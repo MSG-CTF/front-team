@@ -1,0 +1,159 @@
+/*
+ * Figma: "MSG-CTF 프론트 개발" 파일, node-id 10:14 ("Login page", 1920x1080)
+ * 좌표/치수는 get_metadata(id 63:51 / 97:434 / 63:55 / 63:62 / 63:60) 실측값 그대로.
+ * 조정이 필요하면 아래 --* 변수만 고치면 된다 (본문 셀렉터는 좌표를 직접 갖지 않음).
+ */
+
+.page {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  /* Figma 프레임 배경색(#f9eeee) — 배경 이미지가 로드되기 전 잠깐 비치는 색상용 폴백 */
+  background: #f9eeee;
+}
+
+.stage {
+  --stage-w: 1920px;
+  --stage-h: 1080px;
+  /* 뷰포트 어느 비율이든 1920x1080 원본 캔버스를 통째로 균일 스케일 — 좌표계를 절대
+     흩뜨리지 않는다. width/height는 항상 1920x1080 그대로 두고 transform만 축소/확대. */
+  --scale: min(100vw / 1920px, 100vh / 1080px);
+
+  --username-x: 622px;
+  --username-y: 455px;
+  --username-w: 430px;
+  --username-h: 88px;
+
+  --password-x: 626px;
+  --password-y: 568px;
+  --password-w: 430px;
+  --password-h: 88px;
+
+  --button-x: 531px;
+  --button-y: 747px;
+  --button-w: 855px;
+  --button-h: 106px;
+
+  --logo-x: 705px;
+  --logo-y: 18px;
+  --logo-w: 509px;
+  --logo-h: 509px;
+
+  --field-font-size: 36px;
+  --field-text-color: #613d15;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--stage-w);
+  height: var(--stage-h);
+  transform-origin: center center;
+  transform: translate(-50%, -50%) scale(var(--scale));
+}
+
+.background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* object-fit/cover 금지 — 배경엔 프레임/입력창 테두리가 이미 그려져 있어서
+     크롭/확대가 조금이라도 들어가면 위에 겹치는 input/button 좌표와 어긋난다. */
+  width: 1920px;
+  height: 1080px;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.logo {
+  position: absolute;
+  left: var(--logo-x);
+  top: var(--logo-y);
+  width: var(--logo-w);
+  height: var(--logo-h);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 입력창 테두리는 배경에 이미 그려져 있으므로 border/box-shadow/outline은 항상 none.
+   위치·크기·폰트는 Figma의 "USERNAME"/"PASSWORD" placeholder 텍스트 레이어 실측값. */
+.field {
+  position: absolute;
+  background: transparent;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  font-family: "IM Fell English", serif;
+  font-size: var(--field-font-size);
+  color: var(--field-text-color);
+  line-height: normal;
+}
+
+.field::placeholder {
+  color: var(--field-text-color);
+  opacity: 0.85;
+}
+
+.username {
+  left: var(--username-x);
+  top: var(--username-y);
+  width: var(--username-w);
+  height: var(--username-h);
+}
+
+.password {
+  left: var(--password-x);
+  top: var(--password-y);
+  width: var(--password-w);
+  height: var(--password-h);
+}
+
+/* 로그인 버튼은 배경에 안 구워져 있는 별도 인스턴스(Figma id 63:62) — 클릭 영역을
+   시각적 이미지 크기와 정확히 맞춘다. hover/active는 filter로만 표현. */
+.loginButton {
+  position: absolute;
+  left: var(--button-x);
+  top: var(--button-y);
+  width: var(--button-w);
+  height: var(--button-h);
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.loginButtonImg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+.loginButton:hover .loginButtonImg {
+  filter: brightness(1.12);
+}
+
+.loginButton:active .loginButtonImg {
+  filter: brightness(0.9);
+}
+
+.loginButton:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.4) brightness(0.85);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
