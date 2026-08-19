@@ -1,6 +1,12 @@
-// TODO: README.md에 정확한 API 경로가 아직 명시 안 됨.
-// 참고: "9. KOTH 페이지" — 동아리별 문제 목록, 다음 문제 개방 시간, 누적합산 스코어
+import apiClient from "./client.js";
 
-export function getKothChallenges() {
-  throw new Error("getKothChallenges: API 경로 미정");
+// README.md "9. KOTH 페이지"의 endpoint를 한 곳에서 관리한다.
+// KOTH 메인 화면의 1차 구현에서는 백엔드가 준비되지 않아 호출하지 않으며,
+// 연동 시 아래 함수의 응답 data만 feature 내부 view model로 변환한다.
+export function getKothClubs() {
+  return apiClient.get("/koth/clubs");
+}
+
+export function getMyKothProgress() {
+  return apiClient.get("/koth/me");
 }

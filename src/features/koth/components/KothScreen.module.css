@@ -1,0 +1,91 @@
+/*
+ * Figma: "MSG-CTF 프론트 개발", node 10:12 (KOTH page, 1920x1080).
+ * 배경과 모든 클릭/overlay 레이어는 동일한 16:9 stage 안에서 함께 축소된다.
+ */
+
+.page {
+  position: fixed;
+  inset: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #efd5a7;
+}
+
+.stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100vw, 177.7778vh);
+  height: min(100vh, 56.25vw);
+  transform: translate(-50%, -50%);
+}
+
+.background {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  pointer-events: none;
+}
+
+.layerImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  pointer-events: none;
+}
+
+.challengeButton,
+.mainNavigationButton {
+  position: absolute;
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challengeButton:hover .layerImage,
+.mainNavigationButton:hover .layerImage {
+  filter: brightness(1.06);
+}
+
+.challengeButton:active .layerImage,
+.mainNavigationButton:active .layerImage {
+  filter: brightness(0.92);
+}
+
+.challengeButton:focus-visible,
+.mainNavigationButton:focus-visible {
+  outline: 4px solid #6f3e19;
+  outline-offset: 4px;
+}
+
+.challengeButton[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.completionStamp {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.mainNavigationButton {
+  left: 4.0625%;
+  top: 6.7593%;
+  width: 1.9271%;
+  height: 3.1481%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .challengeButton,
+  .mainNavigationButton {
+    transition: filter 120ms ease;
+  }
+}
