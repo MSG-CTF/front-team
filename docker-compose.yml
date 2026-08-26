@@ -1,0 +1,36 @@
+# MSG CTF 프론트엔드 — 로컬 연동용 docker-compose 조각
+#
+# 이 파일 단독으로도 `docker compose up`이 되지만(프론트만 뜸, 백엔드가 없으면
+# /api/v1 호출은 502), 실제 연동 테스트는 백엔드 팀의 docker-compose와 같은
+# 네트워크에 묶여야 의미가 있다. 두 가지 중 회의에서 정하는 대로 맞추면 된다:
+#
+#   (A) 백엔드 compose 파일에 아래 `frontend` 서비스 블록을 그대로 복사해 합친다.
+#   (B) 이 파일을 따로 두고, 아래 `networks.msgctf-net`을 백엔드 compose가 쓰는
+#       외부 네트워크 이름으로 바꿔서 `external: true`로 연결한다.
+#
+# nginx.conf의 `proxy_pass http://backend:8080/...`도 실제 백엔드 서비스명·포트에
+# 맞춰 같이 바꿔야 한다(지금은 자리표시자).
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - msgctf-net
+
+  # 자리표시자 — 백엔드 팀의 실제 서비스 정의로 교체
+  backend:
+    image: replace-with-actual-backend-image
+    ports:
+      - "8080:8080"
+    networks:
+      - msgctf-net
+
+networks:
+  msgctf-net:
+    driver: bridge
