@@ -1,0 +1,254 @@
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/assets/leaderboard/fonts/libre-baskerville-400.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Libre Baskerville";
+  src: url("/assets/leaderboard/fonts/libre-baskerville-600.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Libre Caslon Text";
+  src: url("/assets/leaderboard/fonts/libre-caslon-text-400.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+.page {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: #f8ecec;
+}
+
+.stage {
+  overflow: hidden;
+  color: #2f190a;
+  font-family: "Libre Baskerville", Georgia, serif;
+}
+
+.designCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+  transform: scale(calc(100cqw / 1920px));
+  transform-origin: top left;
+}
+
+.leaderboardArtwork {
+  position: absolute;
+  top: -9px;
+  left: -14px;
+  z-index: 0;
+  display: block;
+  width: 1935px;
+  height: 1089px;
+  object-fit: cover;
+  pointer-events: none;
+  user-select: none;
+}
+
+.backButton {
+  position: absolute;
+  top: 83px;
+  left: 45px;
+  z-index: 5;
+  display: flex;
+  width: 43px;
+  height: 31px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  container-type: size;
+  cursor: pointer;
+}
+
+.backIcon {
+  display: block;
+  flex: none;
+  width: 100cqh;
+  height: 100cqw;
+  transform: rotate(-90deg);
+}
+
+.backIcon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.backButton:hover .backIcon {
+  filter: brightness(1.12);
+}
+
+.backButton:focus-visible {
+  outline: 2px solid #f6e7c9;
+  outline-offset: -4px;
+  border-radius: 50%;
+}
+
+.scoreBoard {
+  position: absolute;
+  top: 178px;
+  left: 212px;
+  z-index: 2;
+  width: 1227px;
+  height: 362px;
+  overflow: hidden;
+}
+
+.scoreArtwork,
+.dynamicGraph {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.scoreArtwork {
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.leaderboardChart {
+  position: absolute;
+  top: 228px;
+  left: 1571px;
+  z-index: 3;
+  width: 134px;
+  height: 262px;
+  color: #402e26;
+}
+
+.legendRow {
+  position: absolute;
+  top: var(--text-top);
+  left: var(--text-left);
+  display: flex;
+  width: var(--text-width);
+  height: var(--text-height);
+  align-items: center;
+}
+
+.legendName {
+  overflow: hidden;
+  width: 100%;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: normal;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rankingTable {
+  position: absolute;
+  top: 617px;
+  left: 342px;
+  z-index: 3;
+  width: 1267px;
+  height: 326px;
+  color: #402e26;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.tableHeader {
+  position: absolute;
+  inset: 0;
+}
+
+.tableBody {
+  position: absolute;
+  inset: 0;
+}
+
+.tableText {
+  position: absolute;
+  top: var(--text-top);
+  left: var(--text-left);
+  display: flex;
+  width: var(--text-width);
+  height: var(--text-height);
+  min-width: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: normal;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tableHeaderText {
+  color: #702e05;
+  font-family: "Libre Caslon Text", Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.teamNameCell {
+  padding-inline: 4px;
+}
+
+.pointCell {
+  color: #bc7514;
+}
+
+.legendState,
+.tableState {
+  position: absolute;
+  z-index: 4;
+  margin: 0;
+  color: rgb(71 42 20 / 76%);
+  font-family: "Libre Baskerville", Georgia, serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.legendState {
+  top: 42%;
+  left: 0;
+  width: 100%;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.tableState {
+  top: 52%;
+  left: 15%;
+  width: 70%;
+  font-size: 19px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

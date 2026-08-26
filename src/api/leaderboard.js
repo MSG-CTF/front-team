@@ -1,6 +1,11 @@
-// TODO: README.md에 정확한 API 경로가 아직 명시 안 됨.
-// 참고: "5. 리더보드 페이지" — 팀/개인 랭킹, 스코어 보드, TOP3
+import apiClient from "./client.js";
 
 export function getLeaderboard() {
-  throw new Error("getLeaderboard: API 경로 미정");
+  return apiClient.get("/leaderboard");
+}
+
+export function getRankings({ page = 1, size = 6 } = {}) {
+  return apiClient.get("/ranking", {
+    params: { page, size },
+  });
 }
