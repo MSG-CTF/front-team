@@ -1,29 +1,46 @@
 import { useState } from "react";
+import { login } from "../../../api/auth.js";
+import {
+  ACCESS_TOKEN_STORAGE_KEY,
+  REFRESH_TOKEN_STORAGE_KEY,
+} from "../../../api/client.js";
+import { isSuccess } from "../../../utils/response.js";
 import LoginScreen from "../components/LoginScreen.jsx";
-
-const ACCESS_TOKEN_STORAGE_KEY = "msgctf_access_token";
 
 export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
+  const [feedback, setFeedback] = useState(null);
 
   const handleLogin = async ({ username, password }) => {
     setSubmitting(true);
+    setFeedback(null);
+
     try {
-      // TODO: 실제 로그인 API 연동 — MsgCTF.spec.md 1절.
-      // POST {BASE_URL}api/v1/auth/login
-      //   Req  { login_id, password }
-      //   Res  { access_token, refresh_token, role, is_leader, nickname, team_id, team_name, user_id }
-      // 이후 보호된 요청은 Authorization: Bearer ${access_token} 헤더로 호출.
-      // 저장 로직만 미리 남겨두고, 실제 apiClient 호출은 API 확정 후 연결.
-      console.log("login submit", { username, password });
-      const accessToken = null; // TODO: 로그인 응답의 access_token으로 교체
-      if (accessToken) {
-        localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, accessToken);
+      const response = await login({ loginId: username, password });
+      const envelope = response.data;
+      const accessToken = envelope?.data?.access_token;
+      const refreshToken = envelope?.data?.refresh_token;
+
+      if (!isSuccess(envelope) || !accessToken || !refreshToken) {
+        setFeedback({
+          type: "error",
+          message: envelope?.message || "로그인 응답을 확인할 수 없습니다.",
+        });
+        return;
       }
+
+      localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, accessToken);
+      localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
+      setFeedback({ type: "success", message: "로그인에 성공했습니다." });
+    } catch (error) {
+      setFeedback({
+        type: "error",
+        message: error.response?.data?.message || "로그인 요청에 실패했습니다.",
+      });
     } finally {
       setSubmitting(false);
     }
   };
 
-  return <LoginScreen onLogin={handleLogin} submitting={submitting} />;
+  return <LoginScreen onLogin={handleLogin} submitting={submitting} feedback={feedback} />;
 }

@@ -20,7 +20,7 @@ const BACKGROUND_SRC = `${ASSET_BASE}login-clean-plate@2x.webp`;
 const LOGO_SRC = `${ASSET_BASE}logo@2x.webp`;
 const LOGIN_BUTTON_SRC = `${ASSET_BASE}login-button@2x.webp`;
 
-export default function LoginScreen({ onLogin, submitting = false }) {
+export default function LoginScreen({ onLogin, submitting = false, feedback = null }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -47,6 +47,8 @@ export default function LoginScreen({ onLogin, submitting = false }) {
             autoComplete="username"
             placeholder="USERNAME"
             value={username}
+            required
+            disabled={submitting}
             onChange={(event) => setUsername(event.target.value)}
             className={`${styles.field} ${styles.username}`}
           />
@@ -61,6 +63,8 @@ export default function LoginScreen({ onLogin, submitting = false }) {
             autoComplete="current-password"
             placeholder="PASSWORD"
             value={password}
+            required
+            disabled={submitting}
             onChange={(event) => setPassword(event.target.value)}
             className={`${styles.field} ${styles.password}`}
           />
@@ -73,6 +77,17 @@ export default function LoginScreen({ onLogin, submitting = false }) {
           >
             <img src={LOGIN_BUTTON_SRC} alt="" aria-hidden="true" className={styles.loginButtonImg} />
           </button>
+
+          {feedback ? (
+            <p
+              className={`${styles.feedback} ${
+                feedback.type === "error" ? styles.feedbackError : styles.feedbackSuccess
+              }`}
+              role={feedback.type === "error" ? "alert" : "status"}
+            >
+              {feedback.message}
+            </p>
+          ) : null}
         </form>
       </div>
     </div>
