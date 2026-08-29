@@ -5,13 +5,13 @@ import {
 } from "../../../constants/enums.js";
 import { formatRemaining } from "../../../utils/time.js";
 
-// Figma node 307:75 "InstancePanel" (640x300) — node 95:360(ChallengeDetailPage)판.
+// Figma node 307:75 "InstancePanel" (640x300) - node 95:360(ChallengeDetailPage)판.
 // "INSTANCE"/"CONNECT"/"TIME TO LIVE"/"EXTENDS n / N" 라벨은 panel-instance.png에
 // 이미 그려져 있고, 안쪽 요소는 이 패널 박스(640x300) 기준 %로 배치한다.
 //
 // RUNNING 배지만 시안 이미지(pill-running.png)로 그리고, 그 외 상태는 텍스트 pill로
 // 대체한다(README.md "인스턴스 상태" 표의 참가자 화면 문구). "EXTENDS n / N"의
-// 라이브 값은 아직 미표시 — 시안 plate에 "1 / 3"이 구워져 있어 이중으로 보임
+// 라이브 값은 아직 미표시 - 시안 plate에 "1 / 3"이 구워져 있어 이중으로 보임
 // (값 없는 plate 재추출 요청 대상, aria-label로만 노출).
 export default function InstancePanel({ instance }) {
   const status = instance?.status ?? null;
@@ -55,7 +55,7 @@ export default function InstancePanel({ instance }) {
         </span>
       )}
 
-      {/* 접속 정보 (host:port) — 시안 307:80 Kode Mono 24px (= 1.25cqw) */}
+      {/* 접속 정보 (host:port) - 시안 307:80 Kode Mono 24px (= 1.25cqw) */}
       <p className="absolute left-[7.5%] top-[40.67%] font-kode-mono text-[1.25cqw] leading-[normal] text-detail-console">
         {isRunning ? instance.connectUrl ?? "-" : "-"}
       </p>

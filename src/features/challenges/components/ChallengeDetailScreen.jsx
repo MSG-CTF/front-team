@@ -26,7 +26,7 @@ export default function ChallengeDetailScreen({
 }) {
   return (
     <FixedAspectStage backdropSrc="/assets/challenge-detail/bg-1920x1080.png">
-      {/* board_panel 193:62 — 카드 프레임 (canvas 100/114/1720/870) */}
+      {/* board_panel 193:62 - 카드 프레임 (canvas 100/114/1720/870) */}
       <div
         aria-hidden="true"
         className="absolute left-[5.208%] top-[10.556%] w-[89.583%] h-[80.556%]"

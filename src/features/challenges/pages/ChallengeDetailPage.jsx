@@ -10,7 +10,7 @@ import { INSTANCE_STATUS } from "../../../constants/enums.js";
 // 일반 category/difficulty/solved 헤더로 대체되었다.
 const MOCK_CHALLENGE = {
   title: "BABYHEAP",
-  category: "FORENSIC", // 헤더 배지는 3글자로 축약 표시 (FORENSIC → "FOR")
+  category: "FORENSIC", // 헤더 배지는 3글자로 축약 표시 (FORENSIC -> "FOR")
   difficulty: "MEDIUM",
   solved: true,
   points: "500",
