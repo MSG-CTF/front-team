@@ -1,6 +1,6 @@
 import apiClient from "./client.js";
 
-// 관리자 API — 전부 Bearer + role: ADMIN 필요. 경로/스키마는 README.md "8. 관리자 페이지"
+// 관리자 API - 전부 Bearer + role: ADMIN 필요. 경로/스키마는 README.md "8. 관리자 페이지"
 // (Notion API명세서 2026-08-26 스냅샷) 기준.
 //
 // 각 함수 옆 [백엔드] 표기는 Notion status 속성이다. "완료"/"PR 대기"는 바로 연동 가능,
@@ -11,7 +11,7 @@ import apiClient from "./client.js";
 
 // ── 대시보드 ────────────────────────────────────────────────────────────────
 export function getAdminDashboard() {
-  // [백엔드: 논의] GET /admin/dashboard — 요약 지표 집계
+  // [백엔드: 논의] GET /admin/dashboard - 요약 지표 집계
   return apiClient.get("/admin/dashboard");
 }
 
@@ -43,14 +43,14 @@ export function adjustMileage(teamId, { amount, reason }) {
   return apiClient.post(`/admin/teams/${teamId}/mileage`, { amount, reason });
 }
 
-// ── 팀 강제 개입 (전부 [백엔드: 논의] — 보드 도메인 PR #14 확정 후) ──────────
+// ── 팀 강제 개입 (전부 [백엔드: 논의] - 보드 도메인 PR #14 확정 후) ──────────
 export function getTeamSnapshots(teamId) {
-  // GET /admin/teams/{id}/snapshots — 롤백 지점 목록
+  // GET /admin/teams/{id}/snapshots - 롤백 지점 목록
   return apiClient.get(`/admin/teams/${teamId}/snapshots`);
 }
 
 export function rollbackTeam(teamId, { snapshotId, reason }) {
-  // POST /admin/teams/{id}/rollback — reason 1~500자
+  // POST /admin/teams/{id}/rollback - reason 1~500자
   return apiClient.post(`/admin/teams/${teamId}/rollback`, {
     snapshot_id: snapshotId,
     reason,
@@ -58,7 +58,7 @@ export function rollbackTeam(teamId, { snapshotId, reason }) {
 }
 
 export function updateBoardCell(teamId, cellIndex, { status, reason }) {
-  // PATCH .../board/cells/{cell_index} — status: UNVISITED|CONSUMED|OPENED|CLEARED. 점수 미변경.
+  // PATCH .../board/cells/{cell_index} - status: UNVISITED|CONSUMED|OPENED|CLEARED. 점수 미변경.
   return apiClient.patch(`/admin/teams/${teamId}/board/cells/${cellIndex}`, {
     status,
     reason,
@@ -66,7 +66,7 @@ export function updateBoardCell(teamId, cellIndex, { status, reason }) {
 }
 
 export function moveBoardPosition(teamId, { position, consumeCell = false, reason }) {
-  // PATCH .../board/position — position 0~35, 도착 칸 효과 미발동
+  // PATCH .../board/position - position 0~35, 도착 칸 효과 미발동
   return apiClient.patch(`/admin/teams/${teamId}/board/position`, {
     position,
     consume_cell: consumeCell,
@@ -75,7 +75,7 @@ export function moveBoardPosition(teamId, { position, consumeCell = false, reaso
 }
 
 export function adjustDiceRolls(teamId, { amount, reason }) {
-  // POST .../board/dice — amount -20~20 (0 불가), 양수=지급 / 음수=회수
+  // POST .../board/dice - amount -20~20 (0 불가), 양수=지급 / 음수=회수
   return apiClient.post(`/admin/teams/${teamId}/board/dice`, { amount, reason });
 }
 
