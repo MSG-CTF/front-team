@@ -326,6 +326,8 @@ STOPPED / FAILED / EXPIRED → CLEANUP_PENDING → CLEANED
 
 > ⚠️ **구현 상태 캡션(현재 코드 스냅샷 기준, 문서가 아니라 확인차 남김)**: `expires_at`(절대시각)만 오고 `remaining_seconds`/`ttl_seconds` 같은 카운트다운 전용 필드는 이 응답에 없다. 화면의 잔여시간 진행바/타이머는 `expires_at - 현재시각`을 프론트에서 매초 재계산해야 한다(`setInterval` 등으로 "지금" 자체가 흘러야 함) — 단순히 fetch 결과를 그대로 렌더링하면 타이머가 멈춰 보인다.
 
+> ⚠️ **구현 상태(2026-08-29, `feature/challenge-detail`)**: UI는 Figma node **95:360(ChallengeDetailPage)** 기준으로 구현됨. 기존 node 104:459("Koth problem solve page") 기반 **KOTH 전용 헤더(KOTH/순위 배지)는 일반 `category`(3글자 축약)/`difficulty`/`SOLVED` 배지로 대체**됐다. 위 `GET /challenges/{id}` 설명의 "KOTH 배지/순위 조합 로직"은 헤더가 범용으로 바뀌면서 이 화면 범위에서 빠졌다 — KOTH 문제의 순위 표시가 필요하면 별도 논의. 인스턴스 생명주기 버튼(CREATE/EXTEND/RESTART)은 UI만 있고 `src/api/instances.js` 연동·플래그 제출은 후속(`TODO(challenge-detail)`). 목업 데이터로 화면만 잡아둔 상태.
+
 ---
 
 ## 4. 리더보드 페이지
@@ -597,6 +599,8 @@ chore/<slug>                # 설정, 빌드, 문서 등 기능 외 작업
 > - `feature/scoreboard`는 위 예외로 승인, 손대지 않음.
 > - **비어 있던 6개 페이지 중 5개**(`board`, `mypage`, `admin`, `timer`, `open-challenges`)는 `main`에서 새로 브랜치를 파서 **완료**. 담당자는 12-2절 표 참고.
 > - `feature/hwan`은 **여전히 미정리 — 2번 연속 보류 결정.** 여기에 Phase 0 스캐폴드 커밋(`e3fc761`)과 문제상세 페이지 작업(로컬 미커밋)이 같이 있고, 그 스캐폴드가 아직 `main`에 없다. `main`은 여전히 Initial commit뿐이라 방금 새로 판 `feature/board`/`feature/mypage`/`feature/admin`/`feature/timer`/`feature/open-challenges`를 포함한 모든 브랜치가 **로그인 페이지/라우팅/apiClient도 없는 빈 상태**에서 시작한다. 이게 풀리기 전까진 "페이지당 브랜치" 원칙은 이름만 갖춰졌을 뿐 실질적으로는 완성되지 않은 상태다. **처리 전까지는**: (1) 스캐폴드를 `main`에 병합, (2) 문제상세 작업을 `feature/challenge-detail`로 분리, (3) `feature/hwan` 정리(rename 또는 삭제) — 이 세 가지가 다음 정리 단계의 최우선 순위로 남아있다.
+>
+> **업데이트(2026-08-29):** (1)·(2) 사실상 해소됨. `main`에는 이제 Phase 0 스캐폴드 · 로그인/라우팅/`apiClient` · 리더보드 · 스코어보드 · 마이페이지 · 로컬 목 백엔드가 모두 병합돼 있다. 여기서 **현재 `main` 기준으로 새로 판** `feature/challenge-detail`(node 95:360 개편안)과 `feature/board`(정적 UI)는 빈 상태가 아니다. 원격의 옛 `feature/board`는 초기 `main` 시점의 stale 포인터라 새로 파서 대체함. 남은 항목: (3) `feature/hwan` 정리.
 
 ### 12-3. 개발 순서 (의존성 + 백엔드 상태 기준 권장안)
 

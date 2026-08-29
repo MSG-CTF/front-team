@@ -3,17 +3,19 @@ import { useNavigate, useParams } from "react-router-dom";
 import ChallengeDetailScreen from "../components/ChallengeDetailScreen.jsx";
 import { INSTANCE_STATUS } from "../../../constants/enums.js";
 
-// TODO: features/challenges/api.js(getChallengeDetail) + features/instances 연동.
-// 요청/응답 필드가 아직 확정되지 않아(README.md "3. 문제 상세 페이지" 참고)
-// 우선 Figma 시안 그대로의 목업 데이터로 화면만 잡아둠.
+// Figma node 95:360 "ChallengeDetailPage". 요청/응답 필드가 아직 확정되지 않아
+// (README.md "3. 문제 상세 페이지") 우선 시안 그대로의 목업 데이터로 화면만 잡아둔다.
+//
+// node 104:459(구 "Koth problem solve page") 기반 KOTH 전용 헤더는 95:360에서
+// 일반 category/difficulty/solved 헤더로 대체되었다.
 const MOCK_CHALLENGE = {
   title: "BABYHEAP",
-  isKoth: true, // 킹힐(King of the Hill) 문제 여부
-  kothRank: "1st", // 우리 팀의 현재 KOTH 순위
+  category: "FORENSIC", // 헤더 배지는 3글자로 축약 표시 (FORENSIC → "FOR")
+  difficulty: "MEDIUM",
   solved: true,
-  points: "500/M",
+  points: "500",
   solves: 18,
-  description: "",
+  description: Array(9).fill("helloworld").join("\n"),
   attachments: [
     { name: "babyheap.tar.zip", sizeLabel: "43", url: null },
     { name: "libc-2.35.so", sizeLabel: "31", url: null },
@@ -22,9 +24,11 @@ const MOCK_CHALLENGE = {
 
 const MOCK_INSTANCE = {
   status: INSTANCE_STATUS.RUNNING,
-  connectUrl: "https://.....",
-  remainingSeconds: 1800,
-  ttlSeconds: 3600,
+  connectUrl: "10.1.32.424:3342",
+  remainingSeconds: 1093,
+  ttlSeconds: 1800,
+  extendsUsed: 1,
+  extendsMax: 3,
 };
 
 export default function ChallengeDetailPage() {
@@ -34,13 +38,17 @@ export default function ChallengeDetailPage() {
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmitFlag = async () => {
-    // TODO: submitFlag({ challengeId, flag: flagValue }) 연결.
-    // 200 OK + code !== "SUCCESS"(예: INCORRECT_FLAG)도 실패로 처리해야 함
-    // (공통 규약 "성공 판정 규칙" 참고).
+    // TODO(challenge-detail): submitFlag({ challengeId, flag }) 연결.
+    // 200 OK + code !== "SUCCESS"(예: INCORRECT_FLAG)도 실패로 처리 (README.md 0-2절).
     setSubmitting(true);
     console.log("submit flag", { challengeId, flag: flagValue });
     setSubmitting(false);
   };
+
+  // TODO(challenge-detail): 아래 3개를 src/api/instances.js에 연결 (README.md 3절).
+  const handleCreateInstance = () => console.log("create instance", { challengeId });
+  const handleExtendInstance = () => console.log("extend instance", { challengeId });
+  const handleRestartInstance = () => console.log("restart instance", { challengeId });
 
   return (
     <ChallengeDetailScreen
@@ -49,6 +57,9 @@ export default function ChallengeDetailPage() {
       flagValue={flagValue}
       onFlagChange={setFlagValue}
       onSubmitFlag={handleSubmitFlag}
+      onCreateInstance={handleCreateInstance}
+      onExtendInstance={handleExtendInstance}
+      onRestartInstance={handleRestartInstance}
       submitDisabled={submitting || flagValue.length === 0}
       onBack={() => navigate(-1)}
     />
