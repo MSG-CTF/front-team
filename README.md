@@ -691,6 +691,8 @@ chore/<slug> # 설정, 빌드, 문서 등 기능 외 작업
 > - `feature/scoreboard`는 위 예외로 승인, 손대지 않음.
 > - **비어 있던 6개 페이지 중 5개**(`board`, `mypage`, `admin`, `timer`, `open-challenges`)는 `main`에서 새로 브랜치를 파서 **완료**. 담당자는 12-2절 표 참고.
 > - `feature/hwan`은 **여전히 미정리 - 2번 연속 보류 결정.** 여기에 Phase 0 스캐폴드 커밋(`e3fc761`)과 문제상세 페이지 작업(로컬 미커밋)이 같이 있고, 그 스캐폴드가 아직 `main`에 없다. `main`은 여전히 Initial commit뿐이라 방금 새로 판 `feature/board`/`feature/mypage`/`feature/admin`/`feature/timer`/`feature/open-challenges`를 포함한 모든 브랜치가 **로그인 페이지/라우팅/apiClient도 없는 빈 상태**에서 시작한다. 이게 풀리기 전까진 "페이지당 브랜치" 원칙은 이름만 갖춰졌을 뿐 실질적으로는 완성되지 않은 상태다. **처리 전까지는**: (1) 스캐폴드를 `main`에 병합, (2) 문제상세 작업을 `feature/challenge-detail`로 분리, (3) `feature/hwan` 정리(rename 또는 삭제) - 이 세 가지가 다음 정리 단계의 최우선 순위로 남아있다.
+>
+> **업데이트(2026-08-29):** (1), (2) 사실상 해소됨. `main`에는 이제 Phase 0 스캐폴드, 로그인/라우팅/`apiClient`, 리더보드, 스코어보드, 마이페이지, 로컬 목 백엔드, 보드 페이지(PR #7), 문제상세 개편안(PR #8)이 모두 병합돼 있다. 남은 항목: (3) `feature/hwan` 정리. `feature/admin`(PR #9), `chore/api-spec-sync`(PR #10)는 현재 `main` 기준으로 만든 것이다.
 
 ### 12-3. 개발 순서 (의존성 + 백엔드 상태 기준 권장안)
 
