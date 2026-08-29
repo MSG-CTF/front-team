@@ -4,8 +4,8 @@ import { formatRemaining } from "../../../utils/time.js";
 // "Time remaining" 라벨 / 스노우플레이크 아이콘 / 진행바 테두리 + 샘플 값("2 / 2",
 // "00:30", 채움)이 panel-dice-status.png에 함께 그려져 있다.
 //
-// ⚠️ 라이브 값(남은 굴림 수·리셋 카운트다운·진행률)은 아직 이 패널에 겹쳐 그리지
-// 않는다 — 시안 plate에 샘플 값이 구워져 있어 이중으로 보이기 때문. 디자이너에게
+// ⚠️ 라이브 값(남은 굴림 수, 리셋 카운트다운, 진행률)은 아직 이 패널에 겹쳐 그리지
+// 않는다 - 시안 plate에 샘플 값이 구워져 있어 이중으로 보이기 때문. 디자이너에게
 // 값 없는 plate 재추출을 요청한 뒤 아래 aria 정보를 화면 텍스트로 승격할 것.
 export default function DiceStatusPanel({ rollsLeft, rollsMax, resetInSeconds }) {
   return (

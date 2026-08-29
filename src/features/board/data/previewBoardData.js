@@ -13,12 +13,12 @@ export const PREVIEW_BOARD_STATE = Object.freeze({
   nextDiceResetInSeconds: 30,
   quarantineReleasedInSeconds: null,
 
-  // KOTH 이벤트 배너(우측) — GET /koth/clubs의 active 클럽 요약으로 채울 예정
+  // KOTH 이벤트 배너(우측) - GET /koth/clubs의 active 클럽 요약으로 채울 예정
   kothEventTitle: "KING OF HILLS",
   round: 1,
 });
 
-// 무인도(QUARANTINE) 칸 안내 문구 — Figma node 309:104.
+// 무인도(QUARANTINE) 칸 안내 문구 - Figma node 309:104.
 // 실제 문구/이미지는 백엔드가 아니라 기획에서 확정(README.md 2절 "무인도칸(미정)").
 export const QUARANTINE_NOTICE_LINES = Object.freeze([
   "부스에서 해지할 수 있는 방법 설명",
