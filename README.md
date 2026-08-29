@@ -294,6 +294,8 @@ STOPPED / FAILED / EXPIRED → CLEANUP_PENDING → CLEANED
 
 **미해결(요약, Appendix B)**: `board/me.active_challenge`에 타이머 필드 부재 · `consumed_cell_indexes` opened/cleared 미구분 · `chance/now` 예시가 카탈로그 밖 카드 · ERD `idempotency_scope`에 `CHANCE_CONFIRM` 누락 · `GET /board/opened_challenges`가 "열린문제 페이지 제외" 범위에 포함되는지 미확정(Appendix C).
 
+> ⚠️ **구현 상태(2026-08-29, `feature/board`)**: Figma node **3:2(BoardPage) / 146:19(무인도 클릭)** 기준 **정적 UI만** 구현됨(12-3절 "목업으로 UI 먼저" 지침). 36칸은 `board-grid.png` 한 장으로 처리(칸별 분해 없음), 무인도 모달은 `?preview=quarantine`로 확인. 주사위 굴리기·칸 오픈·찬스·룰렛·무인도 탈출 API 연동은 후속(`TODO(board)`). 주사위 상태 HUD·무인도 카운트다운의 라이브 값은 시안 plate에 샘플 값이 구워져 있어 미표시(값 없는 plate 재추출 대상). 36칸 클릭 히트스팟은 `GET /board` 칸 좌표 명세(미해결) 확정 후.
+
 ---
 
 ## 3. 문제 상세 페이지
