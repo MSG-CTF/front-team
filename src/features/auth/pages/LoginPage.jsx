@@ -1,13 +1,16 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { login } from "../../../api/auth.js";
 import {
   ACCESS_TOKEN_STORAGE_KEY,
   REFRESH_TOKEN_STORAGE_KEY,
 } from "../../../api/client.js";
 import { isSuccess } from "../../../utils/response.js";
+import { ROUTES } from "../../../routes/routePaths.js";
 import LoginScreen from "../components/LoginScreen.jsx";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
@@ -32,6 +35,7 @@ export default function LoginPage() {
       localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, accessToken);
       localStorage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
       setFeedback({ type: "success", message: "로그인에 성공했습니다." });
+      navigate(ROUTES.board, { replace: true });
     } catch (error) {
       setFeedback({
         type: "error",
