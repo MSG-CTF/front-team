@@ -224,7 +224,7 @@ STOPPED / FAILED / EXPIRED → CLEANUP_PENDING → CLEANED
 |---|---|
 | `role` | `PARTICIPANT`, `ADMIN` |
 | `difficulty` | `EASY`, `MEDIUM`, `HARD` |
-| `category` | `WEB`, `PWN`, `REV`, `CRYPTO`, `FORENSIC`, `MISC` |
+| `category` | `WEB`, `PWN`, `REV`, `CRYPTO`, `FORENSIC`, `MISC`, `WEB3`, `OSINT` (Notion API명세서 2026-08-26 기준 8종 — 초안의 6종에서 확장됨. 배지 축약: FORENSIC→FOR, CRYPTO→CRY, OSINT→OSINT) |
 | `instance.status` | 0-12절 12개 상태 |
 | `mileage.type` | 0-13절 8개 타입 |
 | `cell.type` | `START`, `CHALLENGE`, `CHANCE`, `AIRPORT`, `QUARANTINE`, `ROULETTE` |
@@ -396,40 +396,94 @@ STOPPED / FAILED / EXPIRED → CLEANUP_PENDING → CLEANED
 
 ## 8. 관리자 페이지
 
-인증: 전부 Bearer + `role: ADMIN` 필요(아니면 `403 FORBIDDEN`).
+인증: 전부 Bearer + `role: ADMIN` 필요(아니면 `403 FORBIDDEN`). 공통 401 3종(`TOKEN_MISSING`/`TOKEN_EXPIRED`/`TOKEN_INVALID`)·500 `INTERNAL_ERROR`는 아래에서 반복 표기하지 않는다.
 
-| Method | URL | 설명 | 백엔드 상태 |
+> 📌 **이 절은 Notion 「API명세서 → 관리자 페이지」 DB(2026-08-26 스냅샷) 기준으로 전면 갱신되었다.** 이전 버전(archive 3문서 통합본)에서 "API 자체가 없다"고 🔴로 남겨둔 항목(설정·clear 칸·공개상태·주사위 지급·칸 이동·롤백)은 이제 전부 엔드포인트가 정의돼 있다. `백엔드 상태`는 Notion 각 페이지의 status 속성을 옮긴 것이다.
+
+| Method | URL | 설명 | 백엔드 |
 |---|---|---|---|
-| GET | `/admin/teams` | 팀별 목록(검색/정렬) | 시작 전 |
-| GET | `/admin/instances` | 인스턴스 목록(상태별 집계) | 논의 |
-| POST | `/admin/instances/{instance_id}/reset` | 인스턴스 강제 재시작 | 시작 전 |
-| DELETE | `/admin/instances/{instance_id}` | 인스턴스 강제 종료 | 논의 |
-| GET | `/admin/resources` | 계정/노드별 리소스 상태 | 논의 |
-| GET | `/admin/events` | 최근 이벤트 로그 | 논의 |
-| POST | `/admin/teams/{team_id}/mileage` | 마일리지 지급/회수 | 시작 전 |
-| POST\|DELETE | `/admin/teams/{team_id}/ban` | 팀 벤 처리/해제 | 시작 전 |
-| GET | `/admin/payment/history` | 전체 결제 히스토리 | 시작 전 |
-| POST | `/admin/payment/checkout` | QR 스캔 결제 처리(부스) | 시작 전 |
-| DELETE | `/admin/payment/{history_id}/refund` | 결제 환불 | 시작 전 |
-| POST | `/admin/challenges/{challenge_id}/docker_image` | Docker 이미지 업로드 | 시작 전 |
+| GET | `/admin/dashboard` | 운영 대시보드 요약 지표 | 논의 |
+| GET | `/admin/teams` | 팀별 목록(검색/정렬) | **완료** |
+| GET | `/admin/teams/{team_id}` | 팀 상세(벤 이력·마일리지 요약·최근 내역) | 진행 중 |
+| POST | `/admin/teams/{team_id}/ban` | 팀 벤 처리 | **완료** |
+| DELETE | `/admin/teams/{team_id}/ban` | 팀 벤 해제 | **완료** |
+| POST | `/admin/teams/{team_id}/mileage` | 마일리지 지급/회수 | **완료** |
+| GET | `/admin/teams/{team_id}/snapshots` | 롤백 지점(스냅샷) 목록 | 논의 |
+| POST | `/admin/teams/{team_id}/rollback` | 스냅샷 시점으로 롤백 | 논의 |
+| PATCH | `/admin/teams/{team_id}/board/cells/{cell_index}` | clear 칸 상태 수정 | 논의 |
+| PATCH | `/admin/teams/{team_id}/board/position` | 말 위치 강제 이동 | 논의 |
+| POST | `/admin/teams/{team_id}/board/dice` | 주사위 횟수 지급/회수 | 논의 |
+| GET | `/admin/instances` | 인스턴스 목록(상태·팀·문제별 집계) | PR 대기 |
+| POST | `/admin/instances/{instance_id}/reset` | 인스턴스 강제 재시작 | **완료** |
+| DELETE | `/admin/instances/{instance_id}` | 인스턴스 강제 종료 | **완료** |
+| GET | `/admin/challenges` | 문제 목록(문제별 인스턴스 현황) | 논의 |
+| PATCH | `/admin/challenges/{challenge_id}/visibility` | 문제 공개/비공개 전환 | 논의 |
+| POST | `/admin/challenges/{challenge_id}/releases` | 문제 릴리스 등록(publish bundle) | 시작 전 |
+| GET | `/admin/challenges/{challenge_id}/releases` | 릴리스 이력 조회 | 시작 전 |
+| POST | `/admin/challenges/{challenge_id}/releases/{release_id}/activate` | 현재 릴리스 전환(=롤백) | 시작 전 |
+| GET | `/admin/resources` | 계정/노드별 리소스 상태 | 진행 중 |
+| GET | `/admin/events` | 최근 이벤트 로그 | 진행 중 |
+| GET | `/admin/payment/history` | 전체 결제 히스토리 | **완료** |
+| POST | `/admin/payment/checkout` | QR 스캔 결제 처리(부스) | **완료** |
+| DELETE | `/admin/payment/{history_id}/refund` | 결제 환불 | **완료** |
+| GET | `/admin/settings` | 대회 설정 조회 | 논의 |
+| PATCH | `/admin/settings` | 대회 설정 변경(부분 수정) | 논의 |
 
-- `GET /admin/teams` → `{ teams: [{ team_id, team_name, team_score, mileage, position, is_banned, members: [{user_id, login_id, nickname, role, is_leader}], member_count }], total_count, page, size }`. `login_id`는 관리자 응답에만 포함.
-- `GET /admin/instances` → `{ instances: [{instance_id, team_id, team_name, challenge_id, challenge_title, status, created_at, expires_at}], summary: {by_status, by_team, by_challenge}, total_count, page, size }`. `by_status`는 ERD 12개 상태 항상 전부 포함(0이어도).
-- `POST /admin/instances/{instance_id}/reset` → 202 `{ instance_id, team_id, team_name, challenge_id, status: "RESETTING", host, ports, expires_at, forced_by, forced_at }`. 추가 에러: `404 INSTANCE_NOT_FOUND` / `409 INSTANCE_NOT_RESTARTABLE`.
-- `DELETE /admin/instances/{instance_id}` → 202 `{ instance_id, team_id, team_name, status: "STOPPING", forced_by, forced_at }`. 추가 에러: `404 INSTANCE_NOT_FOUND` / `409 INSTANCE_ALREADY_TERMINATED`.
-- `GET /admin/resources` → 있음 `{ accounts: [{account_id, account_name, status, running_instances, instance_quota, nodes: [{node_id, node_name, status, running_instances, cpu_usage_percent, memory_usage_percent}]}], total_count, collected_at }` / 없음 `data: null`. `status` enum 전체 값 미공개(Appendix B).
-- `GET /admin/events` → `{ events: [{event_id, type, severity, message, team_id, team_name, challenge_id, challenge_title, instance_id, actor, created_at}], total_count, page, size }`. `type`/`severity` enum 전체 값 미공개(Appendix B).
-- `POST /admin/teams/{team_id}/mileage` — Req `{ amount, reason }`(0 불가) → `{ team_id, previous_mileage, amount, current_mileage, reason, adjusted_at, adjusted_by }`. `mileage_history.type`은 서버가 부호로 자동 결정(`ADMIN_GRANT`/`ADMIN_DEDUCT`). 추가 에러: `400 INVALID_AMOUNT` / `400 INSUFFICIENT_MILEAGE` / `404 TEAM_NOT_FOUND`.
-- `POST /admin/teams/{team_id}/ban` — Req `{ ban_reason }` → `{ team_id, is_banned: true, ban_reason, banned_at, banned_by }`. 추가 에러: `404 TEAM_NOT_FOUND` / `409 ALREADY_BANNED`.
-- `DELETE /admin/teams/{team_id}/ban` → `{ team_id, is_banned: false, unbanned_at, unbanned_by }`. 추가 에러: `404 TEAM_NOT_FOUND` / `409 NOT_BANNED`.
-- `GET /admin/payment/history` — Query `team_id`(선택)·`page`·`size` → `{ history: [...], total_count, page, size }`(6절 `mileage_history.type`과 동일 enum 공유).
-- `POST /admin/payment/checkout` — Req `{ payment_token, amount, item_name }` → `{ history_id, team_id, team_name, item_name, amount, current_mileage, processed_at, processed_by }`. 잔액부족 실패 시 토큰 미소모. 추가 에러: `400 INVALID_AMOUNT` / `400 PAYMENT_TOKEN_EXPIRED` / `400 PAYMENT_TOKEN_INVALID` / `400 INSUFFICIENT_MILEAGE`.
-- `DELETE /admin/payment/{history_id}/refund` → `{ history_id(신규 REFUND 행), team_id, team_name, refunded_amount, current_mileage, refunded_at, refunded_by }`. 추가 에러: `404 PAYMENT_NOT_FOUND` / `409 ALREADY_REFUNDED` / `409 NOT_REFUNDABLE`.
-- `POST /admin/challenges/{challenge_id}/docker_image`(multipart/form-data) → 201 `{ challenge_id, docker_image_id, github_repository_url, github_commit_sha, image_name, image_tag, status: "READY", uploaded_at }`. 추가 에러: `400 INVALID_FILE_TYPE`/`INVALID_IMAGE_FILE` · `404 CHALLENGE_NOT_FOUND` · `409 DOCKER_IMAGE_ALREADY_EXISTS` · `413 FILE_TOO_LARGE`.
+**대시보드**
 
-**제품 요구사항(기능명세 원문)**: 팀별 목록, 문제 목록(챌린지별 인스턴스 관리), 설정, 로그, 운영 대시보드. 팀별 목록 상세: clear 칸 관리, 문제 공개상태 관리, 팀 상세 정보, 전체 인스턴스 목록, 팀별/문제별 실행 중 인스턴스 수, 인스턴스 상태 필터링, 실패 인스턴스 표시, 강제 재시작/종료, 계정·노드별 리소스 상태, 최근 이벤트 로그, 마일리지 관리(오픈소스 검토), 주사위 오류 시 고정 지급, 칸 위치 이동, 벤 처리.
+- `GET /admin/dashboard` (Path·Query·Body 없음) → `{ teams: {total_count, banned_count, total_mileage}, payment: {purchase_count, refund_count, net_spent}, contest: {status, start_time, end_time, remaining_seconds} | null, instances: {running, failed, total}, challenges: {total, published, solved_total}, collected_at }`. 집계 전용. `contest.status`: `BEFORE`/`RUNNING`/`ENDED`, 활성 대회 없으면 `contest: null`. `payment.net_spent` = `PURCHASE`합 + `REFUND`합의 절댓값.
 
-**기능명세 대비 API 자체가 없는 항목**(구현 전, Appendix B): 설정 / clear 칸 관리 / 문제 공개상태 관리 / 주사위 오류 시 고정 지급 / 칸 위치 이동(수동 보정) / 🔴 롤백 기능.
+**팀**
+
+- `GET /admin/teams` — Query `search`·`sort`(`score`|`name`)·`page`·`size`(상한 100) → `{ teams: [{ team_id, team_name, team_score, mileage, board_position_states, is_banned, members: [{user_id, login_id, nickname, role, is_leader}], member_count }], total_count, page, size }`. `login_id`는 관리자 응답에만. `members`는 팀장 우선·닉네임 순. `password_hash`는 절대 미포함. 없으면 `teams: []`. 추가 에러: `400 INVALID_REQUEST`(sort 값). ⚠️ 필드명 `board_position_states`(Appendix A #5는 `position`으로 교정했었으나 Notion 최신본이 이 이름을 씀 — 재확인 필요).
+- `GET /admin/teams/{team_id}` — Query `history_limit`(기본 10, 상한 50) → 팀 목록 요약 + `{ ban_reason, banned_at, banned_by, created_at, mileage_summary: {total_earned, total_spent, purchase_count, refund_count}, recent_mileage_history: [{history_id, type, amount, reason, processed_by, created_at}] }`. `is_banned=false`면 `ban_*`는 null. `board_position_states`는 보드 앱 붙기 전 null. 보드 진행 상세·인스턴스 목록은 별도 API. 추가 에러: `404 TEAM_NOT_FOUND`.
+- `POST /admin/teams/{team_id}/ban` — Req `{ ban_reason }`(1자 이상) → `{ team_id, is_banned: true, ban_reason, banned_at, banned_by }`. 밴 시 쓰기 전면 차단(`403 TEAM_BANNED`, 0-6절). 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND` / `409 ALREADY_BANNED`(data `{team_id, ban_reason, banned_at}`).
+- `DELETE /admin/teams/{team_id}/ban` (Body 없음) → `{ team_id, is_banned: false, unbanned_at, unbanned_by }`. 추가 에러: `404 TEAM_NOT_FOUND` / `409 NOT_BANNED`(data `{team_id, is_banned}`). ⚠️ **벤 해제가 자동 롤백까지 하지 않는다** — 롤백은 아래 `/rollback`으로 별도 조작(Notion 초안 전제, 팀 합의 대기 — Appendix B).
+- `POST /admin/teams/{team_id}/mileage` — Req `{ amount, reason }`(amount 0 불가, 양수=지급/음수=회수) → `{ team_id, previous_mileage, amount, current_mileage, reason, adjusted_at, adjusted_by }`. `mileage_history.type`은 서버가 부호로 결정(`ADMIN_GRANT`/`ADMIN_DEDUCT`). 추가 에러: `400 INVALID_REQUEST` / `400 INVALID_AMOUNT`(0) / `400 INSUFFICIENT_MILEAGE`(data `{current_mileage, requested_amount}`, `requested_amount`는 항상 양수) / `404 TEAM_NOT_FOUND`.
+
+**팀 강제 개입 (전부 "논의" · 보드 도메인 PR #14 확정 후 구현 가능)**
+
+- `GET /admin/teams/{team_id}/snapshots` → `{ snapshots: [{ snapshot_id, reason: "BAN"|"MANUAL", team_score, mileage, is_rolled_back, created_by, created_at }], total_count }`. 벤 등 되돌릴 필요가 생기는 순간 서버가 스냅샷을 남긴다. `TeamSnapshot` 테이블 신설 필요. 추가 에러: `404 TEAM_NOT_FOUND`.
+- `POST /admin/teams/{team_id}/rollback` — Req `{ snapshot_id, reason }`(1~500자) → `{ team_id, snapshot_id, restored: {team_score: {before, after}, mileage: {before, after}}, adjustment_history_id, rolled_back_at, rolled_back_by }`. 마일리지는 기존 행 유지 + 차액 보정 행 추가(불변식 유지). 차액 0이면 `adjustment_history_id: null`. 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND` / `404 SNAPSHOT_NOT_FOUND` / `409 ALREADY_ROLLED_BACK`(data `{snapshot_id, rolled_back_at}`).
+- `PATCH /admin/teams/{team_id}/board/cells/{cell_index}` — `cell_index` 0~35. Req `{ status: "UNVISITED"|"CONSUMED"|"OPENED"|"CLEARED", reason }`(1~500자) → `{ team_id, cell_index, previous_status, status, changed_at, changed_by }`. **점수는 건드리지 않는다** — 필요하면 mileage API 별도 호출. `UNVISITED`는 요청 값으로만 허용. 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND`.
+- `PATCH /admin/teams/{team_id}/board/position` — Req `{ position: 0~35, consume_cell: bool(기본 false), reason }`(1~500자) → `{ team_id, previous_position, position, type, cell_consumed, moved_at, moved_by }`. 이동만 하고 도착 칸 효과(찬스/룰렛/무인도)는 미발동. `type`은 `cell.type` enum. 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND`.
+- `POST /admin/teams/{team_id}/board/dice` — Req `{ amount: -20~20(0 불가), reason }`(1~500자) → `{ team_id, previous_dice_rolls_left, amount, dice_rolls_left, reason, adjusted_at, adjusted_by }`. 기능명세 "주사위 오류 시 고정 지급" + 임의 지급. 추가 에러: `400 INVALID_REQUEST` / `400 INVALID_AMOUNT`(0) / `400 INSUFFICIENT_DICE`(data `{current_dice_rolls_left, requested_amount}`) / `404 TEAM_NOT_FOUND`.
+
+**인스턴스**
+
+- `GET /admin/instances` — Query `status`·`team_id`·`challenge_id`·`page`·`size` → `{ instances: [{instance_id, team_id, team_name, challenge_id, challenge_title, status, created_at, expires_at}], summary: {by_status: {12개 상태 전부}, by_team: [{team_id, team_name, running_count}], by_challenge: [{challenge_id, challenge_title, running_count}]}, total_count, page, size }`. 추가 에러: `400 INVALID_REQUEST`.
+- `POST /admin/instances/{instance_id}/reset` (Body 없음) → 202 `{ instance_id, team_id, team_name, challenge_id, status: "RESETTING", host: null, port: null, expires_at: null, forced_by, forced_at }`. ⚠️ `port`(단수, null) — Appendix A #2는 `ports`(복수)로 통일했으나 이 응답은 단수. 추가 에러: `404 INSTANCE_NOT_FOUND` / `409 INSTANCE_NOT_RESTARTABLE`(data `{instance_id, status}`).
+- `DELETE /admin/instances/{instance_id}` (Body 없음) → 202 `{ instance_id, team_id, team_name, status: "STOPPING", forced_by, forced_at }`. 추가 에러: `404 INSTANCE_NOT_FOUND` / `409 INSTANCE_ALREADY_TERMINATED`(data `{instance_id, status}`).
+
+**문제 / 릴리스**
+
+- `GET /admin/challenges` — Query `category`(0-14절 8종)·`is_published`·`sort`(`running`|`title`|`score`, 기본 `running`)·`page`·`size`(기본 50, 상한 100) → `{ challenges: [{ challenge_id, title, category, difficulty, score, is_published, solved_team_count, running_instance_count, failed_instance_count }], total_count, page, size }`. `failed_instance_count > 0`이면 화면 강조. 개별 인스턴스 조작은 `/admin/instances` 계열. 추가 에러: `400 INVALID_REQUEST`.
+- `PATCH /admin/challenges/{challenge_id}/visibility` — Req `{ is_published: bool, reason }`(1~500자) → `{ challenge_id, title, previous_is_published, is_published, affected_team_count, changed_at, changed_by }`. 비공개로 바꿔도 **이미 연 팀의 진행은 유지**(Notion 초안 가정). 보드 팀별 open(`opened_challenges`)과는 다른 층위. 추가 에러: `400 INVALID_REQUEST` / `404 CHALLENGE_NOT_FOUND`.
+- `POST /admin/challenges/{challenge_id}/releases` — 공급망 `artifact-v2.json`의 `artifact` 블록을 그대로 담고 `note`만 선택 추가. Req `{ artifact: {schema_version:"2.0", challenge_slug, revision, name, runtime_type, architecture, workload:{containers:[{name, image(digest 고정), ports:[{port, public}]}]}, resource_profile:{cpu_millicores, memory_mib, ephemeral_storage_mib}, source_ref, scan_result}, note? }` → `{ release_id, challenge_id, version, registry_revision, challenge_slug, architecture, containers: [{name, image_ref, ports}], is_current, is_deployable, note, created_at }`. `version`은 문제별 1부터 서버 자동 증가. `is_deployable`: 컨테이너 1개 + public 포트 1개면 true(멀티 컨테이너는 등록·이력만, Scheduler 계약 확장 전까지 활성화 불가). 검증: `schema_version` `2.0`만, `scan_result` `PASS`만, image는 `ghcr.io/msg-ctf/challenges/<slug>/<name>@sha256:<64hex>` digest 고정만(태그·latest 거절), `challenge_slug` 문제 slug와 일치. `docker_image` API는 이 릴리스 체계로 대체됨. 추가 에러: `400 RELEASE_INVALID` / `404 CHALLENGE_NOT_FOUND` / `409 RELEASE_DUPLICATED`(같은 `registry_revision`).
+- `GET /admin/challenges/{challenge_id}/releases` (Query 없음) → `{ challenge_id, current_release_id: string|null, releases: [{ release_id, version, registry_revision, architecture, containers, is_current, is_deployable, note, created_at }](버전 내림차순), total_count }`. `current_release_id: null`이면 릴리스 없음 → 인스턴스 생성 시 `RUNTIME_CONFIG_NOT_FOUND`. 추가 에러: `404 CHALLENGE_NOT_FOUND`.
+- `POST /admin/challenges/{challenge_id}/releases/{release_id}/activate` (Body 없음) → `{ challenge_id, release_id, version, registry_revision, previous_release_id: string|null, activated_at }`. 옛 릴리스를 지정하면 그대로 롤백. 전환 이후 생성 인스턴스부터 새 릴리스 적용(실행 중 인스턴스·`reset`은 기존 유지, 재생성 필요). 이미 현재 버전이면 멱등(200, `previous_release_id: null`). 추가 에러: `400 RELEASE_NOT_DEPLOYABLE` / `404 CHALLENGE_NOT_FOUND` / `404 RELEASE_NOT_FOUND`.
+
+**리소스 / 로그**
+
+- `GET /admin/resources` → 있음 `{ accounts: [{account_id, account_name, status, running_instances, instance_quota, nodes: [{node_id, node_name, status, running_instances, cpu_usage_percent, memory_usage_percent}]}], total_count, collected_at }` / 없음 `data: null`. `status` 관측값: `HEALTHY` / `DEGRADED` (전체 enum 미공개 — Appendix B).
+- `GET /admin/events` — Query `type`(선택)·`team_id`(선택)·`page`·`size` → `{ events: [{event_id, type, severity, message, team_id, team_name, challenge_id, challenge_title, instance_id, actor, created_at}], total_count, page, size }`. 관측값: `type` `INSTANCE_FAILED`/`TEAM_BANNED` 등, `severity` `ERROR`/`WARNING` 등(전체 enum 미공개 — Appendix B). 팀·문제·인스턴스 무관 이벤트는 해당 필드 null. 없으면 `events: []`. 추가 에러: `400 INVALID_REQUEST`(type 값).
+
+**결제**
+
+- `GET /admin/payment/history` — Query `team_id`(선택)·`page`·`size`(기본 50) → `{ history: [{ history_id, team_id, team_name, type, amount, reason, is_refunded, processed_by, created_at }], total_count, page, size }`. `type`은 0-13절 `mileage.type` enum 공유. 없으면 `history: []`.
+- `POST /admin/payment/checkout` — Req `{ payment_token, amount(≥1), item_name }` → `{ history_id, team_id, team_name, item_name, amount(음수로 기록), current_mileage, processed_at, processed_by }`. 잔액부족 실패 시 QR 토큰 미소모(재시도 가능). "없는 토큰"과 "무효 토큰"은 존재 여부 노출 방지를 위해 `PAYMENT_TOKEN_INVALID` 하나로 병합. 추가 에러: `400 INVALID_AMOUNT` / `400 PAYMENT_TOKEN_EXPIRED` / `400 PAYMENT_TOKEN_INVALID` / `400 INSUFFICIENT_MILEAGE`(data `{current_mileage, requested_amount}`).
+- `DELETE /admin/payment/{history_id}/refund` (Body 없음) → `{ history_id(신규 REFUND 행 ID), team_id, team_name, refunded_amount(양수), current_mileage, refunded_at, refunded_by }`. 기존 `PURCHASE` 행은 불변, `REFUND` 양수 행을 새로 쌓음(불변식 유지). `reason`에 원본 `history_id` 명시. 추가 에러: `404 PAYMENT_NOT_FOUND` / `409 ALREADY_REFUNDED`(data `{history_id, refunded_at}`) / `409 NOT_REFUNDABLE`.
+
+**설정**
+
+- `GET /admin/settings` → `{ contest: {status, started_at, ends_at}, board: {dice_rolls_per_reset, dice_reset_interval_minutes, solve_deadline_minutes}, flag: {max_attempts, lock_seconds}, updated_at, updated_by }`. 대회 시각 원본은 타이머 도메인(`timer.Contest`), 이 API는 읽기용. `board`/`flag` 값은 흩어져 있던 상수를 설정으로 끌어올린 것 — 각 도메인 담당자가 자기 상수를 등록해야 완성. `AdminSetting` 키-값 테이블 신설 필요.
+- `PATCH /admin/settings` — Req는 보낸 키만 부분 수정(예 `{ board: {dice_rolls_per_reset: 4}, flag: {lock_seconds: 60} }`). 범위: `dice_rolls_per_reset` 1~20 / `dice_reset_interval_minutes` 1~1440 / `solve_deadline_minutes` 1~180 / `max_attempts` 1~10 / `lock_seconds` 1~3600 / `contest.ends_at > started_at`. → `GET`과 동일한 전체 설정 객체 반환. 추가 에러: `400 INVALID_REQUEST` / `409 CONTEST_ALREADY_STARTED`(시작된 대회의 시작 시각 변경 시도).
+
+**신규 에러 코드**: `RELEASE_INVALID` / `RELEASE_DUPLICATED` / `RELEASE_NOT_FOUND` / `RELEASE_NOT_DEPLOYABLE` / `SNAPSHOT_NOT_FOUND` / `ALREADY_ROLLED_BACK` / `INSUFFICIENT_DICE` / `CONTEST_ALREADY_STARTED` — 공통 에러 코드 표(0-11절)에는 아직 없으니 연동 시 추가.
+
+**제품 요구사항 ↔ 엔드포인트 매핑**: 팀별 목록→`/admin/teams` · 팀 상세→`/admin/teams/{id}` · 문제 목록(인스턴스 현황)→`/admin/challenges` · 운영 대시보드→`/admin/dashboard` · 로그→`/admin/events` · 설정→`/admin/settings` · clear 칸 관리→`.../board/cells/{i}` · 문제 공개상태→`.../visibility` · 전체 인스턴스 목록/집계/필터/실패표시→`/admin/instances` · 강제 재시작·종료→`/admin/instances/{id}/reset`·`DELETE` · 리소스→`/admin/resources` · 마일리지 관리→`.../mileage` · 주사위 오류/임의 지급→`.../board/dice` · 칸 위치 이동→`.../board/position` · 벤→`.../ban` · 롤백→`.../snapshots`+`.../rollback` · Docker 이미지→`.../releases`(체계 교체).
+
+**여전히 미해결(Appendix B)**: 벤 해제 ↔ 자동 롤백 여부(팀 합의) · `GET /admin/resources`·`/admin/events` enum 전체 값 · `board_position_states` vs `position` 필드명(Appendix A #5) · 인스턴스 `port`(단수) vs `ports`(복수, Appendix A #2) · 보드 강제 개입 5종은 보드 도메인(PR #14) 모델 확정 후.
 
 ---
 
@@ -501,7 +555,7 @@ API 문서 3개엔 없지만 원 기능명세(`archive/최초_MVP_기능요구�
 
 1. **밴된 팀의 리더보드/랭킹 노출 여부** — `최초_MVP_기능요구사항_초안.md`(초안)는 "계속 노출"로 명시, 최종 API 명세서 4·5절은 "밴 팀 제외"로 명시. **이번 통합에서 사용자 QA 결과 미해결로 보류.** 프론트는 두 경우 다 방어적으로 렌더링할 것. (0-6절)
 2. **`GET /ranking/me`의 `team: {팀 이름}` 헤더 인증** — 프로젝트 유일하게 Bearer가 아닌 클라이언트 입력을 신뢰. 다른 팀 정보 열람 가능성.
-3. **관리자 "롤백 기능" API 부재** — 기능명세 정책("벤/강제개입 전 스냅샷, 명시적 복원")과 실제 API 사이 간극.
+3. ~~**관리자 "롤백 기능" API 부재**~~ — **해소(2026-08-26)**: Notion에 `GET /admin/teams/{id}/snapshots` + `POST /admin/teams/{id}/rollback` 정의됨(8절). 남은 결정: **벤 해제(`DELETE .../ban`)가 자동 롤백까지 할지, 롤백은 별도 조작으로 둘지** 팀 합의 필요(Notion 초안은 별도 조작 전제). `TeamSnapshot` 테이블 신설도 필요.
 4. **인스턴스 5개 API의 응답 필드 포함 여부 불일치** — `extend`/`delete`엔 `host`/`ports`가 없음, 프론트가 단일 Instance 타입으로 다루기 어려움.
 5. **`GET /board/cell/current`의 `challenge_title` 필드명 교정(Appendix A #7)** — 이번 통합에서 명명 규칙에 맞춰 임의로 고쳤을 뿐 백엔드 실제 응답으로 확인된 것은 아님. 연동 첫 시도에서 반드시 재확인.
 
@@ -513,8 +567,9 @@ API 문서 3개엔 없지만 원 기능명세(`archive/최초_MVP_기능요구�
 9. `board/me.active_challenge`에 `solve_deadline_at`/`remaining_seconds` 없음(기능명세가 요구하는 "진행 중 타이머 정보").
 10. `consumed_cell_indexes`가 opened/cleared 단계를 구분 못함.
 11. `GET /timer`에 `server_time`/`contest_id` 없음(`board/dice/status` 패턴과 불일치).
-12. 관리자 페이지 — "설정 / clear 칸 관리 / 문제 공개상태 관리 / 주사위 오류 고정 지급 / 칸 위치 이동" API 부재.
-13. `GET /admin/resources`의 `status`, `GET /admin/events`의 `type`/`severity` enum 전체 값 목록 미공개.
+12. ~~관리자 페이지 — "설정 / clear 칸 관리 / 문제 공개상태 관리 / 주사위 오류 고정 지급 / 칸 위치 이동" API 부재.~~ **해소(2026-08-26)**: `PATCH /admin/settings`·`GET /admin/settings` / `.../board/cells/{i}` / `.../visibility` / `.../board/dice` / `.../board/position` 정의됨(8절). 단 보드 강제 개입 5종은 백엔드 "논의"이고 보드 도메인(PR #14) 모델 확정 후 구현 가능.
+13. `GET /admin/resources`의 `status`(관측값 `HEALTHY`/`DEGRADED`), `GET /admin/events`의 `type`(관측값 `INSTANCE_FAILED`/`TEAM_BANNED`)·`severity`(관측값 `ERROR`/`WARNING`) — enum **전체** 값 목록은 여전히 미공개.
+13-1. 8절 신규 엔드포인트 필드명 충돌: `GET /admin/teams`가 `board_position_states`를 씀(Appendix A #5는 `position`으로 교정했었음) / 인스턴스 강제 재시작 응답이 `port`(단수)를 씀(Appendix A #2는 `ports` 복수로 통일). 백엔드 실제 응답으로 재확인 필요.
 14. KOTH — "다음 문제 개방 남은 시간" 필드 없음.
 15. KOTH — `solves[].challenge_id`(KOTH 항목)와 `koth_challenge_id` 동일 값 공간 여부 미확인.
 16. `GET /teams/me/instance`가 "팀"이 아니라 "본인(user_id)" 기준 — 기능명세 문구와 실제 범위 불일치.
