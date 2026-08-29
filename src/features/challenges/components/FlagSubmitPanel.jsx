@@ -20,6 +20,10 @@ export default function FlagSubmitPanel({ value, onChange, onSubmit, disabled })
       <label htmlFor="flag" className="sr-only">
         플래그
       </label>
+      {/* 시안 307:94 FlagPlaceholderText: 캔버스 (1186, 812) 박스 235x30, IM Fell 24px.
+          input은 글자를 콘텐츠 박스에 세로 중앙 정렬하므로, 시안 글자 중심 y=827에
+          맞추려면 top = 827 - h/2 여야 한다 → h 40px(3.7037%), top 807.5px(74.769%).
+          (이전 73.19%는 22px 위에 붙어 있었다.) */}
       <input
         id="flag"
         name="flag"
@@ -28,7 +32,7 @@ export default function FlagSubmitPanel({ value, onChange, onSubmit, disabled })
         autoComplete="off"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="absolute left-[61.77%] top-[73.19%] w-[28%] h-[5%] bg-transparent border-0 outline-none font-im-fell text-[1.25cqw] text-auth-text placeholder-auth-text/50"
+        className="absolute left-[61.77%] top-[74.769%] w-[28%] h-[3.7037%] bg-transparent border-0 outline-none font-im-fell text-[1.25cqw] leading-[normal] text-auth-text placeholder-auth-text/70"
       />
 
       <button

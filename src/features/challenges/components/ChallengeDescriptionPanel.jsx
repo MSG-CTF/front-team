@@ -35,8 +35,10 @@ export default function ChallengeDescriptionPanel({ description, attachments }) 
         />
       </div>
 
-      {/* 실제 문제 설명 — 시안에는 빈 줄무늬만 있고 텍스트 레이어가 없어 같은 영역에 겹친다. */}
-      <p className="absolute left-[8.49%] top-[35.5%] w-[45.83%] h-[24%] overflow-y-auto whitespace-pre-line font-im-fell text-[1.15cqw] leading-[1.4] text-auth-text">
+      {/* 실제 문제 설명 — 시안 DescriptionLineText 1~9 (IM Fell 24px, 줄 간격 30.125px,
+          첫 줄 글자 윗변 y=388). 24px = 1.25cqw, 30.125/24 = 1.2552.
+          높이는 시안 9줄(271px)이 스크롤바 없이 들어가도록 26.6%(287px)로 잡는다. */}
+      <p className="absolute left-[8.49%] top-[35.49%] w-[45.83%] h-[26.6%] overflow-y-auto whitespace-pre-line font-im-fell text-[1.25cqw] leading-[1.2552] text-auth-text">
         {description}
       </p>
 
@@ -59,13 +61,13 @@ export default function ChallengeDescriptionPanel({ description, attachments }) 
             <a
               href={attachment.url ?? undefined}
               download
-              className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] text-auth-text no-underline"
+              className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] leading-[normal] text-auth-text no-underline"
               style={{ left: pctX(FILENAME_LEFT), top: pctY(ROW_BASE.filename + offsetY) }}
             >
               {attachment.name}
             </a>
             <span
-              className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] text-detail-size"
+              className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] leading-[normal] text-detail-size"
               style={{ left: pctX(SIZE_LEFT), top: pctY(ROW_BASE.size + offsetY) }}
             >
               {attachment.sizeLabel}

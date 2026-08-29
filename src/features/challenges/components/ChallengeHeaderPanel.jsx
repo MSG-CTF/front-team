@@ -31,7 +31,10 @@ export default function ChallengeHeaderPanel({ challenge }) {
         />
       </div>
 
-      <h1 className="absolute left-[8.28%] top-[16.61%] font-im-fell text-[2.08cqw] text-auth-text">
+      {/* leading-[normal]: 시안 텍스트 박스 높이(IM Fell 40px → 51px)는 폰트가 주는
+          natural line-height 그대로다. 전역 line-height(1.5)를 그대로 두면 줄 상자가
+          60px로 커져 글자가 시안보다 4~5px 내려간다. 아래 값들도 같은 이유. */}
+      <h1 className="absolute left-[8.28%] top-[16.61%] font-im-fell text-[2.08cqw] leading-[normal] text-auth-text">
         {title}
       </h1>
 
@@ -75,11 +78,11 @@ export default function ChallengeHeaderPanel({ challenge }) {
         </div>
       )}
 
-      <p className="absolute left-[78.13%] top-[18.52%] font-kode-mono text-[2.5cqw] text-detail-points">
+      <p className="absolute left-[78.13%] top-[18.52%] font-kode-mono text-[2.5cqw] leading-[normal] text-detail-points">
         {points}
       </p>
 
-      <p className="absolute left-[86.98%] top-[18.52%] font-kode-mono text-[2.5cqw] text-auth-text">
+      <p className="absolute left-[86.98%] top-[18.52%] font-kode-mono text-[2.5cqw] leading-[normal] text-auth-text">
         {solves}
       </p>
     </>

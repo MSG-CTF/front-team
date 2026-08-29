@@ -55,13 +55,15 @@ export default function InstancePanel({ instance }) {
         </span>
       )}
 
-      {/* 접속 정보 (host:port) */}
-      <p className="absolute left-[7.5%] top-[40.67%] font-kode-mono text-[1.15cqw] text-detail-console">
+      {/* 접속 정보 (host:port) — 시안 307:80 Kode Mono 24px (= 1.25cqw) */}
+      <p className="absolute left-[7.5%] top-[40.67%] font-kode-mono text-[1.25cqw] leading-[normal] text-detail-console">
         {isRunning ? instance.connectUrl ?? "-" : "-"}
       </p>
 
-      {/* TIME TO LIVE 진행바 (node 307:78 TtlTrack / 307:79 TtlProgress) */}
-      <div className="absolute left-[5.47%] top-[74.67%] w-[89.06%] h-[6.67%] rounded-[5px] border-2 border-auth-text bg-black overflow-hidden">
+      {/* TIME TO LIVE 진행바 (node 307:78 TtlTrack / 307:79 TtlProgress).
+          테두리 2px / 반지름 5px는 캔버스 1920 기준 값이라 cqw로 환산해야 무대가
+          줄었을 때 같이 줄어든다 (px로 두면 축소 시 2배쯤 두꺼워 보인다). */}
+      <div className="absolute left-[5.47%] top-[74.67%] w-[89.06%] h-[6.67%] rounded-[0.26cqw] border-[0.104cqw] border-auth-text bg-black overflow-hidden">
         <div
           className="h-full bg-[#e59f29] transition-[width] duration-500"
           style={{ width: `${progressPercent}%` }}
