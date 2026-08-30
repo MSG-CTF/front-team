@@ -1,37 +1,43 @@
 export const KOTH_CHALLENGE_VISUALS = [
   {
     visualKey: "maple-pass",
-    title: "MAPLE PASS",
+    openGroup: 1,
+    visualTitle: "MAPLE PASS",
     imageSrc: "/assets/koth/challenge-maple-pass.png",
     position: { left: "5.8333%", top: "62.8704%", width: "11.8229%", height: "26.2037%" },
   },
   {
     visualKey: "river-crossing",
-    title: "RIVER CROSSING",
+    openGroup: 2,
+    visualTitle: "RIVER CROSSING",
     imageSrc: "/assets/koth/challenge-river-crossing.png",
     position: { left: "20.5729%", top: "62.8704%", width: "11.7188%", height: "26.2037%" },
   },
   {
     visualKey: "pine-ridge",
-    title: "PINE RIDGE",
+    openGroup: 3,
+    visualTitle: "PINE RIDGE",
     imageSrc: "/assets/koth/challenge-pine-ridge.png",
     position: { left: "38.6979%", top: "62.8704%", width: "11.3021%", height: "26.2037%" },
   },
   {
     visualKey: "lantern-camp",
-    title: "LANTERN CAMP",
+    openGroup: 4,
+    visualTitle: "LANTERN CAMP",
     imageSrc: "/assets/koth/challenge-lantern-camp.png",
     position: { left: "52.6563%", top: "62.8704%", width: "11.3021%", height: "26.2037%" },
   },
   {
     visualKey: "stone-ascent",
-    title: "STONE ASCENT",
+    openGroup: 5,
+    visualTitle: "STONE ASCENT",
     imageSrc: "/assets/koth/challenge-stone-ascent.png",
     position: { left: "68.5938%", top: "62.8704%", width: "11.25%", height: "26.2037%" },
   },
   {
     visualKey: "crown-summit",
-    title: "CROWN SUMMIT",
+    openGroup: 6,
+    visualTitle: "CROWN SUMMIT",
     imageSrc: "/assets/koth/challenge-crown-summit.png",
     position: { left: "82.2917%", top: "62.8704%", width: "11.3542%", height: "26.2037%" },
   },
@@ -56,8 +62,3 @@ export const KOTH_COMPLETION_STAMPS = [
     position: { left: "67.4479%", top: "63.8889%", width: "13.4896%", height: "23.9815%" },
   },
 ];
-
-export const EMPTY_KOTH_DATA = {
-  clubs: [],
-  teamChallenges: [],
-};
