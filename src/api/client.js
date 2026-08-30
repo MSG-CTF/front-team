@@ -2,6 +2,7 @@ import axios from "axios";
 
 // README.md "공통 규약" 참고. Base URL은 /api/v1, 경로 끝 슬래시 없음.
 export const ACCESS_TOKEN_STORAGE_KEY = "msgctf_access_token";
+export const REFRESH_TOKEN_STORAGE_KEY = "msgctf_refresh_token";
 
 const apiClient = axios.create({
   baseURL: "/api/v1",
@@ -15,12 +16,76 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-// TODO: 응답 인터셉터 — 아직 구현 안 함, 토큰 저장/갱신 전략이 정해지면 추가.
-// - 401 TOKEN_EXPIRED → POST /auth/refresh로 재발급 후 원 요청 1회 재시도
-// - 401 TOKEN_MISSING / TOKEN_INVALID → 재시도 없이 /login으로 이동
-// - 403 TEAM_BANNED → 쓰기 요청만 차단(조회는 허용), 프론트는 메시지만 노출
-// - HTTP 200이어도 실패일 수 있으므로 성공 판정은 자동으로 하지 않는다.
-//   호출부에서 utils/response.js의 isSuccess()로 직접 판정할 것.
-// 자세한 규칙은 README.md "공통 규약" 절 참고.
+let refreshPromise = null;
+
+function clearStoredTokens() {
+  localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+  localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+}
+
+function redirectToLogin() {
+  if (window.location.pathname !== "/login") {
+    window.location.assign("/login");
+  }
+}
+
+async function renewAccessToken() {
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+  if (!refreshToken) {
+    throw new Error("저장된 refresh token이 없습니다.");
+  }
+
+  const response = await apiClient.post(
+    "/auth/refresh",
+    { refresh_token: refreshToken },
+    { skipAuthRefresh: true },
+  );
+  const envelope = response.data;
+  const accessToken = envelope?.data?.access_token;
+
+  if (envelope?.code !== "SUCCESS" || !accessToken) {
+    throw new Error("access token 재발급에 실패했습니다.");
+  }
+
+  localStorage.setItem(ACCESS_TOKEN_STORAGE_KEY, accessToken);
+  return accessToken;
+}
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    const code = error.response?.data?.code;
+
+    if (
+      code === "TOKEN_EXPIRED" &&
+      originalRequest &&
+      !originalRequest.retryAfterRefresh &&
+      !originalRequest.skipAuthRefresh
+    ) {
+      originalRequest.retryAfterRefresh = true;
+      refreshPromise ??= renewAccessToken().finally(() => {
+        refreshPromise = null;
+      });
+
+      try {
+        const accessToken = await refreshPromise;
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return apiClient(originalRequest);
+      } catch {
+        clearStoredTokens();
+        redirectToLogin();
+        return Promise.reject(error);
+      }
+    }
+
+    if (code === "TOKEN_MISSING" || code === "TOKEN_INVALID") {
+      clearStoredTokens();
+      redirectToLogin();
+    }
+
+    return Promise.reject(error);
+  },
+);
 
 export default apiClient;

@@ -1,0 +1,15 @@
+# MSG CTF 로컬 통합테스트용 목(mock) 백엔드 — Python 의존성
+#
+# 실제로 이 디렉터리(mock-backend/)에서 `pip install -r requirements.txt` ->
+# `python manage.py migrate` -> `python manage.py seed_demo_data` ->
+# `python manage.py runserver`까지 로컬에서 돌려보고 아래 버전으로 고정했다.
+# (검증 환경: Python 3.14)
+#
+# 자세한 사용법은 mock-backend/README.md 참고.
+
+Django==6.1
+djangorestframework==3.18.0
+djangorestframework-simplejwt==5.5.1
+django-cors-headers==4.9.0
+python-dotenv==1.2.3
+gunicorn==26.2.0
