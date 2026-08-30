@@ -1,12 +1,12 @@
 import styles from "./KothScreen.module.css";
 
-export default function MainNavigationButton({ onClick }) {
+export default function MainNavigationButton() {
   return (
     <button
       type="button"
       className={styles.mainNavigationButton}
-      onClick={onClick}
-      aria-label="메인 페이지로 이동"
+      aria-label="메인 페이지 이동 경로 미확정"
+      aria-disabled="true"
     >
       <img
         src="/assets/koth/main-navigation-button.png"

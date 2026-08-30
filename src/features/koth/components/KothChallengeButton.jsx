@@ -1,7 +1,7 @@
 import styles from "./KothScreen.module.css";
 
 export default function KothChallengeButton({ challenge, onSelect }) {
-  const isIdentified = Boolean(challenge.kothChallengeId);
+  const statusClassName = styles[`status${challenge.status}`] ?? styles.statusUnknown;
 
   return (
     <button
@@ -9,10 +9,8 @@ export default function KothChallengeButton({ challenge, onSelect }) {
       className={styles.challengeButton}
       style={challenge.position}
       aria-label={`${challenge.title} KOTH 문제 풀기`}
-      aria-disabled={!isIdentified}
-      onClick={() => {
-        if (isIdentified) onSelect(challenge);
-      }}
+      aria-pressed={challenge.selected}
+      onClick={() => onSelect(challenge)}
     >
       <img
         src={challenge.imageSrc}
@@ -20,6 +18,12 @@ export default function KothChallengeButton({ challenge, onSelect }) {
         aria-hidden="true"
         className={styles.layerImage}
       />
+      <span className={`${styles.challengeStatus} ${statusClassName}`}>
+        {challenge.status}
+      </span>
+      {challenge.solved && (
+        <span className={styles.solvedMarker}>SOLVED</span>
+      )}
     </button>
   );
 }
