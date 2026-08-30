@@ -2,7 +2,7 @@
 // 우측 세로 배너 + 그 아래 "N ROUND" 버튼. 제목/일러스트/라운드 숫자가 그림에
 // 이미 그려져 있어 여기서는 배치와 클릭 영역만 담당한다.
 //
-// ⚠️ 이벤트 제목·라운드 숫자는 banner/button 그림에 구워진 값이다(현재 "KING OF
+// ⚠️ 이벤트 제목, 라운드 숫자는 banner/button 그림에 구워진 값이다(현재 "KING OF
 // HILLS" / "1 ROUND"). GET /koth/clubs 연동 시 값 없는 plate로 교체하고 title/round를
 // 텍스트로 겹쳐 그릴 것.
 export default function KothEventBanner({ title, round, onOpenRound }) {
