@@ -146,6 +146,26 @@
   filter: grayscale(0.4) brightness(0.85);
 }
 
+.feedback {
+  position: absolute;
+  top: 865px;
+  left: 531px;
+  width: 855px;
+  margin: 0;
+  text-align: center;
+  font-family: "IM Fell English", serif;
+  font-size: 24px;
+  line-height: 1.4;
+}
+
+.feedbackError {
+  color: #8b1e16;
+}
+
+.feedbackSuccess {
+  color: #315b2a;
+}
+
 .srOnly {
   position: absolute;
   width: 1px;
