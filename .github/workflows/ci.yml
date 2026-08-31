@@ -1,0 +1,113 @@
+name: CI
+
+# 아직 프론트 팀 확답 전 항목(리버스 프록시 구현 레벨, 배포 타겟)이 남아있어
+# 일단 수동 실행(workflow_dispatch)으로만 걸어둡니다.
+#
+# job이 두 개입니다.
+# 1) frontend-code-scan: jm_devsecops(gh)의 frontend-ci.yml을 호출.
+#    gitleaks/semgrep/trivy(fs) 보안 스캔 + docker build 검증(root 사용자 확인,
+#    Trivy 이미지 스캔) + npm build까지 여기서 전부 끝난다.
+# 2) supply-chain-build-scan-push: GHCR에 실제로 올릴 이미지를 태그해서 빌드하고
+#    SBOM 생성 후 push한다. 이미지 취약점/시크릿 스캔은 위 job에서 이미 같은
+#    Dockerfile로 검증했으므로 여기서 다시 돌리지 않는다(중복 스캔 방지).
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  # pull_request:
+  #   branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+  # frontend-ci.yml 내부 job들이 SARIF 업로드용으로 security-events: write를
+  # 자체 선언하고 있지만, workflow_call은 caller의 top-level 권한을 넘어설 수
+  # 없으므로 여기에도 명시해야 실제로 GitHub Security 탭에 업로드된다.
+  security-events: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  frontend-code-scan:
+    # TODO: frontend-v1.0.0 태그 생성 전까지는 branch ref(@gh)로 임시 참조한다.
+    # 태깅 완료되면 @frontend-v1.0.0으로 즉시 교체할 것 — branch ref는 나중에
+    # 다른 커밋이 push되면 이 워크플로가 가리키는 내용이 바뀌는 리스크가 있다.
+    uses: MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@gh
+    with:
+      working-directory: .
+      dockerfile-path: ./Dockerfile
+    secrets: inherit
+
+  supply-chain-build-scan-push:
+    needs: frontend-code-scan
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.publish.outputs.digest }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: set-up-docker-buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: image-정보-설정
+        id: image
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "target=${REGISTRY}/${owner}/platform/frontend" >> "$GITHUB_OUTPUT"
+          echo "run_tag=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: 이미지-빌드
+        # frontend-code-scan에서 동일 Dockerfile로 취약점/root 검증 통과했으므로
+        # 여기서는 GHCR용 태그로 다시 빌드만 한다(스캔 재실행 없음).
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: ${{ steps.image.outputs.target }}:${{ steps.image.outputs.run_tag }}
+
+      - name: sbom-디렉터리-준비
+        # results/ 자체가 이 저장소에 없고 trivy-action이 상위 디렉터리를
+        # 자동 생성하지 않아 미리 만들어둬야 한다.
+        run: mkdir -p results/frontend/sbom
+
+      - name: cyclonedx-sbom-생성
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          version: v0.74.0
+          image-ref: ${{ steps.image.outputs.target }}:${{ steps.image.outputs.run_tag }}
+          format: cyclonedx
+          output: results/frontend/sbom/frontend.cdx.json
+          scanners: vuln
+          exit-code: "0"
+
+      - name: sbom-artifact-업로드
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: frontend-sbom
+          path: results/frontend/sbom/frontend.cdx.json
+
+      - name: ghcr-로그인
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 검사한-동일-image-발행
+        id: publish
+        if: github.event_name != 'pull_request'
+        env:
+          TARGET_IMAGE: ${{ steps.image.outputs.target }}
+          RUN_TAG: ${{ steps.image.outputs.run_tag }}
+        run: |
+          local_ref="${TARGET_IMAGE}:${RUN_TAG}"
+          docker push "$local_ref"
+          digest="$(docker image inspect "$local_ref" --format '{{index .RepoDigests 0}}')"
+          digest="${digest##*@}"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "published: ${TARGET_IMAGE}@${digest}"
