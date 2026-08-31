@@ -21,7 +21,7 @@ const pctY = (px) => `${((GROUP.top + px) / CANVAS.h) * 100}%`;
 const pctW = (px) => `${(px / CANVAS.w) * 100}%`;
 const pctH = (px) => `${(px / CANVAS.h) * 100}%`;
 
-export default function ChallengeDescriptionPanel({ description, attachments }) {
+export default function ChallengeDescriptionPanel({ description, attachments = [] }) {
   return (
     <>
       <div
@@ -45,7 +45,7 @@ export default function ChallengeDescriptionPanel({ description, attachments }) 
       {attachments.map((attachment, index) => {
         const offsetY = index * ROW_STEP;
         return (
-          <div key={attachment.name}>
+          <div key={attachment.fileId ?? `${attachment.name}-${index}`}>
             <img
               src="/assets/challenge-detail/icon-checkbox.png"
               alt=""
@@ -58,14 +58,23 @@ export default function ChallengeDescriptionPanel({ description, attachments }) 
                 height: pctH(CHECKBOX_SIZE.h),
               }}
             />
-            <a
-              href={attachment.url ?? undefined}
-              download
-              className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] leading-[normal] text-auth-text no-underline"
-              style={{ left: pctX(FILENAME_LEFT), top: pctY(ROW_BASE.filename + offsetY) }}
-            >
-              {attachment.name}
-            </a>
+            {attachment.url ? (
+              <a
+                href={attachment.url}
+                download
+                className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] leading-[normal] text-auth-text no-underline"
+                style={{ left: pctX(FILENAME_LEFT), top: pctY(ROW_BASE.filename + offsetY) }}
+              >
+                {attachment.name}
+              </a>
+            ) : (
+              <span
+                className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] leading-[normal] text-auth-text"
+                style={{ left: pctX(FILENAME_LEFT), top: pctY(ROW_BASE.filename + offsetY) }}
+              >
+                {attachment.name}
+              </span>
+            )}
             <span
               className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] leading-[normal] text-detail-size"
               style={{ left: pctX(SIZE_LEFT), top: pctY(ROW_BASE.size + offsetY) }}

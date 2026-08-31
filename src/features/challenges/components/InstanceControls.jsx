@@ -1,4 +1,4 @@
-import { ACTIVE_INSTANCE_STATUSES } from "../../../constants/enums.js";
+import { INSTANCE_STATUS } from "../../../constants/enums.js";
 
 // Figma node 296:11~296:14 - 인스턴스 생명주기 버튼(각 154x62), 인스턴스 패널 아래 한 줄.
 // 시안에는 create / create-disabled / extend / restart 4개가 x=1140/1300/1462/1624에
@@ -11,19 +11,22 @@ import { ACTIVE_INSTANCE_STATUSES } from "../../../constants/enums.js";
 // 빠진" 것처럼 보인다. 그래서 크기(154x62)와 위/아래 정렬은 시안 그대로 두고 가로만
 // 패널 폭에 균등 배치한다 - x = 1140 / 1382 / 1624 (간격 88), 오른쪽 끝 1778.
 //
-// TODO(challenge-detail): 각 핸들러를 src/api/instances.js에 연결.
-// - onCreate -> POST /instances { challenge_id } (202, 기존 활성 인스턴스는 자동 교체)
-// - onExtend -> POST /instances/{id}/extend { extend_minutes }
-// - onRestart -> POST /instances/{id}/reset
 // 종료(DELETE /instances/{id}) 버튼은 시안에 없음 - 디자이너 확인 필요.
 const BUTTONS = [
   { key: "extend", src: "/assets/challenge-detail/button-instance-extend.png", label: "인스턴스 TTL 연장", left: "71.979%" },
   { key: "restart", src: "/assets/challenge-detail/button-instance-restart.png", label: "인스턴스 재시작", left: "84.583%" },
 ];
 
-export default function InstanceControls({ instance, onCreate, onExtend, onRestart }) {
-  const hasActiveInstance =
-    instance?.status != null && ACTIVE_INSTANCE_STATUSES.includes(instance.status);
+export default function InstanceControls({
+  instance,
+  unavailable,
+  busy,
+  onCreate,
+  onExtend,
+  onRestart,
+}) {
+  const hasActiveInstance = Boolean(instance?.instanceId);
+  const canManageInstance = instance?.status === INSTANCE_STATUS.RUNNING;
 
   const handlers = { extend: onExtend, restart: onRestart };
 
@@ -33,9 +36,9 @@ export default function InstanceControls({ instance, onCreate, onExtend, onResta
       <button
         type="button"
         onClick={onCreate}
-        disabled={hasActiveInstance}
+        disabled={hasActiveInstance || unavailable || busy}
         aria-label="인스턴스 생성"
-        className="absolute left-[59.375%] top-[58.704%] w-[8.021%] h-[5.741%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed"
+        className="absolute left-[59.375%] top-[58.704%] w-[8.021%] h-[5.741%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
       >
         <img
           src={
@@ -55,7 +58,7 @@ export default function InstanceControls({ instance, onCreate, onExtend, onResta
           key={button.key}
           type="button"
           onClick={handlers[button.key]}
-          disabled={!hasActiveInstance}
+          disabled={!canManageInstance || unavailable || busy}
           aria-label={button.label}
           className="absolute top-[58.704%] w-[8.021%] h-[5.741%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
           style={{ left: button.left }}
