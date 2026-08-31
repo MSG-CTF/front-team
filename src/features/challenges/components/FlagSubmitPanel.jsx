@@ -1,7 +1,13 @@
-// Figma node 307:91 "FlagSubmitForm" (640x228) — "SUBMIT FLAG" 라벨/입력창 테두리는
+// Figma node 307:91 "FlagSubmitForm" (640x228) - "SUBMIT FLAG" 라벨/입력창 테두리는
 // panel-flag.png에 그려져 있어, 실제 입력창과 제출 버튼(307:17)만 겹친다.
-// node 95:360에서 placeholder가 flag{...} → MSG{...} 로 바뀌었다.
-export default function FlagSubmitPanel({ value, onChange, onSubmit, disabled }) {
+// node 95:360에서 placeholder가 flag{...} -> MSG{...} 로 바뀌었다.
+export default function FlagSubmitPanel({
+  value,
+  onChange,
+  onSubmit,
+  disabled,
+  inputDisabled,
+}) {
   const handleSubmit = (event) => {
     event.preventDefault();
     onSubmit();
@@ -22,7 +28,7 @@ export default function FlagSubmitPanel({ value, onChange, onSubmit, disabled })
       </label>
       {/* 시안 307:94 FlagPlaceholderText: 캔버스 (1186, 812) 박스 235x30, IM Fell 24px.
           input은 글자를 콘텐츠 박스에 세로 중앙 정렬하므로, 시안 글자 중심 y=827에
-          맞추려면 top = 827 - h/2 여야 한다 → h 40px(3.7037%), top 807.5px(74.769%).
+          맞추려면 top = 827 - h/2 여야 한다 -> h 40px(3.7037%), top 807.5px(74.769%).
           (이전 73.19%는 22px 위에 붙어 있었다.) */}
       <input
         id="flag"
@@ -31,8 +37,9 @@ export default function FlagSubmitPanel({ value, onChange, onSubmit, disabled })
         placeholder="MSG{...}"
         autoComplete="off"
         value={value}
+        disabled={inputDisabled}
         onChange={(event) => onChange(event.target.value)}
-        className="absolute left-[61.77%] top-[74.769%] w-[28%] h-[3.7037%] bg-transparent border-0 outline-none font-im-fell text-[1.25cqw] leading-[normal] text-auth-text placeholder-auth-text/70"
+        className="absolute left-[61.77%] top-[74.769%] w-[28%] h-[3.7037%] bg-transparent border-0 outline-none font-im-fell text-[1.25cqw] leading-[normal] text-auth-text placeholder-auth-text/70 disabled:cursor-not-allowed"
       />
 
       <button

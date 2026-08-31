@@ -25,15 +25,26 @@ export function createInstance({ challengeId }) {
 
 export function resetInstance(instanceId) {
   // POST /instances/{id}/reset - 202. Scheduler가 새 instance_id로 교체(RESETTING 전이 안 씀).
-  return apiClient.post(`/instances/${instanceId}/reset`, {}, idKey("instance-reset"));
+  return apiClient.post(
+    `/instances/${encodeURIComponent(instanceId)}/reset`,
+    {},
+    idKey("instance-reset"),
+  );
 }
 
 export function extendInstance(instanceId) {
   // POST /instances/{id}/extend - 202. 연장 시간은 프론트가 안 보냄(백엔드 30분).
-  return apiClient.post(`/instances/${instanceId}/extend`, {}, idKey("instance-extend"));
+  return apiClient.post(
+    `/instances/${encodeURIComponent(instanceId)}/extend`,
+    {},
+    idKey("instance-extend"),
+  );
 }
 
 export function stopInstance(instanceId) {
   // DELETE /instances/{id} - 202, status STOPPING. RUNNING만 종료 가능.
-  return apiClient.delete(`/instances/${instanceId}`, idKey("instance-stop"));
+  return apiClient.delete(
+    `/instances/${encodeURIComponent(instanceId)}`,
+    idKey("instance-stop"),
+  );
 }

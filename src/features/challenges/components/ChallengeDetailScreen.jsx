@@ -13,6 +13,9 @@ import FlagSubmitPanel from "./FlagSubmitPanel.jsx";
 // 패널들은 같은 16:9 무대 위 % 좌표를 쓰므로, 창 비율이 16:9가 아니어도 프레임이
 // 패널들과 함께 축소되며 항상 패널들을 감싼다.
 export default function ChallengeDetailScreen({
+  loading,
+  pageError,
+  instanceError,
   challenge,
   instance,
   flagValue,
@@ -22,11 +25,14 @@ export default function ChallengeDetailScreen({
   onCreateInstance,
   onExtendInstance,
   onRestartInstance,
+  feedback,
+  actionPending,
   submitDisabled,
+  onRetry,
 }) {
   return (
     <FixedAspectStage backdropSrc="/assets/challenge-detail/bg-1920x1080.png">
-      {/* board_panel 193:62 — 카드 프레임 (canvas 100/114/1720/870) */}
+      {/* board_panel 193:62 - 카드 프레임 (canvas 100/114/1720/870) */}
       <div
         aria-hidden="true"
         className="absolute left-[5.208%] top-[10.556%] w-[89.583%] h-[80.556%]"
@@ -38,24 +44,76 @@ export default function ChallengeDetailScreen({
         />
       </div>
       <BackButton onClick={onBack} />
-      <ChallengeHeaderPanel challenge={challenge} />
-      <ChallengeDescriptionPanel
-        description={challenge.description}
-        attachments={challenge.attachments}
-      />
-      <InstancePanel instance={instance} />
-      <InstanceControls
-        instance={instance}
-        onCreate={onCreateInstance}
-        onExtend={onExtendInstance}
-        onRestart={onRestartInstance}
-      />
-      <FlagSubmitPanel
-        value={flagValue}
-        onChange={onFlagChange}
-        onSubmit={onSubmitFlag}
-        disabled={submitDisabled}
-      />
+
+      {loading && (
+        <section
+          className="absolute left-[34%] top-[39%] z-10 w-[32%] border border-auth-text/50 bg-[#ead3a8]/95 px-[2cqw] py-[1.4cqw] text-center font-im-fell text-[1.3cqw] text-auth-text shadow-xl"
+          role="status"
+        >
+          문제 정보를 불러오는 중입니다.
+        </section>
+      )}
+
+      {pageError && (
+        <section
+          className="absolute left-[34%] top-[36%] z-10 w-[32%] border border-auth-text/50 bg-[#ead3a8]/95 px-[2cqw] py-[1.4cqw] text-center font-im-fell text-auth-text shadow-xl"
+          role="alert"
+        >
+          <p className="m-0 text-[1.3cqw]">{pageError.message}</p>
+          <p className="mt-[0.4cqw] font-kode-mono text-[0.75cqw]">{pageError.code}</p>
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-[0.9cqw] border border-auth-text bg-auth-text px-[1.1cqw] py-[0.45cqw] font-kode-mono text-[0.75cqw] text-[#ead3a8]"
+          >
+            다시 시도
+          </button>
+        </section>
+      )}
+
+      {challenge && !loading && !pageError && (
+        <>
+          <ChallengeHeaderPanel challenge={challenge} />
+          <ChallengeDescriptionPanel
+            description={challenge.description}
+            attachments={challenge.attachments}
+          />
+          <InstancePanel instance={instance} error={instanceError} />
+          <InstanceControls
+            instance={instance}
+            unavailable={Boolean(instanceError)}
+            busy={actionPending}
+            onCreate={onCreateInstance}
+            onExtend={onExtendInstance}
+            onRestart={onRestartInstance}
+          />
+          <FlagSubmitPanel
+            value={flagValue}
+            onChange={onFlagChange}
+            onSubmit={onSubmitFlag}
+            disabled={submitDisabled}
+            inputDisabled={actionPending || challenge.solved}
+          />
+
+          {(instanceError || feedback) && (
+            <div
+              className="absolute left-[59.32%] top-[88.1%] z-10 w-[33.33%] font-kode-mono text-[0.7cqw] leading-tight text-auth-text"
+              role={instanceError || feedback?.type === "error" ? "alert" : "status"}
+            >
+              {instanceError && (
+                <p className="m-0">
+                  {instanceError.message} ({instanceError.code})
+                </p>
+              )}
+              {feedback && (
+                <p className="m-0">
+                  {feedback.message} ({feedback.code})
+                </p>
+              )}
+            </div>
+          )}
+        </>
+      )}
     </FixedAspectStage>
   );
 }

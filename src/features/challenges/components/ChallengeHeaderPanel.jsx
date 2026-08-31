@@ -1,10 +1,10 @@
-// Figma node 307:22 (panel-header, 1660x150) — 배경판 위에 제목/배지/포인트/풀이수를
+// Figma node 307:22 (panel-header, 1660x150) - 배경판 위에 제목/배지/포인트/풀이수를
 // 캔버스 1920x1080 기준 % 좌표로 겹쳐 그린다. "POINTS"/"SOLVES" 라벨은 panel-header.png에
 // 이미 그려져 있어 값만 겹친다.
 //
-// node 95:360(ChallengeDetailPage)에서 헤더 배지가 KOTH 전용(KOTH/순위) → 일반
+// node 95:360(ChallengeDetailPage)에서 헤더 배지가 KOTH 전용(KOTH/순위) -> 일반
 // category/difficulty/solved 로 바뀌었다. category는 README enum(WEB/PWN/REV/CRYPTO/
-// FORENSIC/MISC)을 3글자로 축약해 표시한다(시안: FORENSIC → "FOR").
+// FORENSIC/MISC)을 3글자로 축약해 표시한다(시안: FORENSIC -> "FOR").
 const CATEGORY_SHORT = {
   WEB: "WEB",
   PWN: "PWN",
@@ -31,7 +31,7 @@ export default function ChallengeHeaderPanel({ challenge }) {
         />
       </div>
 
-      {/* leading-[normal]: 시안 텍스트 박스 높이(IM Fell 40px → 51px)는 폰트가 주는
+      {/* leading-[normal]: 시안 텍스트 박스 높이(IM Fell 40px -> 51px)는 폰트가 주는
           natural line-height 그대로다. 전역 line-height(1.5)를 그대로 두면 줄 상자가
           60px로 커져 글자가 시안보다 4~5px 내려간다. 아래 값들도 같은 이유. */}
       <h1 className="absolute left-[8.28%] top-[16.61%] font-im-fell text-[2.08cqw] leading-[normal] text-auth-text">
@@ -64,7 +64,7 @@ export default function ChallengeHeaderPanel({ challenge }) {
         </div>
       )}
 
-      {/* SOLVED 배지 — 우리 팀이 이미 풀었을 때만 */}
+      {/* SOLVED 배지 - 우리 팀이 이미 풀었을 때만 */}
       {solved && (
         <div className="absolute left-[17.45%] top-[21.33%] w-[5.31%] h-[2.96%]">
           <img

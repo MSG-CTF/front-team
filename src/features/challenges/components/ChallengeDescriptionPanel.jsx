@@ -1,4 +1,4 @@
-// Figma node 307:23 (panel-description, 1000x630) — 배경판에 "DESCRIPTION"/"ATTACHMENTS"
+// Figma node 307:23 (panel-description, 1000x630) - 배경판에 "DESCRIPTION"/"ATTACHMENTS"
 // 라벨과 각 첨부파일 줄 오른쪽 "MB" 단위 라벨이 이미 그려져 있다. 실제 설명 텍스트 /
 // 체크박스 아이콘 / 파일명 / 용량 숫자만 캔버스 1920x1080 기준 % 좌표로 겹친다.
 // ("MB"를 다시 붙이면 배경의 "MB"와 겹쳐 이중으로 보이니 주의.)
@@ -21,7 +21,7 @@ const pctY = (px) => `${((GROUP.top + px) / CANVAS.h) * 100}%`;
 const pctW = (px) => `${(px / CANVAS.w) * 100}%`;
 const pctH = (px) => `${(px / CANVAS.h) * 100}%`;
 
-export default function ChallengeDescriptionPanel({ description, attachments }) {
+export default function ChallengeDescriptionPanel({ description, attachments = [] }) {
   return (
     <>
       <div
@@ -35,7 +35,7 @@ export default function ChallengeDescriptionPanel({ description, attachments }) 
         />
       </div>
 
-      {/* 실제 문제 설명 — 시안 DescriptionLineText 1~9 (IM Fell 24px, 줄 간격 30.125px,
+      {/* 실제 문제 설명 - 시안 DescriptionLineText 1~9 (IM Fell 24px, 줄 간격 30.125px,
           첫 줄 글자 윗변 y=388). 24px = 1.25cqw, 30.125/24 = 1.2552.
           높이는 시안 9줄(271px)이 스크롤바 없이 들어가도록 26.6%(287px)로 잡는다. */}
       <p className="absolute left-[8.49%] top-[35.49%] w-[45.83%] h-[26.6%] overflow-y-auto whitespace-pre-line font-im-fell text-[1.25cqw] leading-[1.2552] text-auth-text">
@@ -45,7 +45,7 @@ export default function ChallengeDescriptionPanel({ description, attachments }) 
       {attachments.map((attachment, index) => {
         const offsetY = index * ROW_STEP;
         return (
-          <div key={attachment.name}>
+          <div key={attachment.fileId ?? `${attachment.name}-${index}`}>
             <img
               src="/assets/challenge-detail/icon-checkbox.png"
               alt=""
@@ -58,14 +58,23 @@ export default function ChallengeDescriptionPanel({ description, attachments }) 
                 height: pctH(CHECKBOX_SIZE.h),
               }}
             />
-            <a
-              href={attachment.url ?? undefined}
-              download
-              className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] leading-[normal] text-auth-text no-underline"
-              style={{ left: pctX(FILENAME_LEFT), top: pctY(ROW_BASE.filename + offsetY) }}
-            >
-              {attachment.name}
-            </a>
+            {attachment.url ? (
+              <a
+                href={attachment.url}
+                download
+                className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] leading-[normal] text-auth-text no-underline"
+                style={{ left: pctX(FILENAME_LEFT), top: pctY(ROW_BASE.filename + offsetY) }}
+              >
+                {attachment.name}
+              </a>
+            ) : (
+              <span
+                className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] leading-[normal] text-auth-text"
+                style={{ left: pctX(FILENAME_LEFT), top: pctY(ROW_BASE.filename + offsetY) }}
+              >
+                {attachment.name}
+              </span>
+            )}
             <span
               className="absolute whitespace-nowrap font-kode-mono text-[1.25cqw] leading-[normal] text-detail-size"
               style={{ left: pctX(SIZE_LEFT), top: pctY(ROW_BASE.size + offsetY) }}
