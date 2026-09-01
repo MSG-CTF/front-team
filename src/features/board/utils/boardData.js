@@ -168,12 +168,13 @@ export function getRemainingSeconds(targetIso, diceStatus, now = Date.now()) {
 
 // board-grid.png의 36칸은 동일 간격의 타원 궤도에 배치되어 있다.
 // 이 좌표는 API 값이 아니라 고정된 Figma 보드 asset의 클릭/말 배치 좌표다.
+// 각도는 1번 칸(정중앙 하단)에서 시작해 시계 방향으로 증가한다(Figma 시안 기준).
 export function getBoardCellPosition(cellIndex) {
   const normalizedIndex = Math.min(
     BOARD_CELL_COUNT,
     Math.max(1, Number(cellIndex) || 1),
   );
-  const angle = (Math.PI / 2) - ((normalizedIndex - 1) * Math.PI * 2) / BOARD_CELL_COUNT;
+  const angle = (Math.PI / 2) + ((normalizedIndex - 1) * Math.PI * 2) / BOARD_CELL_COUNT;
 
   return {
     x: 50 + 43.5 * Math.cos(angle),

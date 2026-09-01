@@ -19,7 +19,13 @@
 
 Docker로 띄우는 방법은 `Dockerfile` / `docker-compose.yml` / `nginx.conf` 참고(같은 커밋에 포함).
 
-**`docker compose up --build`** 한 번이면 프론트(nginx, 3000번)뿐 아니라 실제 백엔드를 대신할 **목(mock) 백엔드**(`mock-backend/`, Django + DRF + SimpleJWT, 8000번)까지 같이 뜬다. 실제 백엔드가 아직 "시작 전"/"논의" 단계인 API가 많아서(README.md 8절), 그 전까지 프론트가 API 계약을 로컬에서 검증할 수 있게 만든 것이다. 의존성·데모 계정·구현 범위는 `mock-backend/README.md` 참고, Python 의존성 고정 목록은 `mock-backend/requirements.txt`.
+**`docker compose up --build`** 한 번이면 프론트(nginx, 3000번)뿐 아니라 실제 백엔드를 대신할 **목(mock) 백엔드**(`mock-backend/`, Django + DRF + SimpleJWT, 8000번)까지 같이 뜬다. 실제 백엔드가 아직 "시작 전"/"논의" 단계인 API가 많아서(README.md 8절), 그 전까지 프론트가 API 계약을 로컬에서 검증할 수 있게 만든 것이다. 의존성·데모 계정·구현 범위는 `mock-backend/README.md` 참고.
+
+**`mock-backend/requirements.txt`에 대해:**
+- 이 리포는 프론트엔드 리포(`FRONT`)이고, 이 파일은 프론트가 로컬에서 실제 백엔드 대신 띄우는 **목 서버(Django) 전용** Python 의존성 고정 목록이다 — 루트의 `package.json`(Node/JS)과는 별개다. **프론트 개발/빌드에는 필요 없다.**
+- `docker compose up --build`로 띄우면 `mock-backend/Dockerfile`이 이 파일로 이미지 안에서 알아서 설치하므로, 로컬에 Python을 따로 준비하거나 직접 `pip install`할 필요가 없다.
+- 목 서버를 Docker 없이 직접 띄워보고 싶을 때만 필요하다: `cd mock-backend && python -m venv .venv && .venv\Scripts\activate && pip install -r requirements.txt` (Windows 기준. macOS/Linux는 `source .venv/bin/activate`).
+- 실제 백엔드가 준비되면 이 폴더/파일 전체가 통째로 빠지고(3번 섹션의 `nginx.conf` 프록시 대상만 실제 백엔드로 교체), 프론트 쪽에는 별도의 `requirements.txt`가 생기지 않는다 — 프론트 의존성은 계속 `package.json`/`package-lock.json`이 기준이다.
 
 ## 3. 백엔드 연동 시 반드시 필요한 것 — API 프록시
 
