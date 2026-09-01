@@ -4,8 +4,9 @@ import {
   buildAxisTicks,
   buildScoreSeries,
   createScales,
+  interpolateScoreAtTime,
   niceAxisMax,
-  toStepPath,
+  toLinePath,
 } from "../utils/leaderboardChartData.js";
 import styles from "./LeaderboardScoreGraph.module.css";
 
@@ -52,16 +53,6 @@ function findNearestTimeIndex(times, targetTime) {
     }
   });
   return closestIndex;
-}
-
-function scoreAtTime(points, time) {
-  // step line이므로 t 이하인 마지막 포인트의 점수를 취한다.
-  let current = points[0]?.score ?? 0;
-  for (const point of points) {
-    if (point.t > time) break;
-    current = point.score;
-  }
-  return current;
 }
 
 export default function LeaderboardScoreGraph({ teams, status }) {
@@ -172,7 +163,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
             series.map((entry) => (
               <path
                 key={entry.key}
-                d={toStepPath(entry.points, scales.x, scales.y)}
+                d={toLinePath(entry.points, scales.x, scales.y)}
                 fill="none"
                 stroke={entry.color}
                 strokeWidth={2}
@@ -197,7 +188,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
                 <circle
                   key={entry.key}
                   cx={scales.x(hoverTime)}
-                  cy={scales.y(scoreAtTime(entry.points, hoverTime))}
+                  cy={scales.y(interpolateScoreAtTime(entry.points, hoverTime))}
                   r={3.5}
                   fill={entry.color}
                   stroke="#f8ecec"
@@ -231,7 +222,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
         >
           <p className={styles.tooltipTime}>{formatTick(hoverTime)}</p>
           {series
-            .map((entry) => ({ ...entry, score: scoreAtTime(entry.points, hoverTime) }))
+            .map((entry) => ({ ...entry, score: interpolateScoreAtTime(entry.points, hoverTime) }))
             .sort((a, b) => b.score - a.score)
             .map((entry) => (
               <p key={entry.key} className={styles.tooltipRow}>

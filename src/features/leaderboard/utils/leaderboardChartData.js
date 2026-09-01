@@ -38,8 +38,8 @@ export function buildAxisTicks(max, count = 5) {
 }
 
 // 팀별 누적 점수 시계열을 만든다. 모든 팀이 동일한 시작 시각(전체 첫 solve 시각)에
-// 0점에서 출발해, solve마다 계단식으로 오르고, 마지막 solve 이후 끝 시각까지 값을
-// 유지하는 step line으로 그린다(랭킹 보드 표준 표현).
+// 0점에서 출발해, solve마다 점을 찍고 점과 점 사이는 대각선 직선으로 잇는다(계단식이
+// 아니라 다음 solve까지 점수가 유동적으로 올라가는 것처럼 보이게).
 export function buildScoreSeries(teams, { colors = SCORE_SERIES_COLORS } = {}) {
   const ranked = [...teams]
     .sort((left, right) => right.totalScore - left.totalScore)
@@ -92,17 +92,34 @@ export function createScales({ minTime, maxTime, maxAxisScore, width, height }) 
   };
 }
 
-// step line용 SVG path("이전 값 유지 후 다음 값으로 수직 상승") 좌표 문자열을 만든다.
-export function toStepPath(points, scaleX, scaleY) {
+// 점과 점을 대각선 직선으로 잇는 SVG path 좌표 문자열을 만든다.
+export function toLinePath(points, scaleX, scaleY) {
   if (points.length === 0) return "";
 
   return points
     .map((point, index) => {
       const x = scaleX(point.t).toFixed(2);
       const y = scaleY(point.score).toFixed(2);
-      if (index === 0) return `M ${x} ${y}`;
-      const prevY = scaleY(points[index - 1].score).toFixed(2);
-      return `L ${x} ${prevY} L ${x} ${y}`;
+      return `${index === 0 ? "M" : "L"} ${x} ${y}`;
     })
     .join(" ");
+}
+
+// 두 solve 시각 사이의 특정 시각 t에서의 점수를 선형 보간한다(그래프 선과 동일한
+// 대각선 상의 값을 얻기 위함 — 호버 크로스헤어가 선 위에 정확히 찍히도록).
+export function interpolateScoreAtTime(points, time) {
+  if (points.length === 0) return 0;
+  if (time <= points[0].t) return points[0].score;
+
+  for (let index = 1; index < points.length; index += 1) {
+    const prev = points[index - 1];
+    const next = points[index];
+    if (time <= next.t) {
+      if (next.t === prev.t) return next.score;
+      const ratio = (time - prev.t) / (next.t - prev.t);
+      return prev.score + (next.score - prev.score) * ratio;
+    }
+  }
+
+  return points[points.length - 1].score;
 }
