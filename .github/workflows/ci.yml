@@ -1,10 +1,10 @@
 name: CI
 
 # 아직 프론트 팀 확답 전 항목(리버스 프록시 구현 레벨, 배포 타겟)이 남아있어
-# 일단 수동 실행(workflow_dispatch)으로만 걸어둡니다.
+# 일단 수동 실행(workflow_dispatch)으로만 걸어둠
 #
-# job이 두 개입니다.
-# 1) frontend-code-scan: jm_devsecops(gh)의 frontend-ci.yml을 호출.
+# job이 현재 2개임
+# 1) frontend-code-scan: jm_devsecops(jm)의 frontend-ci.yml을 호출.
 #    gitleaks/semgrep/trivy(fs) 보안 스캔 + docker build 검증(root 사용자 확인,
 #    Trivy 이미지 스캔) + npm build까지 여기서 전부 끝난다.
 # 2) supply-chain-build-scan-push: GHCR에 실제로 올릴 이미지를 태그해서 빌드하고
@@ -31,10 +31,10 @@ env:
 
 jobs:
   frontend-code-scan:
-    # TODO: frontend-v1.0.0 태그 생성 전까지는 branch ref(@gh)로 임시 참조한다.
+    # TODO: frontend-v1.0.0 태그 생성 전까지는 branch ref(@jm)로 임시 참조한다.
     # 태깅 완료되면 @frontend-v1.0.0으로 즉시 교체할 것 — branch ref는 나중에
     # 다른 커밋이 push되면 이 워크플로가 가리키는 내용이 바뀌는 리스크가 있다.
-    uses: MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@gh
+    uses: MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@jm
     with:
       working-directory: .
       dockerfile-path: ./Dockerfile
