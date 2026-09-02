@@ -1,5 +1,6 @@
 import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
 import LeaderboardChart from "./LeaderboardChart.jsx";
+import LeaderboardScoreGraph from "./LeaderboardScoreGraph.jsx";
 import RankingTable from "./RankingTable.jsx";
 import ScoreBoard from "./ScoreBoard.jsx";
 import styles from "./LeaderboardScreen.module.css";
@@ -33,7 +34,10 @@ export default function LeaderboardScreen({
             </span>
           </button>
 
-          <ScoreBoard staticAssetSrc={`${ASSET_BASE}score.png`} />
+          <ScoreBoard
+            staticAssetSrc={`${ASSET_BASE}score.png`}
+            dynamicGraph={<LeaderboardScoreGraph teams={teams} status={leaderboardStatus} />}
+          />
           <LeaderboardChart teams={teams} status={leaderboardStatus} />
           <RankingTable rankings={rankings} status={rankingStatus} />
 
