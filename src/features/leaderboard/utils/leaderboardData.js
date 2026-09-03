@@ -11,11 +11,12 @@ function asTimestamp(value) {
 export function adaptLeaderboardTeams(data) {
   if (!Array.isArray(data?.teams)) return [];
 
-  return data.teams.map((team, teamIndex) => ({
+  return data.teams.slice(0, 8).map((team, teamIndex) => ({
     key: team.team_id || `leaderboard-team-${teamIndex}`,
     teamKey: team.team_id || null,
     name: team.team_name || "—",
-    totalScore: asFiniteNumber(team.total_score),
+    teamScore: asFiniteNumber(team.team_score),
+    isTop3: team.is_top3 === true,
     solves: Array.isArray(team.solves)
       ? team.solves
           .map((solve) => ({
