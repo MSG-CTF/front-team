@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getTimer } from "../../../api/timer.js";
 import { isSuccess } from "../../../utils/response.js";
-import {
-  adaptTimer,
-  createClockSync,
-  getRemainingSeconds,
-} from "../utils/timerData.js";
+import { adaptTimer, getRemainingSeconds } from "../utils/timerData.js";
 
 const RESYNC_INTERVAL_MS = 30_000; // 클라이언트 시계 오차 누적 방지용 주기 재동기화
 const TICK_INTERVAL_MS = 1_000;
@@ -19,7 +15,6 @@ export default function useTimerController() {
   const [state, setState] = useState({
     status: "loading", // loading | success | empty | error
     contest: null,
-    clockSync: null,
     error: "",
   });
   const [now, setNow] = useState(Date.now());
@@ -37,24 +32,20 @@ export default function useTimerController() {
         throw new Error(envelope?.message || "타이머 정보를 불러오지 못했습니다.");
       }
 
-      const clockSync = createClockSync(response.headers);
-
       if (!envelope.data) {
-        setState({ status: "empty", contest: null, clockSync, error: "" });
+        setState({ status: "empty", contest: null, error: "" });
         return;
       }
 
       setState({
         status: "success",
         contest: adaptTimer(envelope.data),
-        clockSync,
         error: "",
       });
     } catch (error) {
       setState({
         status: "error",
         contest: null,
-        clockSync: null,
         error: getErrorMessage(error, "타이머 정보를 불러오지 못했습니다."),
       });
     }
@@ -87,12 +78,12 @@ export default function useTimerController() {
 
   const contest = state.contest;
   const liveRemainingSeconds = (() => {
-    if (!contest || !state.clockSync) return 0;
+    if (!contest) return 0;
     if (contest.status === "BEFORE") {
-      return getRemainingSeconds(contest.startTime, state.clockSync, now);
+      return getRemainingSeconds(contest.startTime, contest, now);
     }
     if (contest.status === "RUNNING") {
-      return getRemainingSeconds(contest.endTime, state.clockSync, now);
+      return getRemainingSeconds(contest.endTime, contest, now);
     }
     return 0;
   })();
@@ -116,7 +107,7 @@ export default function useTimerController() {
     status: state.status,
     contest,
     error: state.error,
-    isSynced: state.clockSync?.isSynced ?? false,
+    isSynced: contest?.serverTime != null,
     liveRemainingSeconds,
     retry,
   };

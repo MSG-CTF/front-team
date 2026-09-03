@@ -1,13 +1,15 @@
 // 타이머 응답 매핑 + 프론트-백엔드 시간 동기화.
+// board/dice/status(boardData.js의 getRemainingSeconds)와 동일한 패턴이다:
+// 서버가 응답에 담아 보내는 server_time과, 그 응답을 받은 클라이언트 시각
+// (receivedAt)의 차이를 이용해 "지금"의 서버 시각을 추정한다. 클라이언트
+// PC 시계가 실제와 몇 분 어긋나 있어도 카운트다운은 정확하다.
 //
-// README Appendix B #11: GET /timer 응답에는 server_time이 없다(board/dice/status와
-// 달리). 그래서 여기서는 axios 응답의 HTTP `Date` 헤더(모든 HTTP 서버가 기본으로
-// 내려주는 표준 헤더, RFC 7231)를 서버 시각 대용으로 쓴다. 이 헤더도 없는 경우에만
-// 클라이언트 시계를 그대로 쓰는 것으로 낮춰 잡는다(동기화 안 된 근사치임을
-// isSynced로 표시). server_time 필드가 추가되면 parseServerTimeFromHeaders만
-// 걷어내고 그 필드를 쓰도록 바꾸면 된다.
+// (참고: 2026-09-03 Notion API명세서에 server_time 필드가 추가되면서
+// README Appendix B #11("GET /timer에 server_time 없음")이 해소됐다.
+// 그 전까지는 HTTP 응답의 Date 헤더로 대신했는데, 이제 board와 동일하게
+// 응답 바디의 server_time을 직접 쓴다.)
 
-export function adaptTimer(data) {
+export function adaptTimer(data, receivedAt = Date.now()) {
   if (!data) return null;
 
   return {
@@ -18,46 +20,25 @@ export function adaptTimer(data) {
     timeUntilStart: data.time_until_start ?? 0,
     remainingSeconds: data.remaining_seconds ?? 0,
     remainingDisplay: data.remaining_display ?? null,
-  };
-}
-
-// axios 응답 헤더에서 서버 시각(ms epoch)을 뽑는다. 못 얻으면 null.
-export function parseServerTimeFromHeaders(headers) {
-  const dateHeader = headers?.date;
-  if (!dateHeader) return null;
-
-  const parsed = Date.parse(dateHeader);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
-// 응답을 받은 시점의 "서버 시각 스냅샷"을 만든다. receivedAt은 그 응답을 받은
-// 클라이언트 시각(performance 기준 아니라 Date.now() - 아래 estimateServerNow가
-// 같은 시계로 경과 시간을 재야 하므로).
-export function createClockSync(headers, receivedAt = Date.now()) {
-  const serverTimeAtReceipt = parseServerTimeFromHeaders(headers);
-
-  return {
-    serverTimeAtReceipt: serverTimeAtReceipt ?? receivedAt,
+    serverTime: data.server_time ?? null,
     receivedAt,
-    isSynced: serverTimeAtReceipt !== null,
   };
 }
 
-// clockSync 기준으로 "지금"의 서버 시각을 추정한다(응답 이후 흐른 시간만큼 더함).
-export function estimateServerNow(clockSync, now = Date.now()) {
-  if (!clockSync) return now;
-  const elapsedSinceResponse = Math.max(0, now - clockSync.receivedAt);
-  return clockSync.serverTimeAtReceipt + elapsedSinceResponse;
-}
-
-// targetIso(start_time 또는 end_time)까지 남은 초. 서버 시각 추정치 기준이라
-// 클라이언트 시계가 어긋나 있어도(예: 로컬 PC 시간이 몇 분 틀린 경우) 정확하다.
-export function getRemainingSeconds(targetIso, clockSync, now = Date.now()) {
-  if (!targetIso) return 0;
+// targetIso(start_time 또는 end_time)까지 남은 초.
+// contest.serverTime이 없으면(구버전 백엔드 등) receivedAt을 그대로 서버
+// 시각으로 간주한다 - 동기화가 안 된 것이므로 클라이언트 시계에 의존한다.
+export function getRemainingSeconds(targetIso, contest, now = Date.now()) {
+  if (!targetIso || !contest) return 0;
 
   const targetAt = Date.parse(targetIso);
   if (!Number.isFinite(targetAt)) return 0;
 
-  const estimatedServerNow = estimateServerNow(clockSync, now);
+  const serverAt = contest.serverTime ? Date.parse(contest.serverTime) : contest.receivedAt;
+  const baseServerTime = Number.isFinite(serverAt) ? serverAt : contest.receivedAt;
+
+  const elapsedSinceResponse = Math.max(0, now - contest.receivedAt);
+  const estimatedServerNow = baseServerTime + elapsedSinceResponse;
+
   return Math.max(0, Math.ceil((targetAt - estimatedServerNow) / 1000));
 }

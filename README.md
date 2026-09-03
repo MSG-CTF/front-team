@@ -419,10 +419,11 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 |---|---|---|
 | GET | `/timer` | 대회 상태, 남은 시간 조회 |
 
-- `GET /timer` -> `{ name, status, start_time, end_time, time_until_start, remaining_seconds, remaining_display }`. `status`: `BEFORE`/`RUNNING`/`ENDED`. **활성 대회 없음 -> `200` + `data: null`**(0-2절 최종 확정 - 구버전 문서의 404 언급은 폐기).
-- `server_time`/`contest_id`는 없음 - 2절 `board/dice/status`와의 패턴 불일치(Appendix B).
+- `GET /timer` -> `{ name, status, start_time, end_time, time_until_start, remaining_seconds, remaining_display, server_time }`. `status`: `BEFORE`/`RUNNING`/`ENDED`. **활성 대회 없음 -> `200` + `data: null`**(0-2절 최종 확정 - 구버전 문서의 404 언급은 폐기).
+- `server_time`은 2026-09-03 Notion API명세서 갱신으로 추가됨(Appendix B #11 해소). `board/dice/status`와 동일하게 응답을 생성한 서버 시각이며, 클라이언트 시계가 어긋났을 때 이 값을 기준으로 카운트다운을 보정한다. `contest_id`는 여전히 없음.
 
 **제품 요구사항(기능명세 원문)**: 남은 시간 표시, 주사위 초기화 시간, 프론트-백엔드 시간 동기화(초 단위 프론트 <-> 분 단위 백엔드 통신 검토).
+**프론트 구현 상태**: `feature/timer-time-sync`에서 `server_time` 기반 시간 동기화 + 실시간 카운트다운 구현(2026-09-03). Figma 시안은 아직 없어 기능 우선으로 구현.
 
 ---
 
@@ -600,7 +601,7 @@ API 문서 3개엔 없지만 원 기능명세(`archive/최초_MVP_기능요구�
 8. ~~`GET /ranking` vs `GET /ranking/me` 필드 불일치.~~ 해소. 둘 다 `{rank, team_id, team_name, team_score, mileage, last_solved_at}`로 통일.
 9. ~~`board/me.active_challenge`에 `solve_deadline_at`/`remaining_seconds` 없음.~~ 해소(2026-08-23). 둘 다 포함(`solve_deadline_at = opened_at + 15분`).
 10. ~~`consumed_cell_indexes`가 opened/cleared 단계를 구분 못함.~~ 해소(2026-08-23). `cell_states: [{cell_index, status, category}]` 추가(`status`: `CONSUMED`/`OPENED`/`CLEARED`). ERD `team_cell_status` enum에 `consumed` 추가 필요.
-11. `GET /timer`에 `server_time`/`contest_id` 없음. 여전히 미해결. 단 `GET /board/dice/status`는 이제 `server_time`을 내려줌.
+11. ~~`GET /timer`에 `server_time`/`contest_id` 없음.~~ `server_time`은 해소(2026-09-03, 7절). `contest_id`는 여전히 없음.
 12. ~~관리자 페이지 - 설정/clear칸/공개상태/주사위지급/칸이동 API 부재.~~ 해소(2026-08-26). 8절. 보드 강제 개입 5종은 백엔드 "논의" + 보드 도메인 PR #14 대기.
 13. `GET /admin/resources`의 `status`(관측 `HEALTHY`/`DEGRADED`), `GET /admin/events`의 `type`(관측 `INSTANCE_FAILED`/`TEAM_BANNED`), `severity`(관측 `ERROR`/`WARNING`) - enum 전체 목록 여전히 미공개.
 14. KOTH - "다음 문제 개방 남은 시간" 필드 여전히 없음(`open_group`은 순번, 시각 아님).
