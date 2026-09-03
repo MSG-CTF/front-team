@@ -38,5 +38,6 @@ class TimerView(APIView):
                 "time_until_start": until_start,
                 "remaining_seconds": remaining,
                 "remaining_display": f"{hours:02d}:{minutes:02d}:{seconds:02d}",
+                "server_time": now,
             }
         )
