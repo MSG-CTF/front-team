@@ -1,0 +1,150 @@
+{
+  "document_purpose": "DevSecOps CI/CD 파이프라인 구성 시 참고용 - 이 리포(front-team) 어디에 어떤 언어/툴이 쓰이는지와 버전 호환성을 정리한 인벤토리. 기능 요구사항은 requirement.md, API 계약은 README.md 기준.",
+  "last_updated": "2026-09-03",
+  "repo": "MSG-CTF/front-team",
+  "existing_pipeline_reference": {
+    "workflow_file": ".github/workflows/ci.yml",
+    "trigger": "workflow_dispatch (수동) - 리버스 프록시 구현 레벨/배포 타겟 미확정으로 push/PR 자동 트리거는 아직 주석 처리됨",
+    "jobs": [
+      {
+        "name": "frontend-code-scan",
+        "calls": "MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@jm",
+        "inputs": { "working-directory": ".", "dockerfile-path": "./Dockerfile" },
+        "does": "gitleaks + semgrep + trivy(fs) 보안 스캔, docker build 검증(root 사용자 확인, Trivy 이미지 스캔), npm build",
+        "note": "@jm은 frontend-v1.0.0 태그 생성 전까지의 임시 branch ref. 태깅 완료 시 태그 참조로 교체 예정(코드 주석 참고)."
+      },
+      {
+        "name": "supply-chain-build-scan-push",
+        "does": "GHCR용 이미지 태그 빌드, CycloneDX SBOM 생성(Trivy), (push 이벤트가 아닐 때만) GHCR push",
+        "registry": "ghcr.io",
+        "image_path_pattern": "ghcr.io/<owner-lowercase>/platform/frontend:<git-sha>"
+      }
+    ],
+    "this_file_relationship": "아래 stack_by_path/compatibility 값은 위 워크플로의 working-directory/dockerfile-path 등 입력값이 실제로 무엇을 가리키는지 설명하는 참고 자료다. 워크플로 자체를 대체하지 않는다."
+  },
+  "stack_by_path": [
+    {
+      "path": "src/, index.html",
+      "role": "프론트엔드 애플리케이션 소스 (production 대상)",
+      "language": ["JavaScript (ES2022+, ESM)", "JSX"],
+      "framework": "React 18.3.1",
+      "router": "react-router-dom 7.18.2",
+      "http_client": "axios 1.19.0",
+      "build_tool": "Vite 5.4.11 (@vitejs/plugin-react)",
+      "styling": "Tailwind CSS 3.4.17 (+ @tailwindcss/container-queries) via PostCSS 8.4.49 + Autoprefixer 10.4.20",
+      "package_manager": "npm, package-lock.json 커밋됨 - CI는 npm install이 아니라 npm ci 사용",
+      "build_command": "npm run build",
+      "dev_command": "npm run dev (기본 포트 5173)",
+      "preview_command": "npm run preview",
+      "test_command": null,
+      "lint_command": null,
+      "output": "dist/ (정적 SPA 빌드, gitignore 대상 - repo에 커밋되지 않음)"
+    },
+    {
+      "path": "mock-backend/",
+      "role": "로컬 통합테스트용 목(mock) 백엔드 - 실제 프로덕션 백엔드가 아님, 프로덕션 파이프라인/배포 대상에서 제외 대상",
+      "language": "Python (검증 환경 3.14)",
+      "framework": "Django 6.1 + Django REST Framework 3.18.0 + djangorestframework-simplejwt 5.5.1 + django-cors-headers 4.9.0",
+      "wsgi_server": "gunicorn 26.2.0",
+      "other_deps": "python-dotenv 1.2.3",
+      "package_manager": "pip, mock-backend/requirements.txt에 버전 고정",
+      "run_commands": [
+        "pip install -r requirements.txt",
+        "python manage.py migrate",
+        "python manage.py seed_demo_data",
+        "python manage.py runserver 0.0.0.0:8000"
+      ],
+      "note": "실제 백엔드가 준비되면 이 디렉터리 전체가 파이프라인/배포 대상에서 빠진다. 그 전까지 이 디렉터리를 별도로 스캔/빌드하려면 Python 생태계용 SCA/SAST(예: pip-audit, bandit 등)가 필요 - 위 frontend-ci.yml은 프론트(JS) 대상이라 이 디렉터리를 커버하지 않는다."
+    },
+    {
+      "path": "Dockerfile",
+      "role": "프로덕션 프론트엔드 이미지 (멀티스테이지)",
+      "stages": [
+        { "name": "build", "base_image": "node:20-alpine", "commands": ["npm ci", "npm run build"] },
+        { "name": "runtime", "base_image": "nginx:1.27-alpine", "serves": "dist/ 를 nginx로 정적 서빙, EXPOSE 80" }
+      ]
+    },
+    {
+      "path": "mock-backend/Dockerfile",
+      "role": "목 백엔드 이미지 (개발/통합테스트 전용, 프로덕션 이미지 아님)",
+      "base_image": "python:3.14-slim",
+      "note": "gcc 설치 후 pip install, EXPOSE 8000, entrypoint.sh가 migrate + seed_demo_data 실행 후 gunicorn 기동"
+    },
+    {
+      "path": "docker-compose.yml",
+      "role": "로컬 통합테스트 전용 compose (프로덕션 배포 매니페스트 아님)",
+      "services": {
+        "frontend": "포트 3000(호스트) -> 80(컨테이너)",
+        "backend": "포트 8000, mock-backend/ 이미지 - 실제 백엔드 준비되면 이 서비스를 실제 백엔드로 교체 필요"
+      }
+    },
+    {
+      "path": "nginx.conf",
+      "role": "프론트 컨테이너 내부 nginx 설정",
+      "does": "SPA 폴백(try_files -> index.html) + /api/v1/ 를 backend:8000 으로 리버스 프록시",
+      "note": "proxy_pass 대상(backend:8000)은 현재 mock-backend를 가리킴 - 실제 백엔드 서비스명/포트로 교체 필요(requirement.md 3절, README.md 12-5절 참고)"
+    }
+  ],
+  "compatibility": {
+    "node": {
+      "required": ">=20",
+      "reason": "Vite 5 + react-router-dom v7 요구사항 (Dockerfile 주석 및 requirement.md 1절 근거)",
+      "pinned_in_ci_base_image": "node:20-alpine (Dockerfile build 스테이지)"
+    },
+    "npm": {
+      "lockfile": "package-lock.json 커밋됨",
+      "ci_install_command": "npm ci (npm install 아님 - 재현 가능한 빌드를 위해)"
+    },
+    "browser_target": {
+      "explicit_browserslist_config": false,
+      "effective_target": "Vite 5 기본 빌드 타겟('modules' - 네이티브 ESM 지원 evergreen 브라우저, 대략 Chrome 87+/Edge 88+/Firefox 78+/Safari 14+)",
+      "autoprefixer_target": "browserslist 설정이 없어 caniuse-lite 기본값 적용",
+      "recommendation": "재현 가능한 빌드와 QA 대상 브라우저 매트릭스 확정을 위해 명시적 browserslist(또는 vite build.target) 설정을 권장 - 아직 미설정 상태"
+    },
+    "python_mock_backend": {
+      "version_verified": "3.14",
+      "scope": "mock-backend/ 전용 - 프론트 프로덕션 빌드/런타임과 무관, 파이프라인이 목 백엔드도 같이 빌드/테스트할 때만 필요"
+    },
+    "container_base_images": [
+      "node:20-alpine (프론트 build 스테이지)",
+      "nginx:1.27-alpine (프론트 runtime 스테이지)",
+      "python:3.14-slim (목 백엔드 전용)"
+    ]
+  },
+  "environment_variables": {
+    "required_for_build_or_runtime_now": [],
+    "note": "현재 필수 환경변수 없음 - src/api/client.js가 API base URL을 상대경로(/api/v1)로 하드코딩하고 있어서(known_gaps 참고), .env 값 없이도 빌드/기동됨",
+    "planned_not_yet_implemented": ["VITE_API_BASE_URL", "VITE_API_PREFIX"],
+    "test_preview_only": {
+      "VITE_LEADERBOARD_PREVIEW": "true로 설정 시 리더보드 페이지가 실제 API 대신 Figma 검수용 목업 데이터를 사용 (프로덕션에서 설정 금지)"
+    }
+  },
+  "ports": {
+    "vite_dev_server": 5173,
+    "docker_container_internal_nginx": 80,
+    "docker_host_mapped_frontend": 3000,
+    "mock_backend": 8000
+  },
+  "security_scan_targets": {
+    "sca_dependency_manifests": [
+      "package-lock.json (npm/JS 의존성 - frontend-ci.yml 스캔 대상)",
+      "mock-backend/requirements.txt (pip/Python 의존성 - 현재 파이프라인 스캔 범위 밖, 목 백엔드도 스캔하려면 별도 job 필요)"
+    ],
+    "sast_source_targets": [
+      "src/ (JS/JSX)",
+      "mock-backend/api/ (Python/Django, 현재 파이프라인 스캔 범위 밖)"
+    ],
+    "container_scan_targets": [
+      "Dockerfile (프론트 프로덕션 이미지, frontend-ci.yml에서 Trivy로 스캔 중)",
+      "mock-backend/Dockerfile (현재 파이프라인 스캔 범위 밖)"
+    ],
+    "secrets_note": "현재 리포에 커밋된 시크릿 없음(mock-backend 데모 계정 비밀번호는 mock-backend/README.md에 공개 문서화된 테스트용 값). Bearer 토큰은 클라이언트 측에서만 보관 - gitleaks 스캔은 이미 frontend-ci.yml에 포함됨."
+  },
+  "known_gaps_relevant_to_pipeline": [
+    "package.json에 test/lint 스크립트가 아직 없음 - 테스트 프레임워크(예: vitest)와 린터(예: eslint)가 아직 도입되지 않아 CI가 지금 당장 돌릴 test/lint 단계가 없다. frontend-ci.yml의 npm build는 빌드 성공 여부만 검증한다.",
+    "API base URL이 상대경로로 하드코딩되어 있어(requirement.md 3절), 배포 타겟이 여러 개가 되면 환경변수 주입 방식(VITE_API_BASE_URL)으로 전환이 필요할 수 있음 - 아직 팀 내 결정 전.",
+    "mock-backend/는 개발/통합테스트 전용이며 프로덕션 배포 대상이 아님 - 실제 백엔드 연동 시 nginx.conf/docker-compose.yml의 backend 대상 교체 필요(README.md 12-5절, requirement.md 3절/7절).",
+    "ci.yml은 아직 workflow_dispatch(수동 실행)만 걸려 있고 push/PR 자동 트리거는 주석 처리 상태 - 리버스 프록시 구현 레벨과 배포 타겟이 확정되면 활성화 예정.",
+    "frontend-ci.yml 참조가 @jm 브랜치(임시)로 걸려 있음 - frontend-v1.0.0 태그가 생성되면 태그 참조로 교체 필요(브랜치 참조는 이후 커밋에 따라 내용이 바뀔 수 있는 리스크)."
+  ]
+}
