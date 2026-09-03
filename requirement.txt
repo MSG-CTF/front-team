@@ -54,7 +54,22 @@
         "python manage.py seed_demo_data",
         "python manage.py runserver 0.0.0.0:8000"
       ],
-      "note": "실제 백엔드가 준비되면 이 디렉터리 전체가 파이프라인/배포 대상에서 빠진다. 그 전까지 이 디렉터리를 별도로 스캔/빌드하려면 Python 생태계용 SCA/SAST(예: pip-audit, bandit 등)가 필요 - 위 frontend-ci.yml은 프론트(JS) 대상이라 이 디렉터리를 커버하지 않는다."
+      "note": "실제 백엔드가 준비되면 이 디렉터리 전체가 파이프라인/배포 대상에서 빠진다. 그 전까지 이 디렉터리를 별도로 스캔/빌드하려면 Python 생태계용 SCA/SAST(예: pip-audit, bandit 등)가 필요 - 위 frontend-ci.yml은 프론트(JS) 대상이라 이 디렉터리를 커버하지 않는다.",
+      "requirements_txt_convention": {
+        "generation_methods": [
+          {
+            "command": "pip freeze > requirements.txt",
+            "caveat": "설치 방식에 따라 패키지가 'torch @ https://.../torch-1.13.1+cu116-...whl' 처럼 다운로드 URL(@ 표기)로 고정될 수 있다. 이 URL은 특정 OS/아키텍처/CUDA 빌드에 종속적이라, 다른 OS(예: CI 러너)에서 같은 URL로 설치가 실패할 수 있다."
+          },
+          {
+            "command": "pip list --format=freeze > requirements.txt",
+            "caveat": "패키지명==버전만 남아 @ URL 문제가 없다. 현재 mock-backend/requirements.txt(Django==6.1 형식)는 이 방식에 해당하는 형태로, CI 러너 이식성 관점에서 더 안전하다."
+          }
+        ],
+        "install_command": "pip install -r requirements.txt",
+        "os_portability_caveat": "한 OS에서 freeze/list로 고정한 목록이 다른 OS에서 그대로 설치되지 않을 수 있다(대표적으로 Linux에서 만든 목록이 Windows에서 설치 안 되는 경우). mock-backend/requirements.txt는 Python 3.14 기준으로 검증됐다고 파일 자체에 명시돼 있는데, CI 러너 OS(보통 Linux)에서도 별도로 설치 검증을 해두는 것을 권장 - 로컬 개발 OS와 CI 러너 OS가 다르면 이 부분에서 파이프라인이 깨질 수 있다.",
+        "current_file_check": "mock-backend/requirements.txt를 확인한 결과 @ URL 없이 패키지명==버전만 있는 pip list --format=freeze 스타일이라 이 리스크는 낮다."
+      }
     },
     {
       "path": "Dockerfile",
@@ -145,6 +160,7 @@
     "API base URL이 상대경로로 하드코딩되어 있어(requirement.md 3절), 배포 타겟이 여러 개가 되면 환경변수 주입 방식(VITE_API_BASE_URL)으로 전환이 필요할 수 있음 - 아직 팀 내 결정 전.",
     "mock-backend/는 개발/통합테스트 전용이며 프로덕션 배포 대상이 아님 - 실제 백엔드 연동 시 nginx.conf/docker-compose.yml의 backend 대상 교체 필요(README.md 12-5절, requirement.md 3절/7절).",
     "ci.yml은 아직 workflow_dispatch(수동 실행)만 걸려 있고 push/PR 자동 트리거는 주석 처리 상태 - 리버스 프록시 구현 레벨과 배포 타겟이 확정되면 활성화 예정.",
-    "frontend-ci.yml 참조가 @jm 브랜치(임시)로 걸려 있음 - frontend-v1.0.0 태그가 생성되면 태그 참조로 교체 필요(브랜치 참조는 이후 커밋에 따라 내용이 바뀔 수 있는 리스크)."
+    "frontend-ci.yml 참조가 @jm 브랜치(임시)로 걸려 있음 - frontend-v1.0.0 태그가 생성되면 태그 참조로 교체 필요(브랜치 참조는 이후 커밋에 따라 내용이 바뀔 수 있는 리스크).",
+    "mock-backend/requirements.txt는 로컬 개발 OS 기준으로 고정된 값이라, 목 백엔드를 파이프라인에서 빌드/테스트하게 되면 CI 러너 OS(보통 Linux)에서도 pip install -r requirements.txt가 그대로 되는지 별도 검증이 필요하다(stack_by_path의 requirements_txt_convention 항목 참고)."
   ]
 }
