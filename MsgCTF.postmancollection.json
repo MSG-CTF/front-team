@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "MSG CTF API — 통합 컬렉션",
+    "name": "MSG CTF API - 통합 컬렉션",
     "description": "11_최종_API명세서_통합본.md 기준으로 생성됨. 필드명은 전부 최종 확정본(Appendix A) 반영. 열린 문제 목록 페이지는 제외(Appendix C 참고).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -589,6 +589,73 @@
             "description": ""
           },
           "response": []
+        },
+        {
+          "name": "주사위 결과 확정",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/board/dice/confirm",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "board",
+                "dice",
+                "confirm"
+              ]
+            },
+            "description": "보류 중인 주사위 이동 결과를 확정한다(팀장만, Idempotency-Key 필요). README 2절 참고."
+          },
+          "response": []
+        },
+        {
+          "name": "찬스카드 버리기",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/board/chance/discard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "board",
+                "chance",
+                "discard"
+              ]
+            },
+            "description": "보유한 찬스카드를 사용하지 않고 버린다(팀장만, Idempotency-Key 필요). README 2절 참고.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"card_id\": \"018f3f1e-0500-7a91-a30b-630000000001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -644,7 +711,7 @@
                 "submit"
               ]
             },
-            "description": "",
+            "description": "정답 시 난이도별 마일리지 지급 + (주사위 이동 15분 이내 & 방금 도착한 최신 칸일 때만) 추가 주사위 지급. 제출 제한(team_id+challenge_id 단위): 연속 오답 3회째에 429 TOO_MANY_ATTEMPTS + 30초 락 (retry_after_seconds로 잔여 시간 반환). 이미 푼 문제는 409 ALREADY_SOLVED(락 카운트에 미포함). 정답 제출 시 연속 실패 횟수/락 상태 초기화. (2026-09-03 Notion 갱신 반영)",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"flag\": \"MSG{this_is_sample_flag}\"\n}",
@@ -833,7 +900,7 @@
                 "leaderboard"
               ]
             },
-            "description": ""
+            "description": "상위 8팀 점수 + solves[](challenge_id, source_type, solved_at, points) - 프론트는 이 배열을 solved_at 순으로 누적합해 그래프를 그린다(점수 재계산 안 함). 0솔브 팀 제외, 밴 팀 제외. 동점 처리는 /ranking과 동일(team_score DESC -> last_solved_at ASC -> team_id ASC)."
           },
           "response": []
         }
@@ -871,7 +938,7 @@
                 }
               ]
             },
-            "description": "인증 필요 여부 미확정(Appendix B #5) — 우선 Bearer 없이 테스트, 401 나오면 auth 헤더 추가"
+            "description": "인증 필요 여부 미확정(Appendix B #5) - 우선 Bearer 없이 테스트, 401 나오면 auth 헤더 추가 정렬: team_score DESC -> last_solved_at ASC -> team_id ASC. last_solved_at은 제오파디 MAX(solved_at), 제오파디 solve가 없으면 KOTH 첫 획득 시각으로 폴백."
           },
           "response": []
         },
@@ -895,7 +962,7 @@
                 "me"
               ]
             },
-            "description": ""
+            "description": " 정렬: team_score DESC -> last_solved_at ASC -> team_id ASC. last_solved_at은 제오파디 MAX(solved_at), 제오파디 solve가 없으면 KOTH 첫 획득 시각으로 폴백."
           },
           "response": []
         },
@@ -923,7 +990,7 @@
                 "member"
               ]
             },
-            "description": ""
+            "description": " 정렬: team_score DESC -> last_solved_at ASC -> team_id ASC. last_solved_at은 제오파디 MAX(solved_at), 제오파디 solve가 없으면 KOTH 첫 획득 시각으로 폴백."
           },
           "response": []
         }
@@ -985,7 +1052,7 @@
                 "solves"
               ]
             },
-            "description": ""
+            "description": "제오파디 + KOTH 풀이를 합쳐서 solved_at 최신순으로 반환. source_type이 KOTH면 challenge_id 대신 koth_challenge_id를 쓰고 solved_by는 항상 null(팀 단위 집계라 개인 제출자 없음). KOTH의 earned_score는 15분마다 갱신되는 누적값이고 solved_at은 처음 양수 점수를 받은 시각으로 고정."
           },
           "response": []
         },
@@ -1014,7 +1081,7 @@
                 "mileage_history"
               ]
             },
-            "description": ""
+            "description": "type 8종(CHALLENGE_SOLVE/START_BONUS/ROULETTE/KOTH_REWARD/ADMIN_GRANT/REFUND/PURCHASE/ADMIN_DEDUCT, 공통 규약 0-13절). amount는 획득 양수/사용 음수(부호가 방향을 가짐, 별도 direction 필드 없음). 환불은 기존 행을 안 고치고 REFUND 행을 새로 쌓으며 ref_history_id로 원본 PURCHASE의 history_id를 가리킨다."
           },
           "response": []
         },
@@ -1049,7 +1116,7 @@
       "name": "07. 타이머 페이지",
       "item": [
         {
-          "name": "대회 상태·남은 시간 조회",
+          "name": "대회 상태/남은 시간 조회",
           "request": {
             "method": "GET",
             "header": [
@@ -1067,7 +1134,7 @@
                 "timer"
               ]
             },
-            "description": ""
+            "description": "대회 상태/남은 시간 조회. 활성 대회 없으면 200 + data: null. 2026-09-03 Notion 갱신으로 응답에 server_time(응답 생성 서버 시각) 필드가 추가됨 - board/dice/status와 동일하게 클라이언트-서버 시계 오차 보정에 쓴다(README Appendix B #11 해소)."
           },
           "response": []
         }
@@ -1530,7 +1597,515 @@
                 "docker_image"
               ]
             },
-            "description": "multipart/form-data — Postman에서 Body > form-data로 별도 구성 필요"
+            "description": "multipart/form-data - Postman에서 Body > form-data로 별도 구성 필요"
+          },
+          "response": []
+        },
+        {
+          "name": "운영 대시보드 요약 지표",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/dashboard",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "dashboard"
+              ]
+            },
+            "description": "집계 전용. contest.status: BEFORE/RUNNING/ENDED, 활성 대회 없으면 contest: null. payment.net_spent = PURCHASE합 + REFUND합의 절댓값."
+          },
+          "response": []
+        },
+        {
+          "name": "팀 상세 조회",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/teams/:team_id?history_limit=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "teams",
+                ":team_id"
+              ],
+              "query": [
+                {
+                  "key": "history_limit",
+                  "value": "10"
+                }
+              ]
+            },
+            "description": "팀 목록 요약 + ban_reason/banned_at/mileage_summary/recent_mileage_history. is_banned=false면 ban_*는 null."
+          },
+          "response": []
+        },
+        {
+          "name": "롤백 지점(스냅샷) 목록",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/teams/:team_id/snapshots",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "teams",
+                ":team_id",
+                "snapshots"
+              ]
+            },
+            "description": "벤 등 되돌릴 필요가 생기는 순간 서버가 남긴 스냅샷 목록. reason: BAN|MANUAL. (백엔드 상태: 논의)"
+          },
+          "response": []
+        },
+        {
+          "name": "스냅샷 시점으로 롤백",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/teams/:team_id/rollback",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "teams",
+                ":team_id",
+                "rollback"
+              ]
+            },
+            "description": "마일리지는 기존 행 유지 + 차액 보정 행 추가(불변식 유지). (백엔드 상태: 논의)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"snapshot_id\": \"018f3f1e-0800-7a91-a30b-630000000001\",\n  \"reason\": \"밴 오처리로 인한 롤백\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "clear 칸 상태 수정",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/teams/:team_id/board/cells/:cell_index",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "teams",
+                ":team_id",
+                "board",
+                "cells",
+                ":cell_index"
+              ]
+            },
+            "description": "cell_index 0~35. status: UNVISITED/CONSUMED/OPENED/CLEARED. 점수는 건드리지 않는다. (백엔드 상태: 논의)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"CLEARED\",\n  \"reason\": \"테스트 진행 중 오픈된 칸 정리\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "말 위치 강제 이동",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/teams/:team_id/board/position",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "teams",
+                ":team_id",
+                "board",
+                "position"
+              ]
+            },
+            "description": "이동만 하고 도착 칸 효과(찬스/룰렛/무인도)는 미발동. (백엔드 상태: 논의)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"position\": 12,\n  \"consume_cell\": false,\n  \"reason\": \"보드 버그로 인한 위치 보정\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "주사위 횟수 지급/회수",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/teams/:team_id/board/dice",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "teams",
+                ":team_id",
+                "board",
+                "dice"
+              ]
+            },
+            "description": "amount -20~20(0 불가). 기능명세 '주사위 오류 시 고정 지급' + 임의 지급. (백엔드 상태: 논의)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 3,\n  \"reason\": \"주사위 오류로 인한 보상 지급\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "문제 목록(인스턴스 현황)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/challenges?category=&is_published=&sort=running&page=1&size=50",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "challenges"
+              ],
+              "query": [
+                {
+                  "key": "category",
+                  "value": ""
+                },
+                {
+                  "key": "is_published",
+                  "value": ""
+                },
+                {
+                  "key": "sort",
+                  "value": "running"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "size",
+                  "value": "50"
+                }
+              ]
+            },
+            "description": "sort: running(기본)|title|score. failed_instance_count > 0이면 화면 강조. (백엔드 상태: 논의)"
+          },
+          "response": []
+        },
+        {
+          "name": "문제 공개/비공개 전환",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/challenges/:challenge_id/visibility",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "challenges",
+                ":challenge_id",
+                "visibility"
+              ]
+            },
+            "description": "비공개로 바꿔도 이미 연 팀의 진행은 유지된다(Notion 초안 가정). (백엔드 상태: 논의)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_published\": false,\n  \"reason\": \"출제 오류 발견으로 임시 비공개\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "문제 릴리스 등록",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/challenges/:challenge_id/releases",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "challenges",
+                ":challenge_id",
+                "releases"
+              ]
+            },
+            "description": "공급망 artifact-v2.json의 artifact 블록을 그대로 담는다. schema_version은 2.0만, scan_result는 PASS만, image는 digest 고정만(태그/latest 거절). docker_image API는 이 체계로 대체됨. (백엔드 상태: 시작 전)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"artifact\": {\n    \"schema_version\": \"2.0\",\n    \"challenge_slug\": \"web-sample\",\n    \"revision\": \"r1\",\n    \"name\": \"web-sample\",\n    \"runtime_type\": \"docker\",\n    \"architecture\": \"amd64\",\n    \"workload\": {\n      \"containers\": [\n        {\n          \"name\": \"web-sample\",\n          \"image\": \"ghcr.io/msg-ctf/challenges/web-sample/web-sample@sha256:0000000000000000000000000000000000000000000000000000000000000\",\n          \"ports\": [\n            {\n              \"port\": 8080,\n              \"public\": true\n            }\n          ]\n        }\n      ]\n    },\n    \"resource_profile\": {\n      \"cpu_millicores\": 500,\n      \"memory_mib\": 512,\n      \"ephemeral_storage_mib\": 512\n    },\n    \"source_ref\": \"git@github.com:msg-ctf/challenges.git#web-sample\",\n    \"scan_result\": \"PASS\"\n  },\n  \"note\": \"초기 배포\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "릴리스 이력 조회",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/challenges/:challenge_id/releases",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "challenges",
+                ":challenge_id",
+                "releases"
+              ]
+            },
+            "description": "releases는 버전 내림차순. current_release_id: null이면 릴리스 없음(인스턴스 생성 시 RUNTIME_CONFIG_NOT_FOUND). (백엔드 상태: 시작 전)"
+          },
+          "response": []
+        },
+        {
+          "name": "현재 릴리스 전환(=롤백)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/challenges/:challenge_id/releases/:release_id/activate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "challenges",
+                ":challenge_id",
+                "releases",
+                ":release_id",
+                "activate"
+              ]
+            },
+            "description": "옛 릴리스를 지정하면 그대로 롤백. 전환 이후 생성 인스턴스부터 새 릴리스 적용. 이미 현재 버전이면 멱등(200, previous_release_id: null). (백엔드 상태: 시작 전)"
+          },
+          "response": []
+        },
+        {
+          "name": "대회 설정 조회",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "settings"
+              ]
+            },
+            "description": "대회 시각 원본은 타이머 도메인(timer.Contest), 이 API는 읽기용. (백엔드 상태: 논의)"
+          },
+          "response": []
+        },
+        {
+          "name": "대회 설정 변경(부분 수정)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_access_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/settings",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "settings"
+              ]
+            },
+            "description": "보낸 키만 부분 수정. dice_rolls_per_reset 1~20 / dice_reset_interval_minutes 1~1440 / solve_deadline_minutes 1~180 / max_attempts 1~10 / lock_seconds 1~3600. (백엔드 상태: 논의)",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"board\": {\n    \"dice_rolls_per_reset\": 4\n  },\n  \"flag\": {\n    \"lock_seconds\": 60\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -1589,7 +2164,7 @@
           "response": []
         },
         {
-          "name": "내 팀 KOTH 점수·순위",
+          "name": "내 팀 KOTH 점수/순위",
           "request": {
             "method": "GET",
             "header": [
@@ -1610,40 +2185,6 @@
               "path": [
                 "koth",
                 "me"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "KOTH 문제 하나 순위",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/koth/leaderboard?koth_challenge_id=018f3f1e-0700-7a91-a30b-630000000010",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "koth",
-                "leaderboard"
-              ],
-              "query": [
-                {
-                  "key": "koth_challenge_id",
-                  "value": "018f3f1e-0700-7a91-a30b-630000000010"
-                }
               ]
             },
             "description": ""
