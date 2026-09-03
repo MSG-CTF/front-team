@@ -154,6 +154,14 @@
   white-space: nowrap;
 }
 
+.legendTop3 .legendName {
+  color: #702e05;
+}
+
+.compactLegend .legendName {
+  font-size: 14px;
+}
+
 .rankingTable {
   position: absolute;
   top: 617px;
@@ -193,6 +201,7 @@
   line-height: normal;
   text-align: center;
   text-overflow: ellipsis;
+  transform: translateX(-6px);
   white-space: nowrap;
 }
 

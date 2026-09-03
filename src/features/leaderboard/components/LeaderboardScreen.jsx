@@ -16,6 +16,7 @@ export default function LeaderboardScreen({
   onBack,
 }) {
   const dataStatus = `leaderboard:${leaderboardStatus}; ranking:${rankingStatus}`;
+  const isPreview = leaderboardStatus === "preview";
 
   return (
     <main className={styles.page} data-leaderboard-source={dataStatus}>
@@ -36,7 +37,11 @@ export default function LeaderboardScreen({
 
           <ScoreBoard
             staticAssetSrc={`${ASSET_BASE}score.png`}
-            dynamicGraph={<LeaderboardScoreGraph teams={teams} status={leaderboardStatus} />}
+            dynamicGraph={
+              isPreview ? null : (
+                <LeaderboardScoreGraph teams={teams} status={leaderboardStatus} />
+              )
+            }
           />
           <LeaderboardChart teams={teams} status={leaderboardStatus} />
           <RankingTable rankings={rankings} status={rankingStatus} />

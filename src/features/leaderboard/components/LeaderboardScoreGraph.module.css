@@ -11,17 +11,24 @@
   overflow: visible;
 }
 
-.axisLabel {
-  fill: #402e26;
-  font-family: "Libre Baskerville", Georgia, serif;
-  font-size: 13px;
-  opacity: 0.78;
+.scoreLine {
+  filter: url("#score-line-glow");
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.axisTitle {
-  fill: #702e05;
-  font-family: "Libre Caslon Text", Georgia, serif;
-  font-size: 15px;
+.hoverLine {
+  stroke: #402e26;
+  stroke-dasharray: 3 3;
+  stroke-width: 1px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.hoverPoint {
+  stroke: #f8ecec;
+  stroke-width: 1px;
+  pointer-events: none;
 }
 
 .tooltip {
@@ -31,8 +38,8 @@
   padding: 8px 10px;
   border: 1px solid #8a5728;
   border-radius: 6px;
-  background: rgba(248, 236, 219, 0.97);
-  box-shadow: 0 6px 16px rgba(40, 19, 4, 0.25);
+  background: rgb(248 236 219 / 97%);
+  box-shadow: 0 6px 16px rgb(40 19 4 / 25%);
   color: #402e26;
   font-family: "Libre Baskerville", Georgia, serif;
   pointer-events: none;

@@ -1,32 +1,21 @@
 import { useMemo, useState } from "react";
 import { toKst } from "../../../utils/time.js";
 import {
-  buildAxisTicks,
   buildScoreSeries,
-  createScales,
+  createChartScales,
   interpolateScoreAtTime,
-  niceAxisMax,
-  toLinePath,
+  toPolylinePoints,
 } from "../utils/leaderboardChartData.js";
 import styles from "./LeaderboardScoreGraph.module.css";
 
-// Figma의 score.png(고정 이미지) 자리를 대체하는 실제 팀별 누적 점수 그래프.
-// ScoreBoard.jsx의 dynamicGraph 슬롯으로 들어가며, 좌표계는 ScoreBoard 박스와 동일한
-// 1227x362(디자인 px) — .dynamicGraph가 inset:0으로 이 박스를 그대로 채운다.
 const VIEW_WIDTH = 1227;
 const VIEW_HEIGHT = 362;
-const PADDING = { top: 28, right: 16, bottom: 34, left: 68 };
-const PLOT_WIDTH = VIEW_WIDTH - PADDING.left - PADDING.right;
-const PLOT_HEIGHT = VIEW_HEIGHT - PADDING.top - PADDING.bottom;
-
-// leaderboard.png(전체 페이지 배경)에는 이 박스 자리에 Figma 목업용 고정 축 눈금이
-// 이미 그려져 있고, 좌/아래로 박스 경계 밖까지 살짝 삐져나와 있다. 그 잔상이 비치지
-// 않도록 배경 마스크만 이 만큼 더 넓게 깐다(카드 테두리/랭킹 테이블은 건드리지 않는
-// 선에서 실측한 값). 실제 그래프 좌표계(PADDING 기준)는 그대로다.
-const BACKGROUND_BLEED = { left: 26, top: 0, right: 26, bottom: 40 };
-
-const INK = "#402e26";
-const GRID = "rgba(64, 46, 38, 0.16)";
+const PLOT = {
+  left: 28,
+  top: 12,
+  right: 22,
+  bottom: 16,
+};
 
 const STATUS_MESSAGE = {
   loading: "LOADING SCORE DATA",
@@ -38,203 +27,161 @@ function formatScore(score) {
   return new Intl.NumberFormat("ko-KR").format(Math.round(score));
 }
 
-function formatTick(timestamp) {
-  return toKst(new Date(timestamp).toISOString(), { hour: "2-digit", minute: "2-digit", hour12: false });
+function formatTime(timestamp) {
+  return toKst(new Date(timestamp).toISOString(), {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
-function findNearestTimeIndex(times, targetTime) {
-  let closestIndex = 0;
-  let closestDistance = Infinity;
-  times.forEach((time, index) => {
-    const distance = Math.abs(time - targetTime);
-    if (distance < closestDistance) {
-      closestDistance = distance;
-      closestIndex = index;
-    }
-  });
-  return closestIndex;
+function findNearestTime(times, targetX, scaleX) {
+  return times.reduce(
+    (nearest, time) => {
+      const distance = Math.abs(scaleX(time) - targetX);
+      return distance < nearest.distance ? { time, distance } : nearest;
+    },
+    { time: null, distance: Infinity },
+  ).time;
 }
 
 export default function LeaderboardScoreGraph({ teams, status }) {
   const [hoverX, setHoverX] = useState(null);
-
-  const { series, minTime, maxTime, maxScore } = useMemo(
-    () => buildScoreSeries(teams ?? []),
-    [teams],
-  );
-
-  const axisMax = useMemo(() => niceAxisMax(maxScore || 1), [maxScore]);
-  const yTicks = useMemo(() => buildAxisTicks(axisMax, 5), [axisMax]);
-
+  const chartData = useMemo(() => buildScoreSeries(teams ?? []), [teams]);
+  const plotWidth = VIEW_WIDTH - PLOT.left - PLOT.right;
+  const plotHeight = VIEW_HEIGHT - PLOT.top - PLOT.bottom;
   const scales = useMemo(
     () =>
-      createScales({
-        minTime,
-        maxTime,
-        maxAxisScore: axisMax,
-        width: PLOT_WIDTH,
-        height: PLOT_HEIGHT,
+      createChartScales({
+        minTime: chartData.minTime,
+        maxTime: chartData.maxTime,
+        maxScore: chartData.maxScore,
+        width: plotWidth,
+        height: plotHeight,
       }),
-    [minTime, maxTime, axisMax],
+    [chartData, plotHeight, plotWidth],
   );
-
-  const xTicks = useMemo(() => {
-    if (minTime == null || maxTime == null) return [];
-    const tickCount = 6;
-    return Array.from({ length: tickCount + 1 }, (_, index) => minTime + ((maxTime - minTime) * index) / tickCount);
-  }, [minTime, maxTime]);
-
-  const allTimes = useMemo(
-    () => Array.from(new Set(series.flatMap((entry) => entry.points.map((point) => point.t)))).sort((a, b) => a - b),
-    [series],
+  const solveTimes = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          chartData.series.flatMap((entry) =>
+            entry.points.slice(1).map((point) => point.timestamp),
+          ),
+        ),
+      ).sort((left, right) => left - right),
+    [chartData.series],
   );
-
-  const hasData = series.length > 0 && minTime != null;
-  const message = STATUS_MESSAGE[status];
-
+  const hasSeries = chartData.series.length > 0;
+  const stateMessage = STATUS_MESSAGE[status] ?? (hasSeries ? null : "NO SCORE DATA");
   const hoverTime =
-    hoverX != null && allTimes.length > 0
-      ? allTimes[findNearestTimeIndex(allTimes.map((t) => scales.x(t)), hoverX)]
+    hoverX !== null && solveTimes.length > 0
+      ? findNearestTime(solveTimes, hoverX, scales.x)
       : null;
 
   const handlePointerMove = (event) => {
-    if (!hasData) return;
+    if (!hasSeries) return;
     const bounds = event.currentTarget.getBoundingClientRect();
-    const relativeX = ((event.clientX - bounds.left) / bounds.width) * VIEW_WIDTH - PADDING.left;
-    setHoverX(Math.max(0, Math.min(PLOT_WIDTH, relativeX)));
+    const pointerX = ((event.clientX - bounds.left) / bounds.width) * plotWidth;
+    setHoverX(Math.max(0, Math.min(plotWidth, pointerX)));
   };
 
-  const handlePointerLeave = () => setHoverX(null);
-
   return (
-    <div className={styles.graph} aria-label="팀별 누적 점수 그래프">
-      <svg
-        className={styles.svg}
-        viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
-        preserveAspectRatio="none"
-        role="img"
-      >
-        {/* score.png 자리를 대체하면서, 그 밑에 깔린 leaderboard.png 배경의 고정
-            축/눈금(Figma 목업용 정적 0~7500·09:00~21:00)을 가려야 하므로 종이 톤
-            배경을 먼저 채운다(leaderboard.png의 그래프 영역 색을 샘플링한 값). 박스
-            경계 밖으로 삐져나온 잔상까지 가리도록 BACKGROUND_BLEED만큼 더 넓게 깐다. */}
-        <rect
-          x={-BACKGROUND_BLEED.left}
-          y={-BACKGROUND_BLEED.top}
-          width={VIEW_WIDTH + BACKGROUND_BLEED.left + BACKGROUND_BLEED.right}
-          height={VIEW_HEIGHT + BACKGROUND_BLEED.top + BACKGROUND_BLEED.bottom}
-          fill="#f6ce98"
-        />
+    <div className={styles.graph} onPointerLeave={() => setHoverX(null)}>
+      {hasSeries ? (
+        <svg
+          className={styles.svg}
+          viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
+          preserveAspectRatio="none"
+          role="img"
+          aria-labelledby="leaderboard-score-title leaderboard-score-description"
+        >
+          <title id="leaderboard-score-title">팀별 누적 점수 그래프</title>
+          <desc id="leaderboard-score-description">
+            문제 풀이 시각 순으로 점수를 누적한 상위 팀 그래프
+          </desc>
+          <defs>
+            <filter id="score-line-glow" x="-10%" y="-20%" width="120%" height="140%">
+              <feGaussianBlur stdDeviation="2.4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
 
-        <g transform={`translate(${PADDING.left}, ${PADDING.top})`}>
-          {yTicks.map((tickScore) => {
-            const y = PLOT_HEIGHT - (tickScore / axisMax) * PLOT_HEIGHT;
-            return (
-              <g key={tickScore}>
-                <line x1={0} x2={PLOT_WIDTH} y1={y} y2={y} stroke={GRID} strokeWidth={1} />
-                <text x={-10} y={y} textAnchor="end" dominantBaseline="middle" className={styles.axisLabel}>
-                  {formatScore(tickScore)}
-                </text>
-              </g>
-            );
-          })}
-
-          <text x={-52} y={-12} className={styles.axisTitle}>
-            POINTS
-          </text>
-
-          <line x1={0} x2={0} y1={0} y2={PLOT_HEIGHT} stroke={INK} strokeWidth={1} opacity={0.5} />
-          <line x1={0} x2={PLOT_WIDTH} y1={PLOT_HEIGHT} y2={PLOT_HEIGHT} stroke={INK} strokeWidth={1} opacity={0.5} />
-
-          {hasData &&
-            xTicks.map((tick) => (
-              <text
-                key={tick}
-                x={scales.x(tick)}
-                y={PLOT_HEIGHT + 22}
-                textAnchor="middle"
-                className={styles.axisLabel}
-              >
-                {formatTick(tick)}
-              </text>
-            ))}
-
-          {hasData &&
-            series.map((entry) => (
-              <path
+          <g transform={`translate(${PLOT.left} ${PLOT.top})`}>
+            {chartData.series.map((entry) => (
+              <polyline
                 key={entry.key}
-                d={toLinePath(entry.points, scales.x, scales.y)}
+                points={toPolylinePoints(entry.points, scales.x, scales.y)}
+                className={styles.scoreLine}
                 fill="none"
                 stroke={entry.color}
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeWidth={entry.isTop3 ? 3.6 : 3}
+                vectorEffect="non-scaling-stroke"
+                data-is-top3={entry.isTop3 || undefined}
               />
             ))}
 
-          {hasData && hoverTime != null && (
-            <>
-              <line
-                x1={scales.x(hoverTime)}
-                x2={scales.x(hoverTime)}
-                y1={0}
-                y2={PLOT_HEIGHT}
-                stroke={INK}
-                strokeWidth={1}
-                strokeDasharray="3 3"
-                opacity={0.55}
-              />
-              {series.map((entry) => (
-                <circle
-                  key={entry.key}
-                  cx={scales.x(hoverTime)}
-                  cy={scales.y(interpolateScoreAtTime(entry.points, hoverTime))}
-                  r={3.5}
-                  fill={entry.color}
-                  stroke="#f8ecec"
-                  strokeWidth={1}
+            {hoverTime !== null ? (
+              <>
+                <line
+                  x1={scales.x(hoverTime)}
+                  x2={scales.x(hoverTime)}
+                  y1={0}
+                  y2={plotHeight}
+                  className={styles.hoverLine}
                 />
-              ))}
-            </>
-          )}
+                {chartData.series.map((entry) => (
+                  <circle
+                    key={entry.key}
+                    cx={scales.x(hoverTime)}
+                    cy={scales.y(interpolateScoreAtTime(entry.points, hoverTime))}
+                    r={3.5}
+                    fill={entry.color}
+                    className={styles.hoverPoint}
+                  />
+                ))}
+              </>
+            ) : null}
 
-          {hasData && (
             <rect
-              x={0}
-              y={0}
-              width={PLOT_WIDTH}
-              height={PLOT_HEIGHT}
+              width={plotWidth}
+              height={plotHeight}
               fill="transparent"
               onPointerMove={handlePointerMove}
-              onPointerLeave={handlePointerLeave}
             />
-          )}
-        </g>
-      </svg>
+          </g>
+        </svg>
+      ) : null}
 
-      {hasData && hoverTime != null && (
+      {hasSeries && hoverTime !== null ? (
         <div
           className={styles.tooltip}
           style={{
-            left: `${((PADDING.left + scales.x(hoverTime)) / VIEW_WIDTH) * 100}%`,
-            top: `${(PADDING.top / VIEW_HEIGHT) * 100}%`,
+            left: `${((PLOT.left + scales.x(hoverTime)) / VIEW_WIDTH) * 100}%`,
+            top: `${(PLOT.top / VIEW_HEIGHT) * 100}%`,
           }}
         >
-          <p className={styles.tooltipTime}>{formatTick(hoverTime)}</p>
-          {series
-            .map((entry) => ({ ...entry, score: interpolateScoreAtTime(entry.points, hoverTime) }))
-            .sort((a, b) => b.score - a.score)
-            .map((entry) => (
-              <p key={entry.key} className={styles.tooltipRow}>
-                <span className={styles.tooltipKey} style={{ backgroundColor: entry.color }} aria-hidden="true" />
-                <span className={styles.tooltipName}>{entry.name}</span>
-                <strong className={styles.tooltipScore}>{formatScore(entry.score)}</strong>
-              </p>
-            ))}
+          <p className={styles.tooltipTime}>{formatTime(hoverTime)}</p>
+          {chartData.series.map((entry) => (
+            <p key={entry.key} className={styles.tooltipRow}>
+              <span
+                className={styles.tooltipKey}
+                style={{ backgroundColor: entry.color }}
+                aria-hidden="true"
+              />
+              <span className={styles.tooltipName}>{entry.name}</span>
+              <strong className={styles.tooltipScore}>
+                {formatScore(interpolateScoreAtTime(entry.points, hoverTime))}
+              </strong>
+            </p>
+          ))}
         </div>
-      )}
+      ) : null}
 
-      {!hasData && message ? <p className={styles.state}>{message}</p> : null}
+      {!hasSeries && stateMessage ? <p className={styles.state}>{stateMessage}</p> : null}
     </div>
   );
 }
