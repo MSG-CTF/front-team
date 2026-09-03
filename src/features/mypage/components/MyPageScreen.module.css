@@ -1,0 +1,303 @@
+@import url("https://fonts.googleapis.com/css2?family=Gilda+Display&family=Kotta+One&display=swap");
+
+.stageViewport {
+  overflow: hidden;
+}
+
+.canvas {
+  /* FixedAspectStage가 이미 정확한 16:9 컨테이너를 만들므로 너비 기준으로 한 번만 scale한다. */
+  --canvas-scale: calc(100cqw / 1920px);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+  transform: translate(-50%, -50%) scale(var(--canvas-scale));
+  transform-origin: center;
+}
+
+.scorePanel,
+.mileagePanel,
+.tablePanelImage,
+.teamPanelImage,
+.teamNameCleanImage {
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+
+.scorePanel,
+.mileagePanel {
+  position: absolute;
+  top: 195px;
+  width: 555px;
+  height: 190px;
+}
+
+.scorePanel {
+  left: 636px;
+}
+
+.mileagePanel {
+  left: 1232px;
+}
+
+.teamInfoCard {
+  position: absolute;
+  top: 195px;
+  left: 125px;
+  width: 470px;
+  height: 800px;
+}
+
+.teamPanelImage,
+.teamNameCleanImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 470px;
+  height: 800px;
+}
+
+/*
+ * Figma node 58:330의 raw image를 수정하지 않고, 팀명 영역만 clip한다.
+ * 원본에 남은 J/C/J/C는 y=500px 아래에 있어 이 90px clip 밖이며 절대 노출되지 않는다.
+ */
+.teamNameCleanClip {
+  position: absolute;
+  z-index: 1;
+  top: 150px;
+  left: 0;
+  width: 470px;
+  height: 100px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.teamNameCleanImage {
+  top: -150px;
+  left: 0;
+}
+
+.teamName,
+.memberName,
+.metricValue,
+.rankLabel,
+.rankValue,
+.tableCell,
+.tableStatus {
+  padding: 0;
+  margin: 0;
+  font-weight: 400;
+  line-height: normal;
+}
+
+.teamName {
+  position: absolute;
+  z-index: 2;
+  top: 171px;
+  left: 119px;
+  width: 235px;
+  height: 69px;
+  overflow: visible;
+  color: #613d15;
+  font-family: "IM Fell English", serif;
+  font-size: 48px;
+  white-space: nowrap;
+}
+
+.memberName {
+  position: absolute;
+  z-index: 2;
+  left: 102px;
+  width: 235px;
+  height: 30px;
+  overflow: hidden;
+  color: #613d15;
+  font-family: "IM Fell English", serif;
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+.metricValue {
+  position: absolute;
+  top: 274px;
+  width: 285px;
+  height: 95px;
+  overflow: hidden;
+  color: #e8d9c8;
+  font-family: "Kotta One", serif;
+  font-size: 80px;
+  white-space: nowrap;
+}
+
+.scoreValue {
+  left: 672px;
+}
+
+.mileageValue {
+  left: 1276px;
+}
+
+.rankLabel {
+  position: absolute;
+  top: 332px;
+  left: 1055px;
+  width: 85px;
+  height: 30px;
+  color: #f1d3a6;
+  font-family: "IM Fell English", serif;
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+.rankValue {
+  position: absolute;
+  top: 333px;
+  left: 1140px;
+  width: 27px;
+  height: 28px;
+  overflow: hidden;
+  color: #f1d3a6;
+  font-family: "Kotta One", serif;
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+.mileageHistoryTable,
+.solveHistoryTable {
+  position: absolute;
+  left: 636px;
+  width: 1150px;
+  height: 270px;
+}
+
+.mileageHistoryTable {
+  top: 417px;
+}
+
+.solveHistoryTable {
+  top: 725px;
+}
+
+.tablePanelImage {
+  position: absolute;
+  inset: 0;
+  width: 1150px;
+  height: 270px;
+}
+
+.tableCell {
+  position: absolute;
+  z-index: 1;
+  height: 30px;
+  overflow: hidden;
+  color: #9b7449;
+  font-size: 24px;
+  white-space: nowrap;
+}
+
+.fellText {
+  font-family: "IM Fell English", serif;
+}
+
+.gildaText {
+  font-family: "Gilda Display", serif;
+  height: 28px;
+}
+
+.mileageDate {
+  left: 49px;
+  width: 125px;
+}
+
+.mileageReason {
+  left: 345px;
+  width: 285px;
+}
+
+.mileageChange {
+  left: 868px;
+  width: 125px;
+  color: #9f4343;
+}
+
+.mileageBalance {
+  width: 125px;
+  text-align: right;
+}
+
+.solveChallenge {
+  left: 49px;
+  width: 285px;
+}
+
+.solveCategory {
+  left: 388px;
+  width: 285px;
+}
+
+.solvePoints {
+  left: 711px;
+  width: 125px;
+  color: #d38f25;
+}
+
+.solveTime {
+  left: 830px;
+  width: 125px;
+  text-align: right;
+}
+
+.solveElapsed {
+  left: 1004px;
+  width: 125px;
+  text-align: right;
+}
+
+.tableStatus {
+  position: absolute;
+  z-index: 1;
+  top: 162px;
+  left: 49px;
+  width: 1067px;
+  color: #9b7449;
+  font-family: "IM Fell English", serif;
+  font-size: 24px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.backButton {
+  position: absolute;
+  z-index: 3;
+  top: 83px;
+  left: 45px;
+  width: 43px;
+  height: 31px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.backIcon {
+  position: absolute;
+  top: -6px;
+  left: 6px;
+  display: block;
+  width: 31px;
+  height: 43px;
+  pointer-events: none;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.backButton:hover .backIcon {
+  filter: brightness(1.12);
+}
+
+.backButton:active .backIcon {
+  filter: brightness(0.88);
+}

@@ -1,0 +1,32 @@
+# MSG CTF 프론트엔드 — 로컬 통합테스트용 docker-compose
+#
+# `backend` 서비스는 실제 프로덕션 백엔드가 아니라 mock-backend/(Django + DRF +
+# SimpleJWT)로 만든 목 서버다. 실제 백엔드가 아직 "시작 전"/"논의" 단계인
+# API가 많아서(루트 README.md 8절), 그 사이 프론트가 로컬에서 API 계약을
+# 검증할 수 있게 하려는 용도다. 실제 백엔드가 준비되면 이 `backend` 서비스를
+# 실제 백엔드 이미지/서비스로 교체하면 된다(nginx.conf의 proxy_pass 대상도 같이).
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - msgctf-net
+
+  backend:
+    build:
+      context: ./mock-backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    networks:
+      - msgctf-net
+
+networks:
+  msgctf-net:
+    driver: bridge

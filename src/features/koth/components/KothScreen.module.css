@@ -1,0 +1,358 @@
+/*
+ * Figma: "MSG-CTF 프론트 개발", node 10:12 (KOTH page, 1920x1080).
+ * 배경과 모든 클릭/overlay 레이어는 동일한 16:9 stage 안에서 함께 축소된다.
+ */
+
+.page {
+  position: fixed;
+  inset: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #efd5a7;
+}
+
+.stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100vw, 177.7778vh);
+  height: min(100vh, 56.25vw);
+  transform: translate(-50%, -50%);
+  font-size: min(1vw, 1.7778vh);
+}
+
+.background {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  pointer-events: none;
+}
+
+.layerImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  pointer-events: none;
+}
+
+.challengeButton,
+.mainNavigationButton {
+  position: absolute;
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.challengeButton:hover .layerImage,
+.mainNavigationButton:hover .layerImage {
+  filter: brightness(1.06);
+}
+
+.challengeButton:active .layerImage,
+.mainNavigationButton:active .layerImage {
+  filter: brightness(0.92);
+}
+
+.challengeButton:focus-visible,
+.mainNavigationButton:focus-visible {
+  outline: 4px solid #6f3e19;
+  outline-offset: 4px;
+}
+
+.challengeButton[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.challengeButton[aria-pressed="true"] {
+  filter: drop-shadow(0 0 0.65em rgba(111, 62, 25, 0.9));
+}
+
+.challengeStatus,
+.solvedMarker {
+  position: absolute;
+  z-index: 3;
+  border: 1px solid rgba(82, 45, 18, 0.75);
+  border-radius: 999px;
+  color: #3f2614;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.62em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  box-shadow: 0 0.1em 0.25em rgba(72, 37, 13, 0.24);
+}
+
+.challengeStatus {
+  top: 3%;
+  right: 4%;
+  padding: 0.48em 0.68em;
+}
+
+.statusSCHEDULED {
+  background: #dfc99a;
+}
+
+.statusACTIVE {
+  background: #b6d59a;
+}
+
+.statusCLOSED {
+  background: #bfa58d;
+}
+
+.statusUnknown {
+  background: #ead9b8;
+}
+
+.solvedMarker {
+  right: 4%;
+  bottom: 3%;
+  padding: 0.48em 0.68em;
+  color: #f5e4bf;
+  background: #7f281d;
+  transform: rotate(-5deg);
+}
+
+.completionStamp {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.mainNavigationButton {
+  left: 4.0625%;
+  top: 6.7593%;
+  width: 1.9271%;
+  height: 3.1481%;
+}
+
+.mainNavigationButton[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
+.teamSummary,
+.dataState,
+.challengeDetail,
+.tokenPanel,
+.mappingWarning {
+  color: #4b2b17;
+  font-family: Georgia, "Times New Roman", serif;
+  border: 1px solid rgba(112, 64, 27, 0.5);
+  background: rgba(240, 216, 169, 0.94);
+  box-shadow: 0 0.35em 1em rgba(79, 39, 13, 0.3);
+}
+
+.teamSummary {
+  position: absolute;
+  z-index: 3;
+  top: 4.2%;
+  right: 4.3%;
+  box-sizing: border-box;
+  width: 18%;
+  padding: 0.7em 0.9em;
+  text-align: center;
+}
+
+.teamSummary strong,
+.teamSummary span {
+  display: block;
+}
+
+.teamSummary strong {
+  overflow: hidden;
+  font-size: 1em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teamSummary span {
+  margin-top: 0.3em;
+  font-size: 0.72em;
+  font-weight: 700;
+}
+
+.teamSummary button,
+.dataState button,
+.tokenPanel button {
+  margin-top: 0.65em;
+  padding: 0.45em 0.9em;
+  border: 1px solid #6f3e19;
+  color: #f4dfb4;
+  font: inherit;
+  font-size: 0.7em;
+  font-weight: 700;
+  background: #6f3e19;
+  cursor: pointer;
+}
+
+.dataState {
+  position: absolute;
+  z-index: 4;
+  top: 39%;
+  left: 35%;
+  box-sizing: border-box;
+  width: 30%;
+  padding: 1.25em 1.5em;
+  font-size: 1em;
+  text-align: center;
+}
+
+.dataState p {
+  margin: 0;
+}
+
+.mappingWarning {
+  position: absolute;
+  z-index: 4;
+  top: 56%;
+  left: 34%;
+  box-sizing: border-box;
+  width: 32%;
+  margin: 0;
+  padding: 0.55em 0.8em;
+  font-size: 0.72em;
+  text-align: center;
+}
+
+.challengeDetail {
+  position: absolute;
+  z-index: 5;
+  top: 27%;
+  left: 34%;
+  box-sizing: border-box;
+  width: 32%;
+  padding: 1em 1.25em;
+}
+
+.challengeDetail h2 {
+  margin: 0.1em 1em 0.55em 0;
+  font-size: 1.15em;
+}
+
+.challengeClub {
+  margin: 0;
+  font-size: 0.68em;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.challengeDetail dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.35em 1em;
+  margin: 0;
+}
+
+.challengeDetail dl div {
+  min-width: 0;
+}
+
+.challengeDetail dt {
+  font-size: 0.58em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.challengeDetail dd {
+  overflow: hidden;
+  margin: 0.12em 0 0;
+  font-size: 0.7em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.routeNotice {
+  margin: 0.8em 0 0;
+  padding-top: 0.55em;
+  border-top: 1px solid rgba(112, 64, 27, 0.35);
+  font-size: 0.62em;
+}
+
+.panelCloseButton {
+  position: absolute;
+  top: 0.25em;
+  right: 0.45em;
+  padding: 0;
+  border: 0;
+  color: #4b2b17;
+  font: inherit;
+  font-size: 1.3em;
+  line-height: 1;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tokenBackdrop {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  background: rgba(32, 18, 9, 0.52);
+}
+
+.tokenPanel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  box-sizing: border-box;
+  width: 36%;
+  min-height: 24%;
+  padding: 1.4em 1.6em;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.tokenPanel h2 {
+  margin: 0 0 0.8em;
+  font-size: 1.25em;
+}
+
+.tokenPanel p {
+  margin: 0.5em 0;
+  font-size: 0.72em;
+}
+
+.tokenContent label {
+  display: block;
+  margin: 0.7em 0 0.35em;
+  font-size: 0.66em;
+}
+
+.tokenContent input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.55em 0.7em;
+  border: 1px solid #8c653d;
+  color: #362010;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68em;
+  background: rgba(255, 247, 225, 0.8);
+}
+
+.tokenTeamName {
+  font-size: 0.86em !important;
+  font-weight: 700;
+}
+
+.tokenIssuedAt {
+  opacity: 0.8;
+}
+
+.tokenState {
+  padding-top: 0.3em;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .challengeButton,
+  .mainNavigationButton {
+    transition: filter 120ms ease;
+  }
+}

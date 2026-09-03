@@ -17,6 +17,71 @@
   stroke-linejoin: round;
 }
 
+.hoverLine {
+  stroke: #402e26;
+  stroke-dasharray: 3 3;
+  stroke-width: 1px;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.hoverPoint {
+  stroke: #f8ecec;
+  stroke-width: 1px;
+  pointer-events: none;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 5;
+  min-width: 132px;
+  padding: 8px 10px;
+  border: 1px solid #8a5728;
+  border-radius: 6px;
+  background: rgb(248 236 219 / 97%);
+  box-shadow: 0 6px 16px rgb(40 19 4 / 25%);
+  color: #402e26;
+  font-family: "Libre Baskerville", Georgia, serif;
+  pointer-events: none;
+  transform: translate(10px, -4px);
+}
+
+.tooltipTime {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.tooltipRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 2px 0;
+  font-size: 13px;
+}
+
+.tooltipKey {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.tooltipName {
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tooltipScore {
+  flex: none;
+  color: #bc7514;
+}
+
 .state {
   position: absolute;
   top: 50%;

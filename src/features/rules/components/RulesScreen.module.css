@@ -1,0 +1,166 @@
+/* Figma: "MSG-CTF 프론트 개발", node 192:137 (Rules Page, 1920x1080). */
+
+.page {
+  position: fixed;
+  inset: 0;
+  min-height: 100vh;
+  overflow: hidden;
+  background: #fff;
+}
+
+.stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100vw, 177.7778vh);
+  height: min(100vh, 56.25vw);
+  transform: translate(-50%, -50%);
+  container-type: inline-size;
+}
+
+.background,
+.layerImage {
+  display: block;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  pointer-events: none;
+}
+
+.background {
+  position: absolute;
+  inset: 0;
+}
+
+.logo {
+  position: absolute;
+  top: 7.2222%;
+  left: 37.9688%;
+  display: block;
+  width: 24.0625%;
+  height: 42.7778%;
+  object-fit: cover;
+  user-select: none;
+  pointer-events: none;
+}
+
+.rulesPanel {
+  position: absolute;
+  top: 38.6111%;
+  left: 9.0625%;
+  width: 80.8854%;
+  height: 48.1481%;
+  overflow: hidden;
+}
+
+.rulesPanelImage {
+  position: absolute;
+  top: -4.34%;
+  left: -2.37%;
+  display: block;
+  width: 104.06%;
+  height: 157.66%;
+  user-select: none;
+  pointer-events: none;
+}
+
+.rulesList {
+  position: absolute;
+  inset: 0;
+}
+
+.ruleItem {
+  position: absolute;
+  left: 2.6401%;
+  width: 86.156%;
+  color: #613d15;
+}
+
+.ruleItem:nth-child(1) {
+  top: 13.8462%;
+}
+
+.ruleItem:nth-child(2) {
+  top: 29.2308%;
+}
+
+.ruleItem:nth-child(3) {
+  top: 44.6154%;
+}
+
+.ruleItem:nth-child(4) {
+  top: 59.8077%;
+}
+
+.ruleItem:nth-child(5) {
+  top: 74.8077%;
+}
+
+.ruleTitle,
+.ruleDescription {
+  margin: 0;
+  word-break: keep-all;
+}
+
+.ruleTitle {
+  font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  font-size: 1.25cqw;
+  font-weight: 700;
+  line-height: 1.2917;
+}
+
+.ruleDescription {
+  margin-top: 0.5208cqw;
+  font-family: "IM FELL English", "Pretendard", "Apple SD Gothic Neo", serif;
+  font-size: 1.25cqw;
+  font-weight: 400;
+  line-height: 1.1667;
+  white-space: nowrap;
+}
+
+.mainNavigationButton {
+  position: absolute;
+  top: 22.3148%;
+  left: 87.6042%;
+  display: block;
+  width: 1.9271%;
+  height: 3.1481%;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mainNavigationButton:hover .layerImage {
+  filter: brightness(1.08);
+}
+
+.mainNavigationButton:active .layerImage {
+  filter: brightness(0.9);
+}
+
+.mainNavigationButton:focus-visible {
+  outline: max(2px, 0.2083cqw) solid #f0c36e;
+  outline-offset: max(2px, 0.2083cqw);
+  border-radius: 50%;
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .mainNavigationButton {
+    transition: filter 120ms ease;
+  }
+}

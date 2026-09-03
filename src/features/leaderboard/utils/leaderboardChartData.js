@@ -1,3 +1,5 @@
+// API가 정렬해 반환한 최대 8팀의 solve 시계열을 화면용 누적 점수로 변환한다.
+// teamScore로 팀 순서를 다시 계산하지 않으며, KOTH용 가짜 시점도 생성하지 않는다.
 export const SCORE_SERIES_COLORS = Object.freeze([
   "#f4ad00",
   "#f35b0a",
@@ -92,4 +94,22 @@ export function toPolylinePoints(points, scaleX, scaleY) {
         `${scaleX(point.timestamp).toFixed(2)},${scaleY(point.score).toFixed(2)}`,
     )
     .join(" ");
+}
+
+export function interpolateScoreAtTime(points, time) {
+  if (points.length === 0) return 0;
+  if (time <= points[0].timestamp) return points[0].score;
+
+  for (let index = 1; index < points.length; index += 1) {
+    const previous = points[index - 1];
+    const next = points[index];
+
+    if (time <= next.timestamp) {
+      if (next.timestamp === previous.timestamp) return next.score;
+      const ratio = (time - previous.timestamp) / (next.timestamp - previous.timestamp);
+      return previous.score + (next.score - previous.score) * ratio;
+    }
+  }
+
+  return points[points.length - 1].score;
 }
