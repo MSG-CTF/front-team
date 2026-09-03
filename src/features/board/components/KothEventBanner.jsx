@@ -1,3 +1,6 @@
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../../routes/routePaths.js";
+
 // Figma node 5:26 "버튼 없 배너"(339x627) + 5:32 "라운드 버튼"(213x168).
 // 우측 세로 배너 + 그 아래 "N ROUND" 버튼. 제목/일러스트/라운드 숫자가 그림에
 // 이미 그려져 있어 여기서는 배치와 클릭 영역만 담당한다.
@@ -6,6 +9,8 @@
 // HILLS" / "1 ROUND"). GET /koth/clubs 연동 시 값 없는 plate로 교체하고 title/round를
 // 텍스트로 겹쳐 그릴 것.
 export default function KothEventBanner() {
+  const navigate = useNavigate();
+
   return (
     <>
       <img
@@ -16,9 +21,9 @@ export default function KothEventBanner() {
 
       <button
         type="button"
-        disabled
-        aria-label="KOTH 라운드 정보 이동은 아직 연결되지 않았습니다"
-        className="absolute left-[84.27%] top-[68.15%] w-[11.09%] h-[15.56%] border-0 bg-transparent p-0 cursor-default"
+        onClick={() => navigate(ROUTES.koth)}
+        aria-label="KOTH 페이지로 이동"
+        className="absolute left-[84.27%] top-[68.15%] w-[11.09%] h-[15.56%] border-0 bg-transparent p-0 cursor-pointer"
       >
         <img
           src="/assets/board/button-round.png"
@@ -26,7 +31,7 @@ export default function KothEventBanner() {
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-contain pointer-events-none"
         />
-        <span className="sr-only">KOTH 라운드 정보 이동 미연결</span>
+        <span className="sr-only">KOTH 페이지로 이동</span>
       </button>
     </>
   );
