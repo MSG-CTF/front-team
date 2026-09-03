@@ -367,7 +367,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 - `team_score` = 제오파디 현재 점수 + KOTH 현재 점수(팀별 KOTH SOLVE `earned_score` 합, KOTH 공통 value 미사용). **밴 팀 제외 + 제오파디/KOTH solve가 하나도 없는 팀 제외**(그래프 특성상 - 0솔브 팀도 포함하는 `/ranking`과 대상 팀이 다를 수 있음).
 - 정렬: `team_score DESC -> last_solved_at ASC -> team_id ASC`. `last_solved_at` = `MAX(solves.solved_at)`, 제오파디 solve 없으면 `MIN(koth_solves.solved_at)`. `is_top3`는 이 정렬 상위 3팀만 true(동점이어도 순서가 정해지므로 3팀 이하).
 - 그래프: 프론트는 `points`를 재계산하지 않고 백엔드가 준 `solves`를 `solved_at` 순으로 누적. **KOTH는 새 SOLVE를 만들지 않음** - 처음 양수 점수 시점에만 점이 생기고 이후 15분 점수는 기존 점(그 팀의 현재 `earned_score`)의 값만 키운다.
-- 백엔드 상태: 진행 중. 에러: 공통 외 없음.
+- 백엔드 상태: **완료**(2026-09-03 Notion 갱신). 에러: 공통 외 없음.
 
 **제품 요구사항(기능명세 원문)**: 랭킹(team/개인) 페이지, 스코어보드 그래프, TOP3 팀명 표시(team/개인).
 
@@ -377,11 +377,12 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 | Method | URL | 설명 | 인증 | 백엔드 |
 |---|---|---|---|---|
-| GET | `/ranking` | 전체 팀 순위(페이지네이션) | 불필요 | 진행 중 |
-| GET | `/ranking/me` | 내 팀 순위 | Bearer | 진행 중 |
-| GET | `/ranking/member` | 개인 순위(제오파디만) | Bearer | 진행 중 |
+| GET | `/ranking` | 전체 팀 순위(페이지네이션) | 불필요 | **완료** |
+| GET | `/ranking/me` | 내 팀 순위 | Bearer | **완료** |
+| GET | `/ranking/member` | 개인 순위(제오파디만) | Bearer | **완료** |
 
 > **Notion 갱신(2026-08-27~29)으로 구 README의 🔴 이슈 3개가 전부 해소됨**: `/ranking`은 인증 불필요로 확정, `/ranking/me`는 비표준 `team:` 헤더 -> **표준 Bearer**로 변경, `/ranking/member`는 완전 스펙화. 전부 밴 팀 제외 + 0솔브 팀 포함.
+> **2026-09-03 재갱신**: 3개 엔드포인트 전부 백엔드 상태 **완료**로 전환(정렬/동점 처리 기준 문서도 같이 보강됨, 아래 각 항목의 정렬 설명이 그 내용). 필드 자체는 변경 없음.
 
 - `GET /ranking` - Query `page`(기본 1), `size`(기본 20, 최대 100) -> `{ rankings: [{ rank, team_id, team_name, team_score, mileage, last_solved_at }], total_count, page, size }`. 정렬: `team_score DESC -> last_solved_at ASC -> team_id ASC`. `team_score` = 제오파디 + KOTH. `last_solved_at` = 제오파디 `MAX(solves.solved_at)`, 없으면 KOTH `MIN(koth_solves.solved_at)`, 둘 다 없으면 null(동점 시 맨 뒤). **밴 팀 제외**(0-6절), **0솔브 팀 포함**. 팀 없으면 `rankings: []`.
 - `GET /ranking/me` (Bearer) -> `{ rank, team_id, team_name, team_score, mileage, last_solved_at }`. 팀 없으면 `404 USER_HAS_NO_TEAM`, 밴돼서 집계 제외면 `200 + data: null`.
@@ -403,7 +404,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 | POST | `/teams/me/qr_token` | QR 결제 토큰 발급(5분 만료) |
 
 - `GET /teams/me` -> `{ team_id, team_name, team_score, jeopardy_score, koth_score, mileage, is_banned, ban_reason, members: [{user_id, nickname, role, is_leader}] }`. `team_score = jeopardy_score + koth_score`(세 값 다 내려 화면마다 점수 안 달라지게). `jeopardy_score` = `teams.team_score`(보드 문제 풀이 누적), `koth_score` = `SUM(koth_solves.earned_score)`. `is_banned=false`면 `ban_reason: null`. members에 `login_id` 없음(관리자 API에만). 백엔드: 완료.
-- `GET /teams/me/solves` -> `{ solves: [{ source_type: "JEOPARDY"|"KOTH", challenge_id(JEOPARDY) 또는 koth_challenge_id(KOTH), challenge_title, earned_score, earned_mileage, is_extra_dice_granted, solved_by: {user_id, nickname} | null, solved_at }], total_count }`. **KOTH 항목은 `koth_challenge_id` 필드 사용**(`challenge_id` 아님), `solved_by: null`(팀 단위 집계), `earned_score`는 누적값, `solved_at` 고정, `earned_mileage: 0`, `is_extra_dice_granted: false`. 정렬 `solved_at` 최신순. 없으면 `solves: []`. 백엔드: **PR 대기**.
+- `GET /teams/me/solves` -> `{ solves: [{ source_type: "JEOPARDY"|"KOTH", challenge_id(JEOPARDY) 또는 koth_challenge_id(KOTH), challenge_title, earned_score, earned_mileage, is_extra_dice_granted, solved_by: {user_id, nickname} | null, solved_at }], total_count }`. **KOTH 항목은 `koth_challenge_id` 필드 사용**(`challenge_id` 아님), `solved_by: null`(팀 단위 집계), `earned_score`는 누적값, `solved_at` 고정, `earned_mileage: 0`, `is_extra_dice_granted: false`. 정렬 `solved_at` 최신순. 없으면 `solves: []`. 백엔드: **완료**(2026-09-03 갱신, 이전 PR 대기에서 전환).
 - `GET /teams/me/mileage_history` -> `{ mileage, history: [{ history_id, type, amount, reason, item_name, is_refunded, ref_history_id, created_at }], total_count }`. `type`은 0-13절 8종. `amount` 전부 더하면 `mileage`와 일치. `ref_history_id`는 `REFUND` 행이 되돌린 원본 `PURCHASE`의 `history_id`(그 외 null - reason 문자열에 식별자 안 넣음). `is_refunded`는 이 행이 이후 환불됐는지. `item_name`은 `PURCHASE`만. 정렬 `created_at` 최신순. 없으면 `history: []` + `mileage: 0`. 백엔드: 완료.
 - `POST /teams/me/qr_token`(Body 없음) -> `{ payment_token, expires_at }`(발급 5분 후). 이전 미사용 토큰 즉시 무효화, 교체. 추가 에러: `403 TEAM_BANNED`. 백엔드: 완료.
 
