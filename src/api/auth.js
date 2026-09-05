@@ -11,7 +11,11 @@ export function login({ loginId, password }) {
 
 export function refresh({ refreshToken }) {
   // POST /auth/refresh - Res { access_token }(1시간). refresh_token은 재발급 안 함.
-  return apiClient.post("/auth/refresh", { refresh_token: refreshToken });
+  return apiClient.post(
+    "/auth/refresh",
+    { refresh_token: refreshToken },
+    { skipAuthRefresh: true },
+  );
 }
 
 export function logout({ refreshToken }) {

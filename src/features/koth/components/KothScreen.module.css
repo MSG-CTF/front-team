@@ -75,8 +75,7 @@
   filter: drop-shadow(0 0 0.65em rgba(111, 62, 25, 0.9));
 }
 
-.challengeStatus,
-.solvedMarker {
+.challengeStatus {
   position: absolute;
   z-index: 3;
   border: 1px solid rgba(82, 45, 18, 0.75);
@@ -112,18 +111,13 @@
   background: #ead9b8;
 }
 
-.solvedMarker {
-  right: 4%;
-  bottom: 3%;
-  padding: 0.48em 0.68em;
-  color: #f5e4bf;
-  background: #7f281d;
-  transform: rotate(-5deg);
-}
-
 .completionStamp {
   position: absolute;
   z-index: 2;
+  top: 4%;
+  right: -8%;
+  bottom: 4%;
+  left: -8%;
   pointer-events: none;
 }
 
@@ -132,10 +126,6 @@
   top: 6.7593%;
   width: 1.9271%;
   height: 3.1481%;
-}
-
-.mainNavigationButton[aria-disabled="true"] {
-  cursor: not-allowed;
 }
 
 .teamSummary,

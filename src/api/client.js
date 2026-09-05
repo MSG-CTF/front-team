@@ -9,6 +9,11 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use((config) => {
+  if (config.skipAuthRefresh) {
+    delete config.headers.Authorization;
+    return config;
+  }
+
   const token = localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
