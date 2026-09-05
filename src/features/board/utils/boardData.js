@@ -3,10 +3,17 @@ import { isSuccess } from "../../../utils/response.js";
 export const BOARD_CELL_COUNT = 36;
 
 export class BoardApiError extends Error {
-  constructor(message, code = "BOARD_REQUEST_FAILED") {
+  constructor(
+    message,
+    code = "BOARD_REQUEST_FAILED",
+    isResponseFailure = false,
+    requestConfig = null,
+  ) {
     super(message);
     this.name = "BoardApiError";
     this.code = code;
+    this.isResponseFailure = isResponseFailure;
+    this.requestConfig = requestConfig;
   }
 }
 
@@ -17,6 +24,8 @@ export function unwrapBoardResponse(response) {
     throw new BoardApiError(
       envelope?.message || "보드 정보를 불러오지 못했습니다.",
       envelope?.code,
+      true,
+      response?.config,
     );
   }
 
@@ -126,6 +135,56 @@ export function adaptChanceCatalog(data) {
         usageTiming: card.usage_timing,
       }))
     : [];
+}
+
+export function adaptChanceDraw(data) {
+  return {
+    cardId: data?.card_id ?? null,
+    name: data?.name ?? "",
+    description: data?.description ?? "",
+    effect: data?.effect ?? null,
+    usageTiming: data?.usage_timing ?? null,
+    used: data?.used === true,
+    diceRollsLeft: data?.dice_rolls_left ?? null,
+    awaitingDiscard: data?.awaiting_discard === true,
+  };
+}
+
+export function adaptChanceAction(data) {
+  return {
+    cardId: data?.card_id ?? null,
+    effect: data?.effect ?? null,
+    fromIndex: data?.from_index ?? null,
+    toIndex: data?.to_index ?? null,
+    movementPath: Array.isArray(data?.movement_path) ? data.movement_path : [],
+    skippedCells: Array.isArray(data?.skipped_cells) ? data.skipped_cells : [],
+    diceRollsLeft: data?.dice_rolls_left ?? null,
+    isQuarantined: data?.is_quarantined,
+    firstNumber: data?.first_number ?? null,
+    secondNumber: data?.second_number ?? null,
+    awaitingConfirm: data?.awaiting_confirm === true,
+    used: data?.used === true,
+  };
+}
+
+export function adaptChanceConfirmation(data) {
+  return {
+    cardId: data?.card_id ?? null,
+    effect: data?.effect ?? null,
+    choice: data?.choice ?? null,
+    chosenNumber: data?.chosen_number ?? null,
+    fromIndex: data?.from_index ?? null,
+    toIndex: data?.to_index ?? null,
+    used: data?.used === true,
+  };
+}
+
+export function adaptRouletteResult(data) {
+  return {
+    label: data?.roulette_result?.label ?? "",
+    mileageGained: data?.mileage_gained ?? 0,
+    totalMileage: data?.total_mileage ?? 0,
+  };
 }
 
 export function adaptMovementResult(data) {

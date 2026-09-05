@@ -20,6 +20,9 @@ export default function BoardScreen({
   currentCell,
   displayPosition,
   pendingRoll,
+  pendingChanceChoice,
+  cellEvent,
+  awaitingDiscard,
   ownedChanceCards,
   cellStatesByIndex,
   selectedCell,
@@ -34,6 +37,13 @@ export default function BoardScreen({
   onConfirmDice,
   onOpenChallenge,
   onMoveAirport,
+  onUseChanceCard,
+  onConfirmChance,
+  onDiscardChance,
+  onSpinRoulette,
+  onRetryChanceDraw,
+  onCloseCellEvent,
+  onEscapeQuarantine,
   onClearSelectedCell,
   onCloseQuarantine,
 }) {
@@ -60,15 +70,20 @@ export default function BoardScreen({
     now,
   );
   const cells = boardDefinition?.cells ?? [];
-  const blockedMessage = diceStatus?.blockedReason
-    ? BLOCKED_REASON_MESSAGES[diceStatus.blockedReason] || diceStatus.blockedReason
-    : null;
+  const blockedMessage = awaitingDiscard
+    ? "보유한 찬스카드 한 장을 먼저 폐기해주세요."
+    : diceStatus?.blockedReason
+      ? BLOCKED_REASON_MESSAGES[diceStatus.blockedReason] ||
+        diceStatus.blockedReason
+      : null;
+  const canRoll =
+    diceStatus?.canRoll === true && !isMutating && !awaitingDiscard;
 
   return (
     <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080.png">
       <DiceStatusPanel
         rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
-        canRoll={diceStatus?.canRoll === true}
+        canRoll={canRoll}
         blockedMessage={blockedMessage}
         resetInSeconds={resetInSeconds}
         challengeRemainingSeconds={challengeRemainingSeconds}
@@ -83,27 +98,49 @@ export default function BoardScreen({
         cellStatesByIndex={cellStatesByIndex}
         consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
         piecePosition={displayPosition}
-        canRoll={diceStatus?.canRoll === true && !isMutating}
+        canRoll={canRoll}
         isRolling={isMutating}
         onRollDice={onRollDice}
         onSelectCell={onSelectCell}
       />
 
-      <ChanceCardSummary cards={ownedChanceCards} />
-
-      <BoardEventPanel
+      <ChanceCardSummary
+        cards={ownedChanceCards}
         cells={cells}
-        myBoard={myBoard}
-        currentCell={currentCell}
-        pendingRoll={pendingRoll}
-        blockedReason={diceStatus?.blockedReason}
-        selectedCell={selectedCell}
+        consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
         isMutating={isMutating}
-        onConfirmDice={onConfirmDice}
-        onOpenChallenge={onOpenChallenge}
-        onMoveAirport={onMoveAirport}
-        onClearSelectedCell={onClearSelectedCell}
+        awaitingDiscard={awaitingDiscard}
+        pendingConfirm={
+          Boolean(pendingRoll) || diceStatus?.blockedReason === "PENDING_CONFIRM"
+        }
+        onUseCard={onUseChanceCard}
       />
+
+      {!showQuarantine && (
+        <BoardEventPanel
+          cells={cells}
+          myBoard={myBoard}
+          currentCell={currentCell}
+          pendingRoll={pendingRoll}
+          pendingChanceChoice={pendingChanceChoice}
+          cellEvent={cellEvent}
+          ownedChanceCards={ownedChanceCards}
+          awaitingDiscard={awaitingDiscard}
+          blockedReason={diceStatus?.blockedReason}
+          selectedCell={selectedCell}
+          isMutating={isMutating}
+          onConfirmDice={onConfirmDice}
+          onOpenChallenge={onOpenChallenge}
+          onMoveAirport={onMoveAirport}
+          onUseChanceCard={onUseChanceCard}
+          onConfirmChance={onConfirmChance}
+          onDiscardChance={onDiscardChance}
+          onSpinRoulette={onSpinRoulette}
+          onRetryChanceDraw={onRetryChanceDraw}
+          onCloseCellEvent={onCloseCellEvent}
+          onClearSelectedCell={onClearSelectedCell}
+        />
+      )}
 
       {isLoading && (
         <div className="absolute inset-0 z-50 grid place-items-center bg-[#2b1609]/35 font-inria-serif text-[1.2cqw] text-[#fff0c4]">
@@ -146,6 +183,13 @@ export default function BoardScreen({
       {showQuarantine && (
         <QuarantinePanel
           releasedInSeconds={quarantineReleasedInSeconds}
+          isMutating={isMutating}
+          freeEscapeCards={ownedChanceCards.filter(
+            (card) =>
+              card.usableNow && card.effect === "QUARANTINE_ESCAPE_FREE",
+          )}
+          onEscape={onEscapeQuarantine}
+          onUseFreeEscape={(cardId) => onUseChanceCard(cardId)}
           onClose={onCloseQuarantine}
         />
       )}
