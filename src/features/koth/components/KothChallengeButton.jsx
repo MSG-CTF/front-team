@@ -1,3 +1,4 @@
+import KothCompletionStamp from "./KothCompletionStamp.jsx";
 import styles from "./KothScreen.module.css";
 
 export default function KothChallengeButton({ challenge, onSelect }) {
@@ -18,11 +19,15 @@ export default function KothChallengeButton({ challenge, onSelect }) {
         aria-hidden="true"
         className={styles.layerImage}
       />
+      <KothCompletionStamp
+        imageSrc={challenge.completionStampImageSrc}
+        visible={challenge.solved}
+      />
       <span className={`${styles.challengeStatus} ${statusClassName}`}>
         {challenge.status}
       </span>
       {challenge.solved && (
-        <span className={styles.solvedMarker}>SOLVED</span>
+        <span className="sr-only">SOLVED</span>
       )}
     </button>
   );

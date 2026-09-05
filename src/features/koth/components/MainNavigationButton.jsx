@@ -1,12 +1,16 @@
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../../routes/routePaths.js";
 import styles from "./KothScreen.module.css";
 
 export default function MainNavigationButton() {
+  const navigate = useNavigate();
+
   return (
     <button
       type="button"
       className={styles.mainNavigationButton}
-      aria-label="메인 페이지 이동 경로 미확정"
-      aria-disabled="true"
+      aria-label="보드 페이지로 이동"
+      onClick={() => navigate(ROUTES.board)}
     >
       <img
         src="/assets/koth/main-navigation-button.png"
