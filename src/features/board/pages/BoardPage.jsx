@@ -17,6 +17,7 @@ export default function BoardPage() {
   const handleOpenChallenge = async (challengeId) => {
     try {
       const openedChallenge = await board.openChallenge(challengeId);
+      if (!openedChallenge) return;
       navigate(ROUTES.challengeDetail(openedChallenge.challengeId), {
         state: { boardAccess: openedChallenge },
       });
@@ -27,10 +28,16 @@ export default function BoardPage() {
 
   const runBoardAction = async (action) => {
     try {
-      await action();
+      return await action();
     } catch {
       // Board controller가 백엔드의 code/message를 화면 오류 상태로 보존한다.
+      return null;
     }
+  };
+
+  const handleEscapeQuarantine = async (code) => {
+    const result = await runBoardAction(() => board.escapeQuarantine(code));
+    if (result) setQuarantineDismissed(true);
   };
 
   return (
@@ -41,6 +48,9 @@ export default function BoardPage() {
       currentCell={board.currentCell}
       displayPosition={board.displayPosition}
       pendingRoll={board.pendingRoll}
+      pendingChanceChoice={board.pendingChanceChoice}
+      cellEvent={board.cellEvent}
+      awaitingDiscard={board.awaitingDiscard}
       ownedChanceCards={board.ownedChanceCards}
       cellStatesByIndex={board.cellStatesByIndex}
       selectedCell={board.selectedCell}
@@ -48,7 +58,9 @@ export default function BoardPage() {
       isMutating={board.isMutating}
       error={board.error}
       showQuarantine={
-        board.myBoard?.isQuarantined === true && !quarantineDismissed
+        board.myBoard?.isQuarantined === true &&
+        !board.awaitingDiscard &&
+        !quarantineDismissed
       }
       onReload={board.reload}
       onDismissError={board.clearError}
@@ -58,6 +70,21 @@ export default function BoardPage() {
       onMoveAirport={(destinationIndex) =>
         runBoardAction(() => board.moveAirport(destinationIndex))
       }
+      onUseChanceCard={(cardId, options) =>
+        runBoardAction(() => board.useChanceCard(cardId, options))
+      }
+      onConfirmChance={(choice) =>
+        runBoardAction(() => board.confirmChance(choice))
+      }
+      onDiscardChance={(cardId) =>
+        runBoardAction(() => board.discardChance(cardId))
+      }
+      onSpinRoulette={(eventToken) =>
+        runBoardAction(() => board.spinRoulette(eventToken))
+      }
+      onRetryChanceDraw={(eventToken) => board.drawChance(eventToken)}
+      onCloseCellEvent={board.closeCellEvent}
+      onEscapeQuarantine={handleEscapeQuarantine}
       onSelectCell={board.selectCell}
       onClearSelectedCell={board.clearSelectedCell}
       onCloseQuarantine={() => setQuarantineDismissed(true)}

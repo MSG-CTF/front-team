@@ -4,14 +4,22 @@ import apiClient from "./client.js";
 // (Notion API명세서 2026-08-23 스냅샷) 기준. 16개 엔드포인트 전부 백엔드 완료.
 //
 // 쓰기 계열(POST)은 전부 Idempotency-Key 헤더 필수 + 이동/굴림 계열은 팀장만.
-// idKey()로 요청마다 새 키를 만들어 넣는다.
+// 같은 논리 작업의 재시도에는 controller가 같은 키를 다시 전달한다.
 // 응답 성공 판정은 HTTP 상태가 아니라 utils/response.js isSuccess() (README 0-2절).
 
-function idKey(prefix) {
+export function createBoardIdempotencyKey(prefix) {
   const uuid =
     globalThis.crypto?.randomUUID?.() ??
     `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  return { headers: { "Idempotency-Key": `${prefix}-${uuid}` } };
+  return `${prefix}-${uuid}`;
+}
+
+function idKey(prefix, idempotencyKey) {
+  return {
+    headers: {
+      "Idempotency-Key": idempotencyKey ?? createBoardIdempotencyKey(prefix),
+    },
+  };
 }
 
 // ---- 조회 ----
@@ -41,46 +49,58 @@ export function getCurrentCell() {
 }
 
 // ---- 굴림 / 이동 (팀장만) ----
-export function rollDice() {
+export function rollDice({ idempotencyKey } = {}) {
   // POST /board/dice/roll - POST_ROLL 카드 보유 시 pending_confirm: true(미확정).
-  return apiClient.post("/board/dice/roll", undefined, idKey("dice-roll"));
+  return apiClient.post(
+    "/board/dice/roll",
+    undefined,
+    idKey("dice-roll", idempotencyKey),
+  );
 }
 
-export function confirmDice() {
+export function confirmDice({ idempotencyKey } = {}) {
   // POST /board/dice/confirm - 보류된 굴림 결과를 현재 위치에 확정.
-  return apiClient.post("/board/dice/confirm", undefined, idKey("dice-confirm"));
+  return apiClient.post(
+    "/board/dice/confirm",
+    undefined,
+    idKey("dice-confirm", idempotencyKey),
+  );
 }
 
-export function moveAirport({ destinationIndex }) {
+export function moveAirport({ destinationIndex, idempotencyKey }) {
   // POST /board/airport/move - 미소모 칸으로 직접 이동. destination_index 1~36.
   return apiClient.post(
     "/board/airport/move",
     { destination_index: destinationIndex },
-    idKey("airport-move"),
+    idKey("airport-move", idempotencyKey),
   );
 }
 
-export function escapeQuarantine({ code }) {
+export function escapeQuarantine({ code, idempotencyKey }) {
   // POST /board/quarantine/escape - 현장에서 찾은 탈출 코드 제출. 위치는 안 바뀜.
   return apiClient.post(
     "/board/quarantine/escape",
     { code },
-    idKey("quarantine-escape"),
+    idKey("quarantine-escape", idempotencyKey),
   );
 }
 
-export function spinRoulette() {
+export function spinRoulette({ idempotencyKey } = {}) {
   // POST /board/roulette/spin - 결과 50/100/150/200 각 25%. 팀당 1회.
-  return apiClient.post("/board/roulette/spin", undefined, idKey("roulette-spin"));
+  return apiClient.post(
+    "/board/roulette/spin",
+    undefined,
+    idKey("roulette-spin", idempotencyKey),
+  );
 }
 
 // ---- 문제 선택 ----
-export function openCell({ challengeId }) {
+export function openCell({ challengeId, idempotencyKey }) {
   // POST /board/cell/open - 후보 문제 1개 선택. cell_index는 안 보냄(서버가 현재 위치로 검증).
   return apiClient.post(
     "/board/cell/open",
     { challenge_id: challengeId },
-    idKey("cell-open"),
+    idKey("cell-open", idempotencyKey),
   );
 }
 
@@ -90,33 +110,41 @@ export function getChanceCatalog() {
   return apiClient.get("/board/chance/catalog");
 }
 
-export function drawChanceCard() {
+export function drawChanceCard({ idempotencyKey } = {}) {
   // POST /board/chance/now - 찬스칸에서 1장 뽑기. 뽑는 시점에 주사위 +1.
-  return apiClient.post("/board/chance/now", undefined, idKey("chance-draw"));
+  return apiClient.post(
+    "/board/chance/now",
+    undefined,
+    idKey("chance-draw", idempotencyKey),
+  );
 }
 
-export function useChanceCard(payload) {
+export function useChanceCard(payload, { idempotencyKey } = {}) {
   // POST /board/chance/use - 카드별 body 다름:
   //  card_move_offset  -> { card_id, offset: -3~3(0 제외) }
   //  card_free_travel  -> { card_id, destination_index }
   //  그 외             -> { card_id }
-  return apiClient.post("/board/chance/use", payload, idKey("chance-use"));
+  return apiClient.post(
+    "/board/chance/use",
+    payload,
+    idKey("chance-use", idempotencyKey),
+  );
 }
 
-export function confirmChanceCard({ choice }) {
+export function confirmChanceCard({ choice, idempotencyKey }) {
   // POST /board/chance/confirm - card_roll_twice_choose 전용. choice: "FIRST" | "SECOND".
   return apiClient.post(
     "/board/chance/confirm",
     { choice },
-    idKey("chance-confirm"),
+    idKey("chance-confirm", idempotencyKey),
   );
 }
 
-export function discardChanceCard({ cardId }) {
+export function discardChanceCard({ cardId, idempotencyKey }) {
   // POST /board/chance/discard - 보유 2장일 때 1장 폐기.
   return apiClient.post(
     "/board/chance/discard",
     { card_id: cardId },
-    idKey("chance-discard"),
+    idKey("chance-discard", idempotencyKey),
   );
 }
