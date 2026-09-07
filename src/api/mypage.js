@@ -7,3 +7,7 @@ export function getMyProfile(config = {}) {
 export function getMyMileageHistory(config = {}) {
   return apiClient.get("/teams/me/mileage_history", config);
 }
+
+export function issueMyQrToken(config = {}) {
+  return apiClient.post("/teams/me/qr_token", undefined, config);
+}

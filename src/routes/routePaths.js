@@ -1,4 +1,5 @@
 export const ROUTES = {
+  login: "/login",
   board: "/board",
   challengeDetail: (challengeId) => `/challenges/${encodeURIComponent(challengeId)}`,
   openChallenges: "/challenges",

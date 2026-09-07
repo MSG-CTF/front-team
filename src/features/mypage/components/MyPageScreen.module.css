@@ -301,3 +301,75 @@
 .backButton:active .backIcon {
   filter: brightness(0.88);
 }
+
+.logoutButton {
+  position: absolute;
+  z-index: 3;
+  top: 616px;
+  left: 481px;
+  width: 52px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #605145;
+  font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: normal;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.logoutButton:hover {
+  text-decoration: underline;
+}
+
+.logoutButton:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.logoutError {
+  position: absolute;
+  z-index: 3;
+  top: 640px;
+  left: 400px;
+  width: 214px;
+  margin: 0;
+  color: #8c2f2f;
+  font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.qrSlot {
+  position: absolute;
+  z-index: 3;
+  top: 457px;
+  left: 290px;
+  display: flex;
+  width: 141px;
+  height: 136px;
+  align-items: center;
+  justify-content: center;
+}
+
+.qrCode {
+  display: block;
+  width: 136px;
+  height: 136px;
+}
+
+.qrStatus {
+  width: 132px;
+  margin: 0;
+  color: #605145;
+  font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}

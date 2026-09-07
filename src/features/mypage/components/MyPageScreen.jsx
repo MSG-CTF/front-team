@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
 import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
 import { formatNumber } from "../utils/myPageData.js";
 import MileageHistoryTable from "./MileageHistoryTable.jsx";
@@ -27,9 +28,22 @@ function profileText(state, field) {
   return formatNumber(state.data[field]);
 }
 
-export default function MyPageScreen({ profile, mileageHistory, solveHistory }) {
+export default function MyPageScreen({
+  profile,
+  mileageHistory,
+  solveHistory,
+  onLogout,
+  isLoggingOut,
+  logoutError,
+  qrState,
+}) {
   const navigate = useNavigate();
   const profileData = profile.status === "success" ? profile.data : {};
+  const showQr =
+    qrState.status === "success" &&
+    Boolean(qrState.paymentToken) &&
+    Boolean(qrState.expiresAt) &&
+    qrState.remainingSeconds > 0;
 
   return (
     <FixedAspectStage backdropSrc={ASSETS.background} className={styles.stageViewport}>
@@ -68,6 +82,49 @@ export default function MyPageScreen({ profile, mileageHistory, solveHistory }) 
 
         <MileageHistoryTable panelSrc={ASSETS.mileageHistoryPanel} state={mileageHistory} />
         <SolveHistoryTable panelSrc={ASSETS.solveHistoryPanel} state={solveHistory} />
+
+        <section
+          className={styles.qrSlot}
+          aria-label={
+            showQr
+              ? `결제 QR 코드, ${qrState.remainingSeconds}초 후 만료`
+              : "결제 QR 코드"
+          }
+        >
+          {showQr && (
+            <QRCodeSVG
+              value={qrState.paymentToken}
+              size={136}
+              className={styles.qrCode}
+            />
+          )}
+          {qrState.status === "loading" && (
+            <p className={styles.qrStatus}>QR 발급 중</p>
+          )}
+          {qrState.status === "error" && (
+            <p className={styles.qrStatus} role="alert">
+              {qrState.error}
+            </p>
+          )}
+          {qrState.status === "expired" && (
+            <p className={styles.qrStatus}>QR 만료</p>
+          )}
+        </section>
+
+        <button
+          type="button"
+          className={styles.logoutButton}
+          onClick={onLogout}
+          disabled={isLoggingOut}
+          aria-label="로그아웃"
+        >
+          로그아웃
+        </button>
+        {logoutError && (
+          <p className={styles.logoutError} role="alert">
+            {logoutError}
+          </p>
+        )}
 
         <button
           type="button"
