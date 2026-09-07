@@ -9,8 +9,26 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  /* Figma 프레임 배경색(#f9eeee) — 배경 이미지가 로드되기 전 잠깐 비치는 색상용 폴백 */
+  /* Figma 프레임 배경색(#f9eeee) — 배경 이미지가 로드되기 전/::before 로딩 전
+     잠깐 비치는 색상용 폴백 */
   background: #f9eeee;
+}
+
+/* .stage는 1920x1080 원본 비율을 그대로 유지한 채 화면에 맞춰 축소만 하므로
+   (아래 --scale 참고), 뷰포트 비율이 16:9가 아니면 위아래 또는 좌우에 여백이
+   생긴다. 그 여백에 flat 배경색이 그대로 보이면 원본 그림과 이어지지 않고
+   경계가 도드라져 보인다("흰 배경"으로 보이는 원인). 같은 배경 그림을 흐리게
+   전체 화면에 깔아 여백을 그림의 연장처럼 보이게 채운다 - 노트북 화면 비율이
+   달라도(21:9, 4:3 등) 항상 자연스럽게 채워진다. */
+.page::before {
+  content: "";
+  position: absolute;
+  inset: -5%;
+  background-image: url("/assets/login/login-clean-plate@2x.webp");
+  background-size: cover;
+  background-position: center;
+  filter: blur(48px) brightness(0.82) saturate(1.05);
+  z-index: 0;
 }
 
 .stage {
@@ -46,6 +64,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
+  z-index: 1;
   width: var(--stage-w);
   height: var(--stage-h);
   transform-origin: center center;

@@ -1,4 +1,4 @@
-import apiClient from "./client.js";
+import apiClient, { clearStoredTokens, REFRESH_TOKEN_STORAGE_KEY } from "./client.js";
 
 // 인증. 경로와 스키마는 README.md "1. 로그인 페이지(인증)"(Notion API명세서 기준).
 
@@ -26,4 +26,21 @@ export function logout({ refreshToken }) {
 export function getMe(config) {
   // GET /auth/me (Bearer) - { user_id, nickname, is_leader, team_id, team_name, role }.
   return apiClient.get("/auth/me", config);
+}
+
+// 로그아웃 버튼(관리자/참가자 화면 공용)이 공유하는 플로우. 서버 로그아웃
+// (refresh_token 폐기)이 실패해도 로컬 토큰은 지우고 내보낸다 - 어차피
+// 남은 access_token은 1시간 뒤 만료된다(README 0-4절). 로그인 화면은
+// ROUTES에 없는 하드코딩 예외라(client.js의 401 인터셉터와 동일하게)
+// window.location으로 이동한다.
+export async function performLogout() {
+  try {
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+    if (refreshToken) await logout({ refreshToken });
+  } catch {
+    // 무시 - 아래에서 어차피 로컬 상태를 정리한다.
+  } finally {
+    clearStoredTokens();
+    window.location.assign("/login");
+  }
 }

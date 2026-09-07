@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { getMe } from "../../../api/auth.js";
+import { getMe, performLogout } from "../../../api/auth.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 
 // Figma: "MSG-CTF 프론트 개발" 파일, node-id 384:396 ("AdminDashboard_OpsOverview_v2").
@@ -126,9 +126,19 @@ export default function AdminLayout({ title, actions, children }) {
             <h1 className="font-im-fell text-[28px] leading-tight text-admin-ink">{title}</h1>
             <div className="flex flex-col items-end gap-1 text-right">
               <span className="font-kode-mono text-sm text-admin-gold">{formatKst(now)}</span>
-              <span className="font-song-myung text-sm text-admin-ink">
-                관리자 {nickname ? `· ${nickname}` : ""}
-              </span>
+              <div className="flex items-center gap-2">
+                <AdminBadge>관리자</AdminBadge>
+                <span className="font-song-myung text-sm text-admin-ink">
+                  {nickname ?? "불러오는 중..."}
+                </span>
+                <button
+                  type="button"
+                  onClick={performLogout}
+                  className="rounded border border-admin-divider px-2 py-0.5 font-song-myung text-xs text-admin-muted hover:border-admin-failed hover:text-admin-failed"
+                >
+                  로그아웃
+                </button>
+              </div>
             </div>
           </header>
           {actions && <div className="mb-4 flex justify-end">{actions}</div>}
