@@ -24,7 +24,7 @@ apiClient.interceptors.request.use((config) => {
 
 let refreshPromise = null;
 
-function clearStoredTokens() {
+export function clearStoredTokens() {
   localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
   localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
   localStorage.removeItem(ROLE_STORAGE_KEY);

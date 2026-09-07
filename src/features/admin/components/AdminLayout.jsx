@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { getMe } from "../../../api/auth.js";
+import { getMe, logout } from "../../../api/auth.js";
+import { clearStoredTokens, REFRESH_TOKEN_STORAGE_KEY } from "../../../api/client.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 
 // Figma: "MSG-CTF 프론트 개발" 파일, node-id 384:396 ("AdminDashboard_OpsOverview_v2").
@@ -73,6 +74,22 @@ function formatKst(date) {
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")} (KST)`;
 }
 
+// 서버 로그아웃(refresh_token 폐기)이 실패해도 로컬 토큰은 지우고 내보낸다 -
+// 어차피 클라이언트에 남은 access_token은 1시간 뒤 만료된다(README 0-4절).
+// 로그인 화면은 ROUTES에 없는 하드코딩 예외라 client.js의 401 인터셉터
+// (redirectToLogin)와 동일하게 window.location으로 이동한다.
+async function handleLogout() {
+  try {
+    const refreshToken = localStorage.getItem(REFRESH_TOKEN_STORAGE_KEY);
+    if (refreshToken) await logout({ refreshToken });
+  } catch {
+    // 무시 - 아래 finally에서 어차피 로컬 상태를 정리한다.
+  } finally {
+    clearStoredTokens();
+    window.location.assign("/login");
+  }
+}
+
 export default function AdminLayout({ title, actions, children }) {
   const nickname = useAdminNickname();
   const now = useKstClock();
@@ -126,9 +143,19 @@ export default function AdminLayout({ title, actions, children }) {
             <h1 className="font-im-fell text-[28px] leading-tight text-admin-ink">{title}</h1>
             <div className="flex flex-col items-end gap-1 text-right">
               <span className="font-kode-mono text-sm text-admin-gold">{formatKst(now)}</span>
-              <span className="font-song-myung text-sm text-admin-ink">
-                관리자 {nickname ? `· ${nickname}` : ""}
-              </span>
+              <div className="flex items-center gap-2">
+                <AdminBadge>관리자</AdminBadge>
+                <span className="font-song-myung text-sm text-admin-ink">
+                  {nickname ?? "불러오는 중..."}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded border border-admin-divider px-2 py-0.5 font-song-myung text-xs text-admin-muted hover:border-admin-failed hover:text-admin-failed"
+                >
+                  로그아웃
+                </button>
+              </div>
             </div>
           </header>
           {actions && <div className="mb-4 flex justify-end">{actions}</div>}
