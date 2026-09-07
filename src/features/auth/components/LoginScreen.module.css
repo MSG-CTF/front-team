@@ -9,34 +9,22 @@
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  /* Figma 프레임 배경색(#f9eeee) — 배경 이미지가 로드되기 전/::before 로딩 전
-     잠깐 비치는 색상용 폴백 */
+  /* Figma 프레임 배경색(#f9eeee) - 배경 이미지가 로드되기 전 잠깐 비치는 색상용 폴백 */
   background: #f9eeee;
-}
-
-/* .stage는 1920x1080 원본 비율을 그대로 유지한 채 화면에 맞춰 축소만 하므로
-   (아래 --scale 참고), 뷰포트 비율이 16:9가 아니면 위아래 또는 좌우에 여백이
-   생긴다. 그 여백에 flat 배경색이 그대로 보이면 원본 그림과 이어지지 않고
-   경계가 도드라져 보인다("흰 배경"으로 보이는 원인). 같은 배경 그림을 흐리게
-   전체 화면에 깔아 여백을 그림의 연장처럼 보이게 채운다 - 노트북 화면 비율이
-   달라도(21:9, 4:3 등) 항상 자연스럽게 채워진다. */
-.page::before {
-  content: "";
-  position: absolute;
-  inset: -5%;
-  background-image: url("/assets/login/login-clean-plate@2x.webp");
-  background-size: cover;
-  background-position: center;
-  filter: blur(48px) brightness(0.82) saturate(1.05);
-  z-index: 0;
 }
 
 .stage {
   --stage-w: 1920px;
   --stage-h: 1080px;
-  /* 뷰포트 어느 비율이든 1920x1080 원본 캔버스를 통째로 균일 스케일 — 좌표계를 절대
-     흩뜨리지 않는다. width/height는 항상 1920x1080 그대로 두고 transform만 축소/확대. */
-  --scale: min(100vw / 1920px, 100vh / 1080px);
+  /* 뷰포트 어느 비율이든 1920x1080 원본 캔버스를 화면 전체를 꽉 채우도록 확대/
+     축소한다(= CSS의 cover와 같은 방식). min이 아니라 max를 쓰면 좁은 쪽
+     기준이 아니라 넓은 쪽 기준으로 커지기 때문에, 16:9가 아닌 화면(21:9
+     울트라와이드, 4:3에 가까운 화면 등)에서는 캔버스가 뷰포트보다 커져서
+     위아래 또는 좌우가 뷰포트 밖으로 살짝 잘려나간다 - 그 대신 화면에 남는
+     여백(과거엔 flat 배경색이 그대로 보였다) 자체가 없어진다. 캔버스 안의
+     모든 요소(로고/입력창/버튼)는 좌표 그대로, 스케일만 같이 커지므로
+     입력창 위치가 어긋나지 않는다. */
+  --scale: max(100vw / 1920px, 100vh / 1080px);
 
   --username-x: 622px;
   --username-y: 455px;
@@ -64,7 +52,6 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  z-index: 1;
   width: var(--stage-w);
   height: var(--stage-h);
   transform-origin: center center;
