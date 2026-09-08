@@ -4,27 +4,32 @@
  * 조정이 필요하면 아래 --* 변수만 고치면 된다 (본문 셀렉터는 좌표를 직접 갖지 않음).
  */
 
+/* Figma node 467:345 "Frame 2" > "Background_Forest" - 관리자 대시보드(node
+   384:396)와 같은 원본 그림(md5 동일)이다. 배경과 로그인 카드를 분리했다 -
+   .page가 뷰포트 전체를 이 그림으로 cover 채우고(정렬 좌표가 필요 없는
+   순수 장식이라 잘리는 건 문제 없음), 그 위에 .stage(카드+입력창+버튼)를
+   원본 비율 그대로 균일 축소(min)해서 얹는다. 화면 비율이 16:9가 아니어도
+   .page가 항상 화면을 꽉 채우고, .stage는 절대 잘리지 않고(카드 테두리
+   전체 항상 보임) 크기만 반응형으로 줄어든다. */
 .page {
   position: relative;
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  /* Figma 프레임 배경색(#f9eeee) - 배경 이미지가 로드되기 전 잠깐 비치는 색상용 폴백 */
-  background: #f9eeee;
+  background-image: url("/assets/login/background-plaza.png");
+  background-size: cover;
+  background-position: center;
+  /* 배경 이미지가 로드되기 전 잠깐 비치는 색상용 폴백(Figma 프레임 배경색) */
+  background-color: #f9eeee;
 }
 
 .stage {
   --stage-w: 1920px;
   --stage-h: 1080px;
-  /* 뷰포트 어느 비율이든 1920x1080 원본 캔버스를 화면 전체를 꽉 채우도록 확대/
-     축소한다(= CSS의 cover와 같은 방식). min이 아니라 max를 쓰면 좁은 쪽
-     기준이 아니라 넓은 쪽 기준으로 커지기 때문에, 16:9가 아닌 화면(21:9
-     울트라와이드, 4:3에 가까운 화면 등)에서는 캔버스가 뷰포트보다 커져서
-     위아래 또는 좌우가 뷰포트 밖으로 살짝 잘려나간다 - 그 대신 화면에 남는
-     여백(과거엔 flat 배경색이 그대로 보였다) 자체가 없어진다. 캔버스 안의
-     모든 요소(로고/입력창/버튼)는 좌표 그대로, 스케일만 같이 커지므로
-     입력창 위치가 어긋나지 않는다. */
-  --scale: max(100vw / 1920px, 100vh / 1080px);
+  /* 뷰포트 어느 비율이든 1920x1080 카드 캔버스를 통째로 균일 스케일 - 카드가
+     잘리는 일 없이 항상 전체가 보인다. 남는 여백은 위 .page의 배경 그림이
+     채운다. */
+  --scale: min(100vw / 1920px, 100vh / 1080px);
 
   --username-x: 622px;
   --username-y: 455px;
