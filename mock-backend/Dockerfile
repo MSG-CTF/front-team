@@ -7,15 +7,19 @@ WORKDIR /app
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends gcc \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --system app \
+    && useradd --system --gid app --home-dir /app --shell /usr/sbin/nologin app \
+    && chown app:app /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY --chown=app:app . .
 
-COPY entrypoint.sh /entrypoint.sh
+COPY --chown=app:app entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 EXPOSE 8000
+USER app
 ENTRYPOINT ["/entrypoint.sh"]
