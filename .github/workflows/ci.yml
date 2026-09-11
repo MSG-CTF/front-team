@@ -1,21 +1,18 @@
 name: CI
 
-# 아직 프론트 팀 확답 전 항목(리버스 프록시 구현 레벨, 배포 타겟)이 남아있어
-# 일단 수동 실행(workflow_dispatch)으로만 걸어둠
-#
 # job이 현재 2개임
-# 1) frontend-code-scan: jm_devsecops(jm)의 frontend-ci.yml을 호출.
-#    gitleaks/semgrep/trivy(fs) 보안 스캔 + docker build 검증(root 사용자 확인,
-#    Trivy 이미지 스캔) + npm build까지 여기서 전부 끝난다.
+# 1) frontend-code-scan: jm_devsecops(중앙 DevSecOps 저장소)의 frontend-ci.yml을 호출.
+#    gitleaks/semgrep/trivy(fs) 보안 스캔 + npm audit + docker build 검증(root 사용자 확인,
+#    Trivy 이미지 스캔, smoke test) + npm build까지 여기서 전부 끝난다.
 # 2) supply-chain-build-scan-push: GHCR에 실제로 올릴 이미지를 태그해서 빌드하고
 #    SBOM 생성 후 push한다. 이미지 취약점/시크릿 스캔은 위 job에서 이미 같은
 #    Dockerfile로 검증했으므로 여기서 다시 돌리지 않는다(중복 스캔 방지).
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
   # push:
-  #   branches: [main]
-  # pull_request:
   #   branches: [main]
 
 permissions:
@@ -31,14 +28,16 @@ env:
 
 jobs:
   frontend-code-scan:
-    # TODO: frontend-v1.0.0 태그 생성 전까지는 branch ref(@jm)로 임시 참조한다.
-    # 태깅 완료되면 @frontend-v1.0.0으로 즉시 교체할 것 — branch ref는 나중에
-    # 다른 커밋이 push되면 이 워크플로가 가리키는 내용이 바뀌는 리스크가 있다.
-    uses: MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@jm
+    # 중앙 CD PR #5가 병합되고 v3.4.0 태그가 발행되기 전까지는 커밋 SHA로 고정
+    # 참조한다. 태깅 완료되면 @v3.4.0으로 교체할 것 — branch ref(@jm)는 나중에
+    # 다른 커밋이 push되면 이 워크플로가 가리키는 내용이 바뀌는 리스크가 있어
+    # 쓰지 않는다.
+    uses: MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@43e06bc6a1615dfbd60bfab85451c128b7acfb02
     with:
       working-directory: .
       dockerfile-path: ./Dockerfile
-    secrets: inherit
+      node-version: "20.19.5"
+      container-port: 80
 
   supply-chain-build-scan-push:
     needs: frontend-code-scan

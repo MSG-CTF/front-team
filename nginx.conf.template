@@ -1,0 +1,29 @@
+# BACKEND_URL/PORT는 컨테이너 시작 시점에 envsubst로 치환된다.
+# (Dockerfile의 NGINX_ENVSUBST_FILTER가 이 두 변수만 치환 대상으로 제한한다.
+#  $host, $remote_addr 같은 nginx 자체 변수는 필터 밖이라 그대로 유지된다.)
+#
+# 로컬 docker-compose: BACKEND_URL=http://backend:8000, PORT=80
+# Cloud Run 등 배포 환경: BACKEND_URL=https://<백엔드 서비스 주소>, PORT는 런타임이 지정
+
+server {
+    listen ${PORT};
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # React Router(SPA) — 새로고침/직접 URL 진입 시 index.html로 폴백
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # 백엔드 API 프록시
+    location /api/v1/ {
+        proxy_pass ${BACKEND_URL}/api/v1/;
+        # BACKEND_URL이 https일 때 SNI를 보내야 하는 백엔드(Cloud Run 등)에 대응
+        proxy_ssl_server_name on;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
