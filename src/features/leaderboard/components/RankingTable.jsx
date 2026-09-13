@@ -77,6 +77,11 @@ export default function RankingTable({ rankings, status }) {
       </div>
 
       <div className={styles.tableBody}>
+        {Array.from({ length: 6 }, (_, index) => (
+          <span key={index} className={styles.rankCell} style={{ top: DATA_COLUMNS[0].centers[index] - 22 }} aria-label={rankings[index] ? `${rankings[index].rank}위` : undefined}>
+            {rankings[index]?.rank ?? ""}
+          </span>
+        ))}
         {rankings.slice(0, 6).map((ranking, rowIndex) => {
           const categoryScores = ranking.categoryScores ?? Array(9).fill(null);
           const values = [
@@ -97,6 +102,7 @@ export default function RankingTable({ rankings, status }) {
                 ]
                   .filter(Boolean)
                   .join(" ")}
+                title={columnIndex === 0 ? `${ranking.rank}위 ${ranking.teamName}` : String(value)}
                 key={`${ranking.key}-${column.key}`}
                 style={toTextBoxStyle(dataTextBox(column, rowIndex))}
               >

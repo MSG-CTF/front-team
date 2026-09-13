@@ -51,7 +51,7 @@ export function buildScoreSeries(teams) {
   const series = visibleTeams
     .map((team, index) => {
       let cumulativeScore = 0;
-      const points = [{ timestamp: minTime, score: 0 }];
+      const points = [{ timestamp: minTime, score: 0, isBoundary: true }];
 
       team.solves.forEach((solve) => {
         const timestamp = asTimestamp(solve.solvedAt);
@@ -60,6 +60,8 @@ export function buildScoreSeries(teams) {
         cumulativeScore += solve.points;
         points.push({ timestamp, score: cumulativeScore });
       });
+
+      if (points.length > 1) points.push({ timestamp: maxTime, score: cumulativeScore, isBoundary: true });
 
       return {
         key: team.key,
@@ -88,28 +90,18 @@ export function createChartScales({ minTime, maxTime, maxScore, width, height })
 }
 
 export function toPolylinePoints(points, scaleX, scaleY) {
-  return points
-    .map(
-      (point) =>
-        `${scaleX(point.timestamp).toFixed(2)},${scaleY(point.score).toFixed(2)}`,
-    )
-    .join(" ");
+  return points.flatMap((point, index) => {
+    const position = `${scaleX(point.timestamp).toFixed(2)},${scaleY(point.score).toFixed(2)}`;
+    if (index === 0) return [position];
+    return [`${scaleX(point.timestamp).toFixed(2)},${scaleY(points[index - 1].score).toFixed(2)}`, position];
+  }).join(" ");
 }
 
-export function interpolateScoreAtTime(points, time) {
-  if (points.length === 0) return 0;
-  if (time <= points[0].timestamp) return points[0].score;
-
-  for (let index = 1; index < points.length; index += 1) {
-    const previous = points[index - 1];
-    const next = points[index];
-
-    if (time <= next.timestamp) {
-      if (next.timestamp === previous.timestamp) return next.score;
-      const ratio = (time - previous.timestamp) / (next.timestamp - previous.timestamp);
-      return previous.score + (next.score - previous.score) * ratio;
-    }
+export function scoreAtTime(points, time) {
+  let score = 0;
+  for (const point of points) {
+    if (point.timestamp > time) break;
+    score = point.score;
   }
-
-  return points[points.length - 1].score;
+  return score;
 }

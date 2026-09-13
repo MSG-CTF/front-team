@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import { toKst } from "../../../utils/time.js";
 import {
   buildScoreSeries,
+  niceAxisMax,
   createChartScales,
-  interpolateScoreAtTime,
+  scoreAtTime,
   toPolylinePoints,
 } from "../utils/leaderboardChartData.js";
 import styles from "./LeaderboardScoreGraph.module.css";
@@ -11,10 +12,10 @@ import styles from "./LeaderboardScoreGraph.module.css";
 const VIEW_WIDTH = 1227;
 const VIEW_HEIGHT = 362;
 const PLOT = {
-  left: 28,
-  top: 12,
-  right: 22,
-  bottom: 16,
+  left: 43,
+  top: 56,
+  right: 0,
+  bottom: 0,
 };
 
 const STATUS_MESSAGE = {
@@ -66,7 +67,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
       Array.from(
         new Set(
           chartData.series.flatMap((entry) =>
-            entry.points.slice(1).map((point) => point.timestamp),
+            entry.points.filter((point) => !point.isBoundary).map((point) => point.timestamp),
           ),
         ),
       ).sort((left, right) => left - right),
@@ -88,17 +89,38 @@ export default function LeaderboardScoreGraph({ teams, status }) {
 
   return (
     <div className={styles.graph} onPointerLeave={() => setHoverX(null)}>
+      <div aria-hidden="true" style={{ position: "absolute", left: -42, top: 34, width: 82, height: 350, background: "#e6d2a4" }} />
+      <div aria-hidden="true" style={{ position: "absolute", left: 0, top: 365, width: 1280, height: 42, background: "#e6d2a4" }} />
+      {hasSeries && Array.from({ length: 6 }, (_, index) => {
+        const value = niceAxisMax(chartData.maxScore) * index / 5;
+        return <span key={index} style={{ position: "absolute", right: "calc(100% - 35px)", top: PLOT.top + scales.y(value) - 10, fontSize: 16 }}>{formatScore(value)}</span>;
+      })}
+      {hasSeries && Array.from({ length: 5 }, (_, index) => {
+        const time = chartData.minTime + (chartData.maxTime - chartData.minTime) * index / 4;
+        return <span key={index} style={{ position: "absolute", left: PLOT.left + scales.x(time), top: 369, fontSize: 15, transform: "translateX(-50%)", whiteSpace: "nowrap" }}>{formatTime(time)} KST</span>;
+      })}
       {hasSeries ? (
         <svg
           className={styles.svg}
           viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
           preserveAspectRatio="none"
           role="img"
+          tabIndex={0}
+          onFocus={() => setHoverX(scales.x(solveTimes[0]))}
+          onBlur={() => setHoverX(null)}
+          onKeyDown={(event) => {
+            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+            event.preventDefault();
+            const index = solveTimes.indexOf(hoverTime);
+            const next = event.key === "Home" ? 0 : event.key === "End" ? solveTimes.length - 1
+              : Math.max(0, Math.min(solveTimes.length - 1, index + (event.key === "ArrowRight" ? 1 : -1)));
+            setHoverX(scales.x(solveTimes[next]));
+          }}
           aria-labelledby="leaderboard-score-title leaderboard-score-description"
         >
           <title id="leaderboard-score-title">팀별 누적 점수 그래프</title>
           <desc id="leaderboard-score-description">
-            문제 풀이 시각 순으로 점수를 누적한 상위 팀 그래프
+            조회 시점의 점수를 최초 풀이 시각에 누적한 그래프, KOTH 점수는 과거 획득 시각에 반영됨, 좌우 방향키로 시각 탐색
           </desc>
           <defs>
             <filter id="score-line-glow" x="-10%" y="-20%" width="120%" height="140%">
@@ -137,7 +159,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
                   <circle
                     key={entry.key}
                     cx={scales.x(hoverTime)}
-                    cy={scales.y(interpolateScoreAtTime(entry.points, hoverTime))}
+                    cy={scales.y(scoreAtTime(entry.points, hoverTime))}
                     r={3.5}
                     fill={entry.color}
                     className={styles.hoverPoint}
@@ -174,7 +196,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
               />
               <span className={styles.tooltipName}>{entry.name}</span>
               <strong className={styles.tooltipScore}>
-                {formatScore(interpolateScoreAtTime(entry.points, hoverTime))}
+                {formatScore(scoreAtTime(entry.points, hoverTime))}
               </strong>
             </p>
           ))}
