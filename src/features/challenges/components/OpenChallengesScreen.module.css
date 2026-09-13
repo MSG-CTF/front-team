@@ -606,6 +606,9 @@
   outline: 3px solid #a86725;
   outline-offset: 3px;
 }
+.page .solvedArchive > summary:focus-visible {
+  outline-offset: -5px;
+}
 .srOnly {
   position: absolute;
   width: 1px;
