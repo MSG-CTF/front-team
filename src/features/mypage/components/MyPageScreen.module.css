@@ -373,3 +373,17 @@
   text-align: center;
   overflow-wrap: anywhere;
 }
+
+.teamName { overflow: hidden; text-overflow: ellipsis; }
+.rankValue { width: 48px; }
+.mileageDate { width: 220px; font-size: 20px; }
+.solveTime { width: 175px; font-size: 20px; }
+.scoreBreakdown { position: absolute; top: 363px; left: 672px; margin: 0; color: #f1d3a6; font-size: 15px; }
+.refreshBar { position: absolute; top: 387px; left: 636px; width: 1150px; display: flex; gap: 18px; align-items: center; color: #613d15; font-size: 16px; }
+.refreshBar button, .historyPagination button, .qrActions button { border: 1px solid #9b7449; border-radius: 4px; background: #e7d4b3; padding: 2px 10px; }
+.refreshBar button:disabled, .historyPagination button:disabled, .qrActions button:disabled { opacity: 0.5; cursor: not-allowed; }
+.historyPagination { position: absolute; top: 240px; left: 420px; width: 400px; display: flex; justify-content: center; align-items: center; gap: 16px; font-size: 16px; color: #613d15; }
+.qrActions { position: absolute; top: 599px; left: 239px; width: 245px; text-align: center; font-size: 15px; color: #613d15; }
+.qrHint { display: block; margin-top: 5px; font-size: 12px; }
+
+.tableCell { text-overflow: ellipsis; }

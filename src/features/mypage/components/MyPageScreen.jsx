@@ -1,3 +1,4 @@
+import { ROUTES } from "../../../routes/routePaths.js";
 import { useNavigate } from "react-router-dom";
 import { QRCodeSVG } from "qrcode.react";
 import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
@@ -36,6 +37,7 @@ export default function MyPageScreen({
   isLoggingOut,
   logoutError,
   qrState,
+  onIssueQr, qrDisabled, onRefresh, refreshing, refreshError,
 }) {
   const navigate = useNavigate();
   const profileData = profile.status === "success" ? profile.data : {};
@@ -80,6 +82,13 @@ export default function MyPageScreen({
           {profile.status === "success" ? formatNumber(profileData.rank) : "—"}
         </p>
 
+        <p className={styles.scoreBreakdown}>JEOPARDY {formatNumber(profileData.jeopardyScore)} / KOTH {formatNumber(profileData.kothScore)}</p>
+        <div className={styles.refreshBar}>
+          <button type="button" disabled={refreshing} onClick={onRefresh}>새로고침</button>
+          <span role={refreshError || profileData.isBanned ? "alert" : undefined}>{profileData.isBanned
+            ? `활동 정지: ${profileData.banReason || "운영자에게 문의하세요"}`
+            : refreshError ? "일부 정보를 갱신하지 못했습니다. 다시 시도하세요" : "30초마다 갱신 / 표시 시간 KST"}</span>
+        </div>
         <MileageHistoryTable panelSrc={ASSETS.mileageHistoryPanel} state={mileageHistory} />
         <SolveHistoryTable panelSrc={ASSETS.solveHistoryPanel} state={solveHistory} />
 
@@ -111,6 +120,11 @@ export default function MyPageScreen({
           )}
         </section>
 
+        <div className={styles.qrActions}>
+          {showQr && <span>{qrState.remainingSeconds}초 후 만료</span>}
+          {!showQr && <button type="button" onClick={onIssueQr} disabled={qrDisabled || qrState.status === "loading"}>{qrState.status === "idle" ? "결제 QR 발급" : "QR 다시 발급"}</button>}
+          <span className={styles.qrHint}>새 QR 발급 시 이전 QR은 만료됩니다</span>
+        </div>
         <button
           type="button"
           className={styles.logoutButton}
@@ -129,7 +143,7 @@ export default function MyPageScreen({
         <button
           type="button"
           className={styles.backButton}
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(ROUTES.board)}
           aria-label="이전 페이지로 이동"
         >
           <img src={ASSETS.backIcon} alt="" aria-hidden="true" className={styles.backIcon} />

@@ -19,12 +19,13 @@ export default function TeamInfoCard({
         <img src={cleanTeamSourceSrc} alt="" className={styles.teamNameCleanImage} />
       </div>
 
-      <p className={styles.teamName}>{visibleTeamName}</p>
+      <p className={styles.teamName} title={visibleTeamName}>{visibleTeamName}</p>
 
       {status === "success" &&
         members.slice(0, 2).map((member, index) => (
           <p
             key={`${member}-${index}`}
+            title={member}
             className={styles.memberName}
             style={{ top: `${567 + index * 56}px` }}
           >

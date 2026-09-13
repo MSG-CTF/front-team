@@ -11,3 +11,7 @@ export function getMyMileageHistory(config = {}) {
 export function issueMyQrToken(config = {}) {
   return apiClient.post("/teams/me/qr_token", undefined, config);
 }
+
+export function getMySolves(config = {}) {
+  return apiClient.get("/teams/me/solves", config);
+}

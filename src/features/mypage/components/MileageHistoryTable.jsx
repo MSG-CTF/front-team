@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import HistoryPagination from "./HistoryPagination.jsx";
 import styles from "./MyPageScreen.module.css";
 
 const ROW_GEOMETRY = [
@@ -14,6 +16,9 @@ function statusLabel(status) {
 }
 
 export default function MileageHistoryTable({ panelSrc, state }) {
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil((state.data?.length || 0) / 3));
+  useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
   const message = statusLabel(state.status);
   const rows = state.status === "success" ? state.data : [];
 
@@ -23,10 +28,10 @@ export default function MileageHistoryTable({ panelSrc, state }) {
 
       {message && <p className={styles.tableStatus}>{message}</p>}
 
-      {rows.slice(0, 3).map((row, index) => {
+      {rows.slice((page - 1) * 3, page * 3).map((row, index) => {
         const geometry = ROW_GEOMETRY[index];
         return (
-          <div key={row.id}>
+          <div key={row.id} title={row.reason}>
             <p
               className={`${styles.tableCell} ${styles.gildaText} ${styles.mileageDate}`}
               style={{ top: `${geometry.dateTop}px` }}
@@ -57,6 +62,7 @@ export default function MileageHistoryTable({ panelSrc, state }) {
           </div>
         );
       })}
+      <HistoryPagination page={page} pageCount={pageCount} onChange={setPage} label="마일리지 기록 페이지" />
     </section>
   );
 }

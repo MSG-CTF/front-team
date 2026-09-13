@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import HistoryPagination from "./HistoryPagination.jsx";
 import styles from "./MyPageScreen.module.css";
 
 const ROW_GEOMETRY = [
@@ -15,6 +17,9 @@ function statusLabel(status) {
 }
 
 export default function SolveHistoryTable({ panelSrc, state }) {
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil((state.data?.length || 0) / 3));
+  useEffect(() => { setPage((current) => Math.min(current, pageCount)); }, [pageCount]);
   const message = statusLabel(state.status);
   const rows = state.status === "success" ? state.data : [];
 
@@ -24,10 +29,10 @@ export default function SolveHistoryTable({ panelSrc, state }) {
 
       {message && <p className={styles.tableStatus}>{message}</p>}
 
-      {rows.slice(0, 3).map((row, index) => {
+      {rows.slice((page - 1) * 3, page * 3).map((row, index) => {
         const geometry = ROW_GEOMETRY[index];
         return (
-          <div key={row.id}>
+          <div key={row.id} title={`${row.sourceType || "-"} / 제출자 ${row.solver || "팀"} / 마일리지 ${row.earnedMileage ?? "-"} / 추가 주사위 ${row.extraDiceGranted ? "지급" : "미지급"}`}>
             <p
               className={`${styles.tableCell} ${styles.fellText} ${styles.solveChallenge}`}
               style={{ top: `${geometry.textTop}px` }}
@@ -63,6 +68,7 @@ export default function SolveHistoryTable({ panelSrc, state }) {
           </div>
         );
       })}
+      <HistoryPagination page={page} pageCount={pageCount} onChange={setPage} label="풀이 기록 페이지" />
     </section>
   );
 }
