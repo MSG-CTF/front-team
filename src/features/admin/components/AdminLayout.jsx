@@ -38,10 +38,10 @@ function useAdminNickname() {
     let cancelled = false;
     getMe()
       .then((res) => {
-        if (!cancelled) setNickname(res.data?.data?.nickname ?? null);
+        if (!cancelled) setNickname(res.data?.data?.nickname ?? "조회 실패");
       })
       .catch(() => {
-        if (!cancelled) setNickname(null);
+        if (!cancelled) setNickname("조회 실패");
       });
     return () => {
       cancelled = true;
@@ -91,7 +91,7 @@ export default function AdminLayout({ title, actions, children }) {
             <img src={LOGO_SRC} alt="" aria-hidden="true" className="h-10 w-10 object-contain" />
             <span className="font-im-fell text-lg text-admin-ink">MSG CTF</span>
           </div>
-          <nav className="flex flex-1 flex-col gap-1">
+          <nav aria-label="관리자 메뉴" className="flex flex-1 flex-col gap-1">
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.to}
@@ -119,7 +119,7 @@ export default function AdminLayout({ title, actions, children }) {
         </aside>
 
         <main
-          className="flex-1 rounded-2xl bg-cover bg-center px-6 py-6 md:px-10 md:py-8"
+          className="min-w-0 flex-1 rounded-2xl bg-cover bg-center px-6 py-6 md:px-10 md:py-8"
           style={{ backgroundImage: `url(${PANEL_SRC})` }}
         >
           <header className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-admin-divider pb-4">
@@ -151,9 +151,9 @@ export default function AdminLayout({ title, actions, children }) {
 
 export function AdminStatusMessage({ status, error, onRetry }) {
   if (status === "loading") {
-    return <p className="font-song-myung text-sm text-admin-muted">불러오는 중입니다...</p>;
+    return <p role="status" className="font-song-myung text-sm text-admin-muted">불러오는 중입니다...</p>;
   }
-  if (status === "error") {
+  if (status === "error" || status === "unavailable") {
     return (
       <div className="flex items-center gap-3 rounded border border-admin-failed bg-[rgba(163,73,52,0.12)] px-4 py-3 text-sm">
         <span role="alert" className="flex-1 font-song-myung text-admin-ink">{error}</span>

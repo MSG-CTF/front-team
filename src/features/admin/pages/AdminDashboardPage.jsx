@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   adjustMileage,
   forceResetInstance,
@@ -7,13 +7,15 @@ import {
   getAdminEvents,
   getAdminInstances,
   getAdminResources,
-  getAdminTeams,
   getTeamSnapshots,
   rollbackTeam,
 } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import AdminLayout, { AdminStatusMessage } from "../components/AdminLayout.jsx";
+import Modal from "../components/AdminDialog.jsx";
+import useAdminTeamOptions from "../hooks/useAdminTeamOptions.js";
+import { getAdminRequestError, summarizeAdminResources } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 
 // 운영 대시보드 - Figma node 384:396 "AdminDashboard_OpsOverview_v2".
@@ -57,30 +59,16 @@ function QuickActionButton({ variant, label, onClick }) {
   );
 }
 
-function Modal({ title, onClose, children }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="w-full max-w-md rounded-xl border border-admin-divider bg-[#f3e6cf] p-5 text-admin-ink shadow-xl">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="font-im-fell text-xl">{title}</h2>
-          <button type="button" onClick={onClose} className="font-song-myung text-sm text-admin-muted hover:text-admin-ink">
-            닫기
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  );
-}
-
 function InstanceActionModal({ label, onClose, onSubmit }) {
   const [instanceId, setInstanceId] = useState("");
+  const pending = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!instanceId.trim()) return;
+    if (pending.current || !instanceId.trim()) return;
+    pending.current = true;
     setIsSubmitting(true);
     setError("");
     try {
@@ -89,17 +77,19 @@ function InstanceActionModal({ label, onClose, onSubmit }) {
     } catch (err) {
       setError(err.response?.data?.message || err.message || "처리에 실패했습니다.");
     } finally {
+      pending.current = false;
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Modal title={label} onClose={onClose}>
+    <Modal title={label} onClose={onClose} busy={isSubmitting}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label className="flex flex-col gap-1 font-song-myung text-sm">
           대상 인스턴스 ID
           <input
             autoFocus
+            disabled={isSubmitting}
             value={instanceId}
             onChange={(event) => setInstanceId(event.target.value)}
             placeholder="문제 목록 · 인스턴스 페이지에서 복사"
@@ -119,30 +109,21 @@ function InstanceActionModal({ label, onClose, onSubmit }) {
   );
 }
 
-function useTeamOptions() {
-  const [teams, setTeams] = useState([]);
-  useEffect(() => {
-    getAdminTeams({ size: 100, sort: "name" })
-      .then((res) => {
-        if (isSuccess(res.data)) setTeams(res.data.data.teams ?? []);
-      })
-      .catch(() => setTeams([]));
-  }, []);
-  return teams;
-}
-
 function MileageGrantModal({ onClose, onDone }) {
-  const teams = useTeamOptions();
+  const teamOptions = useAdminTeamOptions();
+  const teams = teamOptions.data?.teams ?? [];
   const [teamId, setTeamId] = useState("");
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  const pending = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const parsed = Number(amount);
-    if (!teamId || !parsed || !reason.trim()) return;
+    if (pending.current || !teamId || !Number.isSafeInteger(parsed) || parsed === 0 || !reason.trim() || reason.trim().length > 500) return;
+    pending.current = true;
     setIsSubmitting(true);
     setError("");
     try {
@@ -153,16 +134,19 @@ function MileageGrantModal({ onClose, onDone }) {
     } catch (err) {
       setError(err.response?.data?.message || err.message || "마일리지 지급에 실패했습니다.");
     } finally {
+      pending.current = false;
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Modal title="마일리지 지급" onClose={onClose}>
+    <Modal title="마일리지 지급" onClose={onClose} busy={isSubmitting}>
+      <AdminStatusMessage status={teamOptions.status} error={teamOptions.error} onRetry={teamOptions.retry}/>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label className="flex flex-col gap-1 font-song-myung text-sm">
           대상 팀
           <select
+            disabled={isSubmitting}
             value={teamId}
             onChange={(event) => setTeamId(event.target.value)}
             className="rounded border border-admin-divider bg-white/60 px-3 py-2 text-sm"
@@ -179,6 +163,9 @@ function MileageGrantModal({ onClose, onDone }) {
           변동량(+지급 / -회수)
           <input
             type="number"
+            required
+            step={1}
+            disabled={isSubmitting}
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
             className="rounded border border-admin-divider bg-white/60 px-3 py-2 font-kode-mono text-sm"
@@ -187,6 +174,9 @@ function MileageGrantModal({ onClose, onDone }) {
         <label className="flex flex-col gap-1 font-song-myung text-sm">
           사유
           <input
+            required
+            maxLength={500}
+            disabled={isSubmitting}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             className="rounded border border-admin-divider bg-white/60 px-3 py-2 text-sm"
@@ -206,29 +196,42 @@ function MileageGrantModal({ onClose, onDone }) {
 }
 
 function RollbackModal({ onClose, onDone }) {
-  const teams = useTeamOptions();
+  const teamOptions = useAdminTeamOptions();
+  const teams = teamOptions.data?.teams ?? [];
   const [teamId, setTeamId] = useState("");
   const [snapshots, setSnapshots] = useState([]);
   const [snapshotId, setSnapshotId] = useState("");
   const [reason, setReason] = useState("");
+  const pending = useRef(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const [snapshotState, setSnapshotState] = useState({ status: "idle", teamId: null });
+  const [snapshotRevision, setSnapshotRevision] = useState(0);
   useEffect(() => {
-    if (!teamId) {
-      setSnapshots([]);
-      return;
-    }
-    getTeamSnapshots(teamId)
-      .then((res) => {
-        if (isSuccess(res.data)) setSnapshots(res.data.data.snapshots ?? []);
-      })
-      .catch(() => setSnapshots([]));
-  }, [teamId]);
+    setSnapshots([]);
+    setSnapshotId("");
+    if (!teamId) { setSnapshotState({ status: "idle", teamId: null }); return; }
+    const controller = new AbortController();
+    let active = true;
+    setSnapshotState({ status: "loading", teamId });
+    setError("");
+    getTeamSnapshots(teamId, { signal: controller.signal, timeout: 10000 }).then((response) => {
+      if (!isSuccess(response.data) || !Array.isArray(response.data.data?.snapshots)) throw new Error("롤백 지점을 조회하지 못했습니다");
+      if (active) {
+        setSnapshots(response.data.data.snapshots);
+        setSnapshotState({ status: "success", teamId });
+      }
+    }).catch((requestError) => {
+      if (active) { setSnapshotState({ status: "error", teamId }); setError(getAdminRequestError(requestError, "롤백 지점을 조회하지 못했습니다").error); }
+    });
+    return () => { active = false; controller.abort(); };
+  }, [teamId, snapshotRevision]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (!teamId || !snapshotId || !reason.trim()) return;
+    if (pending.current || !teamId || snapshotState.teamId !== teamId || !snapshots.some((item) => item.snapshot_id === snapshotId && !item.is_rolled_back) || !reason.trim() || reason.trim().length > 500) return;
+    pending.current = true;
     setIsSubmitting(true);
     setError("");
     try {
@@ -237,26 +240,26 @@ function RollbackModal({ onClose, onDone }) {
       onDone();
       onClose();
     } catch (err) {
-      setError(
-        err.response?.status === 404
-          ? "이 팀에는 아직 롤백 지점이 없습니다(밴/칸 상태 변경/위치 이동/주사위 지급 시 자동 생성)."
-          : err.response?.data?.message || err.message || "롤백에 실패했습니다.",
-      );
+      setError(getAdminRequestError(err, "롤백에 실패했습니다").error);
     } finally {
+      pending.current = false;
       setIsSubmitting(false);
     }
   };
 
   return (
-    <Modal title="롤백 실행" onClose={onClose}>
+    <Modal title="롤백 실행" onClose={onClose} busy={isSubmitting}>
+      <AdminStatusMessage status={teamOptions.status} error={teamOptions.error} onRetry={teamOptions.retry}/>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <label className="flex flex-col gap-1 font-song-myung text-sm">
           대상 팀
           <select
+            disabled={isSubmitting}
             value={teamId}
             onChange={(event) => {
               setTeamId(event.target.value);
               setSnapshotId("");
+              setSnapshots([]);
             }}
             className="rounded border border-admin-divider bg-white/60 px-3 py-2 text-sm"
           >
@@ -271,17 +274,20 @@ function RollbackModal({ onClose, onDone }) {
         {teamId && (
           <div className="flex flex-col gap-1 font-song-myung text-sm">
             롤백 지점
-            {snapshots.length === 0 && <p className="text-xs text-admin-muted">롤백 지점이 없습니다.</p>}
+            {snapshotState.status === "loading" && <p role="status">롤백 지점 조회 중</p>}
+            {snapshotState.status === "error" && <button type="button" onClick={() => setSnapshotRevision((value) => value + 1)}>다시 조회</button>}
+            {snapshotState.status === "success" && snapshots.length === 0 && <p className="text-xs text-admin-muted">롤백 지점이 없습니다.</p>}
             <div className="flex max-h-40 flex-col gap-1 overflow-y-auto">
               {snapshots.map((snapshot) => (
                 <label key={snapshot.snapshot_id} className="flex items-center gap-2 text-xs">
                   <input
                     type="radio"
                     name="snapshot"
+                    disabled={isSubmitting || snapshot.is_rolled_back}
                     checked={snapshotId === snapshot.snapshot_id}
                     onChange={() => setSnapshotId(snapshot.snapshot_id)}
                   />
-                  {snapshot.label} · {toKst(snapshot.created_at)}
+                  {snapshot.reason || "스냅샷"} / {toKst(snapshot.created_at)} {snapshot.is_rolled_back ? "(복원 완료)" : ""}
                 </label>
               ))}
             </div>
@@ -290,6 +296,9 @@ function RollbackModal({ onClose, onDone }) {
         <label className="flex flex-col gap-1 font-song-myung text-sm">
           사유
           <input
+            required
+            maxLength={500}
+            disabled={isSubmitting}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             className="rounded border border-admin-divider bg-white/60 px-3 py-2 text-sm"
@@ -310,31 +319,39 @@ function RollbackModal({ onClose, onDone }) {
 
 export default function AdminDashboardPage() {
   const dashboard = useAdminResource(getAdminDashboard, [], "대시보드 정보를 불러오지 못했습니다.");
-  const events = useAdminResource(() => getAdminEvents({ size: 5 }), [], "이벤트 로그를 불러오지 못했습니다.");
-  const instances = useAdminResource(() => getAdminInstances({ size: 1 }), [], "인스턴스 현황을 불러오지 못했습니다.");
+  const events = useAdminResource((config) => getAdminEvents({ size: 5 }, config), [], "이벤트 로그를 불러오지 못했습니다.");
+  const instances = useAdminResource((config) => getAdminInstances({ size: 1 }, config), [], "인스턴스 현황을 불러오지 못했습니다.");
   const resources = useAdminResource(getAdminResources, [], "리소스 상태를 불러오지 못했습니다.");
   const [openModal, setOpenModal] = useState(null);
 
   const data = dashboard.data;
   const byStatus = instances.data?.summary?.by_status ?? {};
-  const resourceSummary = resources.data?.summary;
+  const resourceSummary = summarizeAdminResources(resources.data);
 
-  const reloadAll = () => {
-    dashboard.reload();
-    events.reload();
-    instances.reload();
-  };
+  const reloadAll = useCallback(() => Promise.all([
+    dashboard.reload(), events.reload(), instances.reload(), resources.reload(),
+  ]), [dashboard.reload, events.reload, instances.reload, resources.reload]);
+  useEffect(() => {
+    let active = true;
+    let timer;
+    const poll = async () => {
+      if (!openModal) await reloadAll();
+      if (active) timer = setTimeout(poll, 30000);
+    };
+    timer = setTimeout(poll, 30000);
+    return () => { active = false; clearTimeout(timer); };
+  }, [reloadAll, openModal]);
 
   return (
-    <AdminLayout title="MSG CTF 운영 대시보드">
+    <AdminLayout title="MSG CTF 운영 대시보드" actions={<div className="flex flex-wrap items-center gap-3 text-sm"><span>수집 시각 {data?.collected_at ? toKst(data.collected_at) : "-"} (KST)</span><button type="button" onClick={reloadAll} disabled={[dashboard, events, instances, resources].some((item) => item.status === "loading")} className="rounded border border-admin-divider px-3 py-1 disabled:opacity-50">새로고침</button></div>}>
       <AdminStatusMessage status={dashboard.status} error={dashboard.error} onRetry={dashboard.retry} />
 
       {dashboard.status === "success" && data && (
         <>
           <div className="mb-6 flex divide-x divide-admin-divider rounded-lg border border-admin-divider">
-            <StatCard value={data.instances?.running ?? 0} label="실행중 인스턴스" tone="running" />
-            <StatCard value={data.instances?.failed ?? 0} label="실패 인스턴스" tone="failed" />
-            <StatCard value={data.teams?.total_count ?? 0} label="참가 팀 수" tone="gold" />
+            <StatCard value={data.instances?.running ?? "-"} label="실행중 인스턴스" tone="running" />
+            <StatCard value={data.instances?.failed ?? "-"} label="실패 인스턴스" tone="failed" />
+            <StatCard value={data.teams?.total_count ?? "-"} label="참가 팀 수" tone="gold" />
           </div>
 
           <div className="mb-6 grid grid-cols-1 gap-6 border-t border-admin-divider pt-5 lg:grid-cols-[1fr_320px]">
@@ -376,11 +393,12 @@ export default function AdminDashboardPage() {
 
             <section>
               <h2 className="mb-3 font-im-fell text-lg text-admin-ink">인스턴스 상태 분포</h2>
+              <AdminStatusMessage status={instances.status} error={instances.error} onRetry={instances.retry}/>
               <div className="flex flex-col gap-2">
                 {["RUNNING", "STOPPED", "FAILED"].map((key) => (
                   <div key={key} className="flex items-center gap-3">
                     <img src={BADGE_SRC[key]} alt={key} className="h-10 w-[168px] object-contain" />
-                    <span className="font-kode-mono text-2xl text-admin-ink">{byStatus[key] ?? 0}</span>
+                    <span className="font-kode-mono text-2xl text-admin-ink">{instances.status === "success" ? byStatus[key] ?? "-" : "-"}</span>
                   </div>
                 ))}
               </div>
@@ -405,21 +423,18 @@ export default function AdminDashboardPage() {
                 <div>
                   <p className="m-0 text-xs text-admin-muted">K8s 노드</p>
                   <p className="m-0 font-kode-mono text-xl text-admin-ink">
-                    {resourceSummary.nodes_healthy} / {resourceSummary.nodes_total} 정상
+                    {resourceSummary.nodesHealthy} / {resourceSummary.nodesTotal} 정상
                   </p>
                 </div>
                 <div>
-                  <p className="m-0 text-xs text-admin-muted">CPU 사용률</p>
-                  <p className="m-0 font-kode-mono text-xl text-admin-ink">{resourceSummary.avg_cpu_usage_percent}%</p>
+                  <p className="m-0 text-xs text-admin-muted">노드 평균 CPU</p>
+                  <p className="m-0 font-kode-mono text-xl text-admin-ink">{resourceSummary.averageCpuUsagePercent == null ? "-" : `${resourceSummary.averageCpuUsagePercent}%`}</p>
                 </div>
                 <div>
-                  <p className="m-0 text-xs text-admin-muted">메모리 사용률</p>
-                  <p className="m-0 font-kode-mono text-xl text-admin-ink">{resourceSummary.avg_memory_usage_percent}%</p>
+                  <p className="m-0 text-xs text-admin-muted">노드 평균 메모리</p>
+                  <p className="m-0 font-kode-mono text-xl text-admin-ink">{resourceSummary.averageMemoryUsagePercent == null ? "-" : `${resourceSummary.averageMemoryUsagePercent}%`}</p>
                 </div>
-                <div>
-                  <p className="m-0 text-xs text-admin-muted">디스크 사용률</p>
-                  <p className="m-0 font-kode-mono text-xl text-admin-ink">{resourceSummary.avg_disk_usage_percent}%</p>
-                </div>
+
               </div>
             )}
             {resources.status === "success" && !resourceSummary && (
