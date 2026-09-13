@@ -1,44 +1,56 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { isSuccess } from "../../../utils/response.js";
+import { createRequestGuard, getAdminRequestError } from "../utils/adminValidation.js";
 
-function getErrorMessage(error, fallbackMessage) {
-  return error?.response?.data?.message || error?.message || fallbackMessage;
-}
-
-// 관리자 페이지 6개가 전부 "GET 호출 -> envelope 검증 -> data 저장" 패턴을
-// 반복하길래 공통 훅으로 뺐다. fetcher는 axios 응답(response.data가 envelope)을
-// 반환하는 함수, deps가 바뀌면 다시 불러온다.
 export default function useAdminResource(fetcher, deps, fallbackMessage) {
-  const [requestSequence, setRequestSequence] = useState(0);
+  const [revision, setRevision] = useState(0);
   const [state, setState] = useState({ status: "loading", data: null, error: "" });
+  const guard = useRef(null);
+  if (!guard.current) guard.current = createRequestGuard();
+  const active = useRef(false);
+  const fetcherRef = useRef(fetcher);
+  fetcherRef.current = fetcher;
 
   const load = useCallback(async () => {
+    if (!active.current) return false;
+    const request = guard.current.begin();
     setState((current) => ({ ...current, status: "loading", error: "" }));
+    let timer;
+    let abortHandler;
     try {
-      const response = await fetcher();
+      const response = await Promise.race([
+        fetcherRef.current({ signal: request.signal, timeout: 10000 }),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => {
+            reject(new Error("조회 시간이 초과되었습니다. 다시 시도하세요"));
+            request.abort();
+          }, 10000);
+          abortHandler = () => reject(new Error("조회가 취소되었습니다"));
+          request.signal.addEventListener("abort", abortHandler, { once: true });
+        }),
+      ]);
+      if (!request.isCurrent() || !active.current) return false;
       const envelope = response.data;
-      if (!isSuccess(envelope)) {
-        throw new Error(envelope?.message || fallbackMessage);
-      }
+      if (!isSuccess(envelope)) throw new Error(envelope?.message || fallbackMessage);
       setState({ status: "success", data: envelope.data, error: "" });
+      return true;
     } catch (error) {
-      setState({ status: "error", data: null, error: getErrorMessage(error, fallbackMessage) });
+      if (request.isCurrent() && active.current) setState((current) => ({ ...current, ...getAdminRequestError(error, fallbackMessage) }));
+      return false;
+    } finally {
+      clearTimeout(timer);
+      request.signal.removeEventListener("abort", abortHandler);
     }
+    // fetcher가 참조하는 입력이 바뀔 때 새 조회를 시작한다
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (!cancelled) await load();
-    })();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [load, requestSequence]);
+    active.current = true;
+    load();
+    return () => { active.current = false; guard.current.cancel(); };
+  }, [load, revision]);
 
-  const retry = useCallback(() => setRequestSequence((sequence) => sequence + 1), []);
-
+  const retry = useCallback(() => setRevision((value) => value + 1), []);
   return { ...state, retry, reload: load };
 }
