@@ -1,24 +1,69 @@
-// Figma node 307:23의 설명 영역과 첨부파일 첫 두 행 위치를 유지한다
-export default function ChallengeDescriptionPanel({ description, attachments = [] }) {
+import styles from "./ChallengeDetailScreen.module.css";
+
+export default function ChallengeDescriptionPanel({
+  description,
+  attachments = [],
+}) {
   return (
-    <>
-      <div className="absolute left-[6.2%] top-[28.83%] w-[52.08%] h-[58.33%]" aria-hidden="true">
-        <img src="/assets/challenge-detail/panel-description.png" alt="" className="absolute inset-0 w-full h-full object-contain pointer-events-none" />
+    <section
+      className={styles.descriptionPanel}
+      aria-labelledby="challenge-description-heading"
+    >
+      <h2 id="challenge-description-heading" className={styles.sectionHeading}>
+        문제 설명
+      </h2>
+      <div
+        className={styles.descriptionBody}
+        tabIndex={0}
+        aria-label="문제 설명 본문"
+      >
+        {description || "등록된 설명이 없습니다"}
       </div>
-      <p className="absolute left-[8.49%] top-[35.49%] w-[45.83%] h-[26.6%] overflow-y-auto whitespace-pre-line break-words font-im-fell text-[1.25cqw] leading-[1.2552] text-auth-text">
-        {description}
-      </p>
-      <div className="absolute left-[8.49%] top-[71.97%] w-[45.83%] h-[14.8%] overflow-y-auto" aria-label="첨부파일">
-        {attachments.map((attachment, index) => (
-          <div key={attachment.fileId ?? index} className="flex h-[4.01cqw] items-start gap-[1.04cqw] pr-[3cqw] font-kode-mono text-[1.25cqw] text-auth-text">
-            <img src="/assets/challenge-detail/icon-checkbox.png" alt="" className="w-[2.55cqw] h-[2.24cqw] object-contain" />
-            {attachment.url ? (
-              <a href={attachment.url} download title={attachment.name} className="min-w-0 flex-1 truncate pt-[0.3cqw] underline">{attachment.name}</a>
-            ) : <span title={attachment.name} className="min-w-0 flex-1 truncate pt-[0.3cqw]">{attachment.name}</span>}
-            <span className="pt-[0.16cqw] text-detail-size">{attachment.sizeLabel}</span>
-          </div>
-        ))}
+      <div className={styles.attachments}>
+        <h3 className={styles.attachmentHeading}>
+          첨부파일 <span>{attachments.length}</span>
+        </h3>
+        {attachments.length > 0 ? (
+          <ul className={styles.attachmentList} aria-label="첨부파일">
+            {attachments.map((attachment, index) => (
+              <li
+                key={attachment.fileId ?? index}
+                className={styles.attachmentRow}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  aria-hidden="true"
+                >
+                  <path d="M7 3h7l4 4v14H7zM14 3v5h4M10 12h5M10 16h5" />
+                </svg>
+                {attachment.url ? (
+                  <a href={attachment.url} download title={attachment.name}>
+                    {attachment.name}
+                  </a>
+                ) : (
+                  <span
+                    className={styles.attachmentName}
+                    title={attachment.name}
+                  >
+                    {attachment.name}
+                  </span>
+                )}
+                <span className={styles.fileSize}>
+                  {attachment.sizeLabel}
+                  {attachment.sizeLabel && attachment.sizeLabel !== "-"
+                    ? " MB"
+                    : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className={styles.emptyAttachments}>첨부파일이 없습니다</p>
+        )}
       </div>
-    </>
+    </section>
   );
 }
