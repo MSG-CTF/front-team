@@ -6,18 +6,30 @@ export default function ChallengeDescriptionPanel({
 }) {
   return (
     <section
+      id="challenge-description"
       className={styles.descriptionPanel}
       aria-labelledby="challenge-description-heading"
+      tabIndex={-1}
     >
-      <h2 id="challenge-description-heading" className={styles.sectionHeading}>
-        문제 설명
-      </h2>
-      <div
-        className={styles.descriptionBody}
-        tabIndex={0}
-        aria-label="문제 설명 본문"
-      >
-        {description || "등록된 설명이 없습니다"}
+      <div className={styles.sectionIntro}>
+        <span className={styles.sectionNumber} aria-hidden="true">
+          01
+        </span>
+        <h2
+          id="challenge-description-heading"
+          className={styles.sectionHeading}
+        >
+          문제 설명
+        </h2>
+      </div>
+      <div className={styles.descriptionBody} aria-label="문제 설명 본문">
+        {description ? (
+          description
+            .split(/\n\s*\n/)
+            .map((paragraph, index) => <p key={index}>{paragraph}</p>)
+        ) : (
+          <p className={styles.emptyText}>등록된 설명이 없습니다</p>
+        )}
       </div>
       <div className={styles.attachments}>
         <h3 className={styles.attachmentHeading}>
@@ -39,29 +51,33 @@ export default function ChallengeDescriptionPanel({
                 >
                   <path d="M7 3h7l4 4v14H7zM14 3v5h4M10 12h5M10 16h5" />
                 </svg>
-                {attachment.url ? (
-                  <a href={attachment.url} download title={attachment.name}>
-                    {attachment.name}
-                  </a>
-                ) : (
-                  <span
-                    className={styles.attachmentName}
-                    title={attachment.name}
-                  >
-                    {attachment.name}
+                <div className={styles.attachmentInfo}>
+                  {attachment.url ? (
+                    <a href={attachment.url} download title={attachment.name}>
+                      {attachment.name}
+                    </a>
+                  ) : (
+                    <span className={styles.attachmentName}>
+                      {attachment.name}
+                    </span>
+                  )}
+                  <span className={styles.fileSize}>
+                    {attachment.sizeLabel}
+                    {!attachment.url && " · 다운로드 준비 중"}
+                  </span>
+                </div>
+                {attachment.url && (
+                  <span className={styles.downloadIcon} aria-hidden="true">
+                    ↓
                   </span>
                 )}
-                <span className={styles.fileSize}>
-                  {attachment.sizeLabel}
-                  {attachment.sizeLabel && attachment.sizeLabel !== "-"
-                    ? " MB"
-                    : ""}
-                </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className={styles.emptyAttachments}>첨부파일이 없습니다</p>
+          <p className={styles.emptyAttachments}>
+            이 문제에는 첨부파일이 없습니다
+          </p>
         )}
       </div>
     </section>
