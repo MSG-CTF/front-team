@@ -1,145 +1,104 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  getKothClubs,
-  getKothTeamToken,
-  getMyKothProgress,
-} from "../../../api/koth.js";
+import { getKothClubs, getKothTeamToken, getMyKothProgress, getKothLeaderboard } from "../../../api/koth.js";
+import { ACCESS_TOKEN_STORAGE_KEY } from "../../../api/client.js";
 import { isSuccess } from "../../../utils/response.js";
-
-const AUTO_REFRESH_INTERVAL_MS = 30_000;
+import { validateKothClubs } from "../utils/kothChallengeState.js";
 
 function getErrorMessage(error, fallbackMessage) {
   return error?.response?.data?.message || error?.message || fallbackMessage;
 }
 
-// 클럽 1개 = 문제 1개(6클럽 x 1문제, 중첩 challenges[] 아님) - kothChallengeState.js
-// 참고. club.challenges 존재를 요구하던 이전 검증은 실제 응답과 안 맞아서 제거함.
-function validateKothData(clubsData, progressData) {
-  return Array.isArray(clubsData?.clubs)
-    && clubsData.clubs.every((club) => club?.koth_challenge_id != null)
-    && Array.isArray(progressData?.challenges);
+export function useKothData() {
+  const [revision, setRevision] = useState(0);
+  const [state, setState] = useState({ status: "loading", clubsData: null, progressData: null, error: "", clubsStale: false });
+  const authenticated = Boolean(localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY));
+  useEffect(() => {
+    const controller = new AbortController();
+    const config = { signal: controller.signal, timeout: 10000 };
+    let active = true;
+    let timer;
+    async function load() {
+      const [clubsResult, progressResult] = await Promise.allSettled([
+        getKothClubs(config),
+        authenticated ? getMyKothProgress(config) : Promise.resolve(null),
+      ]);
+      if (!active) return;
+      const clubs = clubsResult.status === "fulfilled" ? clubsResult.value?.data : null;
+      const progress = progressResult.status === "fulfilled" ? progressResult.value?.data : null;
+      const clubsOk = isSuccess(clubs) && validateKothClubs(clubs.data);
+      const progressOk = isSuccess(progress) && Array.isArray(progress.data?.challenges);
+      setState((current) => ({
+        status: clubsOk || current.clubsData ? "success" : "error",
+        clubsData: clubsOk ? clubs.data : current.clubsData,
+        progressData: progressOk ? progress.data : null,
+        clubsStale: !clubsOk,
+        error: !clubsOk ? "KOTH 목록을 갱신하지 못했습니다"
+          : authenticated && !progressOk ? "내 팀 점수를 갱신하지 못했습니다" : "",
+      }));
+      timer = window.setTimeout(load, 30000);
+    }
+    load();
+    return () => { active = false; controller.abort(); window.clearTimeout(timer); };
+  }, [revision, authenticated]);
+  return { ...state, authenticated, retry: () => setRevision((value) => value + 1) };
 }
 
-export function useKothData() {
-  const [requestSequence, setRequestSequence] = useState(0);
-  const [state, setState] = useState({
-    status: "loading",
-    clubsData: null,
-    progressData: null,
-    error: "",
-  });
-  const isMountedRef = useRef(true);
-
-  const loadKothData = useCallback(async ({ silent = false } = {}) => {
-    if (!silent) {
-      setState((current) => ({ ...current, status: "loading", error: "" }));
-    }
-
-    try {
-      const [clubsResponse, progressResponse] = await Promise.all([
-        getKothClubs(),
-        getMyKothProgress(),
-      ]);
-      const clubsEnvelope = clubsResponse.data;
-      const progressEnvelope = progressResponse.data;
-
-      if (!isSuccess(clubsEnvelope)) {
-        throw new Error(clubsEnvelope?.message || "KOTH 문제를 불러오지 못했습니다.");
-      }
-      if (!isSuccess(progressEnvelope)) {
-        throw new Error(progressEnvelope?.message || "내 KOTH 진행 상태를 불러오지 못했습니다.");
-      }
-      if (!validateKothData(clubsEnvelope.data, progressEnvelope.data)) {
-        throw new Error("KOTH API 응답 형식이 올바르지 않습니다.");
-      }
-
-      if (isMountedRef.current) {
-        setState({
-          status: "success",
-          clubsData: clubsEnvelope.data,
-          progressData: progressEnvelope.data,
-          error: "",
-        });
-      }
-    } catch (error) {
-      // 백그라운드(silent) 재조회 실패로 화면을 error 상태로 덮지 않는다 -
-      // 다음 30초 주기에 다시 시도한다. 최초 로드 실패만 화면에 표시.
-      if (isMountedRef.current && !silent) {
-        setState({
-          status: "error",
-          clubsData: null,
-          progressData: null,
-          error: getErrorMessage(error, "KOTH 정보를 불러오지 못했습니다."),
-        });
-      }
-    }
-  }, []);
-
+export function useKothLeaderboard(challengeId, authenticated) {
+  const [revision, setRevision] = useState(0);
+  const [state, setState] = useState({ status: "idle", data: null, error: "" });
   useEffect(() => {
-    isMountedRef.current = true;
-    loadKothData();
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, [loadKothData, requestSequence]);
-
-  // 점수/공개 상태(status, current_owner, current_score 등)는 다른 팀의 풀이로
-  // 계속 바뀔 수 있어 30초마다 조용히(로딩 표시 없이) 재조회한다.
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      loadKothData({ silent: true });
-    }, AUTO_REFRESH_INTERVAL_MS);
-    return () => window.clearInterval(intervalId);
-  }, [loadKothData]);
-
-  const retry = useCallback(() => {
-    setRequestSequence((sequence) => sequence + 1);
-  }, []);
-
-  return { ...state, retry };
+    setState({ status: authenticated ? "loading" : "unauthenticated", data: null, error: "" });
+    if (!challengeId || !authenticated) return;
+    let active = true;
+    let timer;
+    const controller = new AbortController();
+    async function load() {
+      try {
+        const response = await getKothLeaderboard(challengeId, { signal: controller.signal, timeout: 10000 });
+        const envelope = response.data;
+        if (!isSuccess(envelope) || envelope.data?.koth_challenge_id !== challengeId || !Array.isArray(envelope.data?.leaderboard)) {
+          throw new Error("문제 순위표를 불러오지 못했습니다");
+        }
+        if (active) setState({ status: "success", data: envelope.data, error: "" });
+      } catch (error) {
+        if (active) setState({ status: "error", data: null, error: getErrorMessage(error, "문제 순위표를 불러오지 못했습니다") });
+      }
+      if (active) timer = window.setTimeout(load, 30000);
+    }
+    load();
+    return () => { active = false; controller.abort(); window.clearTimeout(timer); };
+  }, [challengeId, authenticated, revision]);
+  return { ...state, retry: () => setRevision((value) => value + 1) };
 }
 
 export function useKothTeamToken() {
-  const requestSequence = useRef(0);
-  const [state, setState] = useState({
-    status: "idle",
-    data: null,
-    error: "",
-  });
-
+  const sequence = useRef(0);
+  const pending = useRef(false);
+  const controller = useRef(null);
+  const [state, setState] = useState({ status: "idle", data: null, error: "" });
+  useEffect(() => () => { ++sequence.current; controller.current?.abort(); }, []);
   const requestTeamToken = useCallback(async () => {
-    const currentRequest = requestSequence.current + 1;
-    requestSequence.current = currentRequest;
+    if (pending.current) return;
+    pending.current = true;
+    const request = ++sequence.current;
+    controller.current = new AbortController();
     setState({ status: "loading", data: null, error: "" });
-
     try {
-      const response = await getKothTeamToken();
+      const response = await getKothTeamToken({ signal: controller.current.signal, timeout: 10000 });
       const envelope = response.data;
-      if (!isSuccess(envelope)) {
-        throw new Error(envelope?.message || "KOTH 팀 토큰을 불러오지 못했습니다.");
+      if (!isSuccess(envelope) || typeof envelope.data?.team_token !== "string" || !envelope.data.team_token.trim()) {
+        throw new Error("KOTH 팀 토큰을 불러오지 못했습니다");
       }
-      if (!envelope.data?.team_token?.trim()) {
-        throw new Error("KOTH 팀 토큰 응답 형식이 올바르지 않습니다.");
-      }
-
-      if (requestSequence.current === currentRequest) {
-        setState({ status: "success", data: envelope.data, error: "" });
-      }
+      if (request === sequence.current) setState({ status: "success", data: envelope.data, error: "" });
     } catch (error) {
-      if (requestSequence.current === currentRequest) {
-        setState({
-          status: "error",
-          data: null,
-          error: getErrorMessage(error, "KOTH 팀 토큰을 불러오지 못했습니다."),
-        });
-      }
-    }
+      if (request === sequence.current) setState({ status: "error", data: null, error: getErrorMessage(error, "KOTH 팀 토큰을 불러오지 못했습니다") });
+    } finally { if (request === sequence.current) pending.current = false; }
   }, []);
-
   const clearTeamToken = useCallback(() => {
-    requestSequence.current += 1;
+    ++sequence.current;
+    controller.current?.abort();
+    pending.current = false;
     setState({ status: "idle", data: null, error: "" });
   }, []);
-
   return { ...state, requestTeamToken, clearTeamToken };
 }
