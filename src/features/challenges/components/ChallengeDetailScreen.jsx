@@ -27,6 +27,8 @@ export default function ChallengeDetailScreen({
   onCreateInstance,
   onExtendInstance,
   onRestartInstance,
+  onStopInstance,
+  retrySeconds,
   feedback,
   actionPending,
   submitDisabled,
@@ -88,6 +90,7 @@ export default function ChallengeDetailScreen({
             onCreate={onCreateInstance}
             onExtend={onExtendInstance}
             onRestart={onRestartInstance}
+            onStop={onStopInstance}
           />
           <FlagSubmitPanel
             value={flagValue}
@@ -97,16 +100,20 @@ export default function ChallengeDetailScreen({
             inputDisabled={actionPending || submission.blocked}
           />
 
-          <div className="absolute left-[61.77%] top-[69.9%] w-[28%] font-kode-mono text-[0.75cqw] leading-tight text-auth-text">
+          <div className="absolute left-[61.77%] top-[72%] w-[28%] font-kode-mono text-[0.75cqw] leading-tight text-auth-text">
             {challenge.accessStatus === "OPENED" && <span>OPENED (진행 중) </span>}
             {submission.isCleared && <span>CLEARED (완료) </span>}
             {submission.remainingSeconds != null && (
               <span title={`개방: ${toKst(challenge.openedAt)} / 마감: ${toKst(getChallengeDeadline(challenge.openedAt))} (KST)`}>
-                제출 남은 시간 {formatRemaining(submission.remainingSeconds)}
-                {submission.expired && " (제출 시간 만료)"}
+                추가 주사위 보상 {formatRemaining(submission.remainingSeconds)}
+                {submission.expired && " (보상 종료, 제출 가능)"}
               </span>
             )}
           </div>
+
+          {retrySeconds > 0 && (
+            <p role="status" className="absolute left-[61.77%] top-[85%] font-kode-mono text-[0.75cqw] text-auth-text">재제출까지 {retrySeconds}초</p>
+          )}
 
           {(instanceError || feedback) && (
             <div

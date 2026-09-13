@@ -6,6 +6,8 @@ import {
   findChallengeInstance,
   getChallengeSubmissionState,
   mapChallengeDetail,
+  mapChallengeInstance,
+  getRetryDeadline,
 } from "./challengeDetailMapper.js";
 
 const openedAt = "2026-09-06T23:55:00Z";
@@ -19,7 +21,7 @@ test("개방 시각에 15분을 더하며 UTC 날짜 경계를 처리한다", ()
   }
 });
 
-test("OPENED의 제출 시간은 마감 직전까지 유효하고 만료 후 00:00으로 유지된다", () => {
+test("15분 보너스가 만료되어도 미완료 문제에는 플래그를 제출할 수 있다", () => {
   const challenge = mapChallengeDetail({ status: "OPENED", opened_at: openedAt, is_solved: false });
   assert.equal(getChallengeSubmissionState(challenge, Date.parse(openedAt)).remainingSeconds, 900);
   const before = getChallengeSubmissionState(challenge, Date.parse(deadline) - 1);
@@ -27,9 +29,32 @@ test("OPENED의 제출 시간은 마감 직전까지 유효하고 만료 후 00:
   assert.equal(before.blocked, false);
   for (const now of [Date.parse(deadline), Date.parse(deadline) + 60_000]) {
     const state = getChallengeSubmissionState(challenge, now);
-    assert.equal(state.blocked, true);
+    assert.equal(state.blocked, false);
     assert.equal(state.expired, true);
     assert.equal(formatRemaining(state.remainingSeconds), "00:00");
+  }
+});
+
+test("접속 정보는 RUNNING에서 외부 URL을 그대로 사용하고 내부 포트를 합성하지 않는다", () => {
+  const data = { status: "RUNNING", endpoints: [
+    { container_name: "web", port: 80, service_url: "https://challenge.example:30443/path?q=1" },
+    { container_name: "shell", port: 9000, service_url: "tcp://challenge.example:30999" },
+    { service_url: "javascript:alert(1)" },
+    { service_url: "invalid" },
+  ] };
+  assert.deepEqual(mapChallengeInstance(data).endpoints.map(({ url, isWeb }) => ({ url, isWeb })), [
+    { url: "https://challenge.example:30443/path?q=1", isWeb: true },
+    { url: "tcp://challenge.example:30999", isWeb: false },
+  ]);
+  for (const status of ["REQUESTED", "STOPPING", "FAILED", "UNKNOWN"]) {
+    assert.deepEqual(mapChallengeInstance({ ...data, status }).endpoints, []);
+  }
+});
+
+test("서버가 반환한 재제출 대기 시간을 사용하고 잘못된 값은 타이머로 만들지 않는다", () => {
+  assert.equal(getRetryDeadline({ data: { retry_after_seconds: 27 } }, 1000), 28000);
+  for (const value of [undefined, null, -1, "27", Infinity]) {
+    assert.equal(getRetryDeadline({ data: { retry_after_seconds: value } }, 1000), null);
   }
 });
 

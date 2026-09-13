@@ -15,8 +15,7 @@ export function getChallengeDetail(challengeId, config) {
 
 export function submitFlag(challengeId, { flag }) {
   // POST /challenges/{id}/submit - HTTP 200이어도 code로 판정(README 0-2절).
-  //  code SUCCESS      : 정답. 15분 이내 + 방금 도착한 최신 칸이면 earned_mileage 100
-  //                      + is_extra_dice_granted true, 아니면 false.
+  //  code SUCCESS: 정답, 실제 지급 마일리지와 추가 주사위 여부는 응답을 사용한다
   //  code INCORRECT_FLAG: 오답(연속 3회 미만)
   //  429 TOO_MANY_ATTEMPTS: 3회 연속 오답 -> 30초 락, data.retry_after_seconds
   //  409 ALREADY_SOLVED

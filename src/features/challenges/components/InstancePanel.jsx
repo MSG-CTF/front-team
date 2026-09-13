@@ -3,7 +3,7 @@ import {
   INSTANCE_STATUS_LABEL,
   UNKNOWN_INSTANCE_STATUS_LABEL,
 } from "../../../constants/enums.js";
-import { formatRemaining } from "../../../utils/time.js";
+import { formatRemaining, toKst } from "../../../utils/time.js";
 
 // Figma node 307:75 "InstancePanel" (640x300) - node 95:360(ChallengeDetailPage)판.
 // "INSTANCE"/"CONNECT"/"TIME TO LIVE"/"EXTENDS n / N" 라벨은 panel-instance.png에
@@ -15,7 +15,7 @@ import { formatRemaining } from "../../../utils/time.js";
 // 미제공 표시를 겹쳐 보여준다.
 export default function InstancePanel({ instance, error }) {
   const status = instance?.status ?? null;
-  const isRunning = status === INSTANCE_STATUS.RUNNING;
+  const isRunning = !error && status === INSTANCE_STATUS.RUNNING;
   const statusLabel = error
     ? "조회 실패"
     : status
@@ -51,9 +51,16 @@ export default function InstancePanel({ instance, error }) {
       )}
 
       {/* 접속 정보 (host:port) - 시안 307:80 Kode Mono 24px (= 1.25cqw) */}
-      <p className="absolute left-[7.5%] top-[40.67%] font-kode-mono text-[1.25cqw] leading-[normal] text-detail-console">
-        {isRunning ? instance.connectUrl ?? "-" : "-"}
-      </p>
+      <div className="absolute left-[7.5%] top-[36%] w-[86%] h-[23%] overflow-y-auto font-kode-mono text-[0.85cqw] leading-snug text-detail-console">
+        {isRunning && instance.endpoints.length > 0 ? instance.endpoints.map((endpoint) => (
+          <div key={endpoint.url} className="break-all">
+            <span>{endpoint.name}: </span>
+            {endpoint.isWeb ? (
+              <a href={endpoint.url} target="_blank" rel="noopener noreferrer" className="underline">{endpoint.url}</a>
+            ) : <span className="select-all">{endpoint.url}</span>}
+          </div>
+        )) : <span className="select-all">{isRunning ? instance.connectUrl || "접속 주소 준비 중" : "-"}</span>}
+      </div>
 
       <p className="absolute right-[6%] top-[61%] font-kode-mono text-[1cqw] leading-[normal] text-[#e59f29]">
         {formatRemaining(remainingSeconds)}
@@ -65,9 +72,12 @@ export default function InstancePanel({ instance, error }) {
           추측한 progress fill은 그리지 않고 expires_at 기반 잔여시간만 표시한다. */}
       <div className="absolute left-[5.47%] top-[74.67%] w-[89.06%] h-[6.67%] rounded-[0.26cqw] border-[0.104cqw] border-auth-text bg-black overflow-hidden" />
 
-      <p className="absolute left-[5.1%] top-[87%] z-10 m-0 bg-[#1b0d07] pr-[0.8cqw] font-im-fell text-[0.85cqw] tracking-[0.12em] text-[#9c7040]">
-        EXTENDS {extendsUsed ?? "—"}
+      <p className="absolute left-[5.1%] top-[87%] z-10 m-0 w-[40%] bg-[#1b0d07] pr-[0.8cqw] font-im-fell text-[0.85cqw] tracking-[0.12em] text-[#9c7040]">
+        EXTENDS {extendsUsed ?? "-"}
       </p>
+      {instance?.hardExpiresAt && (
+        <span className="absolute right-[6%] top-[87%] text-[0.65cqw] text-[#9c7040]" title={toKst(instance.hardExpiresAt)}>최대 종료 {toKst(instance.hardExpiresAt, { hour: "2-digit", minute: "2-digit" })} KST</span>
+      )}
     </div>
   );
 }

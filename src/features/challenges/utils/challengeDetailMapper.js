@@ -21,7 +21,7 @@ export function mapChallengeDetail(data) {
         fileId: file.file_id,
         name: file.file_name,
         url: file.download_url,
-        sizeLabel: file.file_size == null ? "—" : String(file.file_size),
+        sizeLabel: file.file_size == null ? "-" : (file.file_size / 1024 / 1024).toFixed(2),
       }))
       : [],
   };
@@ -38,7 +38,7 @@ export function getChallengeSubmissionState(challenge, now = Date.now()) {
     remainingSeconds,
     isCleared,
     expired: remainingSeconds === 0,
-    blocked: isCleared || challenge?.solved === true || remainingSeconds === 0,
+    blocked: isCleared || challenge?.solved === true,
   };
 }
 
@@ -66,8 +66,35 @@ export function mapChallengeInstance(data, now = Date.now()) {
     challengeId: data.challenge_id,
     status: data.status,
     connectUrl: data.host,
+    endpoints: mapInstanceEndpoints(data),
     expiresAt: data.expires_at,
+    hardExpiresAt: data.hard_expires_at ?? null,
     remainingSeconds: calculateRemainingSeconds(data.expires_at, now),
     extendsUsed: data.extend_count ?? null,
   };
+}
+
+export function mapInstanceEndpoints(data) {
+  if (data?.status !== "RUNNING") return [];
+  const endpoints = Array.isArray(data.endpoints) ? data.endpoints : [];
+  return endpoints.flatMap((endpoint) => {
+    try {
+      const url = new URL(endpoint.service_url);
+      if (!["http:", "https:", "tcp:"].includes(url.protocol) || url.username || url.password) return [];
+      return [{
+        name: endpoint.container_name || "서비스",
+        url: endpoint.service_url,
+        isWeb: ["http:", "https:"].includes(url.protocol),
+      }];
+    } catch {
+      return [];
+    }
+  });
+}
+
+export function getRetryDeadline(envelope, now = Date.now()) {
+  const seconds = envelope?.data?.retry_after_seconds;
+  return typeof seconds === "number" && Number.isFinite(seconds) && seconds > 0
+    ? now + Math.ceil(seconds) * 1000
+    : null;
 }
