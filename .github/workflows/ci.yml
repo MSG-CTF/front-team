@@ -12,8 +12,8 @@ on:
   workflow_dispatch:
   pull_request:
     branches: [main]
-  # push:
-  #   branches: [main]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -111,3 +111,22 @@ jobs:
           digest="${digest##*@}"
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "published: ${TARGET_IMAGE}@${digest}"
+
+  deploy-development:
+    name: deploy-development
+    needs: supply-chain-build-scan-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      id-token: write
+    uses: MSG-CTF/jm_devsecops/.github/workflows/reusable-vm-deploy-dev.yml@ebfa5f50b2598306251cf64d6414df51d4c1c870
+    with:
+      component: frontend
+      commit_sha: ${{ github.sha }}
+      pipeline_ref: ebfa5f50b2598306251cf64d6414df51d4c1c870
+      gcp_project_id: project-325bdf5b-3d83-4f27-9f6
+      workload_identity_provider: projects/269174025178/locations/global/workloadIdentityPools/github-vm-cd-dev/providers/github-vm-cd-provider
+      deployer_service_account: github-vm-deployer-dev@project-325bdf5b-3d83-4f27-9f6.iam.gserviceaccount.com
+      vm_zone: asia-northeast3-a
+      vm_name: backend-dev-vm
+      public_domain: msg2.mjsec.kr
