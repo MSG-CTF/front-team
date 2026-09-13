@@ -5,26 +5,24 @@ import {
   createInstance,
   extendInstance,
   resetInstance,
+  stopInstance,
 } from "../../../api/instances.js";
+import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
 import ChallengeDetailScreen from "../components/ChallengeDetailScreen.jsx";
 import useChallengeDetailData from "../hooks/useChallengeDetailData.js";
 import {
   getChallengeSubmissionState,
+  getRetryDeadline,
   mapChallengeDetail,
   mapChallengeInstance,
 } from "../utils/challengeDetailMapper.js";
 
 function feedbackFromEnvelope(envelope, fallbackMessage) {
-  const retryAfterSeconds = envelope?.data?.retry_after_seconds;
-  const retryMessage = retryAfterSeconds == null
-    ? ""
-    : ` (${retryAfterSeconds}초 후 재시도)`;
-
   return {
     type: isSuccess(envelope) ? "success" : "error",
     code: envelope?.code || "REQUEST_FAILED",
-    message: `${envelope?.message || fallbackMessage}${retryMessage}`,
+    message: envelope?.message || fallbackMessage,
   };
 }
 
@@ -34,9 +32,19 @@ function feedbackFromError(error, fallbackMessage) {
 
 export default function ChallengeDetailPage() {
   const { challengeId } = useParams();
+  return <ChallengeDetailContent key={challengeId} challengeId={challengeId} />;
+}
+
+function ChallengeDetailContent({ challengeId }) {
   const navigate = useNavigate();
   const challengeDetail = useChallengeDetailData(challengeId);
   const actionInFlight = useRef(false);
+  const mounted = useRef(true);
+  const [retryAt, setRetryAt] = useState(null);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
   const [flagValue, setFlagValue] = useState("");
   const [pendingAction, setPendingAction] = useState(null);
   const [feedback, setFeedback] = useState(null);
@@ -65,10 +73,11 @@ export default function ChallengeDetailPage() {
     [challengeDetail.instanceData, now],
   );
   const submission = getChallengeSubmissionState(challenge, now);
+  const retrySeconds = retryAt == null ? 0 : Math.max(0, Math.ceil((retryAt - now) / 1000));
 
   const handleSubmitFlag = async () => {
     if (
-      !flagValue || actionInFlight.current
+      !flagValue.trim() || actionInFlight.current || (retryAt != null && Date.now() < retryAt)
       || challengeDetail.status !== "success"
       || getChallengeSubmissionState(challenge).blocked
     ) return;
@@ -78,7 +87,10 @@ export default function ChallengeDetailPage() {
     setFeedback(null);
     try {
       const response = await submitFlag(challengeId, { flag: flagValue });
+      if (!mounted.current) return;
       const envelope = response.data;
+      setRetryAt(getRetryDeadline(envelope));
+      setNow(Date.now());
       const nextFeedback = feedbackFromEnvelope(
         envelope,
         "플래그를 제출하지 못했습니다.",
@@ -90,10 +102,15 @@ export default function ChallengeDetailPage() {
         await challengeDetail.refresh();
       }
     } catch (error) {
+      if (!mounted.current) return;
+      const envelope = error?.response?.data;
+      setRetryAt(getRetryDeadline(envelope));
+      setNow(Date.now());
       setFeedback(feedbackFromError(error, "플래그를 제출하지 못했습니다."));
+      if (envelope?.code === "ALREADY_SOLVED") await challengeDetail.refresh();
     } finally {
       actionInFlight.current = false;
-      setPendingAction(null);
+      if (mounted.current) setPendingAction(null);
     }
   };
 
@@ -105,18 +122,19 @@ export default function ChallengeDetailPage() {
     setFeedback(null);
     try {
       const response = await request();
+      if (!mounted.current) return;
       const envelope = response.data;
       const nextFeedback = feedbackFromEnvelope(envelope, fallbackMessage);
       setFeedback(nextFeedback);
 
       if (isSuccess(envelope)) {
-        await challengeDetail.refreshInstance();
+        challengeDetail.applyInstance(envelope.data);
       }
     } catch (error) {
-      setFeedback(feedbackFromError(error, fallbackMessage));
+      if (mounted.current) setFeedback(feedbackFromError(error, fallbackMessage));
     } finally {
       actionInFlight.current = false;
-      setPendingAction(null);
+      if (mounted.current) setPendingAction(null);
     }
   };
 
@@ -144,6 +162,11 @@ export default function ChallengeDetailPage() {
     );
   };
 
+  const handleStopInstance = () => {
+    if (!instance?.instanceId) return;
+    runInstanceAction("stop-instance", () => stopInstance(instance.instanceId), "인스턴스를 종료하지 못했습니다");
+  };
+
   return (
     <ChallengeDetailScreen
       loading={challengeDetail.status === "loading"}
@@ -158,15 +181,18 @@ export default function ChallengeDetailPage() {
       onCreateInstance={handleCreateInstance}
       onExtendInstance={handleExtendInstance}
       onRestartInstance={handleRestartInstance}
+      onStopInstance={handleStopInstance}
+      retrySeconds={retrySeconds}
       feedback={feedback}
       actionPending={pendingAction != null}
       submitDisabled={
         pendingAction != null
-        || flagValue.length === 0
+        || flagValue.trim().length === 0
+        || retrySeconds > 0
         || submission.blocked
       }
       onRetry={() => challengeDetail.retry()}
-      onBack={() => navigate(-1)}
+      onBack={() => navigate(ROUTES.openChallenges)}
     />
   );
 }
