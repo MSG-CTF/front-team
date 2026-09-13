@@ -16,10 +16,11 @@ import AdminMileagePage from "../features/admin/pages/AdminMileagePage.jsx";
 import AdminSettingsPage from "../features/admin/pages/AdminSettingsPage.jsx";
 import AdminLogsPage from "../features/admin/pages/AdminLogsPage.jsx";
 import AdminAccountsPage from "../features/admin/pages/AdminAccountsPage.jsx";
+import AdminRoute from "./AdminRoute.jsx";
 import { ROUTES } from "./routePaths.js";
 
-// TODO: 인증/관리자 라우트 가드(ProtectedRoute, AdminRoute)는 토큰 저장 방식이
-// 정해지면 추가. 지금은 전부 공개 라우트로 뚫려있음.
+// TODO: 참가자 라우트 가드(로그인 안 한 상태에서 /board 등 직접 접근)는 토큰
+// 저장 방식이 정해지면 추가. 관리자 라우트는 AdminRoute로 막아뒀다(아래).
 export default function AppRoutes() {
   return (
     <Routes>
@@ -33,14 +34,70 @@ export default function AppRoutes() {
       <Route path="/timer" element={<TimerPage />} />
       <Route path={ROUTES.koth} element={<KothPage />} />
       <Route path={ROUTES.rules} element={<RulesPage />} />
-      <Route path={ROUTES.adminDashboard} element={<AdminDashboardPage />} />
-      <Route path={ROUTES.adminTeams} element={<AdminTeamsPage />} />
-      <Route path="/admin/teams/:teamId" element={<AdminTeamDetailPage />} />
-      <Route path={ROUTES.adminChallenges} element={<AdminChallengesPage />} />
-      <Route path={ROUTES.adminMileage} element={<AdminMileagePage />} />
-      <Route path={ROUTES.adminSettings} element={<AdminSettingsPage />} />
-      <Route path={ROUTES.adminLogs} element={<AdminLogsPage />} />
-      <Route path={ROUTES.adminAccounts} element={<AdminAccountsPage />} />
+      <Route
+        path={ROUTES.adminDashboard}
+        element={
+          <AdminRoute>
+            <AdminDashboardPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path={ROUTES.adminTeams}
+        element={
+          <AdminRoute>
+            <AdminTeamsPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/teams/:teamId"
+        element={
+          <AdminRoute>
+            <AdminTeamDetailPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path={ROUTES.adminChallenges}
+        element={
+          <AdminRoute>
+            <AdminChallengesPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path={ROUTES.adminMileage}
+        element={
+          <AdminRoute>
+            <AdminMileagePage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path={ROUTES.adminSettings}
+        element={
+          <AdminRoute>
+            <AdminSettingsPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path={ROUTES.adminLogs}
+        element={
+          <AdminRoute>
+            <AdminLogsPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path={ROUTES.adminAccounts}
+        element={
+          <AdminRoute>
+            <AdminAccountsPage />
+          </AdminRoute>
+        }
+      />
     </Routes>
   );
 }

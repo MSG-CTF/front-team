@@ -17,8 +17,13 @@ const BASE_URL = import.meta.env.BASE_URL;
 const ASSET_BASE = `${BASE_URL}assets/login/`;
 
 const BACKGROUND_SRC = `${ASSET_BASE}login-clean-plate@2x.webp`;
-const LOGO_SRC = `${ASSET_BASE}logo@2x.webp`;
-const LOGIN_BUTTON_SRC = `${ASSET_BASE}login-button@2x.webp`;
+// logo@2x.webp / login-button@2x.webp는 알파 채널이 없는 flat 이미지라
+// 로고 사각 배경(#f9eded)과 버튼 4귀퉁이 톱니 노치 부분이 뒤 배경과 다른
+// 색으로 그대로 보였다. logo-cutout.png(rules/msg-ctf-logo.png와 동일,
+// 실제 알파 채널 있음)와 login-button-cutout.png(같은 원본을 4귀퉁이
+// 배경색 기준 flood-fill로 투명 처리)로 교체했다.
+const LOGO_SRC = `${ASSET_BASE}logo-cutout.png`;
+const LOGIN_BUTTON_SRC = `${ASSET_BASE}login-button-cutout.png`;
 
 export default function LoginScreen({ onLogin, submitting = false, feedback = null }) {
   const [username, setUsername] = useState("");
