@@ -1,3 +1,4 @@
+import { toKst } from "../../../utils/time.js";
 import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
 import LeaderboardChart from "./LeaderboardChart.jsx";
 import LeaderboardScoreGraph from "./LeaderboardScoreGraph.jsx";
@@ -14,6 +15,7 @@ export default function LeaderboardScreen({
   leaderboardStatus,
   rankingStatus,
   onBack,
+  page = 1, pageCount = 1, onPageChange, refreshing, updatedAt, refreshError, onRefresh,
 }) {
   const dataStatus = `leaderboard:${leaderboardStatus}; ranking:${rankingStatus}`;
   const isPreview = leaderboardStatus === "preview";
@@ -46,6 +48,16 @@ export default function LeaderboardScreen({
           <LeaderboardChart teams={teams} status={leaderboardStatus} />
           <RankingTable rankings={rankings} status={rankingStatus} />
 
+          <div className={styles.pagination} aria-label="순위 페이지">
+            <button type="button" disabled={refreshing || page <= 1} onClick={() => onPageChange(page - 1)}>이전</button>
+            <span>{page} / {pageCount}</span>
+            <button type="button" disabled={refreshing || page >= pageCount} onClick={() => onPageChange(page + 1)}>다음</button>
+            <button type="button" disabled={refreshing} onClick={onRefresh}>새로고침</button>
+            <span>{updatedAt ? `조회 ${toKst(updatedAt, { hour: "2-digit", minute: "2-digit", second: "2-digit" })} KST` : ""}</span>
+          </div>
+          <p className={styles.refreshNote} role={refreshError ? "alert" : undefined}>
+            {refreshError ? "일부 정보를 갱신하지 못했습니다. 새로고침으로 다시 시도하세요" : "점수는 조회 시점 기준이며 30초마다 갱신됩니다"}
+          </p>
           <p className={styles.srOnly} aria-live="polite">
             {dataStatus}
           </p>

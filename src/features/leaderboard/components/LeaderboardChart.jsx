@@ -1,3 +1,4 @@
+import { SCORE_SERIES_COLORS } from "../utils/leaderboardChartData.js";
 import styles from "./LeaderboardScreen.module.css";
 
 const DEFAULT_LEGEND_TEXT_BOXES = [
@@ -59,7 +60,8 @@ export default function LeaderboardChart({ teams, status }) {
           data-is-top3={team.isTop3 || undefined}
           aria-label={team.isTop3 ? `TOP 3 ${team.name}` : team.name}
         >
-          <span className={styles.legendName}>{team.name}</span>
+          <span aria-hidden="true" className={styles.legendSwatch} style={{ backgroundColor: SCORE_SERIES_COLORS[index] }} />
+          <span className={styles.legendName} title={team.name}>{team.name}</span>
         </div>
       ))}
       {STATUS_MESSAGE[status] ? (

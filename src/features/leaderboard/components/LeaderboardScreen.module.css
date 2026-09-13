@@ -260,3 +260,16 @@
   white-space: nowrap;
   border: 0;
 }
+
+.pagination {
+  position: absolute; left: 340px; top: 955px; width: 1270px;
+  display: flex; justify-content: center; align-items: center; gap: 20px;
+  font-size: 16px; z-index: 4;
+}
+.pagination button { border: 1px solid #79512f; padding: 4px 16px; border-radius: 4px; background: #e8d0a5; }
+.pagination button:disabled { opacity: 0.45; cursor: not-allowed; }
+.refreshNote { position: absolute; left: 340px; top: 135px; width: 1270px; text-align: center; font-size: 15px; }
+
+.rankCell { position: absolute; left: -116px; width: 80px; height: 46px; display: grid; place-items: center; background: #e6d2a4; font-size: 24px; color: #704823; }
+.leaderboardChart::before { content: ""; position: absolute; left: -60px; top: -10px; width: 58px; height: 280px; background: #e6d2a4; }
+.legendSwatch { position: absolute; left: -44px; top: 6px; width: 18px; height: 18px; border-radius: 50%; border: 1px solid #6a4320; }
