@@ -2,36 +2,39 @@ import styles from "./MyPageScreen.module.css";
 
 export default function TeamInfoCard({
   panelSrc,
-  cleanTeamSourceSrc,
   teamName,
   members,
   status,
+  children,
+  footer,
 }) {
   let visibleTeamName = teamName || "—";
   if (status === "loading") visibleTeamName = "LOADING";
   if (status === "error") visibleTeamName = "UNAVAILABLE";
-
   return (
-    <section className={styles.teamInfoCard} aria-label="팀 정보">
-      <img src={panelSrc} alt="" aria-hidden="true" className={styles.teamPanelImage} />
-
-      <div className={styles.teamNameCleanClip} aria-hidden="true">
-        <img src={cleanTeamSourceSrc} alt="" className={styles.teamNameCleanImage} />
+    <section
+      className={styles.teamInfoCard}
+      aria-label="팀 정보"
+      style={{ borderImageSource: "url(" + panelSrc + ")" }}
+    >
+      <p className={styles.teamRibbon}>TEAM</p>
+      <h1 className={styles.teamName} title={visibleTeamName}>
+        {visibleTeamName}
+      </h1>
+      {children}
+      <div className={styles.members}>
+        <h2>MEMBERS</h2>
+        <ul>
+          {status === "success" &&
+            members.slice(0, 2).map((member, index) => (
+              <li key={member + index} title={member}>
+                {member}
+              </li>
+            ))}
+        </ul>
       </div>
-
-      <p className={styles.teamName} title={visibleTeamName}>{visibleTeamName}</p>
-
-      {status === "success" &&
-        members.slice(0, 2).map((member, index) => (
-          <p
-            key={`${member}-${index}`}
-            title={member}
-            className={styles.memberName}
-            style={{ top: `${567 + index * 56}px` }}
-          >
-            {member}
-          </p>
-        ))}
+      {footer}
+      <p className={styles.teamSignature}>MSG CTF</p>
     </section>
   );
 }

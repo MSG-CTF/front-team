@@ -1,389 +1,564 @@
-@import url("https://fonts.googleapis.com/css2?family=Gilda+Display&family=Kotta+One&display=swap");
-
-.stageViewport {
-  overflow: hidden;
-}
-
-.canvas {
-  /* FixedAspectStage가 이미 정확한 16:9 컨테이너를 만들므로 너비 기준으로 한 번만 scale한다. */
-  --canvas-scale: calc(100cqw / 1920px);
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 1920px;
-  height: 1080px;
-  overflow: hidden;
-  transform: translate(-50%, -50%) scale(var(--canvas-scale));
-  transform-origin: center;
-}
-
-.scorePanel,
-.mileagePanel,
-.tablePanelImage,
-.teamPanelImage,
-.teamNameCleanImage {
-  display: block;
-  pointer-events: none;
-  user-select: none;
-}
-
-.scorePanel,
-.mileagePanel {
-  position: absolute;
-  top: 195px;
-  width: 555px;
-  height: 190px;
-}
-
-.scorePanel {
-  left: 636px;
-}
-
-.mileagePanel {
-  left: 1232px;
-}
-
-.teamInfoCard {
-  position: absolute;
-  top: 195px;
-  left: 125px;
-  width: 470px;
-  height: 800px;
-}
-
-.teamPanelImage,
-.teamNameCleanImage {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 470px;
-  height: 800px;
-}
-
-/*
- * Figma node 58:330의 raw image를 수정하지 않고, 팀명 영역만 clip한다.
- * 원본에 남은 J/C/J/C는 y=500px 아래에 있어 이 90px clip 밖이며 절대 노출되지 않는다.
- */
-.teamNameCleanClip {
-  position: absolute;
-  z-index: 1;
-  top: 150px;
-  left: 0;
-  width: 470px;
-  height: 100px;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.teamNameCleanImage {
-  top: -150px;
-  left: 0;
-}
-
-.teamName,
-.memberName,
-.metricValue,
-.rankLabel,
-.rankValue,
-.tableCell,
-.tableStatus {
-  padding: 0;
-  margin: 0;
-  font-weight: 400;
-  line-height: normal;
-}
-
-.teamName {
-  position: absolute;
-  z-index: 2;
-  top: 171px;
-  left: 119px;
-  width: 235px;
-  height: 69px;
-  overflow: visible;
+.page {
+  min-height: 100dvh;
+  padding: 28px 24px;
   color: #613d15;
-  font-family: "IM Fell English", serif;
-  font-size: 48px;
-  white-space: nowrap;
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background: url("/assets/admin/background-forest.png") center / cover fixed;
 }
 
-.memberName {
-  position: absolute;
-  z-index: 2;
-  left: 102px;
-  width: 235px;
-  height: 30px;
-  overflow: hidden;
-  color: #613d15;
-  font-family: "IM Fell English", serif;
-  font-size: 24px;
-  white-space: nowrap;
-}
-
-.metricValue {
-  position: absolute;
-  top: 274px;
-  width: 285px;
-  height: 95px;
-  overflow: hidden;
-  color: #e8d9c8;
-  font-family: "Kotta One", serif;
-  font-size: 80px;
-  white-space: nowrap;
-}
-
-.scoreValue {
-  left: 672px;
-}
-
-.mileageValue {
-  left: 1276px;
-}
-
-.rankLabel {
-  position: absolute;
-  top: 332px;
-  left: 1055px;
-  width: 85px;
-  height: 30px;
-  color: #f1d3a6;
-  font-family: "IM Fell English", serif;
-  font-size: 24px;
-  white-space: nowrap;
-}
-
-.rankValue {
-  position: absolute;
-  top: 333px;
-  left: 1140px;
-  width: 27px;
-  height: 28px;
-  overflow: hidden;
-  color: #f1d3a6;
-  font-family: "Kotta One", serif;
-  font-size: 24px;
-  white-space: nowrap;
-}
-
-.mileageHistoryTable,
-.solveHistoryTable {
-  position: absolute;
-  left: 636px;
-  width: 1150px;
-  height: 270px;
-}
-
-.mileageHistoryTable {
-  top: 417px;
-}
-
-.solveHistoryTable {
-  top: 725px;
-}
-
-.tablePanelImage {
-  position: absolute;
-  inset: 0;
-  width: 1150px;
-  height: 270px;
-}
-
-.tableCell {
-  position: absolute;
-  z-index: 1;
-  height: 30px;
-  overflow: hidden;
-  color: #9b7449;
-  font-size: 24px;
-  white-space: nowrap;
-}
-
-.fellText {
-  font-family: "IM Fell English", serif;
-}
-
-.gildaText {
-  font-family: "Gilda Display", serif;
-  height: 28px;
-}
-
-.mileageDate {
-  left: 49px;
-  width: 125px;
-}
-
-.mileageReason {
-  left: 345px;
-  width: 285px;
-}
-
-.mileageChange {
-  left: 868px;
-  width: 125px;
-  color: #9f4343;
-}
-
-.mileageBalance {
-  width: 125px;
-  text-align: right;
-}
-
-.solveChallenge {
-  left: 49px;
-  width: 285px;
-}
-
-.solveCategory {
-  left: 388px;
-  width: 285px;
-}
-
-.solvePoints {
-  left: 711px;
-  width: 125px;
-  color: #d38f25;
-}
-
-.solveTime {
-  left: 830px;
-  width: 125px;
-  text-align: right;
-}
-
-.solveElapsed {
-  left: 1004px;
-  width: 125px;
-  text-align: right;
-}
-
-.tableStatus {
-  position: absolute;
-  z-index: 1;
-  top: 162px;
-  left: 49px;
-  width: 1067px;
-  color: #9b7449;
-  font-family: "IM Fell English", serif;
-  font-size: 24px;
-  text-align: center;
-  white-space: nowrap;
+.board {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 22px 26px 30px;
+  border: 12px solid transparent;
+  border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+  background: #eee0bd;
+  box-shadow: 0 12px 36px #21180d55;
 }
 
 .backButton {
-  position: absolute;
-  z-index: 3;
-  top: 83px;
-  left: 45px;
-  width: 43px;
-  height: 31px;
-  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 44px;
+  margin: 0 0 18px;
+  padding: 6px 0;
   border: 0;
   background: transparent;
-  cursor: pointer;
-}
-
-.backIcon {
-  position: absolute;
-  top: -6px;
-  left: 6px;
-  display: block;
-  width: 31px;
-  height: 43px;
-  pointer-events: none;
-  transform: rotate(-90deg);
-  transform-origin: center;
-}
-
-.backButton:hover .backIcon {
-  filter: brightness(1.12);
-}
-
-.backButton:active .backIcon {
-  filter: brightness(0.88);
-}
-
-.logoutButton {
-  position: absolute;
-  z-index: 3;
-  top: 616px;
-  left: 481px;
-  width: 52px;
-  height: 18px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #605145;
-  font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
-  font-size: 15px;
-  font-weight: 400;
-  line-height: normal;
-  text-align: left;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.logoutButton:hover {
-  text-decoration: underline;
-}
-
-.logoutButton:disabled {
-  cursor: wait;
-  opacity: 0.55;
-}
-
-.logoutError {
-  position: absolute;
-  z-index: 3;
-  top: 640px;
-  left: 400px;
-  width: 214px;
-  margin: 0;
-  color: #8c2f2f;
-  font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  color: #613d15;
+  font-family: inherit;
   font-size: 13px;
-  line-height: 18px;
+  cursor: pointer;
+}
+
+.backButton svg {
+  width: 24px;
+  height: 24px;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  align-items: stretch;
+  gap: 24px;
+}
+
+.teamInfoCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+  padding: 24px 18px 20px;
+  border: 8px solid transparent;
+  border-image-slice: 24;
+  border-image-repeat: stretch;
+  background: linear-gradient(110deg, #efdfbd, #e5cda3);
+}
+
+.teamRibbon {
+  width: 100%;
+  max-width: 190px;
+  margin: 0 0 20px;
+  padding: 10px 20px;
+  clip-path: polygon(0 0, 100% 0, 93% 50%, 100% 100%, 0 100%, 7% 50%);
+  background: #862f29;
+  color: #f8e4c7;
   text-align: center;
+  font-family: "IM Fell English", serif;
+  font-size: 22px;
+  letter-spacing: 0.2em;
+}
+
+.teamName {
+  width: 100%;
+  margin: 0 0 24px;
+  text-align: center;
+  font-family: "IM Fell English", "Malgun Gothic", serif;
+  font-size: 30px;
+  font-weight: 400;
+  line-height: 1.3;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .qrSlot {
-  position: absolute;
-  z-index: 3;
-  top: 457px;
-  left: 290px;
+  flex-shrink: 0;
   display: flex;
-  width: 141px;
-  height: 136px;
   align-items: center;
   justify-content: center;
+  width: 176px;
+  height: 176px;
+  padding: 7px;
+  border: 1px solid #947244;
+  border-radius: 0;
+  background: #fff9e9;
 }
 
 .qrCode {
   display: block;
-  width: 136px;
-  height: 136px;
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
 }
 
-.qrStatus {
-  width: 132px;
-  margin: 0;
-  color: #605145;
-  font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+.qrIssueButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  border: 0;
+  background: transparent;
+  color: #644420;
+  font-family: inherit;
   font-size: 14px;
-  line-height: 20px;
+  cursor: pointer;
+}
+
+.qrIssueButton svg {
+  width: 44px;
+  height: 44px;
+}
+
+.qrIssueButton:hover:not(:disabled) {
+  background: #f0e1c1;
+}
+
+.qrIssueButton:disabled {
+  color: #9a8668;
+  cursor: not-allowed;
+}
+
+.qrActions {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 10px;
+  color: #775b33;
+  font-size: 12px;
+  line-height: 1.7;
   text-align: center;
   overflow-wrap: anywhere;
 }
 
-.teamName { overflow: hidden; text-overflow: ellipsis; }
-.rankValue { width: 48px; }
-.mileageDate { width: 220px; font-size: 20px; }
-.solveTime { width: 175px; font-size: 20px; }
-.scoreBreakdown { position: absolute; top: 363px; left: 672px; margin: 0; color: #f1d3a6; font-size: 15px; }
-.refreshBar { position: absolute; top: 387px; left: 636px; width: 1150px; display: flex; gap: 18px; align-items: center; color: #613d15; font-size: 16px; }
-.refreshBar button, .historyPagination button, .qrActions button { border: 1px solid #9b7449; border-radius: 4px; background: #e7d4b3; padding: 2px 10px; }
-.refreshBar button:disabled, .historyPagination button:disabled, .qrActions button:disabled { opacity: 0.5; cursor: not-allowed; }
-.historyPagination { position: absolute; top: 240px; left: 420px; width: 400px; display: flex; justify-content: center; align-items: center; gap: 16px; font-size: 16px; color: #613d15; }
-.qrActions { position: absolute; top: 599px; left: 239px; width: 245px; text-align: center; font-size: 15px; color: #613d15; }
-.qrHint { display: block; margin-top: 5px; font-size: 12px; }
+.qrStatus {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
 
-.tableCell { text-overflow: ellipsis; }
+.members {
+  width: 100%;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #bda177;
+}
+
+.members h2 {
+  margin: 0 0 18px;
+  color: #775b33;
+  text-align: center;
+  font-family: "IM Fell English", serif;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+}
+
+.members ul {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0 0 0 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  list-style-type: square;
+}
+
+.members li {
+  overflow-wrap: anywhere;
+}
+
+.teamFooter {
+  width: 100%;
+  margin-top: auto;
+  padding-top: 24px;
+  text-align: center;
+}
+
+.logoutButton {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 0;
+  color: #715431;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.logoutError {
+  margin: 8px 0 0;
+  color: #893c2c;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.teamSignature {
+  width: 100%;
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid #bda177;
+  text-align: center;
+  font-family: "IM Fell English", serif;
+  font-size: 15px;
+  letter-spacing: 0.16em;
+}
+
+.contentColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.metricPanel {
+  min-width: 0;
+  padding: 18px 20px;
+  border: 6px solid transparent;
+  border-image: url("/assets/mypage/panel-score.png") 24 stretch;
+  background: #302211;
+  color: #f3dfb5;
+}
+
+.metricPanel h2 {
+  margin: 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #816a46;
+  font-family: "IM Fell English", serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+.metricLine {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px 16px;
+  padding-top: 8px;
+}
+
+.metricValue {
+  margin: 0;
+  color: #f6e9d2;
+  font-family: "Kode Mono", monospace;
+  font-size: clamp(30px, 3.8vw, 48px);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.rank {
+  margin: 0;
+  color: #dbc395;
+  font-family: "IM Fell English", serif;
+  font-size: 14px;
+}
+
+.rank strong {
+  padding-left: 6px;
+  font-family: "Kode Mono", monospace;
+  font-weight: 400;
+}
+
+.unit {
+  color: #dbc395;
+  font-family: "IM Fell English", serif;
+  font-size: 15px;
+}
+
+.scoreBreakdown {
+  margin: 10px 0 0;
+  color: #cfbb93;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.refreshBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  color: #725832;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.refreshBar button {
+  min-height: 36px;
+  padding: 6px 12px;
+  border: 1px solid #b79d72;
+  border-radius: 2px;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.mileageHistoryTable,
+.solveHistoryTable {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 16px 20px;
+  border: 8px solid transparent;
+  border-image-slice: 24;
+  border-image-repeat: stretch;
+  background: linear-gradient(110deg, #edddbb, #e7d0a6);
+}
+
+.historyHeading {
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #b79d72;
+  color: #613d15;
+  font-family: "IM Fell English", serif;
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: 0.025em;
+  line-height: 1.2;
+}
+
+.historyScroll {
+  min-height: 132px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #a38b64 #e7d2ac;
+}
+
+.historyTable {
+  width: 100%;
+  min-width: 440px;
+  table-layout: fixed;
+  border-collapse: collapse;
+  color: #614525;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.historyTable th {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  padding: 2px 8px 8px;
+  color: #7d6038;
+  font-family: "IM Fell English", serif;
+  font-size: 12px;
+  font-weight: 400;
+  text-align: left;
+}
+
+.historyTable td {
+  height: 34px;
+  padding: 5px 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.historyTable .numericCell {
+  text-align: right;
+}
+
+.historyTable .historyDate {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.historyTable .historyChange {
+  color: #8f4430;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.historyTable .historyPoints {
+  color: #8a5519;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.historyTable .historyEmpty {
+  height: 102px;
+  text-align: center;
+  white-space: normal;
+}
+
+.historyFooter {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 58px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #c7af87;
+}
+
+.historyPagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  color: #72532d;
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.historyPagination button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 84px;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid #9b7c4e;
+  border-radius: 2px;
+  background: #dfc69b;
+  color: #513717;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.historyPagination button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.historyPagination button:hover:not(:disabled) {
+  border-color: #71512b;
+  background: #c9ab78;
+}
+
+.historyPagination button:active:not(:disabled) {
+  background: #b89762;
+}
+
+.historyPagination button:disabled {
+  border-color: #c5b08a;
+  background: transparent;
+  color: #9b8767;
+  cursor: not-allowed;
+}
+
+.pageIndicator {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-width: 48px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pageIndicator strong {
+  color: #553916;
+  font-weight: 600;
+}
+
+.pageDivider {
+  color: #9a815c;
+}
+
+.page :is(button, a, [tabindex]):focus-visible {
+  outline: 2px solid #946329;
+  outline-offset: 3px;
+}
+
+.page button:disabled {
+  cursor: not-allowed;
+}
+
+@media (max-width: 1100px) {
+  .page {
+    padding: 20px 16px;
+  }
+  .board {
+    padding: 16px;
+  }
+  .layout {
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 18px;
+  }
+  .teamInfoCard {
+    padding: 20px 8px;
+  }
+  .metrics {
+    gap: 12px;
+  }
+  .metricPanel {
+    padding: 14px;
+  }
+  .mileageHistoryTable,
+  .solveHistoryTable {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: 12px 10px;
+  }
+  .board {
+    padding: 14px;
+    border-width: 8px;
+  }
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .teamInfoCard {
+    padding: 24px;
+  }
+  .members,
+  .teamFooter,
+  .teamSignature {
+    max-width: 320px;
+  }
+  .historyFooter {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .historyHeading {
+    font-size: 19px;
+  }
+  .historyPagination {
+    gap: 8px;
+  }
+  .historyPagination button {
+    min-width: 74px;
+    padding-inline: 8px;
+  }
+}
+
+.solveHistoryTable .historyTable {
+  min-width: 500px;
+}
