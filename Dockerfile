@@ -1,5 +1,5 @@
 # MSG CTF 프론트엔드 — 프로덕션 이미지
-# Vite 정적 빌드를 nginx로 서빙한다. (Vite 5 / react-router-dom v7 → Node 20+ 필요)
+# Vite 정적 빌드를 nginx로 서빙한다. (Vite 8 / react-router-dom v7 → Node 20.19+ 필요)
 
 # 1) 빌드 스테이지
 FROM node:20-alpine AS build

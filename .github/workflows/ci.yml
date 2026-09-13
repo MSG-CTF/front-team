@@ -28,8 +28,9 @@ env:
 
 jobs:
   frontend-code-scan:
-    # 중앙 CD PR #5가 병합되고 v3.4.0 태그가 발행되기 전까지는 커밋 SHA로 고정
-    # 참조한다. 태깅 완료되면 @v3.4.0으로 교체할 것 — branch ref(@jm)는 나중에
+    # 중앙 CD PR #7에서 병합된 JavaScript·React 전용 Semgrep 구성을
+    # 공식 merge commit SHA로 고정한다. PR #5가 병합되고 v3.4.0 태그가
+    # 발행되면 검증된 태그로 교체한다. branch ref(@jm)는 나중에
     # 다른 커밋이 push되면 이 워크플로가 가리키는 내용이 바뀌는 리스크가 있어
     # 쓰지 않는다.
     uses: MSG-CTF/jm_devsecops/.github/workflows/frontend-ci.yml@43e06bc6a1615dfbd60bfab85451c128b7acfb02
