@@ -1,86 +1,121 @@
-import { useCallback, useEffect, useState } from "react";
-import { getOpenedChallenges } from "../../../api/board.js";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { getOpenChallenges } from "../../../api/challenges.js";
 import { getMyInstances } from "../../../api/instances.js";
-import { adaptOpenedChallenges } from "../../board/utils/boardData.js";
 import { isSuccess } from "../../../utils/response.js";
-import { mapChallengeInstance } from "../utils/challengeDetailMapper.js";
+import {
+  getOpenChallengesError,
+  readCurrentInstance,
+  readOpenChallenges,
+} from "../utils/openChallengesData.js";
 
-function getErrorMessage(error, fallbackMessage) {
-  return error?.response?.data?.message || error?.message || fallbackMessage;
+const INITIAL_STATE = {
+  status: "loading",
+  challenges: [],
+  totalCount: 0,
+  solvedCount: 0,
+  totalScore: null,
+  instance: null,
+  instanceLoading: true,
+  instanceError: "",
+  error: "",
+  refreshError: "",
+  refreshing: false,
+};
+
+function requireSuccess(response, fallback) {
+  if (isSuccess(response.data)) return response.data.data;
+  const error = new Error(response.data?.message || fallback);
+  error.response = response;
+  throw error;
 }
 
-// 열린 문제 목록 페이지 - README.md "10. 열린 문제 목록 페이지".
-// 전용 API가 없어 GET /board/opened_challenges + GET /teams/me/instances
-// 조합으로 만든다(README에 확정된 방식).
 export default function useOpenChallenges() {
-  const [requestSequence, setRequestSequence] = useState(0);
-  const [state, setState] = useState({
-    status: "loading",
-    challenges: [],
-    totalCount: 0,
-    solvedCount: 0,
-    totalScore: 0,
-    instance: null,
-    error: "",
-  });
+  const [state, setState] = useState(INITIAL_STATE);
+  const sequence = useRef(0);
+  const controller = useRef(null);
 
   const load = useCallback(async () => {
-    setState((current) => ({ ...current, status: "loading", error: "" }));
+    const requestId = ++sequence.current;
+    controller.current?.abort();
+    controller.current = new AbortController();
+    const config = { signal: controller.current.signal, timeout: 10000 };
+    const currentRequest = () => sequence.current === requestId;
+    setState((current) => ({
+      ...current,
+      refreshing: true,
+      instanceLoading: true,
+    }));
 
-    try {
-      const openedResponse = await getOpenedChallenges();
-      const openedEnvelope = openedResponse.data;
-
-      if (!isSuccess(openedEnvelope)) {
-        throw new Error(openedEnvelope?.message || "열린 문제 목록을 불러오지 못했습니다.");
-      }
-
-      const challenges = adaptOpenedChallenges(openedEnvelope.data);
-
-      // 현재 인스턴스 표시는 보조 정보라, 이게 실패해도(백엔드 상태에 따라
-      // 아직 없을 수 있음) 열린 문제 목록 자체는 정상 표시되게 한다.
-      let instance = null;
-      try {
-        const instanceResponse = await getMyInstances();
-        const instanceEnvelope = instanceResponse.data;
-        instance = isSuccess(instanceEnvelope) ? mapChallengeInstance(instanceEnvelope.data) : null;
-      } catch {
-        instance = null;
-      }
-
-      setState({
-        status: "success",
-        challenges,
-        totalCount: openedEnvelope.data?.total_count ?? challenges.length,
-        solvedCount: openedEnvelope.data?.solved_count ?? 0,
-        totalScore: openedEnvelope.data?.total_score ?? 0,
-        instance,
-        error: "",
-      });
-    } catch (error) {
-      setState({
-        status: "error",
-        challenges: [],
-        totalCount: 0,
-        solvedCount: 0,
-        totalScore: 0,
-        instance: null,
-        error: getErrorMessage(error, "열린 문제 목록을 불러오지 못했습니다."),
-      });
-    }
+    // 보조 인스턴스 조회가 늦어져도 문제 목록은 먼저 표시한다
+    await Promise.all([
+      (async () => {
+        try {
+          const response = await getOpenChallenges(config);
+          const data = readOpenChallenges(
+            requireSuccess(response, "열린 문제 목록을 불러오지 못했습니다"),
+          );
+          if (currentRequest())
+            setState((current) => ({
+              ...current,
+              ...data,
+              status: "success",
+              refreshing: false,
+              error: "",
+              refreshError: "",
+            }));
+        } catch (error) {
+          if (!currentRequest()) return;
+          const failure = getOpenChallengesError(error);
+          setState((current) =>
+            current.status === "success" && failure.recoverable
+              ? { ...current, refreshing: false, refreshError: failure.message }
+              : {
+                  ...INITIAL_STATE,
+                  status: "error",
+                  instanceLoading: false,
+                  error: failure.message,
+                },
+          );
+        }
+      })(),
+      (async () => {
+        try {
+          const response = await getMyInstances(config);
+          const instance = readCurrentInstance(
+            requireSuccess(response, "인스턴스 상태를 불러오지 못했습니다"),
+          );
+          if (currentRequest())
+            setState((current) => ({
+              ...current,
+              instance,
+              instanceLoading: false,
+              instanceError: "",
+            }));
+        } catch {
+          if (currentRequest())
+            setState((current) => ({
+              ...current,
+              instance: null,
+              instanceLoading: false,
+              instanceError: "현재 인스턴스 상태를 확인하지 못했습니다",
+            }));
+        }
+      })(),
+    ]);
   }, []);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (!cancelled) await load();
-    })();
-    return () => {
-      cancelled = true;
+    load();
+    const onVisible = () => {
+      if (!document.hidden) load();
     };
-  }, [load, requestSequence]);
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      ++sequence.current;
+      controller.current?.abort();
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [load]);
 
-  const retry = useCallback(() => setRequestSequence((sequence) => sequence + 1), []);
-
-  return { ...state, retry };
+  return { ...state, retry: load };
 }
