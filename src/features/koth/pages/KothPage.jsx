@@ -4,6 +4,7 @@ import { KOTH_CHALLENGE_VISUALS } from "../config/kothVisualConfig.js";
 import {
   useKothData,
   useKothTeamToken,
+  useKothLeaderboard,
 } from "../hooks/useKothData.js";
 import {
   createKothChallengeViewModels,
@@ -39,6 +40,8 @@ export default function KothPage() {
     (challenge) => challenge.kothChallengeId === selectedChallengeId,
   ) ?? null;
 
+  const problemRanking = useKothLeaderboard(selectedChallengeId, kothData.authenticated);
+
   const handleOpenTeamToken = () => {
     setIsTeamTokenOpen(true);
     teamToken.requestTeamToken();
@@ -57,6 +60,9 @@ export default function KothPage() {
     <KothScreen
       requestStatus={kothData.status}
       requestError={kothData.error}
+      authenticated={kothData.authenticated}
+      clubsStale={kothData.clubsStale}
+      problemRanking={problemRanking}
       challenges={challenges}
       isEmpty={kothData.status === "success" && allChallenges.length === 0}
       unmappedChallengeCount={unmappedChallengeCount}

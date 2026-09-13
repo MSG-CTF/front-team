@@ -1,23 +1,23 @@
 export const KOTH_CHALLENGE_VISUALS = [
   {
     visualKey: "maple-pass",
-    openGroup: 1,
+    slot: 1,
     visualTitle: "MAPLE PASS",
     imageSrc: "/assets/koth/challenge-maple-pass.png",
-    completionStampImageSrc: "/assets/koth/completion-stamp-round-3.png",
+    completionStampImageSrc: "/assets/koth/completion-stamp-round-1.png",
     position: { left: "5.8333%", top: "62.8704%", width: "11.8229%", height: "26.2037%" },
   },
   {
     visualKey: "river-crossing",
-    openGroup: 2,
+    slot: 2,
     visualTitle: "RIVER CROSSING",
     imageSrc: "/assets/koth/challenge-river-crossing.png",
-    completionStampImageSrc: "/assets/koth/completion-stamp-round-3.png",
+    completionStampImageSrc: "/assets/koth/completion-stamp-round-1.png",
     position: { left: "20.5729%", top: "62.8704%", width: "11.7188%", height: "26.2037%" },
   },
   {
     visualKey: "pine-ridge",
-    openGroup: 3,
+    slot: 3,
     visualTitle: "PINE RIDGE",
     imageSrc: "/assets/koth/challenge-pine-ridge.png",
     completionStampImageSrc: "/assets/koth/completion-stamp-round-2.png",
@@ -25,7 +25,7 @@ export const KOTH_CHALLENGE_VISUALS = [
   },
   {
     visualKey: "lantern-camp",
-    openGroup: 4,
+    slot: 4,
     visualTitle: "LANTERN CAMP",
     imageSrc: "/assets/koth/challenge-lantern-camp.png",
     completionStampImageSrc: "/assets/koth/completion-stamp-round-2.png",
@@ -33,18 +33,18 @@ export const KOTH_CHALLENGE_VISUALS = [
   },
   {
     visualKey: "stone-ascent",
-    openGroup: 5,
+    slot: 5,
     visualTitle: "STONE ASCENT",
     imageSrc: "/assets/koth/challenge-stone-ascent.png",
-    completionStampImageSrc: "/assets/koth/completion-stamp-round-1.png",
+    completionStampImageSrc: "/assets/koth/completion-stamp-round-3.png",
     position: { left: "68.5938%", top: "62.8704%", width: "11.25%", height: "26.2037%" },
   },
   {
     visualKey: "crown-summit",
-    openGroup: 6,
+    slot: 6,
     visualTitle: "CROWN SUMMIT",
     imageSrc: "/assets/koth/challenge-crown-summit.png",
-    completionStampImageSrc: "/assets/koth/completion-stamp-round-1.png",
+    completionStampImageSrc: "/assets/koth/completion-stamp-round-3.png",
     position: { left: "82.2917%", top: "62.8704%", width: "11.3542%", height: "26.2037%" },
   },
 ];
@@ -54,7 +54,7 @@ export const KOTH_CHALLENGE_VISUALS = [
 export const KOTH_COMPLETION_STAMPS = [
   {
     stampKey: "round-three-stamp",
-    imageSrc: "/assets/koth/completion-stamp-round-3.png",
+    imageSrc: "/assets/koth/completion-stamp-round-1.png",
     position: { left: "5.1042%", top: "64.1667%", width: "13.3333%", height: "23.7037%" },
   },
   {
@@ -64,7 +64,7 @@ export const KOTH_COMPLETION_STAMPS = [
   },
   {
     stampKey: "round-one-stamp",
-    imageSrc: "/assets/koth/completion-stamp-round-1.png",
+    imageSrc: "/assets/koth/completion-stamp-round-3.png",
     position: { left: "67.4479%", top: "63.8889%", width: "13.4896%", height: "23.9815%" },
   },
 ];
