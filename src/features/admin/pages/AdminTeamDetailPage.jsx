@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   adjustDiceRolls,
   adjustMileage,
   banTeam,
+  createAdminIdempotencyKey,
   getAdminTeamDetail,
   getTeamSnapshots,
   moveBoardPosition,
@@ -14,11 +15,15 @@ import {
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
+import { getAdminRequestError } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 
 function MileageForm({ teamId, isMutating, onSubmit }) {
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
+  // 재시도 시 같은 Idempotency-Key를 재사용해야 중복 지급이 막힌다. 성공하면
+  // 비우고, 다음 제출에서 새로 발급한다.
+  const idempotencyKeyRef = useRef(null);
 
   return (
     <form
@@ -26,8 +31,10 @@ function MileageForm({ teamId, isMutating, onSubmit }) {
         event.preventDefault();
         const parsed = Number(amount);
         if (!parsed || !reason.trim()) return;
-        onSubmit(teamId, parsed, reason.trim()).then((ok) => {
+        if (!idempotencyKeyRef.current) idempotencyKeyRef.current = createAdminIdempotencyKey("admin-mileage");
+        onSubmit(teamId, parsed, reason.trim(), idempotencyKeyRef.current).then((ok) => {
           if (ok) {
+            idempotencyKeyRef.current = null;
             setAmount("");
             setReason("");
           }
@@ -227,7 +234,7 @@ function RollbackSection({ teamId, isMutating, onRollback }) {
         }
       })
       .catch((err) => {
-        setLoadError(err.response?.data?.message || err.message || "롤백 지점을 불러오지 못했습니다.");
+        setLoadError(getAdminRequestError(err, "롤백 지점을 불러오지 못했습니다.").error);
         setSnapshots([]);
       });
   };
@@ -317,15 +324,15 @@ export default function AdminTeamDetailPage() {
       await detail.reload();
       return true;
     } catch (error) {
-      setActionError(error.response?.data?.message || error.message || fallbackMessage);
+      setActionError(getAdminRequestError(error, fallbackMessage).error);
       return false;
     } finally {
       setIsMutating(false);
     }
   };
 
-  const handleMileageAdjust = (id, amount, reason) =>
-    runAction(() => adjustMileage(id, { amount, reason }), "마일리지 조정에 실패했습니다.");
+  const handleMileageAdjust = (id, amount, reason, idempotencyKey) =>
+    runAction(() => adjustMileage(id, { amount, reason, idempotencyKey }), "마일리지 조정에 실패했습니다.");
 
   const handleBanToggle = async () => {
     if (!data.is_banned) {

@@ -1,11 +1,13 @@
-export function validateAdminAccount({ loginId, password, nickname, role, isLeader, teamMode, teamId }) {
+export function validateAdminAccount({ loginId, password, nickname, role, isLeader, teamMode, teamId, teamName }) {
   if (!loginId.trim() || Array.from(loginId.trim()).length > 50) return "아이디는 1~50자로 입력하세요";
   if (Array.from(password).length < 8 || Array.from(password).length > 128) return "비밀번호는 8~128자로 입력하세요";
   if (!nickname.trim() || Array.from(nickname.trim()).length > 50) return "닉네임은 1~50자로 입력하세요";
   if (!["PARTICIPANT", "ADMIN"].includes(role)) return "권한을 선택하세요";
   if (role === "ADMIN" && isLeader) return "관리자는 팀장으로 지정할 수 없습니다";
+  if (!["NONE", "EXISTING", "NEW"].includes(teamMode)) return "지원하지 않는 팀 등록 방식입니다";
   if (teamMode === "EXISTING" && !teamId) return "소속 팀을 선택하세요";
-  if (!["NONE", "EXISTING"].includes(teamMode)) return "지원하지 않는 팀 등록 방식입니다";
+  // team_name 1~100자(백엔드), team_id와 동시 전송 시 400 - teamMode로 배타적으로 분리해 막는다.
+  if (teamMode === "NEW" && (!teamName?.trim() || Array.from(teamName.trim()).length > 100)) return "새 팀 이름은 1~100자로 입력하세요";
   return "";
 }
 

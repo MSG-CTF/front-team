@@ -18,10 +18,12 @@ import AdminLogsPage from "../features/admin/pages/AdminLogsPage.jsx";
 import AdminAccountsPage from "../features/admin/pages/AdminAccountsPage.jsx";
 import AdminRoute from "./AdminRoute.jsx";
 import { ROUTES } from "./routePaths.js";
+import useRouteTitle from "./useRouteTitle.js";
 
 // TODO: 참가자 라우트 가드(로그인 안 한 상태에서 /board 등 직접 접근)는 토큰
 // 저장 방식이 정해지면 추가. 관리자 라우트는 AdminRoute로 막아뒀다(아래).
 export default function AppRoutes() {
+  useRouteTitle();
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />

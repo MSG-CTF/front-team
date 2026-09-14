@@ -2,6 +2,23 @@ import apiClient from "./client.js";
 
 const MUTATION_CONFIG = { timeout: 15000, timeoutErrorMessage: "요청 결과를 확인하지 못했습니다. 최신 상태를 조회한 뒤 확인하세요" };
 
+// board.js createBoardIdempotencyKey와 동일한 패턴. 관리자 API 중에는 마일리지
+// 지급/회수만 Idempotency-Key 헤더가 필수(README 8절) - 재시도 시 호출부에서
+// 같은 키를 그대로 넘겨야 중복 지급이 막힌다.
+export function createAdminIdempotencyKey(prefix) {
+  const uuid =
+    globalThis.crypto?.randomUUID?.() ??
+    `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return `${prefix}-${uuid}`;
+}
+
+function idKey(prefix, idempotencyKey) {
+  return {
+    ...MUTATION_CONFIG,
+    headers: { "Idempotency-Key": idempotencyKey ?? createAdminIdempotencyKey(prefix) },
+  };
+}
+
 // 관리자 API - 전부 Bearer + role: ADMIN 필요. 경로/스키마는 README.md "8. 관리자 페이지"
 // (Notion API명세서 2026-09-07 스냅샷) 기준.
 //
@@ -18,8 +35,11 @@ export function getAdminDashboard(config) {
 }
 
 // ── 계정 (2026-09-07 신규 - 회원가입 없이 관리자가 미리 계정을 등록) ────────
-export function registerAdminAccount({ loginId, password, nickname, role = "PARTICIPANT", isLeader = false, teamId }) {
-  // POST /admin/accounts: 기존 팀에 배정하거나 무소속으로 등록
+export function registerAdminAccount({ loginId, password, nickname, role = "PARTICIPANT", isLeader = false, teamId, teamName }) {
+  // POST /admin/accounts
+  // team_id 만  → 기존 팀에 합류 / team_name 만 → 새 팀 생성 후 배정
+  // 둘 다 없음  → 무소속        / 둘 다 있으면  → 400(함께 보낼 수 없음)
+  // team_name 1~100자, 중복이면 409 TEAM_NAME_TAKEN
   return apiClient.post("/admin/accounts", {
     login_id: loginId,
     password,
@@ -27,6 +47,7 @@ export function registerAdminAccount({ loginId, password, nickname, role = "PART
     role,
     is_leader: isLeader,
     team_id: teamId,
+    team_name: teamName,
   }, MUTATION_CONFIG);
 }
 
@@ -59,9 +80,14 @@ export function unbanTeam(teamId) {
   return apiClient.delete(`/admin/teams/${teamId}/ban`);
 }
 
-export function adjustMileage(teamId, { amount, reason }) {
+export function adjustMileage(teamId, { amount, reason, idempotencyKey }) {
   // [백엔드: 완료] amount 0 불가, 양수=지급 / 음수=회수. type은 서버가 부호로 결정.
-  return apiClient.post(`/admin/teams/${teamId}/mileage`, { amount, reason }, MUTATION_CONFIG);
+  // Idempotency-Key 헤더 필수 - 없으면 400 IDEMPOTENCY_KEY_REQUIRED.
+  return apiClient.post(
+    `/admin/teams/${teamId}/mileage`,
+    { amount, reason },
+    idKey("admin-mileage", idempotencyKey),
+  );
 }
 
 // ── 팀 강제 개입 (Notion API명세서 2026-09-07 스냅샷 기준 상태 개별 표기) ──

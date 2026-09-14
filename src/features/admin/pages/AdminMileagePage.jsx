@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { adjustMileage, getAdminMileageHistory, getAdminTeams } from "../../../api/admin.js";
+import { useEffect, useRef, useState } from "react";
+import { adjustMileage, createAdminIdempotencyKey, getAdminMileageHistory, getAdminTeams } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import AdminLayout, { AdminStatusMessage } from "../components/AdminLayout.jsx";
@@ -16,6 +16,9 @@ function GrantForm({ onDone }) {
   const [reason, setReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  // 같은 지급/회수 시도를 재시도할 때 동일 키를 재사용해야 서버가 중복 지급을
+  // 막아준다. 성공하면 비우고, 다음 제출에서 새로 발급한다.
+  const idempotencyKeyRef = useRef(null);
 
   useEffect(() => {
     getAdminTeams({ size: 100, sort: "name" })
@@ -29,9 +32,11 @@ function GrantForm({ onDone }) {
     if (!teamId || !parsed || !reason.trim()) return;
     setIsSubmitting(true);
     setError("");
+    if (!idempotencyKeyRef.current) idempotencyKeyRef.current = createAdminIdempotencyKey("admin-mileage");
     try {
-      const res = await adjustMileage(teamId, { amount: parsed, reason: reason.trim() });
+      const res = await adjustMileage(teamId, { amount: parsed, reason: reason.trim(), idempotencyKey: idempotencyKeyRef.current });
       if (!isSuccess(res.data)) throw new Error(res.data?.message || "처리에 실패했습니다.");
+      idempotencyKeyRef.current = null;
       setAmount("");
       setReason("");
       onDone();
