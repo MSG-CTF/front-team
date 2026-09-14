@@ -9,10 +9,16 @@ test("비밀번호는 공백을 보존하고 8~128자 경계를 검사한다", (
   for (const password of ["1234567", "a".repeat(129), "😀".repeat(4)]) assert.notEqual(validateAdminAccount({ ...account, password }), "");
   assert.equal(validateAdminAccount({ ...account, password: "a".repeat(128) }), "");
 });
-test("관리자와 팀장 동시 지정 및 지원하지 않는 신규 팀 요청을 거부한다", () => {
+test("관리자와 팀장 동시 지정, 기존 팀 미선택, 새 팀 이름 누락을 거부한다", () => {
   assert.notEqual(validateAdminAccount({ ...account, role: "ADMIN", isLeader: true }), "");
-  assert.notEqual(validateAdminAccount({ ...account, teamMode: "NEW" }), "");
   assert.notEqual(validateAdminAccount({ ...account, teamMode: "EXISTING", teamId: "" }), "");
+  assert.notEqual(validateAdminAccount({ ...account, teamMode: "NEW", teamName: "" }), "");
+  assert.notEqual(validateAdminAccount({ ...account, teamMode: "NEW", teamName: "a".repeat(101) }), "");
+  assert.notEqual(validateAdminAccount({ ...account, teamMode: "UNKNOWN" }), "");
+});
+test("새 팀 생성을 선택하면 팀 이름 1~100자를 허용한다", () => {
+  assert.equal(validateAdminAccount({ ...account, teamMode: "NEW", teamName: "새 팀" }), "");
+  assert.equal(validateAdminAccount({ ...account, teamMode: "NEW", teamName: "a".repeat(100) }), "");
 });
 test("설정의 빈 값, 소수와 범위 밖 값을 저장하지 않는다", () => {
   const form = { dice_rolls_per_reset: 3, dice_reset_interval_minutes: 60, solve_deadline_minutes: 15, max_attempts: 3, lock_seconds: 30 };

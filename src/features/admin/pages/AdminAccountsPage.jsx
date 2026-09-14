@@ -5,7 +5,7 @@ import AdminLayout, { AdminStatusMessage } from "../components/AdminLayout.jsx";
 import useAdminTeamOptions from "../hooks/useAdminTeamOptions.js";
 import { validateAdminAccount } from "../utils/adminValidation.js";
 
-const INITIAL = { loginId: "", password: "", nickname: "", role: "PARTICIPANT", isLeader: false, teamMode: "NONE", teamId: "" };
+const INITIAL = { loginId: "", password: "", nickname: "", role: "PARTICIPANT", isLeader: false, teamMode: "NONE", teamId: "", teamName: "" };
 const INPUT_CLASS = "rounded border border-admin-divider bg-white/60 px-3 py-2";
 
 export default function AdminAccountsPage() {
@@ -31,6 +31,7 @@ export default function AdminAccountsPage() {
         loginId: form.loginId.trim(), password: form.password, nickname: form.nickname.trim(),
         role: form.role, isLeader: form.isLeader,
         teamId: form.teamMode === "EXISTING" ? form.teamId : undefined,
+        teamName: form.teamMode === "NEW" ? form.teamName.trim() : undefined,
       });
       if (!isSuccess(response.data)) throw new Error(response.data?.message || "계정 등록에 실패했습니다");
       setResult(response.data.data);
@@ -71,6 +72,10 @@ export default function AdminAccountsPage() {
               {(teams.data?.teams ?? []).map((team) => <option key={team.team_id} value={team.team_id}>{team.team_name}</option>)}
             </select>
           </>}
+          <label><input type="radio" name="team-mode" checked={form.teamMode === "NEW"} onChange={() => update("teamMode", "NEW")}/> 새 팀 만들어서 등록</label>
+          {form.teamMode === "NEW" &&
+            <input aria-label="새 팀 이름" required maxLength={100} placeholder="새 팀 이름 (1~100자)" value={form.teamName} onChange={(event) => update("teamName", event.target.value)} className={INPUT_CLASS}/>
+          }
         </fieldset>
       </fieldset>
       {form.loginId && form.password && form.nickname && validationError && <p className="text-admin-muted">{validationError}</p>}
