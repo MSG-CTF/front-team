@@ -22,7 +22,12 @@ export default function LeaderboardScreen({
 
   return (
     <main className={styles.page} data-leaderboard-source={dataStatus}>
-      <FixedAspectStage className={styles.stage}>
+      {/* backdropSrc 없이는 뷰포트가 정확히 16:9가 아닐 때(초광폭/좁은 창) 무대
+          양옆(또는 위아래)에 .page의 배경색이 그대로 비쳐 흰 여백처럼 보인다.
+          BoardScreen과 동일하게 같은 그림을 배경으로도 깔아 그 틈을 채운다 -
+          이 그림은 로그인 카드처럼 딱 맞는 테두리가 있는 그림이 아니라 화면
+          전체를 덮는 풍경이라 두 레이어가 서로 다르게 잘려도 자연스럽다. */}
+      <FixedAspectStage backdropSrc={`${ASSET_BASE}leaderboard.png`} className={styles.stage}>
         <div className={styles.designCanvas}>
           <img
             src={`${ASSET_BASE}leaderboard.png`}
