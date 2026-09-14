@@ -119,11 +119,11 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: MSG-CTF/jm_devsecops/.github/workflows/reusable-vm-deploy-dev.yml@4dca3ac03e0c95c31deaa13d7e58565f74cc9533
+    uses: MSG-CTF/jm_devsecops/.github/workflows/reusable-vm-deploy-dev.yml@071b962f93badd9b41a15af2df37517e4e4d5bde
     with:
       component: frontend
       commit_sha: ${{ github.sha }}
-      pipeline_ref: 4dca3ac03e0c95c31deaa13d7e58565f74cc9533
+      pipeline_ref: 071b962f93badd9b41a15af2df37517e4e4d5bde
       gcp_project_id: project-325bdf5b-3d83-4f27-9f6
       workload_identity_provider: projects/269174025178/locations/global/workloadIdentityPools/github-vm-cd-dev/providers/github-vm-cd-provider
       deployer_service_account: github-vm-deployer-dev@project-325bdf5b-3d83-4f27-9f6.iam.gserviceaccount.com
