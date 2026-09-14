@@ -59,7 +59,6 @@ export function adaptMyBoard(data) {
   return {
     position: data?.position ?? null,
     type: data?.type ?? null,
-    isQuarantined: data?.is_quarantined === true,
     diceRollsLeft: data?.dice_rolls_left ?? 0,
     nextDiceResetAt: data?.next_dice_reset_at ?? null,
     airportMoveUsed: data?.airport_move_used === true,
@@ -98,12 +97,10 @@ export function adaptDiceStatus(data) {
   return {
     canRoll: data?.can_roll === true,
     diceRollsLeft: data?.dice_rolls_left ?? 0,
-    isQuarantined: data?.is_quarantined === true,
     timerRunning: data?.timer_running === true,
     blockedReason: data?.blocked_reason ?? null,
     serverTime: data?.server_time ?? null,
     nextDiceResetAt: data?.next_dice_reset_at ?? null,
-    quarantineReleasedAt: data?.quarantine_released_at ?? null,
     receivedAt: Date.now(),
   };
 }
@@ -160,7 +157,6 @@ export function adaptChanceAction(data) {
     movementPath: Array.isArray(data?.movement_path) ? data.movement_path : [],
     skippedCells: Array.isArray(data?.skipped_cells) ? data.skipped_cells : [],
     diceRollsLeft: data?.dice_rolls_left ?? null,
-    isQuarantined: data?.is_quarantined,
     firstNumber: data?.first_number ?? null,
     secondNumber: data?.second_number ?? null,
     awaitingConfirm: data?.awaiting_confirm === true,
@@ -244,18 +240,26 @@ export function getRemainingSeconds(targetIso, diceStatus, now = Date.now()) {
   return Math.max(0, Math.ceil((targetAt - estimatedServerNow) / 1000));
 }
 
-// board-grid.png의 36칸은 동일 간격의 타원 궤도에 배치되어 있다.
-// 이 좌표는 API 값이 아니라 고정된 Figma 보드 asset의 클릭/말 배치 좌표다.
-// 각도는 1번 칸(정중앙 하단)에서 시작해 시계 방향으로 증가한다(Figma 시안 기준).
+// Original 1772 × 1330 board artwork has uneven tile spacing. Use actual tile
+// centers so the API cell, icon, click target, and team piece share a position.
+const BOARD_TILE_CENTERS = [
+  [888, 1207], [655, 1200], [518, 1140], [399, 1086], [302, 1028], [216, 946],
+  [146, 856], [105, 760], [100, 660], [107, 563], [146, 472], [193, 381],
+  [265, 300], [351, 233], [446, 178], [553, 126], [664, 96], [782, 77],
+  [898, 75], [1012, 80], [1136, 101], [1247, 144], [1340, 197], [1430, 246],
+  [1515, 311], [1584, 396], [1639, 488], [1672, 581], [1672, 681], [1654, 783],
+  [1604, 870], [1540, 955], [1456, 1033], [1354, 1102], [1234, 1154], [1097, 1190],
+];
+
 export function getBoardCellPosition(cellIndex) {
   const normalizedIndex = Math.min(
     BOARD_CELL_COUNT,
     Math.max(1, Number(cellIndex) || 1),
   );
-  const angle = (Math.PI / 2) + ((normalizedIndex - 1) * Math.PI * 2) / BOARD_CELL_COUNT;
+  const [x, y] = BOARD_TILE_CENTERS[normalizedIndex - 1];
 
   return {
-    x: 50 + 43.5 * Math.cos(angle),
-    y: 50 + 42.5 * Math.sin(angle),
+    x: (x / 1772) * 100,
+    y: (y / 1330) * 100,
   };
 }

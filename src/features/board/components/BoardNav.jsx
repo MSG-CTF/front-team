@@ -34,21 +34,26 @@ export default function BoardNav() {
   return (
     <>
       {BUTTONS.map((button) => (
-        <button
+        <div
           key={button.key}
-          type="button"
-          onClick={() => navigate(button.to)}
-          aria-label={button.label}
-          className={`absolute border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95 ${button.className}`}
+          className={`absolute group pointer-events-none ${button.className}`}
         >
           <img
             src={button.src}
             alt=""
             aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+            className="absolute inset-0 w-full h-full object-contain transition-[filter] duration-150 group-hover:brightness-110 group-active:brightness-95"
           />
-          <span className="sr-only">{button.label}</span>
-        </button>
+          {/* PNG의 투명 여백을 제외해 옆 아이콘의 클릭 영역과 겹치지 않게 한다. */}
+          <button
+            type="button"
+            onClick={() => navigate(button.to)}
+            aria-label={button.label}
+            className="absolute left-[25%] top-[10%] h-[80%] w-[50%] rounded-full border-0 bg-transparent p-0 cursor-pointer pointer-events-auto focus-visible:outline focus-visible:outline-[#ffe090]"
+          >
+            <span className="sr-only">{button.label}</span>
+          </button>
+        </div>
       ))}
       {/* 로그아웃 - 이 3개 아이콘과 달리 Figma에 그려진 그림이 없어서(시안 없음)
           그림 없는 화면 왼쪽 아래 여백에 반투명 텍스트 버튼으로만 얹었다. */}

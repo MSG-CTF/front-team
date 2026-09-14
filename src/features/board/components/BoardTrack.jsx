@@ -1,8 +1,9 @@
 import { getBoardCellPosition } from "../utils/boardData.js";
+import SpecialCellIcon from "./SpecialCellIcon.jsx";
 
 // Figma node 309:78 "BoardGrid"(951x714) + 104:458 "주사위" + 100:454 "람쥐".
-// 36칸은 원본 board-grid.png에 합쳐져 있으므로 분해하지 않는다. API의 36개 cell을
-// 같은 궤도의 클릭 영역과 상태 표시에 결합하고, 팀 말만 현재 position으로 이동한다.
+// 원본 board-grid.png의 칸 위치에 클릭 영역과 상태를 결합한다.
+// 특수칸 아이콘은 현재 API 종류로 덮어 그려 배경에 남은 옛 기획을 표시하지 않는다.
 const CELL_STATE_COLORS = Object.freeze({
   CONSUMED: "bg-[#8d6035]",
   OPENED: "bg-[#2c6b8f]",
@@ -69,6 +70,7 @@ export default function BoardTrack({
             style={{ left: `${coordinates.x}%`, top: `${coordinates.y}%` }}
             className="absolute z-10 h-[11%] w-[8.5%] -translate-x-1/2 -translate-y-1/2 rounded-[45%] border-0 bg-transparent p-0 cursor-pointer focus-visible:outline focus-visible:outline-[0.2cqw] focus-visible:outline-[#ffe090]"
           >
+            <SpecialCellIcon type={cell.type} />
             {cellState?.status && (
               <span
                 className={`absolute right-[3%] top-[4%] h-[0.55cqw] w-[0.55cqw] rounded-full border border-[#f5d793] shadow ${CELL_STATE_COLORS[cellState.status] || "bg-[#8d6035]"}`}

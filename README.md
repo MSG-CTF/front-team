@@ -48,7 +48,7 @@ http://msgctf.kr/internal/** (서버-서버 전용, 프론트 대상 아님)
 
 **성공 판정 규칙**
 > HTTP status가 200이어도 성공이 아닐 수 있다. 프론트는 반드시 `code === "SUCCESS"`로 성공을 판정한다.
-> (예: 플래그 오답은 `200 OK` + `code: "INCORRECT_FLAG"`, 무인도 탈출 실패는 `200 OK` + `code: "ESCAPE_FAILED"`)
+> (예: 플래그 오답은 `200 OK` + `code: "INCORRECT_FLAG"`)
 
 **data 형태**
 - `data`는 **항상 객체 또는 null**. 배열을 최상위에 두지 않는다.
@@ -114,7 +114,6 @@ http://msgctf.kr/internal/** (서버-서버 전용, 프론트 대상 아님)
 ### 0-7. Idempotency-Key
 
 다음 쓰기 API는 `Idempotency-Key` 헤더 **필수**:
-`POST /board/dice/roll`, `POST /board/cell/open`, `POST /board/airport/move`, `POST /board/quarantine/escape`, `POST /board/chance/now`, `POST /board/chance/use`, `POST /board/chance/confirm`(ERD `idempotency_scope` enum에 아직 없음 - Appendix B), `POST /board/roulette/spin`, 인스턴스 생성/재시작/연장/종료 계열.
 
 > `apiClient`(7-5-2절)에 이 헤더를 매번 손으로 안 붙여도 되게 하는 공통 헬퍼가 아직 없다 - Phase 0 인프라 작업 시 반영할 것.
 
@@ -227,7 +226,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 | `category` | `WEB`, `PWN`, `REV`, `CRYPTO`, `FORENSIC`, `MISC` |
 | `instance.status` | 0-12절 12개 상태 |
 | `mileage.type` | 0-13절 8개 타입 |
-| `cell.type` | `START`, `CHALLENGE`, `CHANCE`, `AIRPORT`, `QUARANTINE`, `ROULETTE` |
+| `cell.type` | `START`, `CHALLENGE`, `CHANCE`, `AIRPORT`, `ROULETTE` |
 
 ### 0-15. 용어
 
@@ -262,7 +261,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 인증: `GET /board`, `GET /board/chance/catalog`만 불필요, 나머지 전부 Bearer 필요.
 
-> **이 절은 Notion [API명세서 -> 보드 페이지] DB(2026-08-23 스냅샷) 기준으로 전면 갱신되었다.** 16개 엔드포인트 전부 백엔드 "완료". 굴림 -> 확정 2단계 흐름, 찬스카드 폐기, `cell_states`, 무인도 탈출 코드 방식이 초안에서 크게 바뀌었다. `POST` 쓰기 계열은 전부 `Idempotency-Key` 헤더(`<이름>-<UUID>`) 필수, 이동/굴림 계열은 팀장만.
+> **이 절은 Notion [API명세서 -> 보드 페이지](https://app.notion.com/p/3ab0f19c72be80ab9e57e3776b67323f)의 2026-09-14 확인 내용 기준이다.** 15개 엔드포인트, 룰렛 2칸(16·25번), 찬스카드 5종을 사용한다. `POST` 쓰기 계열은 전부 `Idempotency-Key` 헤더(`<이름>-<UUID>`) 필수, 이동/굴림 계열은 팀장만.
 
 | Method | URL | 설명 |
 |---|---|---|
@@ -275,9 +274,8 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 | POST | `/board/cell/open` | 문제 선택해 오픈 |
 | GET | `/board/opened_challenges` | 열어둔 문제 목록 + 풀이 여부 |
 | POST | `/board/airport/move` | 세계여행(공항) 자유 이동(팀장만) |
-| POST | `/board/quarantine/escape` | 무인도 탈출(탈출 코드 제출, 팀장만) |
 | POST | `/board/roulette/spin` | 룰렛 돌려 마일리지 획득(팀장만) |
-| GET | `/board/chance/catalog` | 전체 chance 카드 종류(7종) |
+| GET | `/board/chance/catalog` | 전체 chance 카드 종류(5종) |
 | POST | `/board/chance/now` | 찬스칸 도착 시 카드 뽑기(팀장만) |
 | POST | `/board/chance/use` | chance 카드 사용(팀장만) |
 | POST | `/board/chance/confirm` | `card_roll_twice_choose` 2단계 확정(팀장만) |
@@ -285,17 +283,16 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 ### 조회
 
-- `GET /board` (인증 없음) -> `{ total_cell_count: 36, cells: [{ cell_index, type, difficulty, name }] }`. 특수칸 고정: 1=START, 7, 30=CHANCE("황금열쇠"), 16=QUARANTINE, 21=AIRPORT("세계여행"), 25=ROULETTE, 나머지 30칸 CHALLENGE. `difficulty`는 CHALLENGE 칸만(`EASY`/`MEDIUM`/`HARD`), 그 외 null. 칸별 난이도는 36칸 전체 확정값(2026-08-19). 추가 에러: `500 BOARD_LOAD_FAILED`. (동아리별 분야x난이도 배정표는 Notion 원문 하단 참고 - 프론트는 `club_name`을 `cell/current`, `opened_challenges`에서 받는다)
-- `GET /board/me` -> `{ position, type, is_quarantined, dice_rolls_left, next_dice_reset_at, quarantine_attempts_left(항상 0, deprecated), airport_move_used, has_passed_start, board_completed, consumed_cell_indexes: [n], cell_states: [{cell_index, status, category}], chance_cards: [{card_id, used, discarded, usable_now}], active_challenge: {challenge_id, opened_at, solve_deadline_at, remaining_seconds} | null }`. **`cell_states[].status`: `CONSUMED`(소모됐지만 문제 미오픈) / `OPENED` / `CLEARED`.** `chance_cards`는 뽑은 전체 이력(`used`, `discarded` 둘 다 false + `usable_now`인 것이 보유분, 최대 2장). `board_completed`는 START 포함 36칸 전부 소모 시 true. `active_challenge`의 `solve_deadline_at` = `opened_at + 15분`.
-- `GET /board/dice/status` -> `{ can_roll, dice_rolls_left, is_quarantined, timer_running, blocked_reason, server_time, next_dice_reset_at, quarantine_released_at }`. `blocked_reason`(먼저 걸리는 하나): `QUARANTINED` -> `BOARD_COMPLETED` -> `CHALLENGE_NOT_SELECTED` -> `TIMER_RUNNING` -> `PENDING_CONFIRM` -> `NO_ROLL_LEFT`. **주사위 충전: 잔여 0이 된 시각 + 15분에 1개**(정시 아님, 팀별 상이). `next_dice_reset_at`은 잔여 0일 때만 값, 그 외 null. 남은 초는 프론트가 `next_dice_reset_at - server_time`로 계산.
+- `GET /board` (인증 없음) -> `{ total_cell_count: 36, cells: [{ cell_index, type, difficulty, name }] }`. 특수칸 고정: 1=START, 7=CHANCE("찬스"), 30=CHANCE("황금열쇠"), 16, 25=ROULETTE("룰렛"), 21=AIRPORT("세계여행"), 나머지 30칸 CHALLENGE. `difficulty`는 CHALLENGE 칸만(`EASY`/`MEDIUM`/`HARD`), 그 외 null. 칸별 난이도는 36칸 전체 확정값(2026-08-19). 추가 에러: `500 BOARD_LOAD_FAILED`. (동아리별 분야x난이도 배정표는 Notion 원문 하단 참고 - 프론트는 `club_name`을 `cell/current`, `opened_challenges`에서 받는다)
+- `GET /board/me` -> `{ position, type, dice_rolls_left, next_dice_reset_at, airport_move_used, has_passed_start, board_completed, consumed_cell_indexes: [n], cell_states: [{cell_index, status, category}], chance_cards: [{card_id, used, discarded, usable_now}], active_challenge: {challenge_id, opened_at, solve_deadline_at, remaining_seconds} | null }`. **`cell_states[].status`: `CONSUMED`(소모됐지만 문제 미오픈) / `OPENED` / `CLEARED`.** `chance_cards`는 뽑은 전체 이력(`used`, `discarded` 둘 다 false + `usable_now`인 것이 보유분, 최대 2장). `board_completed`는 START 포함 36칸 전부 소모 시 true. `active_challenge`의 `solve_deadline_at` = `opened_at + 15분`.
+- `GET /board/dice/status` -> `{ can_roll, dice_rolls_left, timer_running, blocked_reason, server_time, next_dice_reset_at }`. `blocked_reason`(먼저 걸리는 하나): `BOARD_COMPLETED` -> `CHALLENGE_NOT_SELECTED` -> `TIMER_RUNNING` -> `PENDING_CONFIRM` -> `NO_ROLL_LEFT`. **주사위는 최초 3개, 사용 시 15분마다 1개씩 충전, 최대 3개.** `next_dice_reset_at`은 충전 중일 때 다음 충전 시각, 최대 보유량이면 null. 남은 초는 프론트가 `next_dice_reset_at - server_time`로 계산.
 
 ### 이동 / 굴림 (전부 팀장만, Idempotency-Key 필수)
 
-- `POST /board/dice/roll` (Body 없음, `Idempotency-Key: dice-roll-<UUID>`) -> `{ dice_a, dice_b, rolled_number, previous_position, current_position, movement_path: [n], skipped_cells: [n], passed_start, start_reward: {mileage_gained, roll_gained}, board_event_code, pending_confirm, usable_chance_card: {card_id, effect} | null }`. **POST_ROLL 카드(다시굴리기/주변이동)를 보유한 채 굴리면 `pending_confirm: true`로 이동 미확정 -> `dice/confirm` 또는 `chance/use`로 결정.** 보유 POST_ROLL 카드 없으면 `pending_confirm: false`로 즉시 확정. `movement_path` 순서대로 말 이동 애니메이션. 소모 칸이 목적지면 같은 방향 다음 미소모 칸까지 전진(`skipped_cells`). START **통과** 시 `mileage_gained: 100`(매번), START **정확히 도착** 시 `roll_gained: 1`(게임 1회). 추가 에러: `400 REQUEST_BODY_NOT_ALLOWED` / `400 IDEMPOTENCY_KEY_REQUIRED` / `403 NOT_TEAM_LEADER` / `409` `NO_ROLL_LEFT`, `TIMER_RUNNING`, `CHALLENGE_NOT_SELECTED`, `QUARANTINED`, `BOARD_COMPLETED`, `PENDING_CONFIRM`.
+- `POST /board/dice/roll` (Body 없음, `Idempotency-Key: dice-roll-<UUID>`) -> `{ dice_a, dice_b, rolled_number, previous_position, current_position, movement_path: [n], skipped_cells: [n], passed_start, start_reward: {mileage_gained, roll_gained}, board_event_code, pending_confirm, usable_chance_card: {card_id, effect} | null }`. **POST_ROLL 카드(다시굴리기/주변이동)를 보유한 채 굴리면 `pending_confirm: true`로 이동 미확정 -> `dice/confirm` 또는 `chance/use`로 결정.** 보유 POST_ROLL 카드 없으면 `pending_confirm: false`로 즉시 확정. `movement_path` 순서대로 말 이동 애니메이션. 소모 칸이 목적지면 같은 방향 다음 미소모 칸까지 전진(`skipped_cells`). START **통과** 시 `mileage_gained: 100`(매번), START **정확히 도착** 시 `roll_gained: 1`(게임 1회). 추가 에러: `400 REQUEST_BODY_NOT_ALLOWED` / `400 IDEMPOTENCY_KEY_REQUIRED` / `403 NOT_TEAM_LEADER` / `409` `NO_ROLL_LEFT`, `TIMER_RUNNING`, `CHALLENGE_NOT_SELECTED`, `BOARD_COMPLETED`, `PENDING_CONFIRM`.
 - `POST /board/dice/confirm` (Body 없음, `Idempotency-Key: dice-confirm-<UUID>`) -> `dice/roll`과 동일 형태(`pending_confirm: false`, `usable_chance_card: null` 고정), `board_event_code`는 여기서 확정. 추가 에러: `400 REQUEST_BODY_NOT_ALLOWED` / `409 NO_PENDING_ROLL` / `404 CHANCE_CONFIRM_NOT_FOUND`(`card_roll_twice_choose` 선택 대기면 `chance/confirm`을 써야 함).
 - `POST /board/airport/move` (`Idempotency-Key: airport-move-<UUID>`) - Req `{ destination_index }`(1~36, 미소모 칸만) -> `{ previous_position, current_position, movement_path: [목적지], board_event_code, passed_start, start_reward }`. 직접 이동이라 경유 칸 없음. 목적지가 START일 때만 `passed_start: true` + 보상(100/1). 추가 에러: `400 INVALID_DESTINATION_INDEX` / `403 NOT_TEAM_LEADER` / `409 NOT_AIRPORT_CELL` / `409 AIRPORT_MOVE_ALREADY_USED`.
-- `POST /board/quarantine/escape` (`Idempotency-Key: quarantine-escape-<UUID>`) - Req `{ code }`(현장에서 찾은 탈출 코드) -> 성공 `{ is_quarantined: false }`. **위치는 안 바뀜**(16번 칸에 선 채 해제). 탈출 코드는 공용 풀(150개, 1회용, 검증 성공 시 소멸). 확정 로직이라 시도 횟수 제한 없음(구초안의 `ESCAPE_FAILED`/`remaining_attempts` 삭제). 추가 에러: `400 QUARANTINE_CODE_REQUIRED` / `404 QUARANTINE_CODE_INVALID` / `409 QUARANTINE_CODE_ALREADY_USED` / `409 NOT_QUARANTINED` / `403 NOT_TEAM_LEADER`.
-- `POST /board/roulette/spin` (Body 없음, `Idempotency-Key: roulette-spin-<UUID>`) -> `{ roulette_result: {label}, mileage_gained, total_mileage }`. **결과: 50/100/150/200 각 25%.** `mileage_history`에 `ROULETTE` 타입. 팀당 1회. 추가 에러: `400 REQUEST_BODY_NOT_ALLOWED` / `403 NOT_TEAM_LEADER` / `409 NOT_ROULETTE_CELL` / `409 ROULETTE_ALREADY_SPUN`.
+- `POST /board/roulette/spin` (Body 없음, `Idempotency-Key: roulette-spin-<UUID>`) -> `{ roulette_result: {label}, mileage_gained, total_mileage }`. **결과: 50/100/150/200 각 25%.** `mileage_history`에 `ROULETTE` 타입. 16번·25번 각 칸에서 팀당 1회(팀+칸 기준 사용 이력). 추가 에러: `400 REQUEST_BODY_NOT_ALLOWED` / `403 NOT_TEAM_LEADER` / `409 NOT_ROULETTE_CELL` / `409 ROULETTE_ALREADY_SPUN`.
 
 ### 문제 선택
 
@@ -303,25 +300,24 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 - `POST /board/cell/open` (`Idempotency-Key: cell-open-<UUID>`) - Req `{ challenge_id }`(cell_index 안 보냄, 서버가 현재 위치로 검증) -> `{ cell_index, challenge_id, opened_at, solve_deadline_at, remaining_seconds: 900 }`. 추가 에러: `400 CHALLENGE_ID_REQUIRED` / `409 NOT_CHALLENGE_CELL` / `409 CHALLENGE_NOT_CANDIDATE` / `409 CELL_ALREADY_OPENED` / `409 PENDING_CONFIRM`.
 - `GET /board/opened_challenges` -> `{ opened_challenges: [{challenge_id, cell_index, title, category, club_name, score, is_solved, solved_at, opened_at}], total_count, solved_count, total_score }`. 정렬 `opened_at` 오름차순. `is_solved`는 `solves` 테이블 LEFT JOIN 판정. 없으면 빈 배열 + 집계 0. 추가 에러: `404 USER_HAS_NO_TEAM`. (구 README 10 "통합 범위 제외"였으나 이제 보드 API로 확정)
 
-### 찬스카드 (7종, 전부 팀장만, Idempotency-Key 필수)
+### 찬스카드 (5종, 전부 팀장만, Idempotency-Key 필수)
 
-- `GET /board/chance/catalog` (인증 없음) -> `{ cards: [{card_id, name, description, effect, usage_timing}], total_count: 7 }`. 7종: `card_reroll`(RE_ROLL, POST_ROLL) / `card_roll_twice_choose`(ROLL_TWICE_CHOOSE, PRE_ROLL) / `card_move_offset`(MOVE_OFFSET, POST_ROLL) / `card_free_travel`(FREE_MOVE, PRE_ROLL) / `card_extra_roll`(GRANT_EXTRA_ROLL, PRE_ROLL) / `card_quarantine_defense`(QUARANTINE_ESCAPE_FREE, QUARANTINE_STATE) / `card_move_to_quarantine`(FORCE_MOVE_TO_QUARANTINE, PRE_ROLL). `usage_timing`: `PRE_ROLL`/`POST_ROLL`/`QUARANTINE_STATE`. 시드 비면 빈 목록 200(`/board`는 500 - 동작 불일치 미확정).
+- `GET /board/chance/catalog` (인증 없음) -> `{ cards: [{card_id, name, description, effect, usage_timing}], total_count: 5 }`. 5종: `card_reroll`(RE_ROLL, POST_ROLL) / `card_roll_twice_choose`(ROLL_TWICE_CHOOSE, PRE_ROLL) / `card_move_offset`(MOVE_OFFSET, POST_ROLL) / `card_free_travel`(FREE_MOVE, PRE_ROLL) / `card_extra_roll`(GRANT_EXTRA_ROLL, PRE_ROLL). `usage_timing`: `PRE_ROLL`/`POST_ROLL`. 시드 비면 빈 목록 200(`/board`는 500 - 동작 불일치 미확정).
 - `POST /board/chance/now` (Body 없음, `Idempotency-Key: chance-draw-<UUID>`) -> `{ card_id, name, description, effect, usage_timing, used: false, dice_rolls_left, awaiting_discard }`. 찬스칸은 카드 뽑는 시점에 주사위 +1 지급(카드 사용과 무관). `awaiting_discard: true`면 보유 2장 -> `chance/discard` 전까지 `chance/use` 불가. 찬스칸 2개라 팀당 최대 2회. 추가 에러: `400 REQUEST_BODY_NOT_ALLOWED` / `403 NOT_TEAM_LEADER` / `409 NOT_CHANCE_CELL`(같은 칸 재호출 포함) / `409 PENDING_CONFIRM`.
-- `POST /board/chance/use` (`Idempotency-Key: chance-use-<UUID>`) - Req 카드별: `card_move_offset` -> `{card_id, offset: -3~3(0 제외)}` / `card_free_travel` -> `{card_id, destination_index}`(미소모 칸) / 그 외 -> `{card_id}`. Res `effect`별: 이동형(RE_ROLL/MOVE_OFFSET/FREE_MOVE/FORCE_MOVE) -> `{card_id, effect, from_index, to_index, movement_path, skipped_cells, used: true}` / GRANT_EXTRA_ROLL -> `{..., dice_rolls_left, used: true}` / QUARANTINE_ESCAPE_FREE -> `{..., is_quarantined: false, dice_rolls_left(+1 지급), used: true}` / ROLL_TWICE_CHOOSE -> `{..., first_number, second_number, awaiting_confirm: true, used: false}`(주사위 1개 소모, `chance/confirm` 필요). **시점 판정**: PRE_ROLL은 `blocked_reason == null`일 때(`card_extra_roll`은 `NO_ROLL_LEFT`여도 가능), POST_ROLL은 직전 굴림이 `pending_confirm` 상태일 때, QUARANTINE_STATE는 `is_quarantined`일 때. 추가 에러: `400 INVALID_DESTINATION_INDEX` / `400 CARD_ID_REQUIRED` / `404 CHANCE_CARD_NOT_FOUND` / `409 CHANCE_CARD_ALREADY_USED` / `409 CHANCE_CARD_WRONG_TIMING` / `409 CHANCE_CARD_AWAITING_DISCARD` / `403 NOT_TEAM_LEADER`.
+- `POST /board/chance/use` (`Idempotency-Key: chance-use-<UUID>`) - Req 카드별: `card_move_offset` -> `{card_id, offset: -3~3(0 제외)}` / `card_free_travel` -> `{card_id, destination_index}`(미소모 칸) / 그 외 -> `{card_id}`. Res `effect`별: 이동형(RE_ROLL/MOVE_OFFSET/FREE_MOVE) -> `{card_id, effect, from_index, to_index, movement_path, skipped_cells, used: true}` / GRANT_EXTRA_ROLL -> `{..., dice_rolls_left, used: true}` / ROLL_TWICE_CHOOSE -> `{..., first_number, second_number, awaiting_confirm: true, used: false}`(주사위 1개 소모, `chance/confirm` 필요). **시점 판정**: PRE_ROLL은 `blocked_reason == null`일 때(`card_extra_roll`은 `NO_ROLL_LEFT`여도 가능), POST_ROLL은 직전 굴림이 `pending_confirm` 상태일 때. 추가 에러: `400 INVALID_DESTINATION_INDEX` / `400 CARD_ID_REQUIRED` / `404 CHANCE_CARD_NOT_FOUND` / `409 CHANCE_CARD_ALREADY_USED` / `409 CHANCE_CARD_WRONG_TIMING` / `409 CHANCE_CARD_AWAITING_DISCARD` / `403 NOT_TEAM_LEADER`.
 - `POST /board/chance/confirm` (`Idempotency-Key: chance-confirm-<UUID>`, `card_roll_twice_choose` 전용) - Req `{ choice: "FIRST"|"SECOND" }` -> `{ card_id, effect, choice, chosen_number, from_index, to_index, used: true }`. 확정 시에만 이동, 소모, 부수효과 처리. 추가 에러: `404 CHANCE_CONFIRM_NOT_FOUND`(잘못된 choice, 대기 없음, 이미 확정 전부 이 코드) / `403 NOT_TEAM_LEADER`.
 - `POST /board/chance/discard` (`Idempotency-Key: chance-discard-<UUID>`) - Req `{ card_id }` -> `{ discarded_card_id, kept_card_id }`. 보유 2장일 때 1장 폐기(팀장이 선택). 추가 에러: `400 CARD_ID_REQUIRED` / `404 CHANCE_CARD_NOT_FOUND` / `409 NO_CARD_TO_DISCARD` / `403 NOT_TEAM_LEADER`.
 
-**칸 소모 규칙**: CHALLENGE/CHANCE/AIRPORT/QUARANTINE/ROULETTE는 첫 도착 시 소모, 이후 최종 목적지 불가(경유는 가능). CHALLENGE는 도착 즉시 소모되므로 문제를 골라야(`cell/open`) 다음 굴림 가능(`CHALLENGE_NOT_SELECTED`). RE_ROLL로 버린 도착 칸은 소모 취소.
+**칸 소모 규칙**: CHALLENGE/CHANCE/AIRPORT/ROULETTE는 첫 도착 시 소모, 이후 최종 목적지 불가(경유는 가능). CHALLENGE는 도착 즉시 소모되므로 문제를 골라야(`cell/open`) 다음 굴림 가능(`CHALLENGE_NOT_SELECTED`). RE_ROLL로 버린 도착 칸은 소모 취소.
 
-**제품 요구사항(기능명세 원문)**: 문제 목록 조회(보드판), 주사위 굴리는 로직(굴리기 전 chance 카드 선택), 말 이동, 보드칸 선택 시 문제 종류 선택, 현재 보유 chance 카드 목록, 무인도칸, 출발칸, Airport(1칸, 자유 이동), 찬스칸 2개, 클리어칸 처리.
+**제품 요구사항(기능명세 원문)**: 문제 목록 조회(보드판), 주사위 굴리는 로직(굴리기 전 chance 카드 선택), 말 이동, 보드칸 선택 시 문제 종류 선택, 현재 보유 chance 카드 목록, 룰렛 2칸, 출발칸, Airport(1칸, 자유 이동), 찬스칸 2개, 클리어칸 처리.
 
-**프론트 구현 상태**: 2026-08-29(PR #7)엔 정적 UI만이었으나, 2026-09-05(PR #29)에 16개 API 전부(주사위 굴림/확정, 찬스카드 7종 사용/2단계 확정/폐기, 룰렛, 무인도 탈출) 결선 완료. 2026-09-06 후속 수정:
+**프론트 구현 상태**: 2026-09-14 Notion 보드 명세 기준 15개 API, 찬스카드 5종, 룰렛 16·25번을 사용한다. 특수칸 아이콘은 API 종류에 따라 표시하며, 각 칸의 클릭 영역과 말 위치는 보드 그림의 실제 칸 중심에 맞춘다. 기존 연동 동작:
 - 이미 오픈한 칸을 다시 클릭하면 칸 정보 패널 대신 `GET /board/opened_challenges` 기준으로 문제 상세로 바로 재진입(`BoardPage.jsx`).
-- 무인도 팝업 닫기 버튼이 뒤의 보드 칸을 같이 클릭 처리하던 버그 수정 - 전체 화면을 덮는 백드롭을 추가해 모달 밖 클릭을 차단(`QuarantinePanel.jsx`).
 - 주사위 충전/문제 제한시간 카운트다운이 00:00에 닿아도 새로고침 전까지 버튼이 안 풀리던 문제 수정 - 클라이언트에서 카운트다운이 0이 되는 순간을 감지해 한 번 재조회(`useBoardController.js`).
 - "진행 중인 문제" 안내를 `active_challenge` 존재 여부가 아니라 `blocked_reason === "TIMER_RUNNING"` 기준으로 판정하도록 수정 - 제한시간이 지나면 문제 타이머 대신 충전 타이머가 뜨도록 함(`BoardEventPanel.jsx`, `BoardScreen.jsx`).
 
-**미해결(Appendix B)**: `chance/catalog` 빈 시드 처리(200 vs 500), 룰렛/무인도 중복 판정을 `reason` 문자열에 칸 번호 넣는 방식(ERD 규약 위반), `opened_challenges.is_solved`를 `solves` vs `team_challenge_accesses.status`로 판정할지(PR #14 구현이 후자라 리더보드와 소스 갈림), `quarantine_attempts_left` deprecated 필드 제거.
+**미해결(Appendix B)**: `chance/catalog` 빈 시드 처리(200 vs 500), `opened_challenges.is_solved`를 `solves` vs `team_challenge_accesses.status`로 판정할지(PR #14 구현이 후자라 리더보드와 소스 갈림).
 
 ---
 
@@ -430,7 +426,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 - `server_time`은 2026-09-03 Notion API명세서 갱신으로 추가됨(Appendix B #11 해소). `board/dice/status`와 동일하게 응답을 생성한 서버 시각이며, 클라이언트 시계가 어긋났을 때 이 값을 기준으로 카운트다운을 보정한다. `contest_id`는 여전히 없음.
 
 **제품 요구사항(기능명세 원문)**: 남은 시간 표시, 주사위 초기화 시간, 프론트-백엔드 시간 동기화(초 단위 프론트 <-> 분 단위 백엔드 통신 검토).
-**프론트 구현 상태**: `feature/timer-time-sync`에서 `server_time` 기반 시간 동기화 + 실시간 카운트다운 구현(2026-09-03). Figma 시안은 아직 없어 기능 우선으로 구현.
+**프론트 구현 상태**: 2026-09-14 Notion 보드 명세 기준 15개 API, 찬스카드 5종, 룰렛 16·25번을 사용한다. 특수칸 아이콘은 API 종류에 따라 표시하며, 각 칸의 클릭 영역과 말 위치는 보드 그림의 실제 칸 중심에 맞춘다. 기존 연동 동작:
 
 ---
 
@@ -495,7 +491,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 - `GET /admin/teams/{team_id}/snapshots` -> `{ snapshots: [{ snapshot_id, reason: "BAN"|"MANUAL", team_score, mileage, is_rolled_back, created_by, created_at }], total_count }`. 벤 등 되돌릴 필요가 생기는 순간 서버가 스냅샷을 남긴다. `TeamSnapshot` 테이블 신설 필요. 추가 에러: `404 TEAM_NOT_FOUND`.
 - `POST /admin/teams/{team_id}/rollback` - Req `{ snapshot_id, reason }`(1~500자) -> `{ team_id, snapshot_id, restored: {team_score: {before, after}, mileage: {before, after}}, adjustment_history_id, rolled_back_at, rolled_back_by }`. 마일리지는 기존 행 유지 + 차액 보정 행 추가(불변식 유지). 차액 0이면 `adjustment_history_id: null`. 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND` / `404 SNAPSHOT_NOT_FOUND` / `409 ALREADY_ROLLED_BACK`(data `{snapshot_id, rolled_back_at}`).
 - `PATCH /admin/teams/{team_id}/board/cells/{cell_index}` - `cell_index` 0~35. Req `{ status: "UNVISITED"|"CONSUMED"|"OPENED"|"CLEARED", reason }`(1~500자) -> `{ team_id, cell_index, previous_status, status, changed_at, changed_by }`. **점수는 건드리지 않는다** - 필요하면 mileage API 별도 호출. `UNVISITED`는 요청 값으로만 허용. 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND`.
-- `PATCH /admin/teams/{team_id}/board/position` - Req `{ position: 0~35, consume_cell: bool(기본 false), reason }`(1~500자) -> `{ team_id, previous_position, position, type, cell_consumed, moved_at, moved_by }`. 이동만 하고 도착 칸 효과(찬스/룰렛/무인도)는 미발동. `type`은 `cell.type` enum. 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND`.
+- `PATCH /admin/teams/{team_id}/board/position` - Req `{ position: 0~35, consume_cell: bool(기본 false), reason }`(1~500자) -> `{ team_id, previous_position, position, type, cell_consumed, moved_at, moved_by }`. 이동만 하고 도착 칸 효과(찬스/룰렛)는 미발동. `type`은 `cell.type` enum. 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND`.
 - `POST /admin/teams/{team_id}/board/dice` - Req `{ amount: -20~20(0 불가), reason }`(1~500자) -> `{ team_id, previous_dice_rolls_left, amount, dice_rolls_left, reason, adjusted_at, adjusted_by }`. 기능명세 "주사위 오류 시 고정 지급" + 임의 지급. 추가 에러: `400 INVALID_REQUEST` / `400 INVALID_AMOUNT`(0) / `400 INSUFFICIENT_DICE`(data `{current_dice_rolls_left, requested_amount}`) / `404 TEAM_NOT_FOUND`.
 
 **인스턴스**
@@ -590,7 +586,7 @@ API 문서 3개엔 없지만 원 기능명세(`archive/최초_MVP_기능요구�
 2026-09-07에 페이지별 최신 기능 명세 전체(로그인/보드/문제 상세/열린 문제 목록/리더보드/마이페이지/타이머/관리자/KOTH/주사위 충전/시그니처)가 다시 내려왔다. 이번 작업은 그중 **관리자 페이지(8절)만 Figma 시안 연동 + 화면 6종 구현 + API 연동까지 전부 반영**했고, Notion API명세서도 관리자 도메인 기준으로 재동기화했다(8절 상단 참고). 아래는 같은 명세에 있었지만 **이번 패스에는 반영하지 못한 항목**이다 - 다음 작업 때 이 목록부터 확인할 것.
 
 - **주사위 충전 시간 안내**: "주사위 초기화" -> "주사위 충전" 문구 교체, 서버 시각 기준 잔여시간 계산. 보드 화면(2절) 반영 필요.
-- **찬스카드**: 무인도 방어/무인도 이동 2종 삭제, 5종(다시 굴리기/2회 굴림 후 선택/주변 칸 이동/세계여행/주사위 보너스)만 유지하도록 정리. 2절 찬스카드 표/프론트 카드 목록 재확인 필요.
+- **찬스카드 (2026-09-14 반영 완료)**: 5종(다시 굴리기/2회 굴림 후 선택/주변 칸 이동/세계여행/주사위 보너스)만 유지. 2절 찬스카드 표와 화면을 동기화했다.
 - **KOTH 배점/집계 규칙**: 15분 구간 채점(정각/15/30/45분), 구간 배점 40/25/15/12/8, 동점 처리(연속 순위 배점 합산 후 팀 수로 나누고 내림), 팀별 진행 조회(최초 득점 시각 고정), 문제별 순위표(공동순위+타이브레이크 순서) - 9절과 프론트 `useKothData`/`KothLeaderboardTable` 재검토 필요.
 - **라인/분야별 독점 추가점수**: 명세 자체가 미정(대상 칸/판정 기준/점수 미확정) - 구현 보류, 확정되면 별도 절 신설.
 - **시그니처 페이지(신규)**: 동아리별 플래그 제출 전용 페이지(문제 상세 = 플래그 제출 폼), 낮은 배점, 대회 점수에 합산. 페이지/라우트/API 전부 미착수.
@@ -642,8 +638,8 @@ API 문서 3개엔 없지만 원 기능명세(`archive/최초_MVP_기능요구�
 14. KOTH - "다음 문제 개방 남은 시간" 필드 여전히 없음(`open_group`은 순번, 시각 아님).
 15. ~~KOTH - `solves[].challenge_id`와 `koth_challenge_id` 동일 값 공간 미확인.~~ 부분 해소. Notion이 "동일 값"이라고 명시. `solves` 응답도 KOTH 항목은 `koth_challenge_id` 필드를 씀(6절).
 16. ~~`GET /teams/me/instance`가 "본인(user_id)" 기준.~~ 명시화. URL이 `/teams/me/instances`(복수)로 바뀌고 "본인 기준, 같은 팀 다른 사용자 미포함"이 스펙에 명기됨(3절).
-17. ~~`POST /board/chance/now` 응답이 카탈로그 7종에 없음.~~ 해소(2026-08-23). 7종 카드, `effect`, `usage_timing` 전부 확정, 응답 일치.
-18. ERD `idempotency_scope` enum - `CHANCE_CONFIRM` 외에 이제 `dice-confirm`, `chance-discard`, `quarantine-escape` 등 신규 Idempotency-Key 다수. ERD enum 갱신 필요.
+17. ~~`POST /board/chance/now` 응답이 카탈로그 5종에 없음.~~ 해소(2026-08-23). 5종 카드, `effect`, `usage_timing` 전부 확정, 응답 일치.
+18. ERD `idempotency_scope` enum - `CHANCE_CONFIRM` 외에 이제 `dice-confirm`, `chance-discard` 등 신규 Idempotency-Key 다수. ERD enum 갱신 필요.
 19. ~~`GET /board/opened_challenges` 범위 미확정.~~ 해소. 보드 API로 확정, 10절 페이지를 담당.
 20. `GET /challenges/{challenge_id}` 응답에 KOTH 배지/순위 필드 없음 - `GET /koth/me` 클라이언트 조합 필요, 설계 없음(3절).
 

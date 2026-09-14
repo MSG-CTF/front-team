@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../../routes/routePaths.js";
 import RulesScreen from "../components/RulesScreen.jsx";
 
 const RULES = [
@@ -5,37 +7,32 @@ const RULES = [
     icon: "🎲",
     title: "주사위 굴리기",
     description:
-      "주사위를 한 번 굴리면 5분 후에 다시 주사위를 굴릴 수 있습니다. 대기 시간이 끝나면 다시 게임을 진행할 수 있습니다.",
-  },
-  {
-    icon: "🏝️",
-    title: "무인도",
-    description:
-      "무인도 칸에 도착하면 5분 동안 주사위를 굴릴 수 없습니다. 5분이 지나면 자동으로 무인도에서 탈출하여 다시 이동할 수 있습니다.",
+      "주사위는 처음에 3개가 주어집니다. 사용한 주사위는 15분마다 1개씩 충전되며, 최대 3개까지 보유할 수 있습니다. 문제 선택이나 결과 확정이 남아 있거나 문제 제한 시간이 진행 중이면 먼저 해당 단계를 완료해주세요.",
   },
   {
     icon: "🎁",
     title: "찬스 칸",
     description:
-      "찬스 칸에 도착하면 6가지 찬스 중 하나를 랜덤으로 획득합니다. 획득한 찬스를 활용해 게임을 더욱 유리하게 진행해 보세요!",
+      "7번과 30번 찬스 칸에서 5종의 카드 중 한 장을 뽑고 주사위 1개를 받습니다. 카드가 2장이 되면 한 장을 폐기해야 합니다. 카드마다 사용할 수 있는 시점이 다릅니다.",
   },
   {
     icon: "🎡",
     title: "룰렛 칸",
     description:
-      "룰렛 칸에 도착하면 룰렛을 돌려 랜덤한 양의 마일리지를 획득합니다. 어떤 만큼의 마일리지를 받을지는 룰렛 결과에 따라 결정됩니다.",
+      "16번과 25번 룰렛 칸에서 각각 팀당 한 번 룰렛을 돌릴 수 있습니다. 50·100·150·200 마일리지 중 하나를 같은 확률로 받습니다.",
   },
   {
     icon: "🚂",
-    title: "기차 칸",
+    title: "세계여행 칸",
     description:
-      "기차 칸에 도착하면 원하는 칸을 직접 선택해 즉시 이동할 수 있습니다. 원하는 위치로 이동하여 자신에게 유리한 전략을 만들어 보세요.",
+      "21번 세계여행 칸에서는 아직 소모하지 않은 칸을 선택해 즉시 이동할 수 있습니다. 이 이동은 팀당 한 번만 사용할 수 있습니다.",
   },
 ];
 
 export default function RulesPage() {
+  const navigate = useNavigate();
   const handleNavigateMain = () => {
-    // TODO(rules): Main Page 구현 및 route 확정 후 ROUTES helper로 연결한다.
+    navigate(ROUTES.board);
   };
 
   return <RulesScreen rules={RULES} onNavigateMain={handleNavigateMain} />;

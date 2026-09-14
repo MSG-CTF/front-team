@@ -8,9 +8,8 @@ import BoardTrack from "./BoardTrack.jsx";
 import ChanceCardSummary from "./ChanceCardSummary.jsx";
 import DiceStatusPanel from "./DiceStatusPanel.jsx";
 import KothEventBanner from "./KothEventBanner.jsx";
-import QuarantinePanel from "./QuarantinePanel.jsx";
 
-// Figma node 3:2 "BoardPage" (1920x1080) + 146:19 "무인도 클릭"(무인도 모달 상태).
+// Figma node 3:2 "BoardPage" (1920x1080).
 // bg-1920x1080.png는 배경(뷰포트 반응형 object-cover)으로만 쓰고, HUD/배너/보드판/
 // 오버레이는 항상 정확한 16:9 무대 위에서 % 좌표로 배치한다(ChallengeDetailScreen과 동일 패턴).
 export default function BoardScreen({
@@ -29,7 +28,6 @@ export default function BoardScreen({
   isLoading,
   isMutating,
   error,
-  showQuarantine,
   onReload,
   onDismissError,
   onRollDice,
@@ -43,9 +41,7 @@ export default function BoardScreen({
   onSpinRoulette,
   onRetryChanceDraw,
   onCloseCellEvent,
-  onEscapeQuarantine,
   onClearSelectedCell,
-  onCloseQuarantine,
 }) {
   const [now, setNow] = useState(Date.now());
 
@@ -56,11 +52,6 @@ export default function BoardScreen({
 
   const resetInSeconds = getRemainingSeconds(
     diceStatus?.nextDiceResetAt,
-    diceStatus,
-    now,
-  );
-  const quarantineReleasedInSeconds = getRemainingSeconds(
-    diceStatus?.quarantineReleasedAt,
     diceStatus,
     now,
   );
@@ -120,31 +111,29 @@ export default function BoardScreen({
         onUseCard={onUseChanceCard}
       />
 
-      {!showQuarantine && (
-        <BoardEventPanel
-          cells={cells}
-          myBoard={myBoard}
-          currentCell={currentCell}
-          pendingRoll={pendingRoll}
-          pendingChanceChoice={pendingChanceChoice}
-          cellEvent={cellEvent}
-          ownedChanceCards={ownedChanceCards}
-          awaitingDiscard={awaitingDiscard}
-          blockedReason={diceStatus?.blockedReason}
-          selectedCell={selectedCell}
-          isMutating={isMutating}
-          onConfirmDice={onConfirmDice}
-          onOpenChallenge={onOpenChallenge}
-          onMoveAirport={onMoveAirport}
-          onUseChanceCard={onUseChanceCard}
-          onConfirmChance={onConfirmChance}
-          onDiscardChance={onDiscardChance}
-          onSpinRoulette={onSpinRoulette}
-          onRetryChanceDraw={onRetryChanceDraw}
-          onCloseCellEvent={onCloseCellEvent}
-          onClearSelectedCell={onClearSelectedCell}
-        />
-      )}
+      <BoardEventPanel
+        cells={cells}
+        myBoard={myBoard}
+        currentCell={currentCell}
+        pendingRoll={pendingRoll}
+        pendingChanceChoice={pendingChanceChoice}
+        cellEvent={cellEvent}
+        ownedChanceCards={ownedChanceCards}
+        awaitingDiscard={awaitingDiscard}
+        blockedReason={diceStatus?.blockedReason}
+        selectedCell={selectedCell}
+        isMutating={isMutating}
+        onConfirmDice={onConfirmDice}
+        onOpenChallenge={onOpenChallenge}
+        onMoveAirport={onMoveAirport}
+        onUseChanceCard={onUseChanceCard}
+        onConfirmChance={onConfirmChance}
+        onDiscardChance={onDiscardChance}
+        onSpinRoulette={onSpinRoulette}
+        onRetryChanceDraw={onRetryChanceDraw}
+        onCloseCellEvent={onCloseCellEvent}
+        onClearSelectedCell={onClearSelectedCell}
+      />
 
       {isLoading && (
         <div className="absolute inset-0 z-50 grid place-items-center bg-[#2b1609]/35 font-inria-serif text-[1.2cqw] text-[#fff0c4]">
@@ -184,19 +173,6 @@ export default function BoardScreen({
         </div>
       )}
 
-      {showQuarantine && (
-        <QuarantinePanel
-          releasedInSeconds={quarantineReleasedInSeconds}
-          isMutating={isMutating}
-          freeEscapeCards={ownedChanceCards.filter(
-            (card) =>
-              card.usableNow && card.effect === "QUARANTINE_ESCAPE_FREE",
-          )}
-          onEscape={onEscapeQuarantine}
-          onUseFreeEscape={(cardId) => onUseChanceCard(cardId)}
-          onClose={onCloseQuarantine}
-        />
-      )}
     </FixedAspectStage>
   );
 }

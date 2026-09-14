@@ -1,7 +1,7 @@
 import apiClient from "./client.js";
 
 // 보드 페이지 API. 경로와 스키마는 README.md "2. 문제 리스트(보드) 페이지"
-// (Notion API명세서 2026-08-23 스냅샷) 기준. 16개 엔드포인트 전부 백엔드 완료.
+// (Notion 보드 API 명세 2026-09-14 확인) 기준. 15개 엔드포인트.
 //
 // 쓰기 계열(POST)은 전부 Idempotency-Key 헤더 필수 + 이동/굴림 계열은 팀장만.
 // 같은 논리 작업의 재시도에는 controller가 같은 키를 다시 전달한다.
@@ -76,17 +76,8 @@ export function moveAirport({ destinationIndex, idempotencyKey }) {
   );
 }
 
-export function escapeQuarantine({ code, idempotencyKey }) {
-  // POST /board/quarantine/escape - 현장에서 찾은 탈출 코드 제출. 위치는 안 바뀜.
-  return apiClient.post(
-    "/board/quarantine/escape",
-    { code },
-    idKey("quarantine-escape", idempotencyKey),
-  );
-}
-
 export function spinRoulette({ idempotencyKey } = {}) {
-  // POST /board/roulette/spin - 결과 50/100/150/200 각 25%. 팀당 1회.
+  // POST /board/roulette/spin - 결과 50/100/150/200 각 25%. 16·25번 칸별로 팀당 1회.
   return apiClient.post(
     "/board/roulette/spin",
     undefined,
@@ -104,9 +95,9 @@ export function openCell({ challengeId, idempotencyKey }) {
   );
 }
 
-// ---- 찬스카드 (7종, 팀장만) ----
+// ---- 찬스카드 (5종, 팀장만) ----
 export function getChanceCatalog() {
-  // GET /board/chance/catalog (인증 없음) - 7종 정의.
+  // GET /board/chance/catalog (인증 없음) - 5종 정의.
   return apiClient.get("/board/chance/catalog");
 }
 

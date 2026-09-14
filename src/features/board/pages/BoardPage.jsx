@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../routes/routePaths.js";
 import BoardScreen from "../components/BoardScreen.jsx";
@@ -8,12 +7,6 @@ import useBoardController from "../hooks/useBoardController.js";
 export default function BoardPage() {
   const navigate = useNavigate();
   const board = useBoardController();
-  const [quarantineDismissed, setQuarantineDismissed] = useState(false);
-
-  useEffect(() => {
-    if (!board.myBoard?.isQuarantined) setQuarantineDismissed(false);
-  }, [board.myBoard?.isQuarantined]);
-
   const handleOpenChallenge = async (challengeId) => {
     try {
       const openedChallenge = await board.openChallenge(challengeId);
@@ -33,11 +26,6 @@ export default function BoardPage() {
       // Board controller가 백엔드의 code/message를 화면 오류 상태로 보존한다.
       return null;
     }
-  };
-
-  const handleEscapeQuarantine = async (code) => {
-    const result = await runBoardAction(() => board.escapeQuarantine(code));
-    if (result) setQuarantineDismissed(true);
   };
 
   // 이미 문제를 오픈해둔 칸을 다시 클릭하면 칸 정보 패널 대신 바로 문제
@@ -68,11 +56,6 @@ export default function BoardPage() {
       isLoading={board.isLoading}
       isMutating={board.isMutating}
       error={board.error}
-      showQuarantine={
-        board.myBoard?.isQuarantined === true &&
-        !board.awaitingDiscard &&
-        !quarantineDismissed
-      }
       onReload={board.reload}
       onDismissError={board.clearError}
       onRollDice={() => runBoardAction(board.rollDice)}
@@ -95,10 +78,8 @@ export default function BoardPage() {
       }
       onRetryChanceDraw={(eventToken) => board.drawChance(eventToken)}
       onCloseCellEvent={board.closeCellEvent}
-      onEscapeQuarantine={handleEscapeQuarantine}
       onSelectCell={handleSelectCell}
       onClearSelectedCell={board.clearSelectedCell}
-      onCloseQuarantine={() => setQuarantineDismissed(true)}
     />
   );
 }
