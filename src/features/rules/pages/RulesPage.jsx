@@ -1,4 +1,6 @@
+import { useNavigate } from "react-router-dom";
 import RulesScreen from "../components/RulesScreen.jsx";
+import { ROUTES } from "../../../routes/routePaths.js";
 
 const RULES = [
   {
@@ -34,9 +36,8 @@ const RULES = [
 ];
 
 export default function RulesPage() {
-  const handleNavigateMain = () => {
-    // TODO(rules): Main Page 구현 및 route 확정 후 ROUTES helper로 연결한다.
-  };
+  const navigate = useNavigate();
+  const handleNavigateMain = () => navigate(ROUTES.board);
 
   return <RulesScreen rules={RULES} onNavigateMain={handleNavigateMain} />;
 }
