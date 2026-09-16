@@ -23,6 +23,22 @@ def cell_type(index):
     return SPECIAL_CELLS.get(index, "CHALLENGE")
 
 
+def finalize_landing(team, destination, passed_start):
+    first_start_landing = destination == 1 and 1 not in team.consumed_cell_indexes
+    team.position = destination
+    team.consumed_cell_indexes = sorted(set(team.consumed_cell_indexes) | {destination})
+    team.board_completed = set(range(2, TOTAL_CELLS + 1)).issubset(team.consumed_cell_indexes)
+    mileage_gained = 100 if passed_start else 0
+    roll_gained = min(1, max(0, 3 - team.dice_rolls_left)) if first_start_landing and not team.board_completed else 0
+    team.mileage += mileage_gained
+    team.dice_rolls_left += roll_gained
+    team.has_passed_start = team.has_passed_start or passed_start
+    if team.board_completed or team.dice_rolls_left >= 3:
+        team.next_dice_reset_at = None
+    team.save()
+    return {"mileage_gained": mileage_gained, "roll_gained": roll_gained}
+
+
 class BoardView(APIView):
     permission_classes = [AllowAny]
 
@@ -122,19 +138,18 @@ class DiceRollView(APIView):
             if pos == 1:
                 passed_start = True
             movement_path.append(pos)
+        skipped_cells = []
+        while pos in team.consumed_cell_indexes:
+            skipped_cells.append(pos)
+            if len(skipped_cells) >= TOTAL_CELLS:
+                raise ApiError("BOARD_COMPLETED", "이미 보드를 완주했습니다", status=409)
+            pos = pos + 1 if pos < TOTAL_CELLS else 1
+            passed_start = passed_start or pos == 1
+            movement_path.append(pos)
         current = pos
 
         team.dice_rolls_left -= 1
-        team.position = current
-
-        start_reward = None
-        if passed_start:
-            team.has_passed_start = True
-            mileage_gained, roll_gained = 50, 1
-            team.mileage += mileage_gained
-            team.dice_rolls_left += roll_gained
-            start_reward = {"mileage_gained": mileage_gained, "roll_gained": roll_gained}
-        team.save()
+        start_reward = finalize_landing(team, current, passed_start)
 
         return success(
             {
@@ -144,7 +159,7 @@ class DiceRollView(APIView):
                 "previous_position": previous,
                 "current_position": current,
                 "movement_path": movement_path,
-                "skipped_cells": movement_path[:-1],
+                "skipped_cells": skipped_cells,
                 "passed_start": passed_start,
                 "start_reward": start_reward,
                 "board_event_code": cell_type(current),
@@ -294,24 +309,19 @@ class AirportMoveView(APIView):
         require_idempotency_key(request)
 
         destination = request.data.get("destination_index")
-        if not isinstance(destination, int) or not (1 <= destination <= TOTAL_CELLS):
+        if isinstance(destination, bool) or not isinstance(destination, int) or not (1 <= destination <= TOTAL_CELLS):
             raise ApiError("INVALID_DESTINATION_INDEX", "목적지 칸 번호가 올바르지 않습니다", status=400)
+        if destination in team.consumed_cell_indexes:
+            raise ApiError("INVALID_DESTINATION_INDEX", "이미 소모한 칸입니다", status=400)
         if cell_type(team.position) != "AIRPORT":
             raise ApiError("NOT_AIRPORT_CELL", "Airport 칸이 아닙니다", status=409)
         if team.airport_move_used:
             raise ApiError("AIRPORT_MOVE_ALREADY_USED", "이미 Airport 이동을 사용했습니다", status=409)
 
         previous = team.position
-        passed_start = destination < previous or destination == 1
-        team.position = destination
+        passed_start = destination == 1
         team.airport_move_used = True
-        start_reward = None
-        if passed_start:
-            team.has_passed_start = True
-            start_reward = {"mileage_gained": 50, "roll_gained": 1}
-            team.mileage += 50
-            team.dice_rolls_left += 1
-        team.save()
+        start_reward = finalize_landing(team, destination, passed_start)
 
         return success(
             {
