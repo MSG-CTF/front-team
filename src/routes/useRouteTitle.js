@@ -8,6 +8,8 @@ const BASE_TITLE = "MSG CTF";
 // 동적 세그먼트(:teamId, :challengeId)가 있는 라우트는 접두사로 매칭하므로,
 // 더 구체적인 경로를 먼저 나열해야 한다(예: /admin/teams가 /admin보다 앞).
 const ROUTE_TITLES = [
+  ["/", "2026"],
+  ["/guide", "참가 안내와 경기 규칙"],
   ["/login", "로그인"],
   ["/board", "보드"],
   ["/challenges", "문제"],

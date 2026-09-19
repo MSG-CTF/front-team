@@ -1,4 +1,5 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { Route, Routes } from "react-router-dom";
 import LoginPage from "../features/auth/pages/LoginPage.jsx";
 import BoardPage from "../features/board/pages/BoardPage.jsx";
 import OpenChallengesPage from "../features/challenges/pages/OpenChallengesPage.jsx";
@@ -20,13 +21,26 @@ import AdminRoute from "./AdminRoute.jsx";
 import { ROUTES } from "./routePaths.js";
 import useRouteTitle from "./useRouteTitle.js";
 
+const IntroLayout = lazy(() => import("../features/intro/IntroLayout.jsx"));
+const IntroPage = lazy(() => import("../features/intro/IntroPage.jsx"));
+const IntroGuidePage = lazy(() => import("../features/intro/IntroGuidePage.jsx"));
+
 // TODO: 참가자 라우트 가드(로그인 안 한 상태에서 /board 등 직접 접근)는 토큰
 // 저장 방식이 정해지면 추가. 관리자 라우트는 AdminRoute로 막아뒀다(아래).
 export default function AppRoutes() {
   useRouteTitle();
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route
+        element={
+          <Suspense fallback={<p role="status">대회 안내를 불러오는 중</p>}>
+            <IntroLayout />
+          </Suspense>
+        }
+      >
+        <Route path={ROUTES.intro} element={<IntroPage />} />
+        <Route path={ROUTES.introGuide} element={<IntroGuidePage />} />
+      </Route>
       <Route path="/login" element={<LoginPage />} />
       <Route path={ROUTES.board} element={<BoardPage />} />
       <Route path={ROUTES.openChallenges} element={<OpenChallengesPage />} />
