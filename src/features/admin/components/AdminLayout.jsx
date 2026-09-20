@@ -25,6 +25,7 @@ const PANEL_SRC = `${ASSET_BASE}board-panel.png`;
 const NAV_ITEMS = [
   { to: ROUTES.adminDashboard, label: "운영 대시보드", end: true },
   { to: ROUTES.adminChallenges, label: "문제 목록 · 인스턴스" },
+  { to: ROUTES.adminSignatures, label: "시그니처 문제" },
   { to: ROUTES.adminTeams, label: "팀별 목록" },
   { to: ROUTES.adminMileage, label: "마일리지 관리" },
   { to: ROUTES.adminLogs, label: "이벤트 로그" },
@@ -119,8 +120,8 @@ export default function AdminLayout({ title, actions, children }) {
         </aside>
 
         <main
-          className="min-w-0 flex-1 rounded-2xl bg-cover bg-center px-6 py-6 md:px-10 md:py-8"
-          style={{ backgroundImage: `url(${PANEL_SRC})` }}
+          className="min-w-0 flex-1 rounded-2xl bg-[#eed4a5] bg-center px-6 py-6 md:bg-[image:var(--admin-panel)] md:bg-cover md:px-10 md:py-8"
+          style={{ "--admin-panel": `url(${PANEL_SRC})` }}
         >
           <header className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-admin-divider pb-4">
             <h1 className="font-im-fell text-[28px] leading-tight text-admin-ink">{title}</h1>

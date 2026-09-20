@@ -13,6 +13,7 @@ import AdminDashboardPage from "../features/admin/pages/AdminDashboardPage.jsx";
 import AdminTeamsPage from "../features/admin/pages/AdminTeamsPage.jsx";
 import AdminTeamDetailPage from "../features/admin/pages/AdminTeamDetailPage.jsx";
 import AdminChallengesPage from "../features/admin/pages/AdminChallengesPage.jsx";
+import AdminSignaturesPage from "../features/admin/pages/AdminSignaturesPage.jsx";
 import AdminMileagePage from "../features/admin/pages/AdminMileagePage.jsx";
 import AdminSettingsPage from "../features/admin/pages/AdminSettingsPage.jsx";
 import AdminLogsPage from "../features/admin/pages/AdminLogsPage.jsx";
@@ -90,6 +91,7 @@ export default function AppRoutes() {
           </AdminRoute>
         }
       />
+      <Route path={ROUTES.adminSignatures} element={<AdminRoute><AdminSignaturesPage /></AdminRoute>} />
       <Route
         path={ROUTES.adminSettings}
         element={

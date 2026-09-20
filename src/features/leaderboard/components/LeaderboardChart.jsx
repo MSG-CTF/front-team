@@ -1,4 +1,4 @@
-import { SCORE_SERIES_COLORS } from "../utils/leaderboardChartData.js";
+import LeaderboardArtworkSymbol, { LEAF_ARTWORK } from "./LeaderboardArtworkSymbol.jsx";
 import styles from "./LeaderboardScreen.module.css";
 
 const DEFAULT_LEGEND_TEXT_BOXES = [
@@ -60,7 +60,8 @@ export default function LeaderboardChart({ teams, status }) {
           data-is-top3={team.isTop3 || undefined}
           aria-label={team.isTop3 ? `TOP 3 ${team.name}` : team.name}
         >
-          <span aria-hidden="true" className={styles.legendSwatch} style={{ backgroundColor: SCORE_SERIES_COLORS[index] }} />
+          <LeaderboardArtworkSymbol region={LEAF_ARTWORK[index % LEAF_ARTWORK.length]} className={styles.legendLeaf}
+            style={index >= 6 ? { filter: `hue-rotate(${index === 6 ? 155 : -20}deg)` } : undefined} />
           <span className={styles.legendName} title={team.name}>{team.name}</span>
         </div>
       ))}

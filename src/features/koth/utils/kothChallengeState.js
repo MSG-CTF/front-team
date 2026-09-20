@@ -31,6 +31,14 @@ export function getKothConnection(challenge) {
   } catch { return null; }
 }
 
+export function getKothCardAvailability(challenge, stale = false) {
+  if (stale) return { disabled: true, label: "목록을 다시 확인해주세요" };
+  if (challenge?.status === "ACTIVE") return { disabled: false, label: "문제 정보" };
+  if (challenge?.status === "SCHEDULED") return { disabled: true, label: "아직 열리지 않은 문제" };
+  if (challenge?.status === "CLOSED") return { disabled: true, label: "종료된 문제" };
+  return { disabled: true, label: "현재 이용할 수 없는 문제" };
+}
+
 export function createKothChallengeViewModels(visuals, clubs = [], teamChallenges = []) {
   const progressById = new Map(teamChallenges.map((challenge) => [normalizeIdentifier(challenge.koth_challenge_id), challenge]));
   return flattenKothChallenges(clubs).slice(0, visuals.length).map((challenge, index) => {

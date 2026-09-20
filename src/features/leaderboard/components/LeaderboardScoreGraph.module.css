@@ -2,17 +2,24 @@
   position: relative;
   width: 100%;
   height: 100%;
+  user-select: none;
 }
+
+.axisScore { position: absolute; right: calc(100% - 30px); font-size: 16px; font-variant-numeric: tabular-nums; }
+.axisTime { position: absolute; transform: translateX(-50%); white-space: nowrap; font-size: 16px; font-variant-numeric: tabular-nums; }
 
 .svg {
   display: block;
   width: 100%;
   height: 100%;
   overflow: visible;
+  outline: none;
 }
 
+.keyboardFocus { opacity: 0; fill: none; stroke: #925725; stroke-width: 1; stroke-dasharray: 4 4; pointer-events: none; }
+.svg:focus-visible .keyboardFocus { opacity: 0.7; }
+
 .scoreLine {
-  filter: url("#score-line-glow");
   stroke-linecap: round;
   stroke-linejoin: round;
 }
@@ -34,7 +41,8 @@
 .tooltip {
   position: absolute;
   z-index: 5;
-  min-width: 132px;
+  box-sizing: border-box;
+  max-width: 100%;
   padding: 8px 10px;
   border: 1px solid #8a5728;
   border-radius: 6px;
@@ -43,7 +51,7 @@
   color: #402e26;
   font-family: "Libre Baskerville", Georgia, serif;
   pointer-events: none;
-  transform: translate(10px, -4px);
+  overflow: hidden;
 }
 
 .tooltipTime {
@@ -57,8 +65,10 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  height: 22px;
   margin: 2px 0;
-  font-size: 13px;
+  font-size: 14px;
 }
 
 .tooltipKey {
@@ -79,6 +89,10 @@
 
 .tooltipScore {
   flex: none;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: #bc7514;
 }
 
@@ -96,3 +110,13 @@
   text-align: center;
   transform: translateY(-50%);
 }
+
+.zoomControls { position: absolute; top: -22px; right: 0; z-index: 6; display: flex; align-items: center; gap: 8px; color: #593517; }
+.zoomControls button { min-width: 44px; height: 36px; padding: 0 8px; border: 0; background: transparent; color: inherit; font: inherit; font-size: 25px; cursor: pointer; }
+.zoomControls .resetZoom { min-width: 88px; font-size: 16px; }
+.zoomControls button:hover:not(:disabled) { color: #8d410d; background: rgb(145 83 21 / 9%); }
+.zoomControls button:disabled { opacity: 0.4; cursor: not-allowed; }
+.zoomControls button:focus-visible { outline: 2px solid #8d410d; outline-offset: 1px; }
+.zoomHint { margin-right: 8px; font-size: 14px; }
+.interactionArea { cursor: crosshair; touch-action: none; }
+.zoomSelection { fill: rgb(153 94 32 / 18%); stroke: #925725; stroke-width: 1; pointer-events: none; }

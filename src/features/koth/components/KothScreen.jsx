@@ -39,11 +39,11 @@ export default function KothScreen({
         />
 
         {requestStatus === "success" && (
-          <aside className={styles.teamSummary} aria-label="내 팀 KOTH 점수">
+          <aside className={styles.teamSummary} aria-label="내 팀 KoTH 점수">
             <strong>{formatValue(teamName || null)}</strong>
-            <span>TOTAL KOTH SCORE {formatValue(totalKothScore)}</span>
+            <span>KoTH {formatValue(totalKothScore)} pts</span>
             <button type="button" onClick={onOpenTeamToken} disabled={!authenticated}>
-              팀 토큰 확인
+              팀 토큰
             </button>
             <button type="button" onClick={onRetry}>새로고침</button>
             {!authenticated && <span>로그인 후 팀 점수와 토큰 확인</span>}
@@ -52,7 +52,7 @@ export default function KothScreen({
 
         {requestStatus === "loading" && (
           <section className={styles.dataState} role="status">
-            KOTH 정보를 불러오는 중입니다.
+            KoTH 정보를 불러오는 중
           </section>
         )}
 
@@ -67,15 +67,14 @@ export default function KothScreen({
 
         {isEmpty && (
           <section className={styles.dataState}>
-            <p>현재 공개된 KOTH 문제가 없습니다.</p>
+            <p>현재 공개된 KoTH 문제가 없습니다</p>
           </section>
         )}
-
-        {["14%", "45.8%", "77.4%"].map((left) => <span key={left} className={styles.scheduleNotice} style={{ left }}>공개 상태는 각 문제에 표시</span>)}
 
         {requestStatus === "success" && challenges.map((challenge) => (
           <KothChallengeButton
             key={challenge.kothChallengeId}
+            stale={clubsStale}
             challenge={{
               ...challenge,
               selected: challenge.kothChallengeId === selectedChallenge?.kothChallengeId,
@@ -86,12 +85,12 @@ export default function KothScreen({
 
         {requestStatus === "success" && unmappedChallengeCount > 0 && (
           <p className={styles.mappingWarning} role="alert">
-            표시 위치가 확정되지 않은 KOTH 문제 {unmappedChallengeCount}개가 있습니다.
+            표시 위치가 확정되지 않은 KoTH 문제 {unmappedChallengeCount}개가 있습니다
           </p>
         )}
 
         {selectedChallenge && (
-          <section className={styles.challengeDetail} aria-label="선택한 KOTH 문제 정보">
+          <section className={styles.challengeDetail} aria-label="선택한 KoTH 문제 정보">
             <button
               type="button"
               className={styles.panelCloseButton}
@@ -103,12 +102,10 @@ export default function KothScreen({
             <p className={styles.challengeClub}>{selectedChallenge.clubName}</p>
             <h2>{selectedChallenge.title}</h2>
             <dl>
-              <div><dt>STATUS</dt><dd>{selectedChallenge.status}</dd></div>
-              <div><dt>OPEN GROUP</dt><dd>{selectedChallenge.openGroup}</dd></div>
-              <div><dt>OWNER</dt><dd>{formatValue(selectedChallenge.currentOwnerTeamName)}</dd></div>
-              <div><dt>CURRENT SCORE</dt><dd>{formatValue(selectedChallenge.currentScore)}</dd></div>
-              <div><dt>MY SCORE</dt><dd>{formatValue(selectedChallenge.earnedScore)}</dd></div>
-              <div><dt>MY RANK</dt><dd>{formatValue(selectedChallenge.rank)}</dd></div>
+              <div><dt>현재 점령 팀</dt><dd>{formatValue(selectedChallenge.currentOwnerTeamName)}</dd></div>
+              <div><dt>현재 점수</dt><dd>{formatValue(selectedChallenge.currentScore)}</dd></div>
+              <div><dt>우리 팀 점수</dt><dd>{formatValue(selectedChallenge.earnedScore)}</dd></div>
+              <div><dt>우리 팀 순위</dt><dd>{formatValue(selectedChallenge.rank)}</dd></div>
               <div>
                 <dt>최초 득점 (KST)</dt>
                 <dd>{selectedChallenge.solvedAt ? toKst(selectedChallenge.solvedAt) : "—"}</dd>

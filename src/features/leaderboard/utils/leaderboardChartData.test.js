@@ -42,3 +42,17 @@ test("뒷페이지의 서버 순위를 유지하고 그래프 밖 팀의 풀이 
 test("빈 데이터는 그래프를 만들지 않는다", () => {
   assert.deepEqual(buildScoreSeries([]), { series: [], minTime: null, maxTime: null, maxScore: 0 });
 });
+
+test("SIGNATURE 풀이도 점수선과 풀이 수에 포함한다", () => {
+  const rows = adaptLeaderboardTeams({ teams: [{
+    team_id: "signature-team", team_name: "연동팀", team_score: 725, is_top3: true,
+    solves: [
+      { challenge_id: "j", source_type: "JEOPARDY", points: 100, solved_at: "2026-09-20T01:00:00Z" },
+      { challenge_id: "k", source_type: "KOTH", points: 200, solved_at: "2026-09-20T02:00:00Z" },
+      { challenge_id: "s", source_type: "SIGNATURE", points: 425, solved_at: "2026-09-20T03:00:00Z" },
+    ],
+  }] });
+  assert.equal(rows[0].solves[2].sourceType, "SIGNATURE");
+  assert.equal(buildScoreSeries(rows).series[0].finalScore, 725);
+  assert.equal(mergeSolveCounts([{ teamKey: "signature-team" }], rows, true)[0].solveCount, 3);
+});

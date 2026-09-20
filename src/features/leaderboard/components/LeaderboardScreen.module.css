@@ -26,7 +26,7 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: #f8ecec;
+  background: #e6d2a4;
 }
 
 .stage {
@@ -101,11 +101,11 @@
 
 .scoreBoard {
   position: absolute;
-  top: 178px;
-  left: 212px;
+  top: 197px;
+  left: 220px;
   z-index: 2;
-  width: 1227px;
-  height: 362px;
+  width: 1280px;
+  height: 392px;
 }
 
 .scoreArtwork,
@@ -125,10 +125,10 @@
 
 .leaderboardChart {
   position: absolute;
-  top: 228px;
-  left: 1571px;
+  top: 224px;
+  left: 1573px;
   z-index: 3;
-  width: 134px;
+  width: 168px;
   height: 262px;
   color: #402e26;
 }
@@ -162,114 +162,53 @@
   font-size: 14px;
 }
 
-.rankingTable {
+.rankingPanel {
   position: absolute;
-  top: 617px;
-  left: 342px;
+  top: 606px;
+  left: 201px;
+  width: 1520px;
   z-index: 3;
-  width: 1267px;
-  height: 326px;
   color: #402e26;
-  font-size: 16px;
-  font-weight: 600;
 }
-
-.tableHeader {
-  position: absolute;
-  inset: 0;
-}
-
-.tableBody {
-  position: absolute;
-  inset: 0;
-}
-
-.tableText {
-  position: absolute;
-  top: var(--text-top);
-  left: var(--text-left);
-  display: flex;
-  width: var(--text-width);
-  height: var(--text-height);
-  min-width: 0;
+.rankingToolbar {
+  display: grid;
+  grid-template-columns: 240px 1fr 260px;
   align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0;
-  line-height: normal;
-  text-align: center;
-  text-overflow: ellipsis;
-  transform: translateX(-6px);
-  white-space: nowrap;
+  height: 44px;
 }
+.rankingTitle { font-family: "Libre Caslon Text", Georgia, serif; font-size: 20px; color: #754315; letter-spacing: 0.04em; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: 5px; font-size: 19px; }
+.pagination button, .refreshControls button {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  height: 42px; min-width: 48px; padding: 0 12px;
+  border: 0; color: #684322; background: transparent; font: inherit; cursor: pointer;
+}
+.pagination button[aria-current="page"] { color: #863b0c; font-weight: 700; box-shadow: inset 0 -2px #8d4f1c; }
+.pagination button:hover:not(:disabled), .refreshControls button:hover:not(:disabled) { background: rgb(126 77 30 / 9%); }
+.pagination button:focus-visible, .refreshControls button:focus-visible { outline: 2px solid #8d4f1c; outline-offset: -2px; }
+.pagination button:disabled, .refreshControls button:disabled { opacity: 0.35; cursor: not-allowed; }
+.pageTotal { margin-left: 8px; color: #8b6848; font-size: 16px; }
+.refreshControls { display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-size: 17px; }
+.refreshControls time { font-size: 14px; white-space: nowrap; }
+.refreshControls button { padding-right: 0; }
+.refreshControls svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
-.tableHeaderText {
-  color: #702e05;
-  font-family: "Libre Caslon Text", Georgia, serif;
-  font-size: 20px;
-  font-weight: 400;
-  justify-content: flex-start;
-  text-align: left;
-}
+.tableContainer { width: 100%; overflow: hidden; }
+.rankingGrid { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 18px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.rankingGrid th, .rankingGrid td { box-sizing: border-box; min-width: 0; padding: 0 10px; overflow: hidden; text-align: center; vertical-align: middle; }
+.rankingGrid thead th { height: 36px; border-bottom: 1px solid rgb(131 81 37 / 45%); font-family: "Libre Caslon Text", Georgia, serif; font-size: 18px; font-weight: 400; color: #794519; }
+.rankingGrid tbody tr { height: 43px; }
+.rankingGrid tbody th, .rankingGrid tbody td { border-bottom: 1px solid rgb(145 92 43 / 16%); }
+.rankingGrid th + th, .rankingGrid th + td, .rankingGrid td + th, .rankingGrid td + td { border-left: 1px solid rgb(145 92 43 / 16%); }
+.rankingGrid .teamNameCell { padding-inline: 16px; text-align: left; font-weight: 400; }
+.cellValue { display: block; width: 100%; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cellValue:focus-visible { outline: 1px solid #8d4f1c; outline-offset: 2px; }
+.pointCell { color: #985608; font-weight: 600; }
+.rankingGrid .rankCell { padding: 0; font-size: 25px; color: #704823; }
+.rankArtwork { display: block; width: 54px; height: 40px; margin: 0 auto; }
+.rankingGrid .tableState { height: 240px; color: #745436; font-size: 20px; border: 0; }
 
-.teamNameCell {
-  padding-inline: 4px;
-}
-
-.pointCell {
-  color: #bc7514;
-}
-
-.legendState,
-.tableState {
-  position: absolute;
-  z-index: 4;
-  margin: 0;
-  color: rgb(71 42 20 / 76%);
-  font-family: "Libre Baskerville", Georgia, serif;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-align: center;
-}
-
-.legendState {
-  top: 42%;
-  left: 0;
-  width: 100%;
-  font-size: 12px;
-  line-height: 1.35;
-}
-
-.tableState {
-  top: 52%;
-  left: 15%;
-  width: 70%;
-  font-size: 19px;
-}
-
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.pagination {
-  position: absolute; left: 340px; top: 955px; width: 1270px;
-  display: flex; justify-content: center; align-items: center; gap: 20px;
-  font-size: 16px; z-index: 4;
-}
-.pagination button { border: 1px solid #79512f; padding: 4px 16px; border-radius: 4px; background: #e8d0a5; }
-.pagination button:disabled { opacity: 0.45; cursor: not-allowed; }
+.legendState { position: absolute; top: 42%; left: 0; width: 100%; margin: 0; color: rgb(71 42 20 / 76%); font-size: 12px; font-weight: 600; text-align: center; line-height: 1.35; }
+.legendLeaf { position: absolute; left: -44px; top: 0; width: 29px; height: 29px; }
 .refreshNote { position: absolute; left: 340px; top: 135px; width: 1270px; text-align: center; font-size: 15px; }
-
-.rankCell { position: absolute; left: -116px; width: 80px; height: 46px; display: grid; place-items: center; background: #e6d2a4; font-size: 24px; color: #704823; }
-.leaderboardChart::before { content: ""; position: absolute; left: -60px; top: -10px; width: 58px; height: 280px; background: #e6d2a4; }
-.legendSwatch { position: absolute; left: -44px; top: 6px; width: 18px; height: 18px; border-radius: 50%; border: 1px solid #6a4320; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
