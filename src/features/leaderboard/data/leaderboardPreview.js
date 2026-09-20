@@ -54,14 +54,14 @@ function buildPreviewSolves(teamIndex, previewScore, solveCount) {
   });
 }
 
-export const LEADERBOARD_PREVIEW_TEAMS = PREVIEW_NAMES.slice(0, 8).map((name, index) => ({
+export const LEADERBOARD_PREVIEW_TEAMS = import.meta.env.DEV ? PREVIEW_NAMES.slice(0, 8).map((name, index) => ({
   key: `figma-preview-team-${index}`,
   teamKey: null,
   name,
   teamScore: PREVIEW_SCORES[index],
   isTop3: index < 3,
   solves: buildPreviewSolves(index, PREVIEW_SCORES[index], PREVIEW_SOLVES[index]),
-}));
+})) : [];
 
 function buildPreviewBreakdown(teamScore, index) {
   const signatureScore = 300 * (1 + index % 4);
@@ -78,7 +78,7 @@ function buildPreviewBreakdown(teamScore, index) {
   return { categoryScores, kothScore, signatureScore };
 }
 
-export const RANKING_PREVIEW_ROWS = PREVIEW_SCORES.map((teamScore, index) => ({
+export const RANKING_PREVIEW_ROWS = import.meta.env.DEV ? PREVIEW_SCORES.map((teamScore, index) => ({
   key: `figma-preview-ranking-${index}`,
   rank: index + 1,
   teamKey: null,
@@ -90,4 +90,4 @@ export const RANKING_PREVIEW_ROWS = PREVIEW_SCORES.map((teamScore, index) => ({
   ...buildPreviewBreakdown(teamScore, index),
   isTop3: index < 3,
   isPreview: true,
-}));
+})) : [];
