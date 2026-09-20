@@ -12,6 +12,16 @@ export function formatSignedNumber(value) {
   return value > 0 ? `+${formatted}` : formatted;
 }
 
+export function mapMemberRanking(data) {
+  if (!Number.isInteger(data?.rank) || data.rank < 1
+    || typeof data.nickname !== "string" || !data.nickname.trim()
+    || !Number.isFinite(data.user_score) || data.user_score < 0
+    || !Number.isInteger(data.solved_count) || data.solved_count < 0) {
+    throw new Error("개인 순위 응답을 확인하지 못했습니다");
+  }
+  return { rank: data.rank, nickname: data.nickname, score: data.user_score, solvedCount: data.solved_count };
+}
+
 function kstParts(isoUtc, options) {
   const formatted = toKst(isoUtc, options);
   return formatted.match(/\d+/g) ?? [];

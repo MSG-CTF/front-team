@@ -1,6 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mapTeamProfile, mapSolveHistory, mapMileageHistory, getQrRemainingSeconds } from "./myPageData.js";
+import { mapMemberRanking, mapTeamProfile, mapSolveHistory, mapMileageHistory, getQrRemainingSeconds } from "./myPageData.js";
+
+test("개인 순위는 본인 점수와 풀이 수만 사용하고 팀 점수를 합산하지 않는다", () => {
+  const mapped = mapMemberRanking({ nickname: "참가자", rank: 3, user_score: 200.5, solved_count: 2, team_score: 9999, signature_score: 300, koth_score: 400 });
+  assert.deepEqual(mapped, { nickname: "참가자", rank: 3, score: 200.5, solvedCount: 2 });
+  for (const value of [null, {}, { rank: 0 }, { nickname: "참가자", rank: 1, user_score: "200", solved_count: 1 }]) assert.throws(() => mapMemberRanking(value));
+});
 
 test("점수 분리, 차단 상태와 팀장 표시를 서버 응답에서 읽는다", () => {
   const profile = mapTeamProfile({ team_score: 1150, jeopardy_score: 350, koth_score: 800, is_banned: true, ban_reason: "확인 중", members: [{ nickname: "가", is_leader: true }] });

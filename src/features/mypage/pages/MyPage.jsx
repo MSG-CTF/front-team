@@ -3,12 +3,12 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { logout } from "../../../api/auth.js";
 import { ACCESS_TOKEN_STORAGE_KEY, REFRESH_TOKEN_STORAGE_KEY, ROLE_STORAGE_KEY } from "../../../api/client.js";
 import { getMyMileageHistory, getMyProfile, getMySolves, issueMyQrToken } from "../../../api/mypage.js";
-import { getMyRanking } from "../../../api/leaderboard.js";
+import { getMyRanking, getMyMemberRanking } from "../../../api/leaderboard.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
 import MyPageScreen from "../components/MyPageScreen.jsx";
 import { PREVIEW_MY_PAGE_DATA } from "../data/previewMyPageData.js";
-import { mapMileageHistory, mapSolveHistory, mapTeamProfile, getQrRemainingSeconds } from "../utils/myPageData.js";
+import { mapMileageHistory, mapSolveHistory, mapTeamProfile, mapMemberRanking, getQrRemainingSeconds } from "../utils/myPageData.js";
 
 const LOADING = { status: "loading", data: null };
 const QR_IDLE = { status: "idle", paymentToken: "", expiresAt: "", remainingSeconds: null, error: "" };
@@ -24,7 +24,7 @@ export default function MyPage() {
   const logoutPending = useRef(false);
   const [revision, setRevision] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [apiState, setApiState] = useState({ profile: LOADING, mileageHistory: LOADING, solveHistory: LOADING, ranking: LOADING });
+  const [apiState, setApiState] = useState({ profile: LOADING, mileageHistory: LOADING, solveHistory: LOADING, ranking: LOADING, memberRanking: LOADING });
   const [qrState, setQrState] = useState(QR_IDLE);
   const [logoutState, setLogoutState] = useState({ isSubmitting: false, error: "" });
 
@@ -42,19 +42,25 @@ export default function MyPage() {
     async function load() {
       setRefreshing(true);
       const results = await Promise.allSettled([
-        getMyProfile(config), getMyMileageHistory(config), getMySolves(config), getMyRanking(config),
+        getMyProfile(config), getMyMileageHistory(config), getMySolves(config), getMyRanking(config), getMyMemberRanking(config),
       ]);
       if (!active) return;
       const specs = [
         ["profile", mapTeamProfile], ["mileageHistory", mapMileageHistory],
         ["solveHistory", mapSolveHistory], ["ranking", (data) => data],
+        ["memberRanking", mapMemberRanking],
       ];
       setApiState((current) => Object.fromEntries(specs.map(([key, mapper], index) => {
         const result = results[index];
         const envelope = result.status === "fulfilled" ? result.value.data : null;
-        if (!isSuccess(envelope)) return [key, { ...current[key], status: current[key].data ? "success" : "error", error: true }];
-        const data = envelope.data == null ? null : mapper(envelope.data);
-        return [key, { status: data == null || (Array.isArray(data) && data.length === 0) ? "empty" : "success", data, error: false }];
+        try {
+          if (!isSuccess(envelope)) throw new Error("조회 실패");
+          const data = envelope.data == null ? null : mapper(envelope.data);
+          return [key, { status: data == null || (Array.isArray(data) && data.length === 0) ? "empty" : "success", data, error: false }];
+        } catch {
+          if (key === "memberRanking") return [key, { status: "error", data: null, error: true }];
+          return [key, { ...current[key], status: current[key].data ? "success" : "error", error: true }];
+        }
       })));
       setRefreshing(false);
       timer = window.setTimeout(load, 30000);
@@ -121,6 +127,7 @@ export default function MyPage() {
     profile: { status: "success", data: PREVIEW_MY_PAGE_DATA.profile },
     mileageHistory: { status: "success", data: PREVIEW_MY_PAGE_DATA.mileageHistory },
     solveHistory: { status: "success", data: PREVIEW_MY_PAGE_DATA.solveHistory },
+    memberRanking: { status: "success", data: PREVIEW_MY_PAGE_DATA.memberRanking },
   } : {
     ...apiState,
     profile: { ...apiState.profile, data: apiState.profile.data

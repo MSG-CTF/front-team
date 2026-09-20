@@ -50,6 +50,13 @@ export default function BoardNav() {
           <span className="sr-only">{button.label}</span>
         </button>
       ))}
+      <button
+        type="button"
+        onClick={() => navigate(ROUTES.signatures)}
+        className="absolute bottom-[2%] right-[2%] border-0 bg-[#2b1609]/80 px-[1.1cqw] py-[0.55cqw] font-inria-serif text-[1cqw] text-[#f1e4c8] hover:bg-[#2b1609] focus-visible:outline focus-visible:outline-[#f1e4c8]"
+      >
+        동아리 부스 둘러보기 →
+      </button>
       {/* 로그아웃 - 이 3개 아이콘과 달리 Figma에 그려진 그림이 없어서(시안 없음)
           그림 없는 화면 왼쪽 아래 여백에 반투명 텍스트 버튼으로만 얹었다. */}
       <button

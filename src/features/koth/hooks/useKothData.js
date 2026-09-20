@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getKothClubs, getKothTeamToken, getMyKothProgress, getKothLeaderboard } from "../../../api/koth.js";
+import { getKothClub, getKothClubs, getKothTeamToken, getMyKothProgress, getKothLeaderboard } from "../../../api/koth.js";
 import { ACCESS_TOKEN_STORAGE_KEY } from "../../../api/client.js";
 import { isSuccess } from "../../../utils/response.js";
-import { validateKothClubs } from "../utils/kothChallengeState.js";
+import { validateKothClubs, validateKothClubDetail } from "../utils/kothChallengeState.js";
 
 function getErrorMessage(error, fallbackMessage) {
   return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -69,6 +69,34 @@ export function useKothLeaderboard(challengeId, authenticated) {
     return () => { active = false; controller.abort(); window.clearTimeout(timer); };
   }, [challengeId, authenticated, revision]);
   return { ...state, retry: () => setRevision((value) => value + 1) };
+}
+
+export function useKothClubDetail(clubId, challengeId) {
+  const [revision, setRevision] = useState(0);
+  const [state, setState] = useState({ key: null, status: "idle", data: null, error: "" });
+  const key = clubId && challengeId ? `${clubId}:${challengeId}` : null;
+  useEffect(() => {
+    if (!key) return;
+    const controller = new AbortController();
+    let timer;
+    async function load() {
+      setState({ key, status: "loading", data: null, error: "" });
+      try {
+        const { data: envelope } = await getKothClub(clubId, { signal: controller.signal, timeout: 10000 });
+        if (!isSuccess(envelope) || !validateKothClubDetail(envelope.data, clubId, challengeId)) {
+          throw new Error("선택한 문제의 최신 상태를 확인하지 못했습니다");
+        }
+        if (!controller.signal.aborted) setState({ key, status: "success", data: envelope.data, error: "" });
+      } catch {
+        if (!controller.signal.aborted) setState({ key, status: "error", data: null, error: "선택한 문제의 최신 상태를 확인하지 못했습니다" });
+      }
+      if (!controller.signal.aborted) timer = window.setTimeout(load, 30000);
+    }
+    load();
+    return () => { controller.abort(); window.clearTimeout(timer); };
+  }, [clubId, challengeId, key, revision]);
+  const current = state.key === key ? state : { status: key ? "loading" : "idle", data: null, error: "" };
+  return { ...current, retry: () => setRevision((value) => value + 1) };
 }
 
 export function useKothTeamToken() {

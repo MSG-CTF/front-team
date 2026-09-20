@@ -5,11 +5,13 @@ import {
   useKothData,
   useKothTeamToken,
   useKothLeaderboard,
+  useKothClubDetail,
 } from "../hooks/useKothData.js";
 import {
   createKothChallengeViewModels,
   flattenKothChallenges,
   getUnmappedKothChallenges,
+  applyKothClubDetail,
 } from "../utils/kothChallengeState.js";
 
 export default function KothPage() {
@@ -36,9 +38,11 @@ export default function KothPage() {
     () => getUnmappedKothChallenges(KOTH_CHALLENGE_VISUALS, clubs).length,
     [clubs],
   );
-  const selectedChallenge = challenges.find(
+  const selectedListChallenge = challenges.find(
     (challenge) => challenge.kothChallengeId === selectedChallengeId,
   ) ?? null;
+  const clubDetail = useKothClubDetail(selectedListChallenge?.clubId, selectedChallengeId);
+  const selectedChallenge = applyKothClubDetail(selectedListChallenge, clubDetail.data) ?? selectedListChallenge;
 
   const problemRanking = useKothLeaderboard(selectedChallengeId, kothData.authenticated);
 
@@ -69,6 +73,7 @@ export default function KothPage() {
       teamName={kothData.progressData?.team_name ?? ""}
       totalKothScore={kothData.progressData?.total_koth_score ?? null}
       selectedChallenge={selectedChallenge}
+      clubDetail={clubDetail}
       isTeamTokenOpen={isTeamTokenOpen}
       teamToken={teamToken}
       onRetry={kothData.retry}

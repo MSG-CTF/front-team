@@ -1,0 +1,955 @@
+@font-face {
+  font-family: "MSG Payment";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/assets/fonts/pretendard/PretendardVariable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "MSG Payment Title";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/assets/intro/fonts/SongMyung-Regular.ttf") format("truetype");
+}
+
+.payments,
+.dialog,
+.tabs {
+  --pay-ink: #513719;
+  --pay-muted: #79603c;
+  --pay-line: #c4ab7f;
+  --pay-accent: #75412f;
+  --pay-paper: #fbf3df;
+  color: var(--pay-ink);
+  font-family:
+    "MSG Payment", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -0.025em;
+  -webkit-font-smoothing: antialiased;
+}
+
+.payments *,
+.dialog * {
+  box-sizing: border-box;
+}
+.payments button,
+.dialog button,
+.tabs button {
+  touch-action: manipulation;
+}
+.payments :is(button, input, select):focus-visible,
+.dialog :is(button, input):focus-visible,
+.tabs button:focus-visible {
+  outline: 3px solid #946329;
+  outline-offset: 4px;
+}
+.payments button:disabled,
+.dialog button:disabled {
+  cursor: not-allowed;
+}
+
+.tabs {
+  display: flex;
+  gap: 28px;
+  margin-bottom: 36px;
+  border-bottom: 1px solid var(--pay-line);
+}
+.tabs button {
+  position: relative;
+  min-height: 52px;
+  padding: 12px 0 16px;
+  color: #79603c;
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 18px;
+}
+.tabs button[aria-pressed="true"] {
+  color: #75412f;
+  font-weight: 400;
+}
+.tabs button[aria-pressed="true"]::after {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 0;
+  background: #75412f;
+  content: "";
+}
+
+.checkout {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.95fr) minmax(280px, 1fr);
+  gap: clamp(32px, 5vw, 72px);
+  margin: 0 auto 48px;
+  max-width: 900px;
+}
+.eyebrow {
+  display: inline-block;
+  margin: 0 0 14px;
+  padding: 5px 20px 5px 14px;
+  background: #862f29;
+  color: #f8e4c7;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 8px) 50%, 100% 100%, 0 100%);
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 14px;
+  font-weight: 400;
+}
+.scanHeading {
+  margin: 0 0 22px;
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 29px;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+}
+.scanButton {
+  display: flex;
+  width: 100%;
+  min-height: 212px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px;
+  border: 1px solid #a78a5b;
+  border-radius: 2px;
+  background: var(--pay-paper);
+  box-shadow:
+    inset 0 0 0 5px #e9d8b7,
+    inset 0 0 0 6px #cbb58b;
+  color: #775029;
+  transition:
+    background 150ms,
+    border-color 150ms;
+}
+.scanButton:hover {
+  border-color: #775029;
+  background: #f5e7c8;
+}
+.scanButton svg {
+  width: 78px;
+  height: 78px;
+}
+.scanButtonLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+.scanButtonLabel svg {
+  width: 18px;
+  height: 18px;
+}
+.scanReady {
+  min-height: 212px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 24px;
+  border: 1px solid #a78a5b;
+  border-radius: 2px;
+  background: var(--pay-paper);
+  box-shadow:
+    inset 0 0 0 5px #e9d8b7,
+    inset 0 0 0 6px #cbb58b;
+  text-align: center;
+}
+.scanReady > svg {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 12px;
+  color: var(--pay-accent);
+}
+.scanReady strong {
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 19px;
+  font-weight: 400;
+}
+.scanReady p {
+  margin: 6px 0 12px;
+  color: var(--pay-muted);
+  font-size: 14px;
+}
+.textButton {
+  min-height: 44px;
+  padding: 10px 6px;
+  color: var(--pay-muted);
+  font-size: 14px;
+  text-underline-offset: 4px;
+}
+.textButton:hover {
+  color: var(--pay-ink);
+  text-decoration: underline;
+}
+.manualToggle {
+  display: flex;
+  justify-content: center;
+  margin-top: 3px;
+}
+.manualField {
+  margin-top: 10px;
+}
+.manualField[hidden] {
+  display: none;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 550;
+}
+.input {
+  min-width: 0;
+  width: 100%;
+  height: 52px;
+  padding: 0 16px;
+  border: 1px solid #bda177;
+  border-radius: 2px;
+  background: var(--pay-paper);
+  color: var(--pay-ink);
+  font-size: 16px;
+  font-weight: 500;
+}
+.input::placeholder {
+  color: #8b7453;
+  font-weight: 400;
+}
+.input:focus {
+  background: #fff9ea;
+  border-color: #946329;
+}
+.detailsHeading {
+  margin: 2px 0 32px;
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 21px;
+  font-weight: 400;
+}
+.amountField {
+  display: block;
+  margin-bottom: 26px;
+  font-size: 14px;
+  font-weight: 550;
+}
+.amountInput {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 0 0 12px;
+  border-bottom: 2px solid #bda177;
+}
+.amountInput:focus-within {
+  border-color: var(--pay-accent);
+}
+.amountInput input {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none !important;
+  background: transparent;
+  color: var(--pay-ink);
+  font-size: clamp(36px, 3.5vw, 46px);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.3;
+  letter-spacing: -0.055em;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+.amountInput input::-webkit-inner-spin-button,
+.amountInput input::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+.amountInput input::placeholder {
+  color: #a68e68;
+}
+.amountInput input[data-long="true"] {
+  font-size: 32px;
+  letter-spacing: -0.03em;
+}
+.amountInput span {
+  font-family: "IM Fell English", Georgia, serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: #8a6c41;
+}
+.primaryButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 54px;
+  padding: 14px 20px;
+  border: 1px solid #5a3526;
+  border-radius: 3px;
+  background: var(--pay-accent);
+  box-shadow:
+    inset 0 0 0 3px #ffffff0d,
+    0 2px 0 #57361f;
+  color: #fff3dc;
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 19px;
+  font-weight: 400;
+  transition: background 150ms;
+}
+.primaryButton:hover:not(:disabled) {
+  background: #5e3225;
+}
+.primaryButton:disabled {
+  border-color: #b9a17a;
+  background: #dbc8a1;
+  box-shadow: none;
+  color: #786344;
+}
+.primaryButton svg {
+  width: 18px;
+  height: 18px;
+}
+.checkoutAction {
+  margin-top: 28px;
+}
+.actionHint {
+  min-height: 21px;
+  margin: 12px 0 0;
+  color: var(--pay-muted);
+  font-size: 13px;
+  text-align: center;
+}
+.error {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 1px solid #c9a185;
+  border-radius: 2px;
+  background: #f3dfcd;
+  color: #963b29;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.notice {
+  margin: 14px 0;
+  color: var(--pay-accent);
+  font-size: 14px;
+}
+
+.history {
+  padding-top: 30px;
+  border-top: 1px solid var(--pay-line);
+}
+.historyHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.historyTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.historyTitle h2 {
+  margin: 0;
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 23px;
+  font-weight: 400;
+}
+.historyTitle span {
+  color: var(--pay-muted);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.historyTools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.historyTools select {
+  max-width: 240px;
+  min-height: 42px;
+  padding: 8px 32px 8px 12px;
+  border: 1px solid var(--pay-line);
+  border-radius: 2px;
+  background: var(--pay-paper);
+  font-size: 14px;
+}
+.iconButton {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--pay-muted);
+}
+.iconButton:hover:not(:disabled) {
+  background: #e2cda7;
+  color: var(--pay-ink);
+}
+.iconButton:disabled {
+  opacity: 0.45;
+}
+.iconButton svg {
+  width: 21px;
+  height: 21px;
+}
+.historyTable {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  text-align: left;
+}
+.historyTable th {
+  padding: 10px 12px;
+  background: #e6d2aa;
+  color: var(--pay-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+.historyTable th:first-child {
+  width: 32%;
+  border-radius: 0;
+}
+.historyTable th:nth-child(2) {
+  width: 24%;
+  text-align: right;
+}
+.historyTable th:nth-child(3) {
+  width: 27%;
+}
+.historyTable th:last-child {
+  width: 17%;
+  border-radius: 0;
+  text-align: right;
+}
+.historyTable td {
+  padding: 18px 12px;
+  border-bottom: 1px solid #ccb58a;
+  vertical-align: middle;
+}
+.entryTitle {
+  display: block;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.entryTeam {
+  display: block;
+  margin-top: 4px;
+  color: var(--pay-muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.entryAmount {
+  text-align: right;
+  white-space: nowrap;
+  font-size: 17px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.entryAmount small {
+  font-size: 12px;
+  font-weight: 400;
+}
+.entryAmount[data-refund="true"] {
+  color: #82541f;
+}
+.entryMeta {
+  color: var(--pay-muted);
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.entryMeta span {
+  display: block;
+}
+.entryActions {
+  text-align: right;
+}
+.entryActions > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 2px 12px;
+}
+.refundButton {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid #b79a6b;
+  border-radius: 2px;
+  color: var(--pay-ink);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.refundButton:hover:not(:disabled) {
+  background: #e2cda7;
+}
+.refunded {
+  color: var(--pay-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.entryActions .textButton {
+  min-height: 40px;
+  font-size: 13px;
+}
+.empty {
+  padding: 44px 16px !important;
+  color: var(--pay-muted);
+  text-align: center;
+}
+.pagination nav {
+  justify-content: center;
+  margin: 22px 0 4px;
+  gap: 16px;
+  color: var(--pay-muted);
+  font-family: inherit;
+  font-size: 13px;
+}
+.pagination button {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 10px 14px;
+  border-color: var(--pay-line);
+  border-radius: 2px;
+  background: #e5d0a8;
+}
+.historyStatus :global(.font-song-myung) {
+  font-family: inherit;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: #24180dc4;
+  backdrop-filter: blur(3px);
+}
+.dialog {
+  width: 100%;
+  max-width: 440px;
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 24px 28px 28px;
+  border: 8px solid transparent;
+  border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+  border-radius: 0;
+  background: #f5e8ca;
+  background-clip: padding-box;
+  box-shadow: 0 24px 100px #1e120e66;
+  outline: none;
+}
+.dialogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: -6px -10px 20px 0;
+}
+.dialogHeader h2 {
+  margin: 0;
+  color: var(--pay-muted);
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+.confirmHeading {
+  margin: 0 0 16px;
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+.confirmAmount {
+  margin: 0 0 28px;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.045em;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.confirmAmount span {
+  margin-left: 8px;
+  font-family: "IM Fell English", Georgia, serif;
+  font-size: 23px;
+  font-weight: 400;
+}
+.receiptDetails {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 14px 28px;
+  margin: 0 0 28px;
+  padding: 22px 0;
+  border-top: 1px solid var(--pay-line);
+  border-bottom: 1px solid var(--pay-line);
+  font-size: 14px;
+}
+.receiptDetails dt {
+  color: var(--pay-muted);
+}
+.receiptDetails dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 550;
+  overflow-wrap: anywhere;
+}
+.confirmationActions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 10px;
+  margin-top: 26px;
+}
+.secondaryButton {
+  min-height: 52px;
+  padding: 12px 20px;
+  border: 1px solid #b69a6b;
+  border-radius: 3px;
+  background: #e6d1a8;
+  color: #634725;
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 18px;
+  font-weight: 400;
+}
+.secondaryButton:hover:not(:disabled) {
+  background: #d9bf90;
+}
+.receipt {
+  max-width: 460px;
+  margin: 4px auto 48px;
+  text-align: center;
+}
+.receipt > svg {
+  width: 54px;
+  height: 54px;
+  margin: 0 auto 14px;
+  color: var(--pay-accent);
+}
+.receipt h2 {
+  margin: 0 0 12px;
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 25px;
+  font-weight: 400;
+}
+.receipt .confirmAmount {
+  margin-bottom: 24px;
+}
+.receipt .receiptDetails {
+  text-align: left;
+}
+
+.scannerLead {
+  margin: 0 0 20px;
+  font-family: "MSG Payment Title", "Song Myung", serif;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.45;
+  letter-spacing: -0.02em;
+}
+.cameraPreview {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border: 1px solid #967342;
+  border-radius: 2px;
+  background: #2d2013;
+}
+.cameraPreview[hidden] {
+  display: none;
+}
+.cameraPreview video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.viewfinder {
+  position: absolute;
+  inset: 18%;
+  color: #fff2d8;
+  pointer-events: none;
+}
+.viewfinder svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 1px 2px #0006);
+}
+.cameraStarting {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 28px;
+  background: #2d2013;
+  color: #f1dfb9;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.scannerHint {
+  margin: 16px 0 20px;
+  color: var(--pay-muted);
+  font-size: 13px;
+  text-align: center;
+}
+.scannerActions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.scannerError {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 110px;
+  margin: 0 0 16px;
+  border: 1px solid #c3a779;
+  border-radius: 2px;
+  background: #ead8b3;
+  color: #88673a;
+}
+.scannerError svg {
+  width: 48px;
+  height: 48px;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1100px) {
+  .checkout {
+    gap: 32px;
+    grid-template-columns: minmax(200px, 0.9fr) minmax(220px, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .checkout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+    max-width: 460px;
+  }
+  .scanHeading {
+    font-size: 26px;
+  }
+  .scanButton,
+  .scanReady {
+    min-height: 168px;
+  }
+  .scanButton svg {
+    width: 58px;
+    height: 58px;
+  }
+  .scanButtonLabel svg {
+    width: 18px;
+    height: 18px;
+  }
+  .detailsHeading {
+    margin: 0 0 22px;
+  }
+}
+
+@media (max-width: 1100px) {
+  .historyTable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  .historyTable,
+  .historyTable tbody {
+    display: block;
+  }
+  .historyTable tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 14px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--pay-line);
+  }
+  .historyTable td {
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+  .entryActions {
+    align-self: end;
+  }
+  .entryAmount {
+    align-self: start;
+  }
+  .entryActions > div {
+    gap: 8px;
+  }
+  .empty {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .eyebrow {
+    display: none;
+  }
+  .scanHeading {
+    margin-bottom: 16px;
+  }
+  .scanHeading br {
+    display: none;
+  }
+  .scanButton {
+    min-height: 104px;
+    flex-direction: row;
+    gap: 22px;
+    padding: 18px;
+  }
+  .scanButton > svg {
+    width: 48px;
+    height: 48px;
+    flex-shrink: 0;
+  }
+  .scanReady {
+    display: grid;
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: 4px 12px;
+    min-height: 104px;
+    padding: 18px;
+    text-align: left;
+  }
+  .scanReady > svg {
+    grid-area: 1 / 1 / 3 / 2;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+  }
+  .scanReady strong {
+    grid-area: 1 / 2;
+    align-self: end;
+    font-size: 16px;
+  }
+  .scanReady p {
+    grid-area: 2 / 2;
+    align-self: start;
+    margin: 0;
+    font-size: 12px;
+  }
+  .scanReady button {
+    grid-area: 1 / 3 / 3 / 4;
+    padding: 8px 0;
+    font-size: 12px;
+  }
+  .detailsHeading {
+    display: none;
+  }
+  .amountField {
+    margin-bottom: 20px;
+  }
+  .amountInput {
+    margin-top: 6px;
+    padding-bottom: 8px;
+  }
+  .checkoutAction {
+    margin-top: 22px;
+  }
+  .tabs {
+    gap: 24px;
+    margin-bottom: 28px;
+  }
+  .tabs button {
+    font-size: 17px;
+  }
+  .checkout {
+    gap: 22px;
+    margin-bottom: 34px;
+  }
+  .scanHeading {
+    font-size: 23px;
+  }
+  .amountInput input {
+    font-size: 40px;
+  }
+  .history {
+    padding-top: 24px;
+  }
+  .historyHeader {
+    gap: 12px;
+  }
+  .historyTitle h2 {
+    font-size: 19px;
+  }
+  .historyTools {
+    flex: 1;
+    justify-content: flex-end;
+  }
+  .historyTools select {
+    width: 112px;
+  }
+  .entryAmount {
+    font-size: 16px;
+  }
+  .entryTitle {
+    font-size: 15px;
+  }
+  .overlay {
+    padding: 16px;
+  }
+  .dialog {
+    max-height: calc(100dvh - 32px);
+    padding: 16px;
+    border-width: 6px;
+    border-radius: 0;
+  }
+  .confirmAmount {
+    font-size: 34px;
+  }
+  .receiptDetails {
+    gap: 14px 16px;
+  }
+  .confirmationActions .primaryButton {
+    font-size: 18px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .payments *,
+  .dialog * {
+    transition: none !important;
+  }
+}

@@ -47,8 +47,9 @@ export function mapChallengeDetail(data) {
       ? data.files
           .filter((file) => file && typeof file === "object")
           .map((file) => ({
+            challengeId: data.challenge_id,
             fileId: file.file_id,
-            name: file.file_name || "첨부파일",
+            name: typeof file.file_name === "string" && file.file_name ? file.file_name : "첨부파일",
             url: getAttachmentUrl(file.download_url),
             sizeLabel: formatFileSize(file.file_size),
           }))

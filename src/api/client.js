@@ -1,4 +1,5 @@
 import axios from "axios";
+import { readBlobError } from "./errorPayload.js";
 
 // README.md "공통 규약" 참고. Base URL은 /api/v1, 경로 끝 슬래시 없음.
 export const ACCESS_TOKEN_STORAGE_KEY = "msgctf_access_token";
@@ -61,6 +62,7 @@ async function renewAccessToken() {
 apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
+    await readBlobError(error.response);
     const originalRequest = error.config;
     const code = error.response?.data?.code;
 

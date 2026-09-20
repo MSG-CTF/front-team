@@ -13,6 +13,7 @@ const ROUTE_TITLES = [
   ["/login", "로그인"],
   ["/board", "보드"],
   ["/challenges", "문제"],
+  ["/signatures", "부스 문제"],
   ["/leaderboard", "리더보드"],
   ["/mypage", "마이페이지"],
   ["/timer", "타이머"],

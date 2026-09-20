@@ -25,6 +25,9 @@ import useRouteTitle from "./useRouteTitle.js";
 const IntroLayout = lazy(() => import("../features/intro/IntroLayout.jsx"));
 const IntroPage = lazy(() => import("../features/intro/IntroPage.jsx"));
 const IntroGuidePage = lazy(() => import("../features/intro/IntroGuidePage.jsx"));
+const SignaturesPage = lazy(() => import("../features/signatures/pages/SignaturesPage.jsx"));
+const SignatureDetailPage = lazy(() => import("../features/signatures/pages/SignatureDetailPage.jsx"));
+const SignatureClubPage = lazy(() => import("../features/signatures/pages/SignatureClubPage.jsx"));
 
 // TODO: 참가자 라우트 가드(로그인 안 한 상태에서 /board 등 직접 접근)는 토큰
 // 저장 방식이 정해지면 추가. 관리자 라우트는 AdminRoute로 막아뒀다(아래).
@@ -46,6 +49,9 @@ export default function AppRoutes() {
       <Route path={ROUTES.board} element={<BoardPage />} />
       <Route path={ROUTES.openChallenges} element={<OpenChallengesPage />} />
       <Route path="/challenges/:challengeId" element={<ChallengeDetailPage />} />
+      <Route path={ROUTES.signatures} element={<Suspense fallback={<p role="status">부스 문제를 불러오는 중</p>}><SignaturesPage /></Suspense>} />
+      <Route path="/signatures/clubs/:clubId" element={<Suspense fallback={<p role="status">동아리 부스를 불러오는 중</p>}><SignatureClubPage /></Suspense>} />
+      <Route path="/signatures/:signatureId" element={<Suspense fallback={<p role="status">부스 문제를 불러오는 중</p>}><SignatureDetailPage /></Suspense>} />
       <Route path={ROUTES.leaderboard} element={<LeaderboardPage />} />
       <Route path={ROUTES.mypage} element={<MyPage />} />
       <Route path="/timer" element={<TimerPage />} />

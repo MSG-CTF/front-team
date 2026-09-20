@@ -3,9 +3,10 @@ import assert from "node:assert/strict";
 import apiClient from "./client.js";
 import { getChallengeDetail, submitFlag } from "./challenges.js";
 import { createInstance, extendInstance, getMyInstances, resetInstance, stopInstance } from "./instances.js";
-import { getLeaderboard, getRankings } from "./leaderboard.js";
+import { getLeaderboard, getRankings, getMyMemberRanking } from "./leaderboard.js";
 import { getMyProfile, getMyMileageHistory, getMySolves, issueMyQrToken } from "./mypage.js";
-import { getKothClubs, getKothLeaderboard, getKothTeamToken, getMyKothProgress } from "./koth.js";
+import { getKothClub, getKothClubs, getKothLeaderboard, getKothTeamToken, getMyKothProgress } from "./koth.js";
+import { getSignatures, getSignature, submitSignatureFlag } from "./signatures.js";
 import { adjustMileage, checkoutPayment, createAdminSignature, getAdminSignatures, getAdminMileageHistory, getAdminTeamDetail, getPaymentHistory, publishAdminSignature, refundPayment, updateAdminSignature } from "./admin.js";
 
 let calls;
@@ -36,6 +37,10 @@ test("다섯 화면의 조회는 /api/v1과 최신 경로, Bearer 계약을 쓴�
     [() => getMyMileageHistory(config), "/teams/me/mileage_history"],
     [() => getMySolves(config), "/teams/me/solves"],
     [() => getKothClubs(config), "/koth/clubs"],
+    [() => getKothClub("club-1", config), "/koth/clubs/club-1"],
+    [() => getMyMemberRanking(config), "/ranking/member"],
+    [() => getSignatures(config), "/signatures"],
+    [() => getSignature("signature-1", config), "/signatures/signature-1"],
     [() => getMyKothProgress(config), "/koth/me"],
     [() => getKothTeamToken(config), "/koth/team_token"],
     [() => getAdminTeamDetail("team-1", {}, config), "/admin/teams/team-1"],
@@ -50,6 +55,21 @@ test("다섯 화면의 조회는 /api/v1과 최신 경로, Bearer 계약을 쓴�
     assert.equal(request.headers.Authorization, "Bearer local-contract-token");
     assert.equal(request.signal, controller.signal);
   }
+});
+
+test("참가자 시그니처 제출은 flag만 보내며 공백, 취소 신호와 제한 시간을 유지한다", async () => {
+  const controller = new AbortController();
+  await submitSignatureFlag("signature-1", { flag: " LOCAL ", team_id: "ignored", teamId: "ignored" }, { signal: controller.signal });
+  const request = calls.at(-1);
+  assert.equal(request.url, "/signatures/signature-1/submit");
+  assert.equal(request.method, "post");
+  assert.equal(request.timeout, 15000);
+  assert.equal(request.signal, controller.signal);
+  assert.deepEqual(JSON.parse(request.data), { flag: " LOCAL " });
+  await getKothClub("club/a?b");
+  assert.equal(calls.at(-1).url, "/koth/clubs/club%2Fa%3Fb");
+  await getSignature("signature/a?b");
+  assert.equal(calls.at(-1).url, "/signatures/signature%2Fa%3Fb");
 });
 
 test("랭킹과 관리자 내역은 페이지와 snake_case 필터를 그대로 전달한다", async () => {

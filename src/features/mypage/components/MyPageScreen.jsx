@@ -19,6 +19,7 @@ export default function MyPageScreen({
   profile,
   mileageHistory,
   solveHistory,
+  memberRanking,
   onLogout,
   isLoggingOut,
   logoutError,
@@ -139,7 +140,7 @@ export default function MyPageScreen({
           <div className={styles.contentColumn}>
             <div className={styles.metrics}>
               <section className={styles.metricPanel} aria-label="팀 점수">
-                <h2>CURRENT SCORE</h2>
+                <h2>TEAM SCORE</h2>
                 <div className={styles.metricLine}>
                   <p className={styles.metricValue}>
                     {profileText(profile, "score")}
@@ -172,6 +173,20 @@ export default function MyPageScreen({
                 </div>
               </section>
             </div>
+            <section className={styles.memberRanking} aria-label="내 개인 순위">
+              <div className={styles.memberHeading}><h2>PERSONAL RANK</h2><span>본인이 푼 JEOPARDY 기준</span></div>
+              {memberRanking?.status === "success" && <>
+                <strong className={styles.memberNickname}>{memberRanking.data.nickname}</strong>
+                <dl className={styles.memberStats}>
+                  <div><dt>순위</dt><dd>{formatNumber(memberRanking.data.rank)}<small> 위</small></dd></div>
+                  <div><dt>개인 점수</dt><dd>{formatNumber(memberRanking.data.score)}<small> pts</small></dd></div>
+                  <div><dt>해결</dt><dd>{formatNumber(memberRanking.data.solvedCount)}<small> 문제</small></dd></div>
+                </dl>
+              </>}
+              {memberRanking?.status === "loading" && <p role="status">개인 순위를 불러오는 중</p>}
+              {memberRanking?.status === "error" && <p role="alert">개인 순위를 확인하지 못했습니다 새로고침으로 다시 확인해주세요</p>}
+              {memberRanking?.status === "empty" && <p>아직 집계된 개인 순위가 없습니다</p>}
+            </section>
             <div className={styles.refreshBar}>
               <span
                 role={
