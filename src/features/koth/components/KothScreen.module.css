@@ -345,3 +345,12 @@
 .problemRanking table { width: 100%; text-align: left; border-collapse: collapse; }
 .problemRanking th, .problemRanking td { border-bottom: 1px solid #b39260; padding: 0.4em; overflow-wrap: anywhere; }
 .teamSummary button:disabled { opacity: 0.5; cursor: not-allowed; }
+.challengeDetail h2 { font-size: clamp(18px, 1.15em, 23px); overflow-wrap: anywhere; }
+.challengeDetail .challengeClub { font-size: 12px; }
+.challengeDetail dt { font-size: 12px; }
+.challengeDetail dd { font-size: 13px; }
+.challengeDetail .routeNotice { font-size: 13px; }
+.challengeDetail .problemRanking { font-size: 13px; }
+.challengeDetail .panelCloseButton { min-width: 32px; min-height: 32px; }
+.detailFeedback { font-size: 13px; line-height: 1.7; }
+.detailFeedback button { padding: 0.25em 0.5em; border: 1px solid #8c653d; background: transparent; color: inherit; font: inherit; cursor: pointer; }

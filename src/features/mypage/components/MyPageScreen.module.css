@@ -14,6 +14,7 @@
   border: 12px solid transparent;
   border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
   background: #eee0bd;
+  background-clip: padding-box;
   box-shadow: 0 12px 36px #21180d55;
 }
 
@@ -54,6 +55,7 @@
   border-image-slice: 24;
   border-image-repeat: stretch;
   background: linear-gradient(110deg, #efdfbd, #e5cda3);
+  background-clip: padding-box;
 }
 
 .teamRibbon {
@@ -241,6 +243,7 @@
   border: 6px solid transparent;
   border-image: url("/assets/mypage/panel-score.png") 24 stretch;
   background: #302211;
+  background-clip: padding-box;
   color: #f3dfb5;
 }
 
@@ -309,6 +312,24 @@
   line-height: 1.6;
 }
 
+.memberRanking {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  padding: 18px 4px;
+  border-block: 1px solid #b99b6b;
+  color: #614525;
+}
+.memberHeading h2 { margin: 0 0 5px; font-family: "IM Fell English", serif; font-size: 18px; font-weight: 400; }
+.memberHeading span { color: #79603c; font-size: 11px; }
+.memberNickname { min-width: 0; max-width: 15em; font-size: 14px; overflow-wrap: anywhere; }
+.memberStats { display: flex; flex-wrap: wrap; gap: 12px 24px; margin: 0 0 0 auto; }
+.memberStats dt { margin-bottom: 4px; color: #79603c; font-size: 11px; }
+.memberStats dd { margin: 0; font-family: "Kode Mono", monospace; font-size: 20px; overflow-wrap: anywhere; }
+.memberStats small { font-family: "Pretendard", sans-serif; font-size: 11px; }
+.memberRanking > p { margin: 0; font-size: 13px; line-height: 1.7; }
+
 .refreshBar button {
   min-height: 36px;
   padding: 6px 12px;
@@ -330,6 +351,7 @@
   border-image-slice: 24;
   border-image-repeat: stretch;
   background: linear-gradient(110deg, #edddbb, #e7d0a6);
+  background-clip: padding-box;
 }
 
 .historyHeading {

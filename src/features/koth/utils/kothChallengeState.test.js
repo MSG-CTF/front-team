@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createKothChallengeViewModels, flattenKothChallenges, getKothCardAvailability, getKothConnection, validateKothClubs } from "./kothChallengeState.js";
+import { applyKothClubDetail, validateKothClubDetail, createKothChallengeViewModels, flattenKothChallenges, getKothCardAvailability, getKothConnection, validateKothClubs } from "./kothChallengeState.js";
 import { KOTH_CHALLENGE_VISUALS } from "../config/kothVisualConfig.js";
 
 const clubs = Array.from({ length: 6 }, (_, index) => ({
@@ -9,6 +9,23 @@ const clubs = Array.from({ length: 6 }, (_, index) => ({
     challenge_url: "https://example.com:9443/path?stage=1",
   }],
 }));
+
+test("KoTH 상세는 동아리와 문제 식별자가 모두 맞아야 목록에 적용한다", () => {
+  const [selected] = createKothChallengeViewModels(KOTH_CHALLENGE_VISUALS, clubs);
+  const detail = { ...clubs[0], challenge_count: 1 };
+  assert.equal(validateKothClubDetail(detail, "club-0", "k-0"), true);
+  assert.equal(applyKothClubDetail(selected, { ...detail, club_id: "other" }), null);
+  assert.equal(applyKothClubDetail(selected, { ...detail, challenges: [], challenge_count: 0 }), null);
+  assert.equal(applyKothClubDetail(selected, { ...detail, challenge_count: 2 }), null);
+});
+
+test("상세에서 종료되거나 주소가 지워지면 목록의 예전 ACTIVE 접속 주소를 쓰지 않는다", () => {
+  const [selected] = createKothChallengeViewModels(KOTH_CHALLENGE_VISUALS, clubs);
+  for (const change of [{ status: "CLOSED" }, { challenge_url: null }]) {
+    const detail = { ...clubs[0], challenges: [{ ...clubs[0].challenges[0], ...change }], challenge_count: 1 };
+    assert.equal(getKothConnection(applyKothClubDetail(selected, detail)), null);
+  }
+});
 test("6개 동아리의 중첩 문제를 읽고 동일 공개 그룹도 별도 위치에 배치한다", () => {
   assert.equal(validateKothClubs({ clubs }), true);
   const rows = createKothChallengeViewModels(KOTH_CHALLENGE_VISUALS, clubs);

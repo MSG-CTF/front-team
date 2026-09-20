@@ -19,6 +19,7 @@ export default function KothScreen({
   teamName,
   totalKothScore,
   selectedChallenge,
+  clubDetail,
   isTeamTokenOpen,
   teamToken,
   onRetry,
@@ -27,7 +28,8 @@ export default function KothScreen({
   onOpenTeamToken,
   onCloseTeamToken,
 }) {
-  const connection = clubsStale ? null : getKothConnection(selectedChallenge);
+  const detailReady = clubDetail.status === "success";
+  const connection = clubsStale || !detailReady ? null : getKothConnection(selectedChallenge);
   return (
     <main className={styles.page} aria-label="King of the Hill 문제 선택">
       <div className={styles.stage}>
@@ -101,7 +103,7 @@ export default function KothScreen({
             </button>
             <p className={styles.challengeClub}>{selectedChallenge.clubName}</p>
             <h2>{selectedChallenge.title}</h2>
-            <dl>
+            {detailReady && <dl>
               <div><dt>현재 점령 팀</dt><dd>{formatValue(selectedChallenge.currentOwnerTeamName)}</dd></div>
               <div><dt>현재 점수</dt><dd>{formatValue(selectedChallenge.currentScore)}</dd></div>
               <div><dt>우리 팀 점수</dt><dd>{formatValue(selectedChallenge.earnedScore)}</dd></div>
@@ -110,10 +112,12 @@ export default function KothScreen({
                 <dt>최초 득점 (KST)</dt>
                 <dd>{selectedChallenge.solvedAt ? toKst(selectedChallenge.solvedAt) : "—"}</dd>
               </div>
-            </dl>
+            </dl>}
+            {clubDetail.status === "loading" && <p className={styles.detailFeedback} role="status">최신 문제 정보를 확인하는 중</p>}
+            {clubDetail.status === "error" && <p className={styles.detailFeedback} role="alert">{clubDetail.error} <button type="button" onClick={clubDetail.retry}>다시 확인</button></p>}
             <div className={styles.routeNotice}>
               {connection ? <a href={connection} target="_blank" rel="noopener noreferrer" className={styles.connectButton}>문제 접속</a>
-                : <span>{clubsStale ? "목록 갱신 후 접속할 수 있습니다" : selectedChallenge.status === "ACTIVE" ? "접속 주소 준비 중" : "현재 접속할 수 없는 문제입니다"}</span>}
+                : <span>{!detailReady ? "최신 상태 확인 후 접속할 수 있습니다" : clubsStale ? "목록 갱신 후 접속할 수 있습니다" : selectedChallenge.status === "ACTIVE" ? "접속 주소 준비 중" : "현재 접속할 수 없는 문제입니다"}</span>}
             </div>
             <section className={styles.problemRanking} aria-label="문제별 팀 순위">
               <h3>문제별 누적 순위</h3>

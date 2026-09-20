@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { getMe, performLogout } from "../../../api/auth.js";
 import { ROUTES } from "../../../routes/routePaths.js";
+import paymentLayout from "./AdminPaymentLayout.module.css";
 
 // Figma: "MSG-CTF 프론트 개발" 파일, node-id 384:396 ("AdminDashboard_OpsOverview_v2").
 // 이 프레임은 대시보드 화면 하나만 시안이 있고, 사이드바 항목(운영 대시보드/문제 목록-
@@ -74,25 +75,50 @@ function formatKst(date) {
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")} (KST)`;
 }
 
-export default function AdminLayout({ title, actions, children }) {
+export default function AdminLayout({ title, actions, children, variant }) {
   const nickname = useAdminNickname();
   const now = useKstClock();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const isPayment = variant === "payment";
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-fixed text-admin-ink"
+      className={`min-h-screen bg-cover bg-center bg-fixed text-admin-ink ${isPayment ? paymentLayout.layout : ""}`}
       style={{ backgroundImage: `url(${BACKGROUND_SRC})` }}
     >
       <div className="mx-auto flex min-h-screen max-w-[1720px] flex-col gap-6 px-4 py-8 md:flex-row">
         <aside
-          className="flex shrink-0 flex-col rounded-2xl bg-cover bg-center px-5 py-6 md:w-[260px]"
+          className={`flex shrink-0 flex-col rounded-2xl bg-cover bg-center px-5 py-6 md:w-[260px] ${isPayment ? paymentLayout.sidebar : ""}`}
+          data-menu-open={menuOpen}
           style={{ backgroundImage: `url(${PANEL_SRC})` }}
         >
-          <div className="mb-6 flex items-center gap-2">
-            <img src={LOGO_SRC} alt="" aria-hidden="true" className="h-10 w-10 object-contain" />
+          <div
+            className={`mb-6 flex items-center gap-2 ${isPayment ? paymentLayout.brand : ""}`}
+          >
+            <img
+              src={LOGO_SRC}
+              alt=""
+              aria-hidden="true"
+              className="h-10 w-10 object-contain"
+            />
             <span className="font-im-fell text-lg text-admin-ink">MSG CTF</span>
+            {isPayment && (
+              <button
+                type="button"
+                className={paymentLayout.menuToggle}
+                aria-expanded={menuOpen}
+                aria-controls="admin-menu"
+                onClick={() => setMenuOpen(!menuOpen)}
+              >
+                {menuOpen ? "닫기" : "메뉴"}
+              </button>
+            )}
           </div>
-          <nav aria-label="관리자 메뉴" className="flex flex-1 flex-col gap-1">
+          <nav
+            id="admin-menu"
+            aria-label="관리자 메뉴"
+            className="flex flex-1 flex-col gap-1"
+          >
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.to}
@@ -116,17 +142,25 @@ export default function AdminLayout({ title, actions, children }) {
           >
             참가자 화면으로
           </a>
-          <p className="mt-6 font-song-myung text-[11px] text-admin-muted/70">MSG CTF Admin Console</p>
+          <p className="mt-6 font-song-myung text-[11px] text-admin-muted/70">
+            MSG CTF Admin Console
+          </p>
         </aside>
 
         <main
-          className="min-w-0 flex-1 rounded-2xl bg-[#eed4a5] bg-center px-6 py-6 md:bg-[image:var(--admin-panel)] md:bg-cover md:px-10 md:py-8"
+          className={`min-w-0 flex-1 rounded-2xl bg-[#eed4a5] bg-center px-6 py-6 md:bg-[image:var(--admin-panel)] md:bg-cover md:px-10 md:py-8 ${isPayment ? paymentLayout.main : ""}`}
           style={{ "--admin-panel": `url(${PANEL_SRC})` }}
         >
-          <header className="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-admin-divider pb-4">
-            <h1 className="font-im-fell text-[28px] leading-tight text-admin-ink">{title}</h1>
+          <header
+            className={`mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-admin-divider pb-4 ${isPayment ? paymentLayout.header : ""}`}
+          >
+            <h1 className="font-im-fell text-[28px] leading-tight text-admin-ink">
+              {title}
+            </h1>
             <div className="flex flex-col items-end gap-1 text-right">
-              <span className="font-kode-mono text-sm text-admin-gold">{formatKst(now)}</span>
+              <span className="font-kode-mono text-sm text-admin-gold">
+                {formatKst(now)}
+              </span>
               <div className="flex items-center gap-2">
                 <AdminBadge>관리자</AdminBadge>
                 <span className="font-song-myung text-sm text-admin-ink">
@@ -152,12 +186,18 @@ export default function AdminLayout({ title, actions, children }) {
 
 export function AdminStatusMessage({ status, error, onRetry }) {
   if (status === "loading") {
-    return <p role="status" className="font-song-myung text-sm text-admin-muted">불러오는 중입니다...</p>;
+    return (
+      <p role="status" className="font-song-myung text-sm text-admin-muted">
+        불러오는 중입니다...
+      </p>
+    );
   }
   if (status === "error" || status === "unavailable") {
     return (
       <div className="flex items-center gap-3 rounded border border-admin-failed bg-[rgba(163,73,52,0.12)] px-4 py-3 text-sm">
-        <span role="alert" className="flex-1 font-song-myung text-admin-ink">{error}</span>
+        <span role="alert" className="flex-1 font-song-myung text-admin-ink">
+          {error}
+        </span>
         <button
           type="button"
           onClick={onRetry}
@@ -178,7 +218,9 @@ export function AdminBadge({ tone = "neutral", children }) {
     bad: "border-admin-failed text-admin-failed",
   }[tone];
   return (
-    <span className={`inline-block rounded-full border px-2 py-0.5 font-song-myung text-xs ${toneClass}`}>
+    <span
+      className={`inline-block rounded-full border px-2 py-0.5 font-song-myung text-xs ${toneClass}`}
+    >
       {children}
     </span>
   );

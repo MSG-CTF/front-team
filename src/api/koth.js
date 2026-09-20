@@ -13,10 +13,10 @@ export function getKothClubs(config) {
   return apiClient.get("/koth/clubs", config);
 }
 
-export function getKothClub(clubId) {
+export function getKothClub(clubId, config) {
   // GET /koth/clubs/{club_id} (인증 없음)
   // 동아리 1개 + challenges[] + challenge_count
-  return apiClient.get(`/koth/clubs/${clubId}`);
+  return apiClient.get(`/koth/clubs/${encodeURIComponent(clubId)}`, config);
 }
 
 export function getMyKothProgress(config) {

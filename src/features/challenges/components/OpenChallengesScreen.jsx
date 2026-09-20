@@ -1,4 +1,6 @@
 import { useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { ROUTES } from "../../../routes/routePaths.js";
 import {
   INSTANCE_STATUS_LABEL,
   UNKNOWN_INSTANCE_STATUS_LABEL,
@@ -117,7 +119,7 @@ export default function OpenChallengesScreen({
         >
           <span aria-hidden="true">←</span> 보드로 돌아가기
         </button>
-        <span>문제 보관함</span>
+        <Link to={ROUTES.signatures} className={styles.backButton}>동아리 부스 둘러보기 →</Link>
       </div>
       <main className={styles.board} aria-label="열린 문제 목록">
         <header className={styles.header}>

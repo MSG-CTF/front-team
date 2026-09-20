@@ -60,6 +60,7 @@
   border: 10px solid transparent;
   border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
   background: #eee2c5;
+  background-clip: padding-box;
   box-shadow: 0 12px 40px #160d0c50;
 }
 .header {
@@ -290,6 +291,7 @@
   gap: 5px;
 }
 .attachmentInfo a,
+.attachmentButton,
 .attachmentName {
   overflow-wrap: anywhere;
   line-height: 1.6;
@@ -299,6 +301,22 @@
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+.attachmentButton {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #663c25;
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.attachmentButton:disabled { opacity: 0.6; cursor: wait; }
+.attachmentButton:focus-visible, .downloadCancel:focus-visible { outline: 2px solid #663c25; outline-offset: 4px; }
+.downloadError { color: #8a2b20; font-size: 12px; line-height: 1.6; }
+.downloadCancel { flex-shrink: 0; border: 1px solid #c7ae88; background: none; color: #663c25; padding: 6px 10px; font: inherit; cursor: pointer; }
 .fileSize {
   color: var(--muted);
   font-size: 12px;

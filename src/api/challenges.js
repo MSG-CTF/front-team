@@ -1,5 +1,23 @@
 import apiClient from "./client.js";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function challengeFilePath(challengeId, fileId) {
+  if (typeof challengeId !== "string" || typeof fileId !== "string" || !UUID.test(challengeId) || !UUID.test(fileId)) {
+    throw new TypeError("문제 파일 식별자를 확인하지 못했습니다");
+  }
+  return `/challenges/${challengeId}/files/${fileId}/download`;
+}
+
+export function downloadChallengeFile(challengeId, fileId, { signal } = {}) {
+  // 응답의 임의 URL에 Bearer를 붙이지 않고 현재 문제의 고정 경로만 요청한다
+  return apiClient.get(challengeFilePath(challengeId, fileId), {
+    responseType: "blob",
+    timeout: 60000,
+    signal,
+  });
+}
+
 // 문제 관련 조회/제출. 경로와 스키마는 README.md "3. 문제 상세 페이지",
 // "10. 열린 문제 목록 페이지"(Notion API명세서 기준). 인스턴스 생명주기는 api/instances.js.
 

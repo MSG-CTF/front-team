@@ -31,6 +31,24 @@ export function getKothConnection(challenge) {
   } catch { return null; }
 }
 
+export function validateKothClubDetail(data, clubId, challengeId) {
+  return data?.club_id === clubId && typeof data.name === "string"
+    && Array.isArray(data.challenges) && data.challenge_count === data.challenges.length
+    && data.challenges.some((challenge) => challenge?.koth_challenge_id === challengeId
+      && ["ACTIVE", "SCHEDULED", "CLOSED"].includes(challenge.status)
+      && typeof challenge.title === "string"
+      && (challenge.challenge_url === null || typeof challenge.challenge_url === "string"));
+}
+
+export function applyKothClubDetail(selected, detail) {
+  if (!selected || !validateKothClubDetail(detail, selected.clubId, selected.kothChallengeId)) return null;
+  const challenge = detail.challenges.find((entry) => entry.koth_challenge_id === selected.kothChallengeId);
+  return { ...selected, clubName: detail.name, title: challenge.title,
+    status: challenge.status, challengeUrl: challenge.challenge_url,
+    currentOwnerTeamName: challenge.current_owner_team_name,
+    currentScore: challenge.current_score, openedAt: challenge.opened_at, closedAt: challenge.closed_at };
+}
+
 export function getKothCardAvailability(challenge, stale = false) {
   if (stale) return { disabled: true, label: "목록을 다시 확인해주세요" };
   if (challenge?.status === "ACTIVE") return { disabled: false, label: "문제 정보" };

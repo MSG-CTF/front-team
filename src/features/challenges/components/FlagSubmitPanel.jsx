@@ -11,6 +11,7 @@ export default function FlagSubmitPanel({
   retrySeconds,
   solved,
   feedback,
+  maxLength,
   children,
 }) {
   const invalid =
@@ -52,6 +53,7 @@ export default function FlagSubmitPanel({
         autoCapitalize="off"
         spellCheck={false}
         value={value}
+        maxLength={maxLength}
         disabled={inputDisabled}
         onChange={(event) => onChange(event.target.value)}
         className={styles.flagInput}
