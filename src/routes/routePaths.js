@@ -13,6 +13,7 @@ export const ROUTES = {
   adminTeams: "/admin/teams",
   adminTeamDetail: (teamId) => `/admin/teams/${encodeURIComponent(teamId)}`,
   adminChallenges: "/admin/challenges",
+  adminSignatures: "/admin/signatures",
   adminMileage: "/admin/mileage",
   adminSettings: "/admin/settings",
   adminLogs: "/admin/logs",

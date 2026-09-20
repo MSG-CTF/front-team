@@ -45,6 +45,7 @@ export function mapTeamProfile(data) {
     rank: null,
     jeopardyScore: data.jeopardy_score ?? null,
     kothScore: data.koth_score ?? null,
+    signatureScore: data.signature_score ?? null,
     isBanned: data.is_banned === true,
     banReason: data.ban_reason ?? null,
     members,
@@ -56,7 +57,7 @@ export function mapMileageHistory(data) {
     id: entry.history_id ?? `mileage-${index}`,
     date: formatMileageDate(entry.created_at),
     reason:
-      [entry.reason || "-", entry.item_name, entry.is_refunded ? "환불 완료" : null].filter(Boolean).join(" / "),
+      [...new Set([entry.reason, entry.item_name, entry.is_refunded ? "환불 완료" : null].filter(Boolean))].join(" / ") || "-",
     change: formatSignedNumber(entry.amount),
     // 현재 contract에는 행별 balance가 없다. 현재 mileage에서 역산하지 않는다.
     balance: "—",
@@ -69,12 +70,12 @@ export function mapSolveHistory(data) {
   const solves = Array.isArray(data?.solves) ? data.solves : [];
 
   return solves.map((entry, index) => ({
-    id: `${entry.source_type || "JEOPARDY"}:${entry.challenge_id ?? entry.koth_challenge_id ?? index}`,
+    id: `${entry.source_type || "JEOPARDY"}:${entry.challenge_id ?? entry.koth_challenge_id ?? entry.signature_id ?? index}`,
     sourceType: entry.source_type ?? null,
     solver: entry.solved_by?.nickname ?? null,
     earnedMileage: entry.earned_mileage ?? null,
     extraDiceGranted: entry.is_extra_dice_granted === true,
-    challenge: `${entry.source_type === "KOTH" ? "KOTH / " : ""}${entry.challenge_title ?? "—"}`,
+    challenge: `${entry.source_type === "KOTH" ? "KoTH / " : entry.source_type === "SIGNATURE" ? "SIGNATURE / " : ""}${entry.challenge_title ?? "—"}`,
     category: null,
     points: formatNumber(entry.earned_score),
     solvedAt: formatMileageDate(entry.solved_at),

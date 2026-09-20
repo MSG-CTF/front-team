@@ -52,9 +52,9 @@ export function registerAdminAccount({ loginId, password, nickname, role = "PART
 }
 
 // ── 마일리지 전체 내역 ───────────────────────────────────────────────────
-export function getAdminMileageHistory({ teamId, page = 1, size = 50 } = {}) {
+export function getAdminMileageHistory({ teamId, type, page = 1, size = 50 } = {}, config) {
   // [백엔드: PR 대기] GET /admin/mileage_history - 팀별이 아닌 전체 조회
-  return apiClient.get("/admin/mileage_history", { params: { team_id: teamId, page, size } });
+  return apiClient.get("/admin/mileage_history", { ...config, params: { team_id: teamId, type, page, size } });
 }
 
 // ── 팀 ─────────────────────────────────────────────────────────────────────
@@ -63,9 +63,10 @@ export function getAdminTeams({ search, sort, page = 1, size = 20 } = {}, config
   return apiClient.get("/admin/teams", { ...config, params: { search, sort, page, size } });
 }
 
-export function getAdminTeamDetail(teamId, { historyLimit = 10 } = {}) {
+export function getAdminTeamDetail(teamId, { historyLimit = 10 } = {}, config) {
   // [백엔드: 완료] history_limit 기본 10, 상한 50
   return apiClient.get(`/admin/teams/${teamId}`, {
+    ...config,
     params: { history_limit: historyLimit },
   });
 }
@@ -195,6 +196,29 @@ export function activateChallengeRelease(challengeId, releaseId) {
   return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/activate`);
 }
 
+// 시그니처 문제는 JEOPARDY 등록 및 릴리스와 별도 계약이다
+export function getAdminSignatures(config) {
+  return apiClient.get("/admin/signatures", config);
+}
+
+export function createAdminSignature({ clubId, title, description, flag, score }) {
+  return apiClient.post("/admin/signatures", {
+    club_id: clubId, title, description, flag, score,
+  }, MUTATION_CONFIG);
+}
+
+export function updateAdminSignature(signatureId, { title, description, flag, score }) {
+  return apiClient.patch(`/admin/signatures/${encodeURIComponent(signatureId)}`, {
+    title, description, flag, score,
+  }, MUTATION_CONFIG);
+}
+
+export function publishAdminSignature(signatureId, isPublished) {
+  return apiClient.patch(`/admin/signatures/${encodeURIComponent(signatureId)}/publish`, {
+    is_published: isPublished,
+  }, MUTATION_CONFIG);
+}
+
 // ── 리소스 / 로그 ─────────────────────────────────────────────────────────
 export function getAdminResources(config) {
   // [백엔드: 시작 전] 수집 정보 없으면 data: null
@@ -210,9 +234,10 @@ export function getAdminEvents({ type, teamId, page = 1, size = 50 } = {}, confi
 }
 
 // ── 결제 ───────────────────────────────────────────────────────────────────
-export function getPaymentHistory({ teamId, page = 1, size = 50 } = {}) {
+export function getPaymentHistory({ teamId, page = 1, size = 50 } = {}, config) {
   // [백엔드: 완료]
   return apiClient.get("/admin/payment/history", {
+    ...config,
     params: { team_id: teamId, page, size },
   });
 }
@@ -223,12 +248,12 @@ export function checkoutPayment({ paymentToken, amount, itemName }) {
     payment_token: paymentToken,
     amount,
     item_name: itemName,
-  });
+  }, MUTATION_CONFIG);
 }
 
 export function refundPayment(historyId) {
   // [백엔드: 완료] 기존 PURCHASE 행 불변, REFUND 양수 행 새로 생성
-  return apiClient.delete(`/admin/payment/${historyId}/refund`);
+  return apiClient.delete(`/admin/payment/${encodeURIComponent(historyId)}/refund`, MUTATION_CONFIG);
 }
 
 // ── 설정 ───────────────────────────────────────────────────────────────────

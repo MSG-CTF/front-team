@@ -17,6 +17,7 @@ import { toKst } from "../../../utils/time.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
 import { getAdminRequestError } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
+import { mileageAttempt, validateMileageAdjustment } from "../utils/adminMileage.js";
 
 function MileageForm({ teamId, isMutating, onSubmit }) {
   const [amount, setAmount] = useState("");
@@ -30,9 +31,9 @@ function MileageForm({ teamId, isMutating, onSubmit }) {
       onSubmit={(event) => {
         event.preventDefault();
         const parsed = Number(amount);
-        if (!parsed || !reason.trim()) return;
-        if (!idempotencyKeyRef.current) idempotencyKeyRef.current = createAdminIdempotencyKey("admin-mileage");
-        onSubmit(teamId, parsed, reason.trim(), idempotencyKeyRef.current).then((ok) => {
+        if (isMutating || validateMileageAdjustment({ teamId, amount, reason })) return;
+        idempotencyKeyRef.current = mileageAttempt(idempotencyKeyRef.current, { teamId, amount, reason }, () => createAdminIdempotencyKey("admin-mileage"));
+        onSubmit(teamId, parsed, reason.trim(), idempotencyKeyRef.current.key).then((ok) => {
           if (ok) {
             idempotencyKeyRef.current = null;
             setAmount("");
@@ -44,6 +45,8 @@ function MileageForm({ teamId, isMutating, onSubmit }) {
     >
       <input
         type="number"
+        step={1}
+        disabled={isMutating}
         value={amount}
         onChange={(event) => setAmount(event.target.value)}
         placeholder="+지급 / -회수"
@@ -51,13 +54,15 @@ function MileageForm({ teamId, isMutating, onSubmit }) {
       />
       <input
         value={reason}
+        disabled={isMutating}
+        maxLength={500}
         onChange={(event) => setReason(event.target.value)}
         placeholder="사유"
         className="w-48 rounded border border-admin-divider bg-white/60 px-2 py-1.5"
       />
       <button
         type="submit"
-        disabled={isMutating || !amount || !reason.trim()}
+        disabled={isMutating || Boolean(validateMileageAdjustment({ teamId, amount, reason }))}
         className="rounded border border-admin-ink px-3 py-1.5 disabled:opacity-50"
       >
         마일리지 조정
@@ -304,15 +309,18 @@ function RollbackSection({ teamId, isMutating, onRollback }) {
 export default function AdminTeamDetailPage() {
   const { teamId } = useParams();
   const detail = useAdminResource(
-    () => getAdminTeamDetail(teamId),
+    (config) => getAdminTeamDetail(teamId, {}, config),
     [teamId],
     "팀 상세 정보를 불러오지 못했습니다.",
   );
   const [isMutating, setIsMutating] = useState(false);
   const [actionError, setActionError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
+  const pending = useRef(false);
 
   const runAction = async (action, fallbackMessage) => {
+    if (pending.current) return false;
+    pending.current = true;
     setIsMutating(true);
     setActionError("");
     setActionMessage("");
@@ -321,12 +329,14 @@ export default function AdminTeamDetailPage() {
       if (!isSuccess(response.data)) {
         throw new Error(response.data?.message || fallbackMessage);
       }
-      await detail.reload();
+      const refreshed = await detail.reload();
+      if (!refreshed) setActionMessage("요청은 처리됐지만 최신 상태를 불러오지 못했습니다 다시 조회해서 확인하세요");
       return true;
     } catch (error) {
       setActionError(getAdminRequestError(error, fallbackMessage).error);
       return false;
     } finally {
+      pending.current = false;
       setIsMutating(false);
     }
   };
@@ -404,7 +414,7 @@ export default function AdminTeamDetailPage() {
               <dt className="text-admin-muted">마일리지</dt>
               <dd>{data.mileage}</dd>
               <dt className="text-admin-muted">보드 위치</dt>
-              <dd>{data.position}</dd>
+              <dd>{data.position ?? data.board_position_states ?? "미제공"}</dd>
               {data.is_banned && (
                 <>
                   <dt className="text-admin-muted">밴 사유</dt>

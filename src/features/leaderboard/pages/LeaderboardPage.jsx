@@ -17,7 +17,7 @@ export default function LeaderboardPage() {
   const [leaderboard, setLeaderboard] = useState(() => initialResource(LEADERBOARD_PREVIEW_TEAMS));
   const [ranking, setRanking] = useState(() => initialResource(RANKING_PREVIEW_ROWS));
   const [page, setPage] = useState(1);
-  const [pageCount, setPageCount] = useState(1);
+  const [pageCount, setPageCount] = useState(() => USE_PREVIEW_DATA ? Math.ceil(RANKING_PREVIEW_ROWS.length / 6) : 1);
   const [revision, setRevision] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [updatedAt, setUpdatedAt] = useState(null);
@@ -68,9 +68,10 @@ export default function LeaderboardPage() {
     };
   }, [page, revision]);
 
-  const rankingRows = useMemo(() => mergeSolveCounts(
-    ranking.data, leaderboard.data, leaderboard.status === "success",
-  ), [ranking.data, leaderboard.data, leaderboard.status]);
+  const rankingRows = useMemo(() => USE_PREVIEW_DATA
+    ? ranking.data.slice((page - 1) * 6, page * 6)
+    : mergeSolveCounts(ranking.data, leaderboard.data, leaderboard.status === "success"),
+  [ranking.data, leaderboard.data, leaderboard.status, page]);
 
   return <LeaderboardScreen
     teams={leaderboard.data} rankings={rankingRows}

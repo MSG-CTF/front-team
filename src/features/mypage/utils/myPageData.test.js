@@ -33,3 +33,21 @@ test("QR의 서버 만료 시각을 사용하고 잘못되거나 지난 토큰�
   assert.equal(getQrRemainingSeconds("2026-09-01T00:00:00Z", Date.parse("2026-09-01T00:00:01Z")), 0);
   assert.equal(getQrRemainingSeconds("invalid"), null);
 });
+
+test("SIGNATURE 점수와 고유 ID를 보존하고 풀이 유형을 표시한다", () => {
+  const profile = mapTeamProfile({ team_score: 1600, jeopardy_score: 1000, koth_score: 200, signature_score: 400 });
+  assert.equal(profile.signatureScore, 400);
+  assert.equal(profile.score, 1600);
+  const solve = { source_type: "SIGNATURE", signature_id: "signature-1", challenge_title: "현장 문제", earned_score: 400 };
+  const rows = mapSolveHistory({ solves: [solve] });
+  assert.equal(rows[0].id, "SIGNATURE:signature-1");
+  assert.equal(rows[0].challenge, "SIGNATURE / 현장 문제");
+  assert.equal(mapSolveHistory({ solves: [{ source_type: "KOTH", koth_challenge_id: "k-1" }, solve] })[1].id, rows[0].id);
+  assert.equal(mapTeamProfile({}).signatureScore, null);
+});
+
+test("결제 품목과 사유가 같으면 한 번만 표시한다", () => {
+  const [row] = mapMileageHistory({ history: [{ reason: "음료", item_name: "음료", amount: -30, is_refunded: true }] });
+  assert.equal(row.reason, "음료 / 환불 완료");
+  assert.equal(mapMileageHistory({ history: [{}] })[0].reason, "-");
+});

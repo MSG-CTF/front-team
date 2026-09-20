@@ -51,12 +51,12 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.challengeButton:hover .layerImage,
+.challengeButton:not(:disabled):hover .layerImage,
 .mainNavigationButton:hover .layerImage {
   filter: brightness(1.06);
 }
 
-.challengeButton:active .layerImage,
+.challengeButton:not(:disabled):active .layerImage,
 .mainNavigationButton:active .layerImage {
   filter: brightness(0.92);
 }
@@ -67,48 +67,16 @@
   outline-offset: 4px;
 }
 
-.challengeButton[aria-disabled="true"] {
+.challengeButton:disabled {
   cursor: not-allowed;
+}
+
+.challengeButton:disabled .layerImage {
+  filter: brightness(0.5) saturate(0.5);
 }
 
 .challengeButton[aria-pressed="true"] {
   filter: drop-shadow(0 0 0.65em rgba(111, 62, 25, 0.9));
-}
-
-.challengeStatus {
-  position: absolute;
-  z-index: 3;
-  border: 1px solid rgba(82, 45, 18, 0.75);
-  border-radius: 999px;
-  color: #3f2614;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 0.62em;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 1;
-  box-shadow: 0 0.1em 0.25em rgba(72, 37, 13, 0.24);
-}
-
-.challengeStatus {
-  top: 3%;
-  right: 4%;
-  padding: 0.48em 0.68em;
-}
-
-.statusSCHEDULED {
-  background: #dfc99a;
-}
-
-.statusACTIVE {
-  background: #b6d59a;
-}
-
-.statusCLOSED {
-  background: #bfa58d;
-}
-
-.statusUnknown {
-  background: #ead9b8;
 }
 
 .completionStamp {
@@ -128,7 +96,6 @@
   height: 3.1481%;
 }
 
-.teamSummary,
 .dataState,
 .challengeDetail,
 .tokenPanel,
@@ -143,33 +110,45 @@
 .teamSummary {
   position: absolute;
   z-index: 3;
-  top: 4.2%;
-  right: 4.3%;
-  box-sizing: border-box;
-  width: 18%;
-  padding: 0.7em 0.9em;
-  text-align: center;
-}
-
-.teamSummary strong,
-.teamSummary span {
-  display: block;
+  top: 4.3%;
+  right: 5%;
+  display: flex;
+  align-items: baseline;
+  gap: 1.2em;
+  max-width: 58%;
+  color: #4b2b17;
+  font-size: 0.9em;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
 .teamSummary strong {
   overflow: hidden;
-  font-size: 1em;
+  max-width: 13em;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .teamSummary span {
-  margin-top: 0.3em;
-  font-size: 0.72em;
-  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
-.teamSummary button,
+.teamSummary button {
+  flex-shrink: 0;
+  padding: 0.15em 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
+}
+
+.teamSummary button:focus-visible {
+  outline: 2px solid #6f3e19;
+  outline-offset: 3px;
+}
+
 .dataState button,
 .tokenPanel button {
   margin-top: 0.65em;
@@ -347,15 +326,22 @@
   }
 }
 
-.challengeCaption { position: absolute; top: -20%; left: -15%; width: 130%; color: #4b2b17; font-size: 0.8em; line-height: 1.3; }
-.challengeCaption strong, .challengeCaption span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.challengeScore { position: absolute; bottom: -9%; left: 0; width: 100%; font-size: 0.8em; color: #4b2b17; }
+.challengeCaption {
+  position: absolute;
+  top: calc(100% + 0.6em);
+  left: -10%;
+  width: 120%;
+  overflow: hidden;
+  color: #4b2b17;
+  font-size: 0.85em;
+  font-weight: 600;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .challengeDetail { top: 17%; left: 30%; width: 40%; max-height: 43%; overflow-y: auto; }
 .connectButton { display: inline-block; padding: 0.5em 1em; color: #f4dfb4; background: #6f3e19; text-decoration: none; }
 .problemRanking { margin-top: 0.8em; font-size: 0.72em; }
 .problemRanking table { width: 100%; text-align: left; border-collapse: collapse; }
 .problemRanking th, .problemRanking td { border-bottom: 1px solid #b39260; padding: 0.4em; overflow-wrap: anywhere; }
 .teamSummary button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.challengeCaption { top: -9%; font-size: 0.68em; line-height: 1.1; }
-.scheduleNotice { position: absolute; top: 57.9%; width: 14%; padding: 0.1em 0; background: #ead8af; text-align: center; font-size: 0.65em; color: #6f3e19; }

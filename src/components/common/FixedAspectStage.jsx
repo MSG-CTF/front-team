@@ -15,12 +15,12 @@
 export default function FixedAspectStage({ backdropSrc, children, className = "" }) {
   return (
     <div className="fixed inset-0 overflow-hidden">
-      <img
+      {backdropSrc && <img
         src={backdropSrc}
         alt=""
         aria-hidden="true"
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-      />
+      />}
       <div
         className={`absolute left-1/2 top-1/2 w-[min(100vw,177.78vh)] h-[min(100vh,56.25vw)] -translate-x-1/2 -translate-y-1/2 @container ${className}`}
       >

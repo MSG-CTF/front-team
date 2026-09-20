@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { createKothChallengeViewModels, flattenKothChallenges, getKothConnection, validateKothClubs } from "./kothChallengeState.js";
+import { createKothChallengeViewModels, flattenKothChallenges, getKothCardAvailability, getKothConnection, validateKothClubs } from "./kothChallengeState.js";
 import { KOTH_CHALLENGE_VISUALS } from "../config/kothVisualConfig.js";
 
 const clubs = Array.from({ length: 6 }, (_, index) => ({
@@ -37,4 +37,16 @@ test("최초 득점 도장은 진행 중 문제의 접속을 막지 않고 공�
 test("응답 형식 오류와 빈 목록을 구분한다", () => {
   assert.equal(validateKothClubs({ clubs: [] }), true);
   assert.equal(validateKothClubs({ clubs: [{}] }), false);
+});
+
+test("비활성 카드는 닫고 진행 중 카드는 최초 득점 후에도 선택할 수 있다", () => {
+  for (const status of ["SCHEDULED", "CLOSED", "UNKNOWN", null]) {
+    assert.equal(getKothCardAvailability({ status }).disabled, true);
+  }
+  assert.equal(getKothCardAvailability({ status: "ACTIVE", solved: true }).disabled, false);
+  assert.equal(getKothCardAvailability({ status: "ACTIVE", challengeUrl: null }).disabled, false);
+});
+
+test("목록 갱신에 실패하면 지난 ACTIVE 상태로 문제를 열지 않는다", () => {
+  assert.equal(getKothCardAvailability({ status: "ACTIVE" }, true).disabled, true);
 });

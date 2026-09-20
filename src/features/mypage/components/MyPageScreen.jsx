@@ -154,8 +154,9 @@ export default function MyPageScreen({
                   </p>
                 </div>
                 <p className={styles.scoreBreakdown}>
-                  JEOPARDY {formatNumber(profileData.jeopardyScore)} / KOTH{" "}
-                  {formatNumber(profileData.kothScore)}
+                  JEOPARDY {formatNumber(profileData.jeopardyScore)} / KoTH{" "}
+                  {formatNumber(profileData.kothScore)} / SIGNATURE{" "}
+                  {formatNumber(profileData.signatureScore)}
                 </p>
               </section>
               <section

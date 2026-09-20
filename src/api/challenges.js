@@ -22,6 +22,7 @@ export function submitFlag(challengeId, { flag }) {
   return apiClient.post(
     `/challenges/${encodeURIComponent(challengeId)}/submit`,
     { flag },
+    { timeout: 15000 },
   );
 }
 

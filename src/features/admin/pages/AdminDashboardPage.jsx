@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   adjustMileage,
+  createAdminIdempotencyKey,
   forceResetInstance,
   forceStopInstance,
   getAdminDashboard,
@@ -17,6 +18,7 @@ import Modal from "../components/AdminDialog.jsx";
 import useAdminTeamOptions from "../hooks/useAdminTeamOptions.js";
 import { getAdminRequestError, summarizeAdminResources } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
+import { mileageAttempt, validateMileageAdjustment } from "../utils/adminMileage.js";
 
 // 운영 대시보드 - Figma node 384:396 "AdminDashboard_OpsOverview_v2".
 // 시안의 "빠른 작업" 4개 버튼(강제 재시작/강제 종료/마일리지 지급/롤백 실행)은
@@ -116,19 +118,24 @@ function MileageGrantModal({ onClose, onDone }) {
   const [amount, setAmount] = useState("");
   const [reason, setReason] = useState("");
   const pending = useRef(false);
+  const attempt = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const parsed = Number(amount);
-    if (pending.current || !teamId || !Number.isSafeInteger(parsed) || parsed === 0 || !reason.trim() || reason.trim().length > 500) return;
+    if (pending.current || teamOptions.status !== "success") return;
+    const validation = validateMileageAdjustment({ teamId, amount, reason });
+    if (validation) { setError(validation); return; }
     pending.current = true;
     setIsSubmitting(true);
     setError("");
     try {
-      const res = await adjustMileage(teamId, { amount: parsed, reason: reason.trim() });
+      attempt.current = mileageAttempt(attempt.current, { teamId, amount, reason }, () => createAdminIdempotencyKey("admin-mileage"));
+      const res = await adjustMileage(teamId, { amount: parsed, reason: reason.trim(), idempotencyKey: attempt.current.key });
       if (!isSuccess(res.data)) throw new Error(res.data?.message || "마일리지 지급에 실패했습니다.");
+      attempt.current = null;
       onDone();
       onClose();
     } catch (err) {
@@ -185,7 +192,7 @@ function MileageGrantModal({ onClose, onDone }) {
         {error && <p role="alert" className="font-song-myung text-sm text-admin-failed">{error}</p>}
         <button
           type="submit"
-          disabled={isSubmitting || !teamId || !amount || !reason.trim()}
+          disabled={isSubmitting || teamOptions.status !== "success" || Boolean(validateMileageAdjustment({ teamId, amount, reason }))}
           className="self-end rounded border border-admin-ink px-4 py-1.5 font-song-myung text-sm disabled:opacity-50"
         >
           지급
