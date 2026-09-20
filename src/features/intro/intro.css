@@ -1,21 +1,32 @@
 /* MSG artwork and a compact event-site layout informed by the CCE reference */
 @font-face {
   font-family: "MSG Intro Body";
-  src: url("/assets/fonts/pretendard/PretendardVariable.woff2") format("woff2");
-  font-weight: 100 900;
+  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Thin.ttf")
+    format("truetype");
+  font-weight: 100;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "MSG Intro Title";
-  src: url("/assets/intro/fonts/SongMyung-Regular.ttf") format("truetype");
+  font-family: "MSG Intro Body";
+  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "MSG Intro Number";
-  src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
+  font-family: "MSG Intro Body";
+  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Bold.ttf")
+    format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "MSG Intro Title";
+  src: url("/assets/intro/fonts/chungju-kimsaeng/ChungjuKimSaeng.ttf")
+    format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -28,7 +39,7 @@
   --accent: #e0bc86;
   --body: "MSG Intro Body", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --title: "MSG Intro Title", "Batang", serif;
-  --number: "MSG Intro Number", Georgia, serif;
+  --number: "MSG Intro Title", "Batang", serif;
   --space-1: 8px;
   --space-2: 16px;
   --space-3: 24px;
@@ -284,8 +295,8 @@
   grid-template-rows: minmax(0, 1fr) auto;
   align-items: center;
   padding: 24px 40px 16px;
-  background: #483320 url("/assets/login/background-plaza.png") center 44% /
-    cover no-repeat;
+  background: #483320 url("/assets/login/background-plaza.png")
+    calc(50% + clamp(18px, 2vw, 40px)) 44% / cover no-repeat;
 }
 .msg-intro .cover::before {
   content: "";
