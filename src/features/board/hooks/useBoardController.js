@@ -220,7 +220,7 @@ export default function useBoardController() {
   );
 
   const handleRollDice = useCallback(
-    () =>
+    ({ onDiceResult } = {}) =>
       runMutation({
         actionId: "dice-roll",
         prefix: "dice-roll",
@@ -229,6 +229,7 @@ export default function useBoardController() {
           const rollResult = adaptMovementResult(
             unwrapBoardResponse(await rollDice({ idempotencyKey })),
           );
+          await onDiceResult?.(rollResult);
           await animateMovement(rollResult.movementPath);
 
           if (rollResult.pendingConfirm) {

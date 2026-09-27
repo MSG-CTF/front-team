@@ -75,7 +75,7 @@ export default function BoardPage() {
       }
       onReload={board.reload}
       onDismissError={board.clearError}
-      onRollDice={() => runBoardAction(board.rollDice)}
+      onRollDice={(options) => runBoardAction(() => board.rollDice(options))}
       onConfirmDice={() => runBoardAction(board.confirmDice)}
       onOpenChallenge={handleOpenChallenge}
       onMoveAirport={(destinationIndex) =>
