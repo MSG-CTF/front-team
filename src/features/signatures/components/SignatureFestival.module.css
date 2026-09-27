@@ -1,0 +1,680 @@
+@font-face {
+  font-family: "Festival Display";
+  src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
+  font-display: swap;
+}
+@font-face {
+  font-family: "Booth Lettering";
+  src: url("/assets/leaderboard/fonts/libre-baskerville-400.ttf")
+    format("truetype");
+  font-display: swap;
+}
+.festivalPage {
+  min-height: 100dvh;
+  color: #fff0cf;
+  background: #23170f;
+  font-family: "Pretendard Variable", "Pretendard", "Malgun Gothic", sans-serif;
+}
+.festivalPage *,
+.festivalPage *::before,
+.festivalPage *::after {
+  box-sizing: border-box;
+}
+.scene {
+  position: relative;
+  container-type: inline-size;
+  width: 100%;
+  max-width: 1800px;
+  aspect-ratio: 3 / 2;
+  margin-inline: auto;
+  isolation: isolate;
+  background: url("/assets/signatures/club-festival-v1.webp") center / 100% 100%
+    no-repeat;
+}
+.scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    #160c08b3 0%,
+    #160c084d 14%,
+    transparent 24%,
+    transparent 89%,
+    #160c08d9 100%
+  );
+}
+.navigation {
+  position: absolute;
+  z-index: 2;
+  inset: 1.5% 3% auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.navigation a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 6px 4px;
+  color: #fff2d5;
+  font-size: clamp(13px, 1.1cqw, 17px);
+  text-shadow: 0 2px 5px #160c08;
+  text-decoration: none;
+}
+.navigation a:hover {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+.festivalHeader {
+  position: absolute;
+  inset: 3.2% 20% auto;
+  text-align: center;
+  text-shadow:
+    0 2px 6px #281308,
+    0 4px 20px #281308;
+}
+.festivalHeader p {
+  margin: 0 0 3px;
+  font-family: "Festival Display", serif;
+  font-size: clamp(12px, 1.1cqw, 18px);
+  letter-spacing: 0.25em;
+}
+.festivalHeader h1 {
+  margin: 0;
+  font-family: "Festival Display", serif;
+  font-size: clamp(30px, 4.1cqw, 68px);
+  font-weight: 400;
+  line-height: 1.08;
+  letter-spacing: 0.025em;
+}
+.festivalHeader > span {
+  display: block;
+  margin-top: 12px;
+  font-size: clamp(12px, 1.05cqw, 16px);
+  word-break: keep-all;
+}
+.booths {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.boothPosition {
+  position: absolute;
+  top: 20%;
+  left: 5.5%;
+  width: 25.5%;
+  height: 33%;
+}
+.boothPosition[data-booth="1"],
+.boothPosition[data-booth="4"] {
+  left: 37.2%;
+}
+.boothPosition[data-booth="2"],
+.boothPosition[data-booth="5"] {
+  left: 69.1%;
+}
+.boothPosition[data-booth="3"],
+.boothPosition[data-booth="4"],
+.boothPosition[data-booth="5"] {
+  top: 53.7%;
+}
+.booth {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff0d1;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.boothSign {
+  display: flex;
+  position: absolute;
+  top: 33.5%;
+  left: 13%;
+  right: 13%;
+  height: 10.5%;
+  z-index: 2;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 2px 3px #241008;
+  transition:
+    color 160ms,
+    filter 160ms;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+}
+.brandName {
+  font-family: "Booth Lettering", Georgia, serif;
+  font-size: clamp(15px, 1.6cqw, 28px);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.boothGlow {
+  position: absolute;
+  inset: 0 0 10%;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at 50% 27%,
+    #ffd27529,
+    #edaf5b0f 40%,
+    transparent 69%
+  );
+}
+.achievement {
+  position: absolute;
+  top: 62.5%;
+  left: 50%;
+  width: 35%;
+  max-width: 190px;
+  z-index: 3;
+  pointer-events: none;
+  transform: translate(-50%, -50%) rotate(-11deg);
+  transform-origin: 50% 50%;
+  animation: stampArrival 320ms ease-out both;
+}
+@keyframes stampArrival {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(-11deg) scale(1.18);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) rotate(-11deg) scale(1);
+  }
+}
+.clubStamp {
+  display: block;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  color: #fff;
+  background: none;
+  filter: drop-shadow(0 1px 1px #28170f75);
+}
+.stampInk {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  opacity: 0.92;
+  /* 두 군데 옅은 잉크 자국만 더하고 로고 자체는 지우지 않는다 */
+  mask-image: linear-gradient(
+    174deg,
+    #000 0 27%,
+    #000b 27.4% 28%,
+    #000 28.4% 71%,
+    #000c 71.4% 72%,
+    #000 72.4%
+  );
+}
+.stampBorder {
+  display: block;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  stroke: currentColor;
+}
+.stampLogo {
+  position: absolute;
+  inset: 21%;
+  background: currentColor;
+  mask-image: var(--stamp-logo);
+  mask-mode: alpha;
+  mask-position: center;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}
+.clubStamp[data-stamp-shape="wide"] .stampLogo {
+  inset: 28% 15%;
+}
+.clubStamp[data-stamp-shape="shield"] .stampLogo {
+  inset: 22% 26% 25%;
+}
+.clubStamp[data-stamp-brand="codecure"] .stampLogo {
+  inset: 18%;
+}
+.boothPosition[data-progress="complete"] .boothSign {
+  color: #ffe4a8;
+  text-shadow:
+    0 1px 2px #160c08,
+    0 0 12px #edb76666;
+}
+.boothPosition[data-progress="partial"] .boothGlow {
+  opacity: 0.5;
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.boothCaption {
+  display: flex;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 4px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #251208dd 15%,
+    #251208dd 85%,
+    transparent
+  );
+  text-shadow: 0 1px 3px #160c08;
+}
+.university {
+  font-size: clamp(11px, 1.02cqw, 16px);
+  line-height: 1.4;
+}
+.enterLabel {
+  margin-top: 5px;
+  color: #f3ce86;
+  font-size: clamp(12px, 1.05cqw, 16px);
+  line-height: 1.4;
+}
+.booth:hover .boothSign {
+  color: #ffe3a7;
+  filter: drop-shadow(0 0 6px #ffb64c);
+}
+.booth:hover .enterLabel {
+  color: #fff1d2;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.booth:focus-visible {
+  outline: 3px solid #ffe3a7;
+  outline-offset: 8px;
+  border-radius: 12px;
+}
+.unavailable {
+  cursor: default;
+}
+.unavailable .boothSign,
+.unavailable .boothCaption {
+  opacity: 0.65;
+}
+.sceneFooter {
+  position: absolute;
+  inset: auto 6% 3%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  color: #f4dfbd;
+  font-size: clamp(12px, 1.05cqw, 16px);
+  text-shadow: 0 2px 4px #160c08;
+}
+.sceneFooter button,
+.sceneNotice button {
+  min-height: 44px;
+  padding: 8px;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  cursor: pointer;
+}
+.sceneFooter button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.sceneNotice {
+  position: absolute;
+  z-index: 3;
+  top: 16%;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100% - 32px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 18px;
+  background: #281b10f2;
+  color: #ffe6c0;
+  font-size: 14px;
+  box-shadow: 0 8px 20px #190d0866;
+}
+.sceneNotice p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.otherClubs {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px;
+}
+.otherClubs h2 {
+  margin: 0 0 16px;
+  font-size: 20px;
+}
+.otherClubs a {
+  display: inline-flex;
+  max-width: 100%;
+  min-height: 44px;
+  align-items: center;
+  margin-right: 24px;
+  color: #ffe6c0;
+  overflow-wrap: anywhere;
+}
+.festivalPage :is(a, button):focus-visible {
+  outline: 3px solid #ffe3a7;
+  outline-offset: 5px;
+}
+.clubPage {
+  background:
+    linear-gradient(#26140870, #261408b3),
+    url("/assets/signatures/club-festival-v1.webp") center / cover fixed;
+}
+.clubBoard {
+  max-width: 1000px;
+  margin-top: clamp(24px, 6vh, 72px);
+}
+.clubHeader {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid #c5ac80;
+}
+.clubHeader > div {
+  min-width: 0;
+}
+.clubLogo {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 84px;
+  height: 84px;
+  padding: 14px;
+  background: #503820;
+  clip-path: polygon(
+    10% 0,
+    90% 0,
+    100% 10%,
+    100% 90%,
+    90% 100%,
+    10% 100%,
+    0 90%,
+    0 10%
+  );
+}
+.clubLogo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.clubLogo[data-kind="wordmark"] {
+  width: 124px;
+}
+.detailAchievement {
+  display: inline-block;
+  width: 64px;
+  flex-shrink: 0;
+  margin-left: 6px;
+  transform: rotate(-11deg);
+}
+.detailAchievement .clubStamp {
+  /* 밝은 문제 설명 종이 위에서는 잉크를 진하게 표시한다 */
+  color: #764632;
+  filter: none;
+}
+.clubProgress {
+  margin: 0 0 0 auto;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #705638;
+  text-align: right;
+}
+.clubProgress strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 26px;
+  font-weight: 400;
+}
+.problemList {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.problemLink {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 160px;
+  padding: 28px 0;
+  border-bottom: 1px solid #c5ac80;
+  color: #493219;
+  text-decoration: none;
+}
+.problemLink > div {
+  min-width: 0;
+  flex: 1;
+}
+.problemLabel {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: #785631;
+}
+.problemLink h2 {
+  margin: 10px 0 12px;
+  font-family: "Song Myung", serif;
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.problemTeams {
+  font-size: 12px;
+  color: #78603f;
+}
+.problemScore {
+  max-width: 35%;
+  font-family: "Festival Display", serif;
+  font-size: 30px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+.problemScore small {
+  font-size: 14px;
+}
+.problemArrow {
+  font-size: 28px;
+}
+.problemLink:hover h2 {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+@media (max-width: 900px) {
+  .scene {
+    aspect-ratio: auto;
+    padding: 155px 14px 28px;
+    background-size: auto 100%;
+  }
+  .scene::before {
+    background: #23170f9e;
+  }
+  .navigation {
+    inset: 10px 18px auto;
+  }
+  .navigation a {
+    font-size: 12px;
+  }
+  .festivalHeader {
+    inset: 69px 12px auto;
+  }
+  .festivalHeader p {
+    font-size: 11px;
+  }
+  .festivalHeader h1 {
+    font-size: clamp(30px, 7.8vw, 46px);
+  }
+  .festivalHeader > span {
+    font-size: 12px;
+    margin-top: 9px;
+  }
+  .booths {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 12px;
+    margin-top: 20px;
+  }
+  .boothPosition,
+  .boothPosition[data-booth] {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 0.78;
+    background-image: url("/assets/signatures/club-festival-v1.webp");
+    background-size: 385% 290%;
+    background-position: 5% 31%;
+    border-radius: 5px;
+  }
+  .boothPosition[data-booth="1"] {
+    background-position: 50% 31%;
+  }
+  .boothPosition[data-booth="2"] {
+    background-position: 95% 31%;
+  }
+  .boothPosition[data-booth="3"] {
+    background-position: 5% 80%;
+  }
+  .boothPosition[data-booth="4"] {
+    background-position: 50% 80%;
+  }
+  .boothPosition[data-booth="5"] {
+    background-position: 95% 80%;
+  }
+  .boothSign {
+    top: 29.5%;
+    left: 8%;
+    right: 8%;
+    height: 13%;
+  }
+  .brandName {
+    font-size: clamp(13px, 3.8vw, 22px);
+  }
+  .achievement {
+    top: 57%;
+    width: 46%;
+  }
+  .boothCaption {
+    bottom: 0;
+    padding: 10px 4px;
+    background: #28170eee;
+  }
+  .university {
+    font-size: 12px;
+    word-break: keep-all;
+  }
+  .enterLabel {
+    font-size: 12px;
+    margin-top: 4px;
+  }
+  .sceneFooter {
+    position: static;
+    margin-top: 22px;
+    font-size: 12px;
+    gap: 4px;
+  }
+  .sceneFooter button {
+    margin-left: auto;
+  }
+  .sceneNotice {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    max-width: none;
+    width: 100%;
+    margin-top: 24px;
+    font-size: 13px;
+  }
+  .clubHeader {
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .clubLogo {
+    width: 60px;
+    height: 60px;
+    padding: 10px;
+  }
+  .clubLogo[data-kind="wordmark"] {
+    width: 96px;
+  }
+  .clubHeader > div {
+    flex: 1;
+  }
+  .clubProgress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-basis: 100%;
+  }
+  .clubProgress strong {
+    margin: 0;
+    font-size: 22px;
+  }
+  .problemLink {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .problemLink > div {
+    flex-basis: 100%;
+  }
+  .problemLink h2 {
+    font-size: 22px;
+  }
+  .problemScore {
+    max-width: calc(100% - 48px);
+    font-size: 26px;
+  }
+  .problemArrow {
+    margin-left: auto;
+  }
+}
+@media (min-width: 901px) and (max-width: 1200px) {
+  .achievement {
+    top: 60%;
+    width: 30%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boothSign {
+    transition: none;
+  }
+  .achievement {
+    animation: none;
+  }
+}

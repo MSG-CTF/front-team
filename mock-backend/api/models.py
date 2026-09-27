@@ -32,6 +32,9 @@ class Team(models.Model):
     koth_score = models.IntegerField(default=0)
     is_banned = models.BooleanField(default=False)
     ban_reason = models.CharField(max_length=255, null=True, blank=True)
+    # GET /admin/teams/{id}(README 8절)에서 조회할 수 있게 밴 처리 시점에 남긴다.
+    banned_at = models.DateTimeField(null=True, blank=True)
+    banned_by = models.CharField(max_length=100, null=True, blank=True)
 
     # README.md 2절 GET /board/me 기준 보드 상태
     position = models.IntegerField(default=1)
@@ -100,6 +103,8 @@ class Challenge(models.Model):
     difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES)
     score = models.IntegerField(default=100)
     description = models.TextField(blank=True, default="")
+    # GET/PATCH /admin/challenges(README 8절, 백엔드: 논의).
+    is_published = models.BooleanField(default=True)
 
     def __str__(self):
         return self.title
@@ -218,3 +223,63 @@ class ContestTimer(models.Model):
     name = models.CharField(max_length=100, default="MSG CTF")
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
+
+
+class AdminSetting(models.Model):
+    """GET/PATCH /admin/settings(README 8절). 대회당 1행만 쓰는 싱글턴.
+
+    README는 일반 키-값 테이블을 제안하지만, 이 목서버 범위에서는 필드로
+    고정해두는 쪽이 검증(범위 체크)이 더 명확해서 이렇게 뒀다.
+    """
+
+    dice_rolls_per_reset = models.IntegerField(default=1)
+    dice_reset_interval_minutes = models.IntegerField(default=15)
+    solve_deadline_minutes = models.IntegerField(default=15)
+    max_attempts = models.IntegerField(default=3)
+    lock_seconds = models.IntegerField(default=30)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.CharField(max_length=100, blank=True, default="")
+
+
+class AdminEvent(models.Model):
+    """관리자 조작 이벤트 로그(README 8절 GET /admin/events, GET /admin/dashboard
+    "최근 이벤트 로그" - Figma node 384:396). 실제 이벤트 버스가 없는 목서버라
+    각 관리자 액션 처리 시점에 직접 한 행씩 남긴다.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    type = models.CharField(max_length=50)
+    severity = models.CharField(max_length=20, default="INFO")
+    message = models.CharField(max_length=255)
+    team_name = models.CharField(max_length=100, blank=True, default="")
+    challenge_title = models.CharField(max_length=200, blank=True, default="")
+    actor = models.CharField(max_length=100, blank=True, default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+
+class TeamSnapshot(models.Model):
+    """롤백 지점(README 8절 GET .../snapshots, POST .../rollback).
+    보드 상태에 영향을 주는 관리자 조작(밴, clear 칸, 위치 이동, 주사위 지급) 직전에
+    자동으로 한 장씩 남긴다. 팀당 최근 20개만 보관한다.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    team = models.ForeignKey(Team, related_name="snapshots", on_delete=models.CASCADE)
+    label = models.CharField(max_length=200)
+    position = models.IntegerField()
+    dice_rolls_left = models.IntegerField()
+    is_quarantined = models.BooleanField()
+    consumed_cell_indexes = models.JSONField()
+    opened_challenge_log = models.JSONField()
+    chance_cards = models.JSONField()
+    jeopardy_score = models.IntegerField()
+    koth_score = models.IntegerField()
+    mileage = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.CharField(max_length=100, blank=True, default="")
+
+    class Meta:
+        ordering = ["-created_at"]

@@ -7,7 +7,7 @@ export function toKst(isoUtc, options = {}) {
   });
 }
 
-// 문제 제출 마감은 개방 시각부터 15분. 표시용 KST 변환과 분리해서 계산한다.
+// 추가 주사위 보상 기간은 개방 시각부터 15분이며 이후에도 정답 제출은 가능하다
 export function getChallengeDeadline(openedAt) {
   if (typeof openedAt !== "string" || !openedAt.trim()) return null;
   const openedTimestamp = Date.parse(openedAt);

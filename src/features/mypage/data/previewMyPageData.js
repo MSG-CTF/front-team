@@ -1,4 +1,5 @@
 export const PREVIEW_MY_PAGE_DATA = Object.freeze({
+  memberRanking: { rank: 8, nickname: "YESEUL KIM", score: 800, solvedCount: 3 },
   profile: {
     teamName: "MAPLELEAF",
     score: 1240,

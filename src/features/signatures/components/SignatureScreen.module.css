@@ -1,0 +1,78 @@
+.clubMark {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 6px;
+  background: #513a23;
+  color: #fff4dc;
+}
+
+.clubMark img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.clubMark[data-kind="wordmark"] {
+  width: 100px;
+  padding-inline: 10px;
+}
+
+.footnote {
+  margin: 26px 0 0;
+  color: #78603f;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.pageNotice {
+  min-height: 240px;
+  margin: 0;
+  padding: 64px 12px;
+  color: #6b5234;
+  text-align: center;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.pageNotice h1 {
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.pageNotice p {
+  margin: 0 0 24px;
+}
+
+.detailClub {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  color: #6b5234;
+  font-family: "IM Fell English", "Pretendard", serif;
+  font-size: 20px;
+  overflow-wrap: anywhere;
+}
+
+.solvedAt {
+  margin: 28px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid #d8c29d;
+  color: #52603d;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.rewardNote {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid #ddccb0;
+  color: #705638;
+  font-size: 12px;
+  line-height: 1.8;
+}

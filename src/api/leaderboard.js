@@ -3,17 +3,17 @@ import apiClient from "./client.js";
 // 리더보드 / 랭킹. 경로와 스키마는 README.md "4. 리더보드 페이지", "5. 랭킹 페이지"
 // (Notion API명세서 2026-08-27~29 기준).
 
-export function getLeaderboard() {
+export function getLeaderboard(config) {
   // GET /leaderboard (인증 없음) - 상위 8팀. teams[].team_score / is_top3 / solves[].
   // 밴 팀 + 0솔브 팀 제외. 프론트는 solves를 solved_at 순으로 누적해 그래프.
-  return apiClient.get("/leaderboard");
+  return apiClient.get("/leaderboard", config);
 }
 
-export function getRankings({ page = 1, size = 20 } = {}) {
+export function getRankings({ page = 1, size = 20 } = {}, config) {
   // GET /ranking (인증 불필요, 2026-08 확정) - 전체 팀 순위. size 최대 100.
   // rankings[]: rank, team_id, team_name, team_score, mileage, last_solved_at.
   // 밴 팀 제외, 0솔브 팀 포함.
-  return apiClient.get("/ranking", { params: { page, size } });
+  return apiClient.get("/ranking", { ...config, params: { page, size } });
 }
 
 export function getMyRanking(config) {

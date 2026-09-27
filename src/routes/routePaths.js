@@ -1,7 +1,13 @@
 export const ROUTES = {
+  intro: "/",
+  introGuide: "/guide",
+  login: "/login",
   board: "/board",
   challengeDetail: (challengeId) => `/challenges/${encodeURIComponent(challengeId)}`,
   openChallenges: "/challenges",
+  signatures: "/signatures",
+  signatureClub: (clubId) => `/signatures/clubs/${encodeURIComponent(clubId)}`,
+  signatureDetail: (signatureId) => `/signatures/${encodeURIComponent(signatureId)}`,
   leaderboard: "/leaderboard",
   koth: "/koth",
   mypage: "/mypage",
@@ -10,6 +16,9 @@ export const ROUTES = {
   adminTeams: "/admin/teams",
   adminTeamDetail: (teamId) => `/admin/teams/${encodeURIComponent(teamId)}`,
   adminChallenges: "/admin/challenges",
+  adminSignatures: "/admin/signatures",
+  adminMileage: "/admin/mileage",
   adminSettings: "/admin/settings",
   adminLogs: "/admin/logs",
+  adminAccounts: "/admin/accounts",
 };

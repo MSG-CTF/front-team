@@ -1,18 +1,22 @@
 import KothCompletionStamp from "./KothCompletionStamp.jsx";
+import { getKothCardAvailability } from "../utils/kothChallengeState.js";
 import styles from "./KothScreen.module.css";
 
-export default function KothChallengeButton({ challenge, onSelect }) {
-  const statusClassName = styles[`status${challenge.status}`] ?? styles.statusUnknown;
+export default function KothChallengeButton({ challenge, stale, onSelect }) {
+  const availability = getKothCardAvailability(challenge, stale);
 
   return (
     <button
       type="button"
       className={styles.challengeButton}
       style={challenge.position}
-      aria-label={`${challenge.title} KOTH 문제 풀기`}
+      disabled={availability.disabled}
+      aria-label={`${challenge.clubName} ${challenge.title} KoTH ${availability.label}`}
+      title={`${challenge.title} / ${availability.label}`}
       aria-pressed={challenge.selected}
-      onClick={() => onSelect(challenge)}
+      onClick={() => { if (!availability.disabled) onSelect(challenge); }}
     >
+      <span className={styles.challengeCaption}>{challenge.clubName}</span>
       <img
         src={challenge.imageSrc}
         alt=""
@@ -23,11 +27,8 @@ export default function KothChallengeButton({ challenge, onSelect }) {
         imageSrc={challenge.completionStampImageSrc}
         visible={challenge.solved}
       />
-      <span className={`${styles.challengeStatus} ${statusClassName}`}>
-        {challenge.status}
-      </span>
       {challenge.solved && (
-        <span className="sr-only">SOLVED</span>
+        <span className="sr-only">최초 득점 완료</span>
       )}
     </button>
   );

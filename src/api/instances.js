@@ -9,7 +9,7 @@ function idKey(prefix) {
   const uuid =
     globalThis.crypto?.randomUUID?.() ??
     `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-  return { headers: { "Idempotency-Key": `${prefix}-${uuid}` } };
+  return { timeout: 15000, headers: { "Idempotency-Key": `${prefix}-${uuid}` } };
 }
 
 export function getMyInstances(config) {

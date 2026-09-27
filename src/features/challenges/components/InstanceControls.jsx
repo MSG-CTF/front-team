@@ -1,77 +1,84 @@
-import { INSTANCE_STATUS } from "../../../constants/enums.js";
-
-// Figma node 296:11~296:14 - 인스턴스 생명주기 버튼(각 154x62), 인스턴스 패널 아래 한 줄.
-// 시안에는 create / create-disabled / extend / restart 4개가 x=1140/1300/1462/1624에
-// 나란히 있는데, create-disabled는 create 버튼의 "비활성 상태" 스펙(같은 버튼의 다른
-// 상태를 나란히 보여준 것)이므로 실제로는 3버튼으로 구현하고 create 버튼이 인스턴스
-// 유무에 따라 두 이미지를 전환한다.
-//
-// 다만 시안의 4칸은 인스턴스 패널(x 1139~1779) 폭을 정확히 꽉 채우므로, 3개를 시안
-// 앞 세 칸(1140/1300/1462)에 그대로 두면 오른쪽에 160px 빈칸이 생겨 "버튼이 하나
-// 빠진" 것처럼 보인다. 그래서 크기(154x62)와 위/아래 정렬은 시안 그대로 두고 가로만
-// 패널 폭에 균등 배치한다 - x = 1140 / 1382 / 1624 (간격 88), 오른쪽 끝 1778.
-//
-// 종료(DELETE /instances/{id}) 버튼은 시안에 없음 - 디자이너 확인 필요.
-const BUTTONS = [
-  { key: "extend", src: "/assets/challenge-detail/button-instance-extend.png", label: "인스턴스 TTL 연장", left: "71.979%" },
-  { key: "restart", src: "/assets/challenge-detail/button-instance-restart.png", label: "인스턴스 재시작", left: "84.583%" },
-];
+import styles from "./ChallengeDetailScreen.module.css";
 
 export default function InstanceControls({
   instance,
+  otherInstance,
+  controls,
   unavailable,
-  busy,
-  onCreate,
-  onExtend,
-  onRestart,
+  pendingAction,
+  onAction,
 }) {
-  const hasActiveInstance = Boolean(instance?.instanceId);
-  const canManageInstance = instance?.status === INSTANCE_STATUS.RUNNING;
-
-  const handlers = { extend: onExtend, restart: onRestart };
-
+  const busy = pendingAction != null;
+  const canShowCreate =
+    !instance?.instanceId ||
+    ["STOPPED", "FAILED", "EXPIRED", "CLEANED"].includes(instance.status);
   return (
-    <>
-      {/* CREATE - 활성 인스턴스가 있으면 비활성 상태 이미지로 전환 */}
-      <button
-        type="button"
-        onClick={onCreate}
-        disabled={hasActiveInstance || unavailable || busy}
-        aria-label="인스턴스 생성"
-        className="absolute left-[59.375%] top-[58.704%] w-[8.021%] h-[5.741%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-60"
+    <div className={styles.controlsSection}>
+      <div
+        className={styles.instanceControls}
+        role="group"
+        aria-label="인스턴스 작업"
+        aria-busy={["create", "extend", "restart", "stop"].includes(
+          pendingAction,
+        )}
       >
-        <img
-          src={
-            hasActiveInstance
-              ? "/assets/challenge-detail/button-instance-create-disabled.png"
-              : "/assets/challenge-detail/button-instance-create.png"
-          }
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-        />
-        <span className="sr-only">인스턴스 생성</span>
-      </button>
-
-      {BUTTONS.map((button) => (
-        <button
-          key={button.key}
-          type="button"
-          onClick={handlers[button.key]}
-          disabled={!canManageInstance || unavailable || busy}
-          aria-label={button.label}
-          className="absolute top-[58.704%] w-[8.021%] h-[5.741%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-105 active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
-          style={{ left: button.left }}
-        >
-          <img
-            src={button.src}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-          />
-          <span className="sr-only">{button.label}</span>
-        </button>
-      ))}
-    </>
+        {canShowCreate ? (
+          <button
+            type="button"
+            className={styles.createButton}
+            onClick={() => onAction("create")}
+            disabled={!controls.canCreate || unavailable || busy}
+            aria-label="인스턴스 생성"
+          >
+            {pendingAction === "create"
+              ? "생성 요청 중…"
+              : otherInstance
+                ? "이 문제로 전환"
+                : "인스턴스 생성"}
+          </button>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => onAction("extend")}
+              disabled={!controls.canExtend || unavailable || busy}
+              aria-label="인스턴스 TTL 연장"
+            >
+              {pendingAction === "extend" ? "연장 중…" : "시간 연장"}
+            </button>
+            <button
+              type="button"
+              onClick={() => onAction("restart")}
+              disabled={!controls.canRestart || unavailable || busy}
+              aria-label="인스턴스 재시작"
+            >
+              {pendingAction === "restart" ? "요청 중…" : "재시작"}
+            </button>
+            <button
+              type="button"
+              className={styles.stopButton}
+              onClick={() => onAction("stop")}
+              disabled={!controls.canStop || unavailable || busy}
+              aria-label="인스턴스 종료"
+            >
+              {pendingAction === "stop" ? "종료 중…" : "종료"}
+            </button>
+          </>
+        )}
+      </div>
+      {controls.extendLimitReached && (
+        <p className={styles.controlHint}>연장 횟수 3회를 모두 사용했습니다</p>
+      )}
+      {controls.expired && (
+        <p className={styles.controlHint}>
+          사용 시간이 만료됐습니다. 서버 상태를 확인하고 있습니다
+        </p>
+      )}
+      {otherInstance && otherInstance.status !== "RUNNING" && (
+        <p className={styles.controlHint}>
+          다른 인스턴스의 준비가 끝나면 전환할 수 있습니다
+        </p>
+      )}
+    </div>
   );
 }

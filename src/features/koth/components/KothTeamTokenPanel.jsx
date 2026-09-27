@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toKst } from "../../../utils/time.js";
 import styles from "./KothScreen.module.css";
 
@@ -9,6 +9,12 @@ export default function KothTeamTokenPanel({
   onRetry,
   onClose,
 }) {
+  const panel = useRef(null);
+  useEffect(() => {
+    const previous = document.activeElement;
+    panel.current?.focus();
+    return () => previous?.focus();
+  }, []);
   const [copyStatus, setCopyStatus] = useState("idle");
 
   useEffect(() => {
@@ -33,6 +39,18 @@ export default function KothTeamTokenPanel({
     <div className={styles.tokenBackdrop} role="presentation">
       <section
         className={styles.tokenPanel}
+        ref={panel}
+        tabIndex={-1}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") { event.preventDefault(); onClose(); }
+          if (event.key === "Tab") {
+            const controls = Array.from(panel.current.querySelectorAll("button:not(:disabled), input"));
+            const first = controls[0];
+            const last = controls[controls.length - 1];
+            if (event.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) { event.preventDefault(); last?.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+          }
+        }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="koth-token-title"

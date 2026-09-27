@@ -1,132 +1,183 @@
-import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
 import BackButton from "./BackButton.jsx";
 import ChallengeHeaderPanel from "./ChallengeHeaderPanel.jsx";
 import ChallengeDescriptionPanel from "./ChallengeDescriptionPanel.jsx";
 import InstancePanel from "./InstancePanel.jsx";
 import InstanceControls from "./InstanceControls.jsx";
+import InstanceActionDialog from "./InstanceActionDialog.jsx";
 import FlagSubmitPanel from "./FlagSubmitPanel.jsx";
-import { formatRemaining, getChallengeDeadline, toKst } from "../../../utils/time.js";
+import RequestFeedback from "./RequestFeedback.jsx";
+import { formatRemaining } from "../../../utils/time.js";
+import styles from "./ChallengeDetailScreen.module.css";
 
-// Figma node 95:360 "ChallengeDetailPage" (1920x1080).
-// bg-1920x1080.png = 뒤 배경(Background 193:16)만 담은 프레임 없는 그림이고,
-// 카드 프레임(board_panel 193:62)은 panel-board.png로 분리해 무대(children) 안에서
-// 그린다. 배경은 뷰포트를 object-cover로 자유롭게 채우지만 카드 프레임과 안쪽
-// 패널들은 같은 16:9 무대 위 % 좌표를 쓰므로, 창 비율이 16:9가 아니어도 프레임이
-// 패널들과 함께 축소되며 항상 패널들을 감싼다.
 export default function ChallengeDetailScreen({
   loading,
   pageError,
+  refreshError,
+  refreshing,
   instanceError,
   challenge,
   submission,
   instance,
+  otherInstance,
+  controls,
   flagValue,
   onFlagChange,
   onSubmitFlag,
   onBack,
-  onCreateInstance,
-  onExtendInstance,
-  onRestartInstance,
-  feedback,
-  actionPending,
+  onInstanceAction,
+  retrySeconds,
+  flagFeedback,
+  instanceFeedback,
+  pendingAction,
   submitDisabled,
+  instanceUnavailable,
+  confirmation,
+  onConfirmAction,
+  onCancelAction,
   onRetry,
 }) {
   return (
-    <FixedAspectStage backdropSrc="/assets/challenge-detail/bg-1920x1080.png">
-      {/* board_panel 193:62 - 카드 프레임 (canvas 100/114/1720/870) */}
-      <div
-        aria-hidden="true"
-        className="absolute left-[5.208%] top-[10.556%] w-[89.583%] h-[80.556%]"
-      >
-        <img
-          src="/assets/challenge-detail/panel-board.png"
-          alt=""
-          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-        />
+    <div className={styles.page}>
+      <div className={styles.backBar}>
+        <BackButton onClick={onBack} />
+        <span className={styles.pageLocation}>문제 상세</span>
       </div>
-      <BackButton onClick={onBack} />
-
-      {loading && (
-        <section
-          className="absolute left-[34%] top-[39%] z-10 w-[32%] border border-auth-text/50 bg-[#ead3a8]/95 px-[2cqw] py-[1.4cqw] text-center font-im-fell text-[1.3cqw] text-auth-text shadow-xl"
-          role="status"
-        >
-          문제 정보를 불러오는 중입니다.
-        </section>
-      )}
-
-      {pageError && (
-        <section
-          className="absolute left-[34%] top-[36%] z-10 w-[32%] border border-auth-text/50 bg-[#ead3a8]/95 px-[2cqw] py-[1.4cqw] text-center font-im-fell text-auth-text shadow-xl"
-          role="alert"
-        >
-          <p className="m-0 text-[1.3cqw]">{pageError.message}</p>
-          <p className="mt-[0.4cqw] font-kode-mono text-[0.75cqw]">{pageError.code}</p>
-          <button
-            type="button"
-            onClick={onRetry}
-            className="mt-[0.9cqw] border border-auth-text bg-auth-text px-[1.1cqw] py-[0.45cqw] font-kode-mono text-[0.75cqw] text-[#ead3a8]"
-          >
-            다시 시도
-          </button>
-        </section>
-      )}
-
-      {challenge && !loading && !pageError && (
-        <>
-          <ChallengeHeaderPanel challenge={challenge} />
-          <ChallengeDescriptionPanel
-            description={challenge.description}
-            attachments={challenge.attachments}
-          />
-          <InstancePanel instance={instance} error={instanceError} />
-          <InstanceControls
-            instance={instance}
-            unavailable={Boolean(instanceError)}
-            busy={actionPending}
-            onCreate={onCreateInstance}
-            onExtend={onExtendInstance}
-            onRestart={onRestartInstance}
-          />
-          <FlagSubmitPanel
-            value={flagValue}
-            onChange={onFlagChange}
-            onSubmit={onSubmitFlag}
-            disabled={submitDisabled}
-            inputDisabled={actionPending || submission.blocked}
-          />
-
-          <div className="absolute left-[61.77%] top-[69.9%] w-[28%] font-kode-mono text-[0.75cqw] leading-tight text-auth-text">
-            {challenge.accessStatus === "OPENED" && <span>OPENED (진행 중) </span>}
-            {submission.isCleared && <span>CLEARED (완료) </span>}
-            {submission.remainingSeconds != null && (
-              <span title={`개방: ${toKst(challenge.openedAt)} / 마감: ${toKst(getChallengeDeadline(challenge.openedAt))} (KST)`}>
-                제출 남은 시간 {formatRemaining(submission.remainingSeconds)}
-                {submission.expired && " (제출 시간 만료)"}
-              </span>
-            )}
+      <main className={styles.board} aria-label="문제 상세">
+        {loading && (
+          <div className={styles.loadingState} role="status" aria-busy="true">
+            <div className={styles.skeletonTitle} aria-hidden="true" />
+            <div className={styles.skeletonBody} aria-hidden="true" />
+            <p>문제 정보를 불러오는 중입니다</p>
           </div>
-
-          {(instanceError || feedback) && (
-            <div
-              className="absolute left-[59.32%] top-[88.1%] z-10 w-[33.33%] font-kode-mono text-[0.7cqw] leading-tight text-auth-text"
-              role={instanceError || feedback?.type === "error" ? "alert" : "status"}
+        )}
+        {pageError && (
+          <section className={styles.pageMessage} role="alert">
+            <p className={styles.eyebrow}>CHALLENGE</p>
+            <h1>
+              {pageError.code === "CHALLENGE_LOCKED"
+                ? "아직 열리지 않은 문제입니다"
+                : "문제를 불러오지 못했습니다"}
+            </h1>
+            <p>{pageError.message}</p>
+            <button
+              type="button"
+              className={styles.primaryButton}
+              disabled={refreshing}
+              onClick={onRetry}
             >
-              {instanceError && (
-                <p className="m-0">
-                  {instanceError.message} ({instanceError.code})
+              {refreshing ? "확인 중…" : "다시 시도"}
+            </button>
+          </section>
+        )}
+        {challenge && !loading && !pageError && (
+          <>
+            <ChallengeHeaderPanel challenge={challenge} />
+            <nav className={styles.sectionNav} aria-label="문제 상세 바로가기">
+              <a href="#challenge-description">문제 설명</a>
+              <a href="#challenge-instance">인스턴스</a>
+              <a href="#challenge-flag">플래그 제출</a>
+            </nav>
+            {refreshError && (
+              <div className={styles.refreshNotice} role="status">
+                <p>
+                  최신 상태를 불러오지 못해 마지막으로 확인한 문제를 표시하고
+                  있습니다
+                  <br />
+                  <span>
+                    다시 확인할 때까지 제출과 인스턴스 작업이 잠시 대기합니다
+                  </span>
                 </p>
-              )}
-              {feedback && (
-                <p className="m-0">
-                  {feedback.message} ({feedback.code})
-                </p>
-              )}
+                <button
+                  type="button"
+                  disabled={refreshing}
+                  className={styles.secondaryButton}
+                  onClick={onRetry}
+                >
+                  {refreshing ? "확인 중…" : "다시 확인"}
+                </button>
+              </div>
+            )}
+            <div className={styles.contentGrid}>
+              <ChallengeDescriptionPanel
+                description={challenge.description}
+                attachments={challenge.attachments}
+              />
+              <div className={styles.actionColumn}>
+                <InstancePanel
+                  instance={instance}
+                  otherInstance={otherInstance}
+                  error={instanceError}
+                >
+                  <InstanceControls
+                    instance={instance}
+                    otherInstance={otherInstance}
+                    controls={controls}
+                    unavailable={instanceUnavailable}
+                    pendingAction={pendingAction}
+                    onAction={onInstanceAction}
+                  />
+                  {instanceError && (
+                    <div className={styles.instanceError}>
+                      <p role="alert">{instanceError.message}</p>
+                      <button
+                        type="button"
+                        className={styles.copyButton}
+                        onClick={onRetry}
+                        disabled={refreshing}
+                      >
+                        {refreshing ? "확인 중…" : "다시 조회"}
+                      </button>
+                    </div>
+                  )}
+                  <RequestFeedback feedback={instanceFeedback} />
+                </InstancePanel>
+                <FlagSubmitPanel
+                  value={flagValue}
+                  onChange={onFlagChange}
+                  onSubmit={onSubmitFlag}
+                  disabled={submitDisabled}
+                  inputDisabled={
+                    pendingAction === "submit-flag" || submission.blocked
+                  }
+                  busy={pendingAction === "submit-flag"}
+                  retrySeconds={retrySeconds}
+                  solved={submission.blocked}
+                  feedback={flagFeedback}
+                >
+                  {submission.remainingSeconds != null &&
+                    !submission.blocked && (
+                      <div className={styles.bonusNotice}>
+                        <div>
+                          <span>개방 후 보상 시간</span>
+                          <strong>
+                            {submission.expired
+                              ? "종료"
+                              : formatRemaining(submission.remainingSeconds)}
+                          </strong>
+                        </div>
+                        <p>
+                          {submission.expired
+                            ? "시간이 지나도 정답 제출과 점수·마일리지 획득은 가능합니다"
+                            : "현재 진행 중인 문제를 15분 안에 해결하면 추가 주사위를 받습니다"}
+                        </p>
+                      </div>
+                    )}
+                </FlagSubmitPanel>
+              </div>
             </div>
-          )}
-        </>
+          </>
+        )}
+      </main>
+      {confirmation && (
+        <InstanceActionDialog
+          returnFocusTo={confirmation.trigger}
+          action={confirmation.action}
+          otherInstance={otherInstance}
+          onConfirm={onConfirmAction}
+          onCancel={onCancelAction}
+          disabled={instanceUnavailable || pendingAction != null}
+        />
       )}
-    </FixedAspectStage>
+    </div>
   );
 }

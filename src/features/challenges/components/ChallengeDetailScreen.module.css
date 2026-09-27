@@ -1,0 +1,973 @@
+.page {
+  --ink: #392b1c;
+  --muted: #715d40;
+  --line: #cbb68d;
+  --paper: #faf3e3;
+  --accent: #75412f;
+  min-height: 100dvh;
+  padding: 24px clamp(12px, 2.5vw, 40px) 48px;
+  color: var(--ink);
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  background:
+    linear-gradient(#20170e45, #20170e70),
+    url("/assets/challenge-detail/bg-1920x1080.png") center / cover fixed;
+}
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+.backBar,
+.board {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+}
+.backBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.backButton {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #e1cba278;
+  border-radius: 4px;
+  color: #fff4db;
+  background: #2c1c11e6;
+  font-size: 14px;
+  cursor: pointer;
+}
+.backButton svg {
+  width: 20px;
+  height: 20px;
+}
+.backButton:hover {
+  background: #48321e;
+}
+.pageLocation {
+  color: #f1dfbd;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+.board {
+  padding: clamp(20px, 2.7vw, 36px);
+  border: 10px solid transparent;
+  border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+  background: #eee2c5;
+  background-clip: padding-box;
+  box-shadow: 0 12px 40px #160d0c50;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 28px;
+}
+.titleGroup {
+  min-width: 0;
+}
+.eyebrow {
+  margin: 0 0 10px;
+  color: var(--muted);
+  font-family: "IM Fell English", serif;
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  overflow-wrap: anywhere;
+}
+.eyebrow span {
+  font-family: "Pretendard", sans-serif;
+  letter-spacing: 0;
+}
+.title {
+  margin: 0;
+  font-family: "IM Fell English", "Song Myung", serif;
+  font-size: clamp(26px, 2.9vw, 40px);
+  font-weight: 400;
+  line-height: 1.35;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+}
+.categoryBadge,
+.difficultyBadge,
+.solvedBadge,
+.accessBadge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 4px 9px;
+  border: 1px solid #baa37b;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.categoryBadge {
+  color: #fff2df;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.difficultyBadge {
+  background: #e5d6b6;
+}
+.solvedBadge {
+  color: #36472b;
+  background: #dde7cb;
+  border-color: #8e9d74;
+}
+.accessBadge {
+  color: #645237;
+  background: #f8eed7;
+}
+.metrics {
+  flex-shrink: 0;
+  display: flex;
+  gap: 28px;
+  margin: 0;
+  padding-left: 28px;
+  border-left: 1px solid #baa277;
+  text-align: right;
+}
+.metrics dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.metrics dd {
+  margin: 8px 0 0;
+  font-family: "Kode Mono", monospace;
+  font-size: clamp(25px, 2.7vw, 36px);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.metrics dd small {
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+}
+.points {
+  color: #855320;
+}
+.sectionNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin-top: 28px;
+  padding: 12px 0;
+  border-block: 1px solid var(--line);
+}
+.sectionNav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 4px 2px;
+  color: #665033;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  text-underline-offset: 6px;
+}
+.sectionNav a:hover {
+  color: #7c3826;
+  text-decoration: underline;
+}
+.contentGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(330px, 1fr);
+  gap: 24px;
+  margin-top: 24px;
+  align-items: start;
+}
+.descriptionPanel,
+.flagPanel {
+  min-width: 0;
+  padding: clamp(20px, 2.3vw, 28px);
+  border: 1px solid #c1aa81;
+  border-radius: 4px;
+  background: var(--paper);
+}
+.descriptionPanel,
+.flagPanel,
+.instancePanel {
+  scroll-margin-top: 20px;
+}
+.sectionIntro {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sectionNumber {
+  color: #9b7c51;
+  font-family: "Kode Mono", monospace;
+  font-size: 12px;
+}
+.sectionHeading {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: -0.03em;
+}
+.descriptionBody {
+  min-height: 180px;
+  max-width: 68ch;
+  margin-top: 24px;
+  color: #35291b;
+  font-size: 16px;
+  line-height: 1.95;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.descriptionBody p {
+  margin: 0 0 1.4em;
+}
+.descriptionBody p:last-child {
+  margin-bottom: 0;
+}
+.emptyText {
+  color: var(--muted);
+}
+.attachments {
+  margin-top: 32px;
+  padding-top: 22px;
+  border-top: 1px solid #dac7a6;
+}
+.attachmentHeading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 14px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.attachmentHeading span {
+  min-width: 22px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #6b5232;
+  background: #eee0c4;
+  text-align: center;
+  font-size: 11px;
+}
+.attachmentList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.attachmentRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px 0;
+  border-bottom: 1px solid #e0d1b8;
+  font-size: 14px;
+}
+.attachmentRow:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+.attachmentRow svg {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  color: #856a46;
+}
+.attachmentInfo {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+.attachmentInfo a,
+.attachmentButton,
+.attachmentName {
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.attachmentInfo a {
+  color: #663c25;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.attachmentButton {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #663c25;
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.attachmentButton:disabled { opacity: 0.6; cursor: wait; }
+.attachmentButton:focus-visible, .downloadCancel:focus-visible { outline: 2px solid #663c25; outline-offset: 4px; }
+.downloadError { color: #8a2b20; font-size: 12px; line-height: 1.6; }
+.downloadCancel { flex-shrink: 0; border: 1px solid #c7ae88; background: none; color: #663c25; padding: 6px 10px; font: inherit; cursor: pointer; }
+.fileSize {
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.downloadIcon {
+  flex-shrink: 0;
+  color: #856a46;
+  font-size: 22px;
+}
+.emptyAttachments {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.actionColumn {
+  display: grid;
+  min-width: 0;
+  gap: 20px;
+}
+.instancePanel {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid #786144;
+  border-radius: 4px;
+  color: #f5e8ce;
+  background: linear-gradient(135deg, #35291b, #241d14);
+  box-shadow: inset 0 0 0 3px #d9b77412;
+}
+.instanceHeader {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.instanceBadge,
+.runningBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: 1px solid #897657;
+  border-radius: 3px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.instanceBadge i,
+.runningBadge i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.runningBadge {
+  color: #e2edcc;
+  background: #405132;
+  border-color: #889b6b;
+}
+.consoleLabel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  justify-content: space-between;
+  margin: 22px 0 10px;
+  color: #e5cda6;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.consoleLabel span {
+  color: #c2af90;
+  font-size: 11px;
+}
+.endpoints {
+  padding: 0 12px;
+  border: 1px solid #6c583c;
+  border-radius: 3px;
+  background: #1b160f;
+  color: #f9eeda;
+}
+.endpoint {
+  min-width: 0;
+  padding: 10px 0 14px;
+  font-size: 13px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.endpoint + .endpoint {
+  border-top: 1px solid #59482f;
+}
+.endpointHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+.endpointName {
+  min-width: 0;
+  color: #d9bf93;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.endpointName small {
+  margin-left: 8px;
+  color: #b7aa8e;
+  font-family: "Kode Mono", monospace;
+  font-size: 10px;
+}
+.endpoint a,
+.connectionText {
+  font-family: "Kode Mono", "Malgun Gothic", monospace;
+  font-size: 13px;
+  user-select: all;
+  overflow-wrap: anywhere;
+}
+.endpoint a {
+  color: #f3dcab;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.connectionText {
+  margin: 12px 0;
+}
+.copyButton {
+  flex-shrink: 0;
+  min-width: 48px;
+  min-height: 36px;
+  padding: 5px 8px;
+  border: 1px solid #8b7652;
+  border-radius: 3px;
+  background: transparent;
+  color: #f2d9a9;
+  font-size: 11px;
+  cursor: pointer;
+}
+.copyButton:hover:not(:disabled) {
+  background: #4b3e29;
+}
+.copyError {
+  margin: 8px 0 0;
+  color: #efd1a1;
+  font-family: "Pretendard", sans-serif;
+  font-size: 12px;
+}
+.instanceEmpty {
+  padding: 24px 0 8px;
+  color: #d5c09b;
+}
+.instanceEmpty svg {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 12px;
+  color: #b49b71;
+}
+.instanceEmpty p {
+  margin: 0 0 7px;
+  color: #f5e7c9;
+  font-size: 14px;
+  font-weight: 600;
+}
+.instanceEmpty span {
+  display: block;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.instanceMetrics {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin: 22px 0 0;
+}
+.instanceMetrics dt {
+  color: #d0bfa0;
+  font-size: 12px;
+}
+.instanceMetrics dd {
+  margin: 6px 0 0;
+  color: #f1d392;
+  font-family: "Kode Mono", monospace;
+  font-size: 25px;
+  line-height: 1.3;
+}
+.instanceMetrics dd small {
+  color: #cfbd9d;
+  font-size: 13px;
+}
+.instanceMetrics > :last-child:not(:first-child) {
+  text-align: right;
+}
+.instanceMetrics .expiredTime {
+  color: #f4b19b;
+}
+.expiryTimes {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+}
+.expiryTimes p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  justify-content: space-between;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.7;
+}
+.expiryTimes span {
+  color: #c2ae8b;
+}
+.expiryTimes time {
+  color: #e4d3b4;
+  overflow-wrap: anywhere;
+}
+.otherInstance {
+  margin: 16px 0 0;
+  padding: 12px;
+  border-left: 2px solid #bd9c61;
+  background: #f5dba511;
+  color: #e1ccaa;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.otherInstance strong {
+  color: #f6e3bd;
+  font-weight: 600;
+}
+.controlsSection {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #6b5639;
+}
+.instanceControls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.instanceControls button {
+  min-height: 44px;
+  padding: 10px 5px;
+  border: 1px solid #9d8760;
+  border-radius: 3px;
+  background: #e2c99a;
+  color: #332616;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.instanceControls button:hover:not(:disabled) {
+  background: #f3daaa;
+}
+.instanceControls .createButton {
+  grid-column: 1 / -1;
+  font-size: 14px;
+}
+.instanceControls .stopButton {
+  color: #ffcdba;
+  background: #5d382b;
+  border-color: #af795f;
+}
+.controlHint {
+  margin: 12px 0 0;
+  color: #e8cc9c;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.instanceControls button:disabled,
+.instancePanel button:disabled {
+  color: #bbad94;
+  background: #332c21;
+  border-color: #756449;
+  cursor: not-allowed;
+}
+.primaryButton,
+.secondaryButton,
+.submitButton {
+  min-height: 44px;
+  padding: 11px 16px;
+  border: 1px solid #5c432a;
+  border-radius: 4px;
+  color: #fff3d7;
+  background: #574029;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms;
+}
+.primaryButton:hover:not(:disabled),
+.submitButton:hover:not(:disabled) {
+  background: #704d2d;
+}
+.secondaryButton {
+  color: #4f3a24;
+  background: #f6ecd8;
+  border-color: #baa077;
+}
+.secondaryButton:hover:not(:disabled) {
+  background: #e9d8b7;
+}
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.submitButton:disabled {
+  border-color: #b9a88b;
+  background: #e6dcc9;
+  color: #796a51;
+  cursor: not-allowed;
+}
+.formHint {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.8;
+}
+.fieldLabel {
+  display: block;
+  margin: 22px 0 8px;
+  color: #62492e;
+  font-size: 12px;
+  font-weight: 600;
+}
+.flagInput {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 12px;
+  border: 1px solid #b89b70;
+  border-radius: 4px;
+  color: #332416;
+  background: #fffcf5;
+  font-family: "Kode Mono", monospace;
+  font-size: 16px;
+  line-height: 1.5;
+}
+.flagInput::placeholder {
+  color: #907c5e;
+}
+.flagInput:disabled {
+  background: #eee6d6;
+  color: #796a51;
+  cursor: not-allowed;
+}
+.flagInput[aria-invalid="true"] {
+  border-color: #b04c39;
+}
+.submitButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  margin-top: 12px;
+}
+.submitButton span {
+  font-size: 20px;
+  line-height: 1;
+}
+.retryNotice {
+  margin: 14px 0 0;
+  color: #7c482d;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.retryNotice strong {
+  font-variant-numeric: tabular-nums;
+}
+.notice,
+.errorMessage {
+  margin: 16px 0 0;
+  padding: 14px;
+  border: 1px solid #b6c29b;
+  border-radius: 3px;
+  background: #edf2df;
+  color: #354726;
+  font-size: 13px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.notice p,
+.errorMessage p {
+  margin: 0;
+}
+.errorMessage {
+  border-color: #d4a38f;
+  color: #7d3526;
+  background: #f9e9df;
+}
+.rewards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+  margin: 12px 0 0;
+}
+.rewards dt {
+  font-size: 11px;
+}
+.rewards dd {
+  margin: 3px 0 0;
+  font-family: "Kode Mono", monospace;
+  font-size: 21px;
+  line-height: 1.4;
+}
+.bonusNotice {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid #ddccb0;
+}
+.bonusNotice > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #6f5737;
+}
+.bonusNotice strong {
+  color: #85502a;
+  font-family: "Kode Mono", "Pretendard", sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+}
+.bonusNotice p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.8;
+}
+.instanceError {
+  margin-top: 16px;
+}
+.instanceError p {
+  color: #efb9a7;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.refreshNotice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #c6a778;
+  border-radius: 3px;
+  background: #f6e7c7;
+  color: #6a4828;
+}
+.refreshNotice p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.refreshNotice span {
+  color: #7d6646;
+  font-size: 12px;
+}
+.pageMessage {
+  min-height: 320px;
+  padding: 64px 16px;
+  text-align: center;
+}
+.pageMessage h1 {
+  margin: 0 0 16px;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.pageMessage p:not(.eyebrow) {
+  margin: 0 0 24px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.8;
+}
+.loadingState {
+  min-height: 420px;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.skeletonTitle {
+  width: 65%;
+  height: 44px;
+  border-radius: 3px;
+  background: #d6c4a0;
+}
+.skeletonBody {
+  height: 180px;
+  margin: 32px 0;
+  border-radius: 3px;
+  background: #e5d6b8;
+}
+.confirmDialog {
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 28px;
+  border: 2px solid #957349;
+  border-radius: 5px;
+  background: #f8eed9;
+  color: var(--ink);
+  box-shadow: 0 20px 60px #160d0c60;
+  overflow: auto;
+}
+.confirmDialog::backdrop {
+  background: #17120dcc;
+  backdrop-filter: blur(3px);
+}
+.confirmDialog h2 {
+  margin: 0 0 16px;
+  font-family: "Song Myung", serif;
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.confirmDialog h2 + p {
+  margin: 0;
+  color: #685134;
+  font-size: 14px;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
+}
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 26px;
+}
+.page :is(button, input, a, [tabindex]):focus-visible {
+  outline: 3px solid #ad6821;
+  outline-offset: 3px;
+}
+.instancePanel :is(button, a, [tabindex]):focus-visible {
+  outline-color: #f2c975;
+}
+.screenReaderOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+@media (max-width: 960px) {
+  .board {
+    padding: 24px;
+  }
+  .contentGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .descriptionBody {
+    min-height: 120px;
+    max-width: none;
+  }
+  .metrics {
+    gap: 20px;
+    padding-left: 20px;
+  }
+  .copyButton {
+    min-height: 44px;
+    min-width: 56px;
+  }
+}
+@media (max-width: 600px) {
+  .page {
+    padding: 12px 8px 28px;
+  }
+  .backBar {
+    margin-bottom: 12px;
+    padding-inline: 4px;
+  }
+  .board {
+    border-width: 7px;
+    padding: 22px 14px;
+  }
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 24px;
+  }
+  .title {
+    font-size: 28px;
+  }
+  .metrics {
+    justify-content: flex-start;
+    gap: 32px;
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+  .metrics dd {
+    font-size: 29px;
+  }
+  .sectionNav {
+    justify-content: space-between;
+    gap: 4px 8px;
+    margin-top: 22px;
+    padding-block: 8px;
+  }
+  .sectionNav a {
+    min-height: 44px;
+    font-size: 12px;
+  }
+  .descriptionPanel,
+  .flagPanel,
+  .instancePanel {
+    padding: 20px 16px;
+  }
+  .descriptionBody {
+    font-size: 16px;
+    line-height: 1.9;
+  }
+  .contentGrid {
+    gap: 18px;
+    margin-top: 20px;
+  }
+  .actionColumn {
+    gap: 18px;
+  }
+  .sectionHeading {
+    font-size: 17px;
+  }
+  .descriptionBody {
+    margin-top: 20px;
+  }
+  .pageLocation {
+    font-size: 11px;
+  }
+  .expiryTimes p {
+    flex-direction: column;
+    gap: 1px;
+  }
+  .dialogActions > button {
+    flex: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page button {
+    transition: none;
+  }
+}

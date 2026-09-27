@@ -4,11 +4,14 @@ import { KOTH_CHALLENGE_VISUALS } from "../config/kothVisualConfig.js";
 import {
   useKothData,
   useKothTeamToken,
+  useKothLeaderboard,
+  useKothClubDetail,
 } from "../hooks/useKothData.js";
 import {
   createKothChallengeViewModels,
   flattenKothChallenges,
   getUnmappedKothChallenges,
+  applyKothClubDetail,
 } from "../utils/kothChallengeState.js";
 
 export default function KothPage() {
@@ -35,9 +38,13 @@ export default function KothPage() {
     () => getUnmappedKothChallenges(KOTH_CHALLENGE_VISUALS, clubs).length,
     [clubs],
   );
-  const selectedChallenge = challenges.find(
+  const selectedListChallenge = challenges.find(
     (challenge) => challenge.kothChallengeId === selectedChallengeId,
   ) ?? null;
+  const clubDetail = useKothClubDetail(selectedListChallenge?.clubId, selectedChallengeId);
+  const selectedChallenge = applyKothClubDetail(selectedListChallenge, clubDetail.data) ?? selectedListChallenge;
+
+  const problemRanking = useKothLeaderboard(selectedChallengeId, kothData.authenticated);
 
   const handleOpenTeamToken = () => {
     setIsTeamTokenOpen(true);
@@ -57,12 +64,16 @@ export default function KothPage() {
     <KothScreen
       requestStatus={kothData.status}
       requestError={kothData.error}
+      authenticated={kothData.authenticated}
+      clubsStale={kothData.clubsStale}
+      problemRanking={problemRanking}
       challenges={challenges}
       isEmpty={kothData.status === "success" && allChallenges.length === 0}
       unmappedChallengeCount={unmappedChallengeCount}
       teamName={kothData.progressData?.team_name ?? ""}
       totalKothScore={kothData.progressData?.total_koth_score ?? null}
       selectedChallenge={selectedChallenge}
+      clubDetail={clubDetail}
       isTeamTokenOpen={isTeamTokenOpen}
       teamToken={teamToken}
       onRetry={kothData.retry}
