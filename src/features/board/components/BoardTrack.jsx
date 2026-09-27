@@ -1,4 +1,6 @@
+import { useRef, useState } from "react";
 import { getBoardCellPosition } from "../utils/boardData.js";
+import Dice3D from "./Dice3D.jsx";
 
 // Figma node 309:78 "BoardGrid"(951x714) + 104:458 "주사위" + 100:454 "람쥐".
 // 36칸은 원본 board-grid.png에 합쳐져 있으므로 분해하지 않는다. API의 36개 cell을
@@ -8,6 +10,11 @@ const CELL_STATE_COLORS = Object.freeze({
   OPENED: "bg-[#2c6b8f]",
   CLEARED: "bg-[#477a38]",
 });
+
+// Temporary visual-only preview: open the board with ?diceAnimationTest=1 in Vite dev.
+// Removing this flag and the branch in handleRollDice removes the test mode.
+const diceAnimationTest = import.meta.env.DEV &&
+  new URLSearchParams(window.location.search).get("diceAnimationTest") === "1";
 
 export default function BoardTrack({
   cells,
@@ -20,6 +27,28 @@ export default function BoardTrack({
   isRolling,
 }) {
   const pieceCoordinates = getBoardCellPosition(piecePosition);
+  const diceRef = useRef(null);
+  const rollingRef = useRef(false);
+  const [rolling, setRolling] = useState(false);
+  const [diceReady, setDiceReady] = useState(false);
+
+  const handleRollDice = async () => {
+    if ((!canRoll && !diceAnimationTest) || !diceReady || rollingRef.current) return;
+    rollingRef.current = true;
+    setRolling(true);
+    try {
+      if (diceAnimationTest) {
+        const diceA = Math.floor(Math.random() * 6) + 1;
+        const diceB = Math.floor(Math.random() * 6) + 1;
+        await diceRef.current?.startRoll({ diceA, diceB });
+      } else {
+        await onRollDice({ onDiceResult: (result) => diceRef.current?.startRoll(result) });
+      }
+    } finally {
+      rollingRef.current = false;
+      setRolling(false);
+    }
+  };
 
   return (
     <div className="absolute left-[23.33%] top-[26.76%] w-[49.53%] h-[66.11%]">
@@ -40,17 +69,12 @@ export default function BoardTrack({
 
       <button
         type="button"
-        onClick={onRollDice}
-        disabled={!canRoll}
-        aria-label={isRolling ? "주사위 처리 중" : "주사위 굴리기"}
-        className="absolute left-[37.5%] top-[39%] z-20 w-[22%] h-[16%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95 disabled:cursor-not-allowed disabled:brightness-90"
+        onClick={handleRollDice}
+        disabled={(!canRoll && !diceAnimationTest) || !diceReady || rolling}
+        aria-label={isRolling || rolling ? "주사위 처리 중" : "주사위 굴리기"}
+        className="absolute left-[35%] top-[39%] z-20 w-[30%] h-[16%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95 disabled:cursor-not-allowed disabled:brightness-90"
       >
-        <img
-          src="/assets/board/dice.png"
-          alt=""
-          aria-hidden="true"
-          className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-        />
+        <Dice3D ref={diceRef} onReady={() => setDiceReady(true)} />
         <span className="sr-only">주사위 굴리기</span>
       </button>
 
