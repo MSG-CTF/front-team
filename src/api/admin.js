@@ -71,6 +71,17 @@ export function getAdminTeamDetail(teamId, { historyLimit = 10 } = {}, config) {
   });
 }
 
+export function updateAdminTeam(teamId, changes) {
+  return apiClient.patch(`/admin/teams/${encodeURIComponent(teamId)}`, changes, MUTATION_CONFIG);
+}
+
+export function deleteAdminTeam(teamId, reason) {
+  return apiClient.delete(`/admin/teams/${encodeURIComponent(teamId)}`, {
+    ...MUTATION_CONFIG,
+    data: { reason },
+  });
+}
+
 export function banTeam(teamId, { banReason }) {
   // [백엔드: 완료] ban_reason 1자 이상
   return apiClient.post(`/admin/teams/${teamId}/ban`, { ban_reason: banReason });

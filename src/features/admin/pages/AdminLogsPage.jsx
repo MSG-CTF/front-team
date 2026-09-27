@@ -5,6 +5,14 @@ import { toKst } from "../../../utils/time.js";
 import AdminLayout, { AdminStatusMessage } from "../components/AdminLayout.jsx";
 import useAdminResource from "../hooks/useAdminResource.js";
 
+const EVENT_TYPES = [
+  "TEAM_BANNED", "TEAM_UNBANNED", "MILEAGE_ADJUSTED", "PAYMENT_REFUNDED",
+  "INSTANCE_FAILED", "INSTANCE_FORCED", "CHALLENGE_VISIBILITY_CHANGED",
+  "SETTINGS_CHANGED", "DICE_ADJUSTED", "BOARD_POSITION_MOVED",
+  "CELL_STATUS_CHANGED", "TEAM_UPDATED", "TEAM_DELETED", "ACCOUNT_CREATED",
+  "PAYMENT_PROCESSED", "CHALLENGE_CREATED",
+];
+
 // 로그/리소스 - README.md "8. 관리자 페이지 > 리소스/로그"(백엔드: 진행 중).
 // type/severity enum 전체 목록이 아직 미공개(Appendix B)라 관측된 값을
 // 그대로 텍스트로 보여준다(별도 배지 매핑 안 함).
@@ -51,7 +59,8 @@ export default function AdminLogsPage() {
 
       <section className="overflow-x-auto">
         <form onSubmit={(event) => { event.preventDefault(); setPage(1); setAppliedType(type.trim()); }} className="mb-3 flex flex-wrap gap-2">
-          <label>이벤트 유형 <input value={type} onChange={(event) => setType(event.target.value)} placeholder="전체" className="rounded border border-admin-divider bg-white/60 px-2 py-1"/></label>
+          <label>이벤트 유형 <input list="admin-event-types" value={type} onChange={(event) => setType(event.target.value)} placeholder="전체 또는 유형 선택" className="rounded border border-admin-divider bg-white/60 px-2 py-1"/></label>
+          <datalist id="admin-event-types">{EVENT_TYPES.map((eventType) => <option key={eventType} value={eventType} />)}</datalist>
           <button type="submit" className="rounded border border-admin-divider px-3 py-1">필터 적용</button>
         </form>
         <h2 className="mb-2 text-sm font-bold text-admin-muted">최근 이벤트</h2>
@@ -72,7 +81,7 @@ export default function AdminLogsPage() {
                 <tr key={event.event_id} className="border-b border-admin-divider/40 last:border-0">
                   <td className="px-2 py-1">{event.type}</td>
                   <td className="px-2 py-1">{event.severity}</td>
-                  <td className="max-w-md break-words px-2 py-1">{event.message}</td>
+                  <td className="max-w-md break-words px-2 py-1">{event.message ?? "-"}</td>
                   <td className="px-2 py-1">
                     {[event.team_name, event.challenge_title].filter(Boolean).join(" / ") || "-"}
                   </td>

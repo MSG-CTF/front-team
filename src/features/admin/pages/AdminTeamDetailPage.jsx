@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { ROUTES } from "../../../routes/routePaths.js";
 import {
   adjustDiceRolls,
   adjustMileage,
@@ -15,6 +16,7 @@ import {
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
+import { AdminTeamDeleteDialog, AdminTeamEditDialog } from "../components/AdminTeamManagementDialogs.jsx";
 import { getAdminRequestError } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { mileageAttempt, validateMileageAdjustment } from "../utils/adminMileage.js";
@@ -308,6 +310,7 @@ function RollbackSection({ teamId, isMutating, onRollback }) {
 // 롤백/스냅샷도 이제 붙였다(목서버에 자동 스냅샷 + 롤백 엔드포인트 구현).
 export default function AdminTeamDetailPage() {
   const { teamId } = useParams();
+  const navigate = useNavigate();
   const detail = useAdminResource(
     (config) => getAdminTeamDetail(teamId, {}, config),
     [teamId],
@@ -316,6 +319,7 @@ export default function AdminTeamDetailPage() {
   const [isMutating, setIsMutating] = useState(false);
   const [actionError, setActionError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
+  const [teamDialog, setTeamDialog] = useState(null);
   const pending = useRef(false);
 
   const runAction = async (action, fallbackMessage) => {
@@ -399,14 +403,18 @@ export default function AdminTeamDetailPage() {
                   <AdminBadge tone="good">정상</AdminBadge>
                 )}
               </div>
-              <button
-                type="button"
-                disabled={isMutating}
-                onClick={handleBanToggle}
-                className="rounded border border-admin-failed px-3 py-1 font-song-myung text-xs text-admin-failed disabled:opacity-50"
-              >
-                {data.is_banned ? "밴 해제" : "밴 처리"}
-              </button>
+              <div className="flex gap-2">
+                <button type="button" disabled={isMutating} onClick={() => setTeamDialog("edit")}
+                  className="rounded border border-admin-divider px-3 py-1 font-song-myung text-xs disabled:opacity-50">수정</button>
+                <button
+                  type="button"
+                  disabled={isMutating}
+                  onClick={handleBanToggle}
+                  className="rounded border border-admin-failed px-3 py-1 font-song-myung text-xs text-admin-failed disabled:opacity-50"
+                >
+                  {data.is_banned ? "밴 해제" : "밴 처리"}
+                </button>
+              </div>
             </div>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-1 font-song-myung text-sm md:grid-cols-4">
               <dt className="text-admin-muted">점수</dt>
@@ -489,7 +497,25 @@ export default function AdminTeamDetailPage() {
             <h2 className="mb-2 font-song-myung text-sm font-bold text-admin-muted">롤백</h2>
             <RollbackSection teamId={teamId} isMutating={isMutating} onRollback={handleRollback} />
           </section>
+
+          <section className="rounded-lg border border-admin-failed/70 bg-white/30 p-4">
+            <h2 className="m-0 font-song-myung text-sm font-bold text-admin-failed">위험 조치</h2>
+            <p className="font-song-myung text-sm">팀과 소속 계정 및 모든 팀 기록을 영구 삭제합니다.</p>
+            <button type="button" disabled={isMutating} onClick={() => setTeamDialog("delete")}
+              className="rounded border border-admin-failed px-3 py-1.5 font-song-myung text-sm text-admin-failed disabled:opacity-50">팀 삭제...</button>
+          </section>
         </div>
+      )}
+      {teamDialog === "edit" && data && (
+        <AdminTeamEditDialog team={data} onClose={() => setTeamDialog(null)} onSaved={async () => {
+          setTeamDialog(null);
+          const refreshed = await detail.reload();
+          setActionMessage(refreshed ? "팀 정보를 수정했습니다. 소속 또는 팀장 정보가 변경된 팀원은 다시 로그인해야 변경사항이 반영됩니다."
+            : "수정은 완료됐지만 상세 정보를 다시 불러오지 못했습니다. 새로고침해 확인하세요.");
+        }} />
+      )}
+      {teamDialog === "delete" && data && (
+        <AdminTeamDeleteDialog team={data} onClose={() => setTeamDialog(null)} onDeleted={() => navigate(ROUTES.adminTeams, { replace: true })} />
       )}
     </AdminLayout>
   );
