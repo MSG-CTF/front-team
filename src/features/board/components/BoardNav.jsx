@@ -11,6 +11,7 @@ const BUTTONS = [
     label: "규칙 설명서",
     src: "/assets/board/nav-rules.png",
     className: "left-[75.42%] top-[2.96%] w-[10.47%] h-[12.41%]",
+    hitArea: "left-[49.5%] top-[46%] w-[52%]",
   },
   {
     key: "mypage",
@@ -18,6 +19,7 @@ const BUTTONS = [
     label: "마이 페이지",
     src: "/assets/board/nav-mypage.png",
     className: "left-[80.68%] top-[1.2%] w-[13.39%] h-[15.83%]",
+    hitArea: "left-1/2 top-[48%] w-[39%]",
   },
   {
     key: "scoreboard",
@@ -25,6 +27,7 @@ const BUTTONS = [
     label: "스코어보드",
     src: "/assets/board/nav-scoreboard.png",
     className: "left-[87.76%] top-[1.2%] w-[12.24%] h-[14.54%]",
+    hitArea: "left-1/2 top-[48%] w-[42%]",
   },
 ];
 
@@ -34,21 +37,23 @@ export default function BoardNav() {
   return (
     <>
       {BUTTONS.map((button) => (
-        <button
+        <div
           key={button.key}
-          type="button"
-          onClick={() => navigate(button.to)}
-          aria-label={button.label}
-          className={`absolute border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95 ${button.className}`}
+          className={`group absolute pointer-events-none ${button.className}`}
         >
           <img
             src={button.src}
             alt=""
             aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+            className="absolute inset-0 w-full h-full object-contain pointer-events-none transition-[filter] duration-150 group-hover:brightness-110 group-active:brightness-95"
           />
-          <span className="sr-only">{button.label}</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => navigate(button.to)}
+            aria-label={button.label}
+            className={`absolute aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border-0 bg-transparent p-0 cursor-pointer pointer-events-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#f1e4c8] ${button.hitArea}`}
+          />
+        </div>
       ))}
       <button
         type="button"
