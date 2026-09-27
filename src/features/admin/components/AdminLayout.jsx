@@ -215,8 +215,9 @@ export function AdminBadge({ tone = "neutral", children }) {
   const toneClass = {
     neutral: "border-admin-muted text-admin-muted",
     good: "border-admin-running text-admin-running",
+    warn: "border-admin-gold text-admin-ink",
     bad: "border-admin-failed text-admin-failed",
-  }[tone];
+  }[tone] ?? "border-admin-muted text-admin-muted";
   return (
     <span
       className={`inline-block rounded-full border px-2 py-0.5 font-song-myung text-xs ${toneClass}`}

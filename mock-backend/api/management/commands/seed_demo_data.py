@@ -12,7 +12,8 @@ from api.models import (
     User,
 )
 
-SPECIAL_CELLS = {1: "START", 7: "CHANCE", 16: "QUARANTINE", 21: "AIRPORT", 25: "ROULETTE", 30: "CHANCE"}
+# 칸 타입 5종(QUARANTINE 삭제, 백엔드 #81~#85). 룰렛칸 2개 명세에 맞춰 옛 무인도 자리(16)를 룰렛으로 둔다.
+SPECIAL_CELLS = {1: "START", 7: "CHANCE", 16: "ROULETTE", 21: "AIRPORT", 25: "ROULETTE", 30: "CHANCE"}
 CATEGORIES = ["WEB", "PWN", "REV", "CRYPTO", "FORENSIC", "MISC"]
 DIFFICULTIES = ["EASY", "MEDIUM", "HARD"]
 
@@ -20,7 +21,6 @@ CHANCE_CARDS = [
     ("card_reroll", "다시 굴리기", "주사위를 한 번 더 굴린다", "REROLL", "찬스칸 도착 시"),
     ("card_move_forward", "전진", "3칸 전진한다", "MOVE_FORWARD_3", "찬스칸 도착 시"),
     ("card_move_backward", "후퇴", "3칸 후퇴한다", "MOVE_BACKWARD_3", "찬스칸 도착 시"),
-    ("card_skip_quarantine", "무인도 면제권", "무인도 도착을 1회 무시한다", "SKIP_QUARANTINE", "무인도 도착 시"),
     ("card_extra_roll", "추가 주사위", "주사위 굴릴 기회를 1회 더 얻는다", "EXTRA_ROLL", "언제든"),
     ("card_mileage_bonus", "마일리지 보너스", "마일리지를 추가로 얻는다", "MILEAGE_BONUS", "즉시"),
     ("card_roll_twice_choose", "두 번 굴려 선택", "두 번 굴려 유리한 결과를 선택한다", "ROLL_TWICE_CHOOSE", "찬스칸 도착 시"),

@@ -3,12 +3,28 @@ import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../routes/routePaths.js";
 import BoardScreen from "../components/BoardScreen.jsx";
 import useBoardController from "../hooks/useBoardController.js";
+import { getAirportSelectableCellIndexes, isAirportSelectionMode } from "../utils/boardOverlays.js";
 
 // 문제 리스트(보드) 페이지 - README.md "2. 문제 리스트(보드) 페이지".
 export default function BoardPage() {
   const navigate = useNavigate();
   const board = useBoardController();
   const [quarantineDismissed, setQuarantineDismissed] = useState(false);
+  // 기차여행(Figma 555:342) - 보드 칸을 눌러 고른 목적지. 확인 패널에서 이동을 확정한다.
+  const [airportDestinationIndex, setAirportDestinationIndex] = useState(null);
+  const isAirportSelecting = isAirportSelectionMode({
+    currentCell: board.currentCell,
+    myBoard: board.myBoard,
+    pendingRoll: board.pendingRoll,
+    pendingChanceChoice: board.pendingChanceChoice,
+    awaitingDiscard: board.awaitingDiscard,
+    blockedReason: board.diceStatus?.blockedReason,
+    cellEvent: board.cellEvent,
+  });
+
+  useEffect(() => {
+    if (!isAirportSelecting) setAirportDestinationIndex(null);
+  }, [isAirportSelecting]);
 
   useEffect(() => {
     if (!board.myBoard?.isQuarantined) setQuarantineDismissed(false);
@@ -43,6 +59,15 @@ export default function BoardPage() {
   // 이미 문제를 오픈해둔 칸을 다시 클릭하면 칸 정보 패널 대신 바로 문제
   // 상세로 재진입한다(README 2절 opened_challenges 기준).
   const handleSelectCell = (cellIndex) => {
+    if (isAirportSelecting) {
+      const selectable = getAirportSelectableCellIndexes(
+        board.boardDefinition?.cells,
+        board.myBoard.consumedCellIndexes,
+        board.myBoard.position,
+      );
+      if (selectable.has(cellIndex)) setAirportDestinationIndex(cellIndex);
+      return;
+    }
     const opened = board.openedChallengesByCell.get(cellIndex);
     if (opened) {
       navigate(ROUTES.challengeDetail(opened.challengeId));
@@ -65,6 +90,8 @@ export default function BoardPage() {
       ownedChanceCards={board.ownedChanceCards}
       cellStatesByIndex={board.cellStatesByIndex}
       selectedCell={board.selectedCell}
+      openedChallenges={board.openedChallenges}
+      airportDestinationIndex={airportDestinationIndex}
       isLoading={board.isLoading}
       isMutating={board.isMutating}
       error={board.error}
@@ -78,9 +105,13 @@ export default function BoardPage() {
       onRollDice={() => runBoardAction(board.rollDice)}
       onConfirmDice={() => runBoardAction(board.confirmDice)}
       onOpenChallenge={handleOpenChallenge}
-      onMoveAirport={(destinationIndex) =>
-        runBoardAction(() => board.moveAirport(destinationIndex))
-      }
+      onMoveAirport={async (destinationIndex) => {
+        const result = await runBoardAction(() => board.moveAirport(destinationIndex));
+        if (result) setAirportDestinationIndex(null);
+      }}
+      onCancelAirportDestination={() => setAirportDestinationIndex(null)}
+      onOpenChallengeDetail={(challengeId) => navigate(ROUTES.challengeDetail(challengeId))}
+      onViewAllChallenges={() => navigate(ROUTES.openChallenges)}
       onUseChanceCard={(cardId, options) =>
         runBoardAction(() => board.useChanceCard(cardId, options))
       }

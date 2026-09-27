@@ -598,6 +598,7 @@ export default function useBoardController() {
     awaitingDiscard,
     ownedChanceCards,
     cellStatesByIndex,
+    openedChallenges,
     openedChallengesByCell,
     selectedCell,
     isLoading,

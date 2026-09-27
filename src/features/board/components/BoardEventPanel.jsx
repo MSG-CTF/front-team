@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
+import MileageRouletteModal from "./MileageRouletteModal.jsx";
 
 const OFFSET_OPTIONS = [-3, -2, -1, 1, 2, 3];
 
@@ -70,51 +71,6 @@ function ChallengeCandidates({ candidates, isMutating, onOpenChallenge }) {
             </span>
           </button>
         ))}
-      </div>
-    </PanelShell>
-  );
-}
-
-function AirportDestination({ cells, consumedCellIndexes, isMutating, onMoveAirport }) {
-  const firstAvailable = useMemo(
-    () =>
-      cells.find((cell) => !consumedCellIndexes.includes(cell.cellIndex))
-        ?.cellIndex ?? "",
-    [cells, consumedCellIndexes],
-  );
-  const [destinationIndex, setDestinationIndex] = useState(firstAvailable);
-
-  useEffect(() => {
-    setDestinationIndex(firstAvailable);
-  }, [firstAvailable]);
-
-  return (
-    <PanelShell title="공항 이동">
-      <p className="my-[0.45cqw] text-[0.72cqw]">
-        아직 소모하지 않은 목적지를 선택해주세요.
-      </p>
-      <div className="flex gap-[0.55cqw]">
-        <select
-          value={destinationIndex}
-          onChange={(event) => setDestinationIndex(Number(event.target.value))}
-          className="min-w-0 flex-1 rounded-[0.3cqw] border border-[#9a6539] bg-[#fff2cf] px-[0.5cqw] py-[0.35cqw] text-[0.7cqw]"
-        >
-          {cells.map((cell) => (
-            <option
-              key={cell.cellIndex}
-              value={cell.cellIndex}
-              disabled={consumedCellIndexes.includes(cell.cellIndex)}
-            >
-              {cell.cellIndex}번 / {cell.name || cell.type}
-            </option>
-          ))}
-        </select>
-        <ActionButton
-          disabled={isMutating || destinationIndex === ""}
-          onClick={() => onMoveAirport(Number(destinationIndex))}
-        >
-          이동
-        </ActionButton>
       </div>
     </PanelShell>
   );
@@ -289,41 +245,7 @@ function ChanceDrawEvent({ event, isMutating, onRetry, onClose }) {
   );
 }
 
-function RouletteEvent({ event, isMutating, onSpin, onClose }) {
-  return (
-    <PanelShell title="룰렛" onClose={event.status === "success" ? onClose : undefined}>
-      {event.status === "success" ? (
-        <dl className="my-[0.5cqw] grid grid-cols-[auto_1fr] gap-x-[0.6cqw] gap-y-[0.3cqw] text-[0.72cqw]">
-          {event.result.label && (
-            <>
-              <dt className="font-bold">결과</dt>
-              <dd>{event.result.label}</dd>
-            </>
-          )}
-          <dt className="font-bold">획득 마일리지</dt>
-          <dd>{event.result.mileageGained}</dd>
-          <dt className="font-bold">총 마일리지</dt>
-          <dd>{event.result.totalMileage}</dd>
-        </dl>
-      ) : (
-        <>
-          <p className="my-[0.5cqw] text-[0.72cqw]">
-            룰렛을 돌려 마일리지를 획득하세요.
-          </p>
-          <ActionButton
-            disabled={isMutating}
-            onClick={() => onSpin(event.token)}
-          >
-            {isMutating ? "처리 중" : "룰렛 돌리기"}
-          </ActionButton>
-        </>
-      )}
-    </PanelShell>
-  );
-}
-
 export default function BoardEventPanel({
-  cells,
   myBoard,
   currentCell,
   pendingRoll,
@@ -334,9 +256,9 @@ export default function BoardEventPanel({
   blockedReason,
   selectedCell,
   isMutating,
+  isAirportSelecting,
   onConfirmDice,
   onOpenChallenge,
-  onMoveAirport,
   onUseChanceCard,
   onConfirmChance,
   onDiscardChance,
@@ -395,7 +317,7 @@ export default function BoardEventPanel({
 
   if (cellEvent?.type === "ROULETTE") {
     return (
-      <RouletteEvent
+      <MileageRouletteModal
         event={cellEvent}
         isMutating={isMutating}
         onSpin={onSpinRoulette}
@@ -417,16 +339,8 @@ export default function BoardEventPanel({
     );
   }
 
-  if (currentCell?.type === "AIRPORT" && !myBoard.airportMoveUsed) {
-    return (
-      <AirportDestination
-        cells={cells}
-        consumedCellIndexes={myBoard.consumedCellIndexes}
-        isMutating={isMutating}
-        onMoveAirport={onMoveAirport}
-      />
-    );
-  }
+  // 기차여행 목적지 선택(Figma 555:342)은 BoardScreen의 AirportTravelOverlay가 맡는다.
+  if (isAirportSelecting) return null;
 
   if (selectedCell) {
     return (

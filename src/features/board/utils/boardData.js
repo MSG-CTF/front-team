@@ -117,7 +117,8 @@ export function adaptCurrentCell(data) {
     challengeCandidates: Array.isArray(data.challenge_candidates)
       ? data.challenge_candidates.map((candidate) => ({
           challengeId: candidate.challenge_id,
-          title: candidate.title,
+          // 필드명 미확정(README 0-3절/2절: title vs challenge_title) - 둘 다 받는다
+          title: candidate.title ?? candidate.challenge_title,
           category: candidate.category,
           clubName: candidate.club_name,
           score: candidate.score,

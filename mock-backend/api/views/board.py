@@ -16,7 +16,8 @@ from ..permissions import (
 from ..response import success
 
 TOTAL_CELLS = 36
-SPECIAL_CELLS = {1: "START", 7: "CHANCE", 16: "QUARANTINE", 21: "AIRPORT", 25: "ROULETTE", 30: "CHANCE"}
+# 칸 타입 5종(QUARANTINE 삭제, 백엔드 #81~#85). 룰렛칸 2개 명세에 맞춰 옛 무인도 자리(16)를 룰렛으로 둔다.
+SPECIAL_CELLS = {1: "START", 7: "CHANCE", 16: "ROULETTE", 21: "AIRPORT", 25: "ROULETTE", 30: "CHANCE"}
 
 
 def cell_type(index):
@@ -157,7 +158,10 @@ class CellCurrentView(APIView):
 
     def get(self, request):
         team = require_team(request)
-        if cell_type(team.position) != "CHALLENGE":
+        already_opened = any(
+            entry.get("cell_index") == team.position for entry in team.opened_challenge_log
+        )
+        if cell_type(team.position) != "CHALLENGE" or already_opened:
             # README 2절: CHALLENGE가 아니거나 이미 오픈한 칸이면 에러가 아니라
             # 200 + challenge_candidates: [] 다. 예전엔 404 CELL_NOT_FOUND를
             # 던졌는데, 그러면 무인도/찬스/공항 등 칸에 있을 때 보드 전체
@@ -500,8 +504,8 @@ class RouletteSpinView(APIView):
         if cell_type(team.position) != "ROULETTE":
             raise ApiError("NOT_ROULETTE_CELL", "룰렛 칸이 아닙니다", status=409)
 
-        # README: "수치 미정" — 목서버에서는 임의 구간으로 흉내낸다.
-        gained = random.choice([0, 10, 20, 30, 50, 100])
+        # 기능 명세(2026-09-28): 50/100/150/200 마일리지 중 하나.
+        gained = random.choice([50, 100, 150, 200])
         team.mileage += gained
         team.save()
 

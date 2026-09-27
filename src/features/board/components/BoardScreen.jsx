@@ -2,15 +2,19 @@ import { useEffect, useState } from "react";
 import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import { getRemainingSeconds } from "../utils/boardData.js";
+import { getAirportSelectableCellIndexes, isAirportSelectionMode } from "../utils/boardOverlays.js";
+import AirportTravelOverlay from "./AirportTravelOverlay.jsx";
 import BoardEventPanel from "./BoardEventPanel.jsx";
 import BoardNav from "./BoardNav.jsx";
 import BoardTrack from "./BoardTrack.jsx";
 import ChanceCardSummary from "./ChanceCardSummary.jsx";
 import DiceStatusPanel from "./DiceStatusPanel.jsx";
 import KothEventBanner from "./KothEventBanner.jsx";
+import OpenChallengesSidePanel, { OpenChallengesToggle } from "./OpenChallengesSidePanel.jsx";
 import QuarantinePanel from "./QuarantinePanel.jsx";
 
-// Figma node 3:2 "BoardPage" (1920x1080) + 146:19 "무인도 클릭"(무인도 모달 상태).
+// Figma node 3:2 "BoardPage" (1920x1080) + 146:19 "무인도 클릭"(무인도 모달 상태)
+// + 518:300 "열린 문제"(좌측 패널) + 555:342 "기차여행"(목적지 선택) + 555:306 "룰렛"(모달).
 // bg-1920x1080.png는 배경(뷰포트 반응형 object-cover)으로만 쓰고, HUD/배너/보드판/
 // 오버레이는 항상 정확한 16:9 무대 위에서 % 좌표로 배치한다(ChallengeDetailScreen과 동일 패턴).
 export default function BoardScreen({
@@ -26,6 +30,8 @@ export default function BoardScreen({
   ownedChanceCards,
   cellStatesByIndex,
   selectedCell,
+  openedChallenges = [],
+  airportDestinationIndex = null,
   isLoading,
   isMutating,
   error,
@@ -46,8 +52,12 @@ export default function BoardScreen({
   onEscapeQuarantine,
   onClearSelectedCell,
   onCloseQuarantine,
+  onOpenChallengeDetail,
+  onViewAllChallenges,
+  onCancelAirportDestination,
 }) {
   const [now, setNow] = useState(Date.now());
+  const [isOpenListVisible, setIsOpenListVisible] = useState(false);
 
   useEffect(() => {
     const timerId = window.setInterval(() => setNow(Date.now()), 1000);
@@ -82,6 +92,23 @@ export default function BoardScreen({
       : null;
   const canRoll =
     diceStatus?.canRoll === true && !isMutating && !awaitingDiscard;
+  const isAirportSelecting =
+    !showQuarantine &&
+    isAirportSelectionMode({
+      currentCell,
+      myBoard,
+      pendingRoll,
+      pendingChanceChoice,
+      awaitingDiscard,
+      blockedReason: diceStatus?.blockedReason,
+      cellEvent,
+    });
+  const airportSelectableCellIndexes = isAirportSelecting
+    ? getAirportSelectableCellIndexes(cells, myBoard?.consumedCellIndexes, myBoard?.position)
+    : null;
+  const airportDestination = isAirportSelecting && airportDestinationIndex != null
+    ? cells.find((cell) => cell.cellIndex === airportDestinationIndex) ?? null
+    : null;
 
   return (
     <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080.png">
@@ -91,6 +118,12 @@ export default function BoardScreen({
         blockedMessage={blockedMessage}
         resetInSeconds={resetInSeconds}
         challengeRemainingSeconds={challengeRemainingSeconds}
+      />
+
+      <OpenChallengesToggle
+        isOpen={isOpenListVisible}
+        count={openedChallenges.length}
+        onToggle={() => setIsOpenListVisible((value) => !value)}
       />
 
       <BoardNav />
@@ -106,6 +139,8 @@ export default function BoardScreen({
         isRolling={isMutating}
         onRollDice={onRollDice}
         onSelectCell={onSelectCell}
+        selectableCellIndexes={airportSelectableCellIndexes}
+        highlightedCellIndex={airportDestination?.cellIndex ?? null}
       />
 
       <ChanceCardSummary
@@ -120,9 +155,26 @@ export default function BoardScreen({
         onUseCard={onUseChanceCard}
       />
 
+      {isOpenListVisible && (
+        <OpenChallengesSidePanel
+          challenges={openedChallenges}
+          onSelectChallenge={onOpenChallengeDetail}
+          onViewAll={onViewAllChallenges}
+          onClose={() => setIsOpenListVisible(false)}
+        />
+      )}
+
+      {isAirportSelecting && (
+        <AirportTravelOverlay
+          destination={airportDestination}
+          isMutating={isMutating}
+          onConfirm={onMoveAirport}
+          onCancel={onCancelAirportDestination}
+        />
+      )}
+
       {!showQuarantine && (
         <BoardEventPanel
-          cells={cells}
           myBoard={myBoard}
           currentCell={currentCell}
           pendingRoll={pendingRoll}
@@ -133,9 +185,9 @@ export default function BoardScreen({
           blockedReason={diceStatus?.blockedReason}
           selectedCell={selectedCell}
           isMutating={isMutating}
+          isAirportSelecting={isAirportSelecting}
           onConfirmDice={onConfirmDice}
           onOpenChallenge={onOpenChallenge}
-          onMoveAirport={onMoveAirport}
           onUseChanceCard={onUseChanceCard}
           onConfirmChance={onConfirmChance}
           onDiscardChance={onDiscardChance}

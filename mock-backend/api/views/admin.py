@@ -171,7 +171,7 @@ class AdminInstanceResetView(APIView):
         instance.status = "RESETTING"
         instance.save()
         _log_event(
-            "INSTANCE_FORCE_RESET",
+            "INSTANCE_FORCED",
             "인스턴스 강제 재시작",
             team_name=instance.team.team_name,
             challenge_title=instance.challenge.title,
@@ -209,7 +209,7 @@ class AdminInstanceDeleteView(APIView):
         instance.status = "STOPPING"
         instance.save()
         _log_event(
-            "INSTANCE_FORCE_STOP",
+            "INSTANCE_FORCED",
             "인스턴스 강제 종료",
             team_name=instance.team.team_name,
             challenge_title=instance.challenge.title,
@@ -226,6 +226,11 @@ class AdminInstanceDeleteView(APIView):
             },
             status=202,
         )
+
+
+def _avg(nodes, key):
+    values = [n[key] for n in nodes if n.get(key) is not None]
+    return round(sum(values) / len(values), 1) if values else None
 
 
 class AdminResourcesView(APIView):
@@ -268,9 +273,10 @@ class AdminResourcesView(APIView):
                 "node_id": "mock-node-4",
                 "node_name": "local-node-4",
                 "status": "ACTIVE",
-                "running_instances": 0,
-                "cpu_usage_percent": 9.0,
-                "memory_usage_percent": 15.0,
+                # null은 "미수집"이다. 0으로 표시하면 안 된다(백엔드 PR #85).
+                "running_instances": None,
+                "cpu_usage_percent": None,
+                "memory_usage_percent": None,
                 "disk_usage_percent": 20.0,
             },
         ]
@@ -280,18 +286,18 @@ class AdminResourcesView(APIView):
                 "accounts": [
                     {
                         "account_id": "mock-account-1",
-                        "account_name": "local-mock",
+                        "provider": "GCP",
+                        "scope_id": "example-project",
                         "status": "ACTIVE",
                         "running_instances": running,
-                        "instance_quota": 100,
                         "nodes": nodes,
                     }
                 ],
                 "summary": {
                     "nodes_total": len(nodes),
                     "nodes_healthy": healthy,
-                    "avg_cpu_usage_percent": round(sum(n["cpu_usage_percent"] for n in nodes) / len(nodes), 1),
-                    "avg_memory_usage_percent": round(sum(n["memory_usage_percent"] for n in nodes) / len(nodes), 1),
+                    "avg_cpu_usage_percent": _avg(nodes, "cpu_usage_percent"),
+                    "avg_memory_usage_percent": _avg(nodes, "memory_usage_percent"),
                     "avg_disk_usage_percent": round(sum(n["disk_usage_percent"] for n in nodes) / len(nodes), 1),
                 },
                 "total_count": 1,
@@ -369,7 +375,7 @@ class AdminTeamMileageView(APIView):
             reason=reason,
         )
         _log_event(
-            "MILEAGE_ADJUST",
+            "MILEAGE_ADJUSTED",
             f"마일리지 {'지급' if amount > 0 else '회수'} {amount:+d}",
             team_name=team.team_name,
             actor=request.user.nickname,
@@ -403,7 +409,7 @@ class AdminTeamBanView(APIView):
         team.banned_at = timezone.now()
         team.banned_by = request.user.nickname
         team.save()
-        _log_event("TEAM_BAN", "팀 벤(BAN) 처리", team_name=team.team_name, actor=request.user.nickname)
+        _log_event("TEAM_BANNED", "팀 벤(BAN) 처리", team_name=team.team_name, severity="WARNING", actor=request.user.nickname)
         return success(
             {
                 "team_id": str(team.id),
@@ -423,7 +429,7 @@ class AdminTeamBanView(APIView):
         team.is_banned = False
         team.ban_reason = None
         team.save()
-        _log_event("TEAM_UNBAN", "팀 벤(BAN) 해제", team_name=team.team_name, actor=request.user.nickname)
+        _log_event("TEAM_UNBANNED", "팀 벤(BAN) 해제", team_name=team.team_name, actor=request.user.nickname)
         return success(
             {
                 "team_id": str(team.id),
@@ -548,6 +554,13 @@ class AdminPaymentRefundView(APIView):
             amount=history.amount,
             item_name=history.item_name,
             ref_history_id=history.id,
+        )
+
+        _log_event(
+            "PAYMENT_REFUNDED",
+            f"결제 환불 {history.item_name} ({abs(history.amount)} 마일리지)",
+            team_name=team.team_name,
+            actor=request.user.nickname,
         )
 
         return success(
@@ -797,7 +810,7 @@ class AdminChallengeVisibilityView(APIView):
         challenge.is_published = is_published
         challenge.save()
         _log_event(
-            "CHALLENGE_VISIBILITY",
+            "CHALLENGE_VISIBILITY_CHANGED",
             "문제 공개 상태 전환",
             challenge_title=f"{challenge.category} · {challenge.title}",
             actor=request.user.nickname,
@@ -887,6 +900,7 @@ class AdminSettingsView(APIView):
 
         setting.updated_by = request.user.nickname
         setting.save()
+        _log_event("SETTINGS_CHANGED", f"대회 설정 변경 {request.data}", actor=request.user.nickname)
         return success(_settings_dict(setting))
 
 
@@ -1102,8 +1116,14 @@ class AdminBoardCellView(APIView):
         reason = request.data.get("reason", "")
         if status_value not in BOARD_CELL_STATUSES:
             raise ApiError("INVALID_REQUEST", f"status는 {BOARD_CELL_STATUSES} 중 하나여야 합니다", status=400)
-        if not (0 <= cell_index <= 35):
-            raise ApiError("INVALID_REQUEST", "cell_index는 0~35여야 합니다", status=400)
+        # 보드 칸은 1번(START)~36번이다. 0번 칸은 존재하지 않는다(백엔드 #81~#85).
+        if not (1 <= cell_index <= 36):
+            raise ApiError("INVALID_REQUEST", "cell_index는 1~36이어야 합니다", status=400)
+        # OPENED/CLEARED는 그 칸에서 이미 연 문제가 있어야 한다.
+        if status_value in ("OPENED", "CLEARED") and not any(
+            e.get("cell_index") == cell_index for e in team.opened_challenge_log
+        ):
+            raise ApiError("INVALID_REQUEST", "이 칸에서 연 문제가 없어 OPENED/CLEARED로 바꿀 수 없습니다", status=400)
 
         _snapshot_team(team, f"칸 #{cell_index} 상태 변경 직전", request.user.nickname)
 
@@ -1120,7 +1140,7 @@ class AdminBoardCellView(APIView):
         team.save()
 
         _log_event(
-            "BOARD_CELL_UPDATE",
+            "CELL_STATUS_CHANGED",
             "clear 칸 관리",
             team_name=f"{team.team_name} · 칸 #{cell_index}",
             actor=request.user.nickname,
@@ -1155,8 +1175,8 @@ class AdminBoardPositionView(APIView):
         position = request.data.get("position")
         consume_cell = bool(request.data.get("consume_cell", False))
         reason = request.data.get("reason", "")
-        if not isinstance(position, int) or not (0 <= position <= 35):
-            raise ApiError("INVALID_REQUEST", "position은 0~35의 정수여야 합니다", status=400)
+        if not isinstance(position, int) or isinstance(position, bool) or not (1 <= position <= 36):
+            raise ApiError("INVALID_REQUEST", "position은 1~36의 정수여야 합니다", status=400)
 
         _snapshot_team(team, "말 위치 이동 직전", request.user.nickname)
 
@@ -1166,7 +1186,7 @@ class AdminBoardPositionView(APIView):
         team.save()
 
         _log_event(
-            "BOARD_POSITION_MOVE",
+            "BOARD_POSITION_MOVED",
             "말 위치 이동",
             team_name=f"{team.team_name} · 칸 #{position}",
             actor=request.user.nickname,
@@ -1208,7 +1228,7 @@ class AdminBoardDiceView(APIView):
         team.save()
 
         _log_event(
-            "BOARD_DICE_ADJUST",
+            "DICE_ADJUSTED",
             f"주사위 {'지급' if amount > 0 else '회수'} {amount:+d}",
             team_name=team.team_name,
             actor=request.user.nickname,

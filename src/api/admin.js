@@ -106,7 +106,9 @@ export function rollbackTeam(teamId, { snapshotId, reason }) {
 }
 
 export function updateBoardCell(teamId, cellIndex, { status, reason }) {
-  // [백엔드: 진행 중] PATCH .../board/cells/{cell_index} - status: UNVISITED|CONSUMED|OPENED|CLEARED. 점수 미변경.
+  // [백엔드: 완료(머지)] PATCH .../board/cells/{cell_index} - cell_index 1~36(0번 칸 없음).
+  // status: UNVISITED|CONSUMED|OPENED|CLEARED. 점수 미변경.
+  // OPENED/CLEARED는 그 칸에 이미 연 문제가 있어야 한다 - 없으면 400 INVALID_REQUEST.
   return apiClient.patch(`/admin/teams/${teamId}/board/cells/${cellIndex}`, {
     status,
     reason,
@@ -114,7 +116,8 @@ export function updateBoardCell(teamId, cellIndex, { status, reason }) {
 }
 
 export function moveBoardPosition(teamId, { position, consumeCell = false, reason }) {
-  // [백엔드: 진행 중] PATCH .../board/position - position 0~35, 도착 칸 효과 미발동
+  // [백엔드: 완료(머지)] PATCH .../board/position - position 1~36(1번이 START), 도착 칸 효과 미발동.
+  // 응답 type은 START/CHALLENGE/CHANCE/AIRPORT/ROULETTE 5종(QUARANTINE 없음).
   return apiClient.patch(`/admin/teams/${teamId}/board/position`, {
     position,
     consume_cell: consumeCell,
@@ -221,12 +224,15 @@ export function publishAdminSignature(signatureId, isPublished) {
 
 // ── 리소스 / 로그 ─────────────────────────────────────────────────────────
 export function getAdminResources(config) {
-  // [백엔드: 시작 전] 수집 정보 없으면 data: null
+  // [백엔드: PR #85 리뷰 중] accounts[]: { account_id, provider, scope_id, status, running_instances, nodes }
+  // (account_name, instance_quota 삭제). cpu/memory_usage_percent, running_instances는 null이면 미수집.
+  // 수집된 VM이 없으면 200 + data: null, 리소스 브로커 연결 실패는 503 SCHEDULER_UNAVAILABLE.
   return apiClient.get("/admin/resources", config);
 }
 
 export function getAdminEvents({ type, teamId, page = 1, size = 50 } = {}, config) {
-  // [백엔드: 진행 중] type / team_id 선택
+  // [백엔드: 완료(머지)] type / team_id 선택. type 11종은 features/admin/utils/adminBoard.js
+  // ADMIN_EVENT_TYPES, severity는 INFO/WARNING/CRITICAL/MANUAL_REVIEW 4종(ERROR 없음).
   return apiClient.get("/admin/events", {
     ...config,
     params: { type, team_id: teamId, page, size },

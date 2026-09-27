@@ -66,12 +66,12 @@ export const MILEAGE_TYPE = {
   ADMIN_DEDUCT: "ADMIN_DEDUCT",
 };
 
+// 칸 타입은 5종이다. QUARANTINE(무인도)은 백엔드에서 삭제됐다(#81~#85).
 export const CELL_TYPE = {
   START: "START",
   CHALLENGE: "CHALLENGE",
   CHANCE: "CHANCE",
   AIRPORT: "AIRPORT",
-  QUARANTINE: "QUARANTINE",
   ROULETTE: "ROULETTE",
 };
 
