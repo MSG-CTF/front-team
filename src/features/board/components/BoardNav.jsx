@@ -73,11 +73,11 @@ export default function BoardNav() {
         동아리 부스 둘러보기 →
       </button>
       {/* 로그아웃 - 이 3개 아이콘과 달리 Figma에 그려진 그림이 없어서(시안 없음)
-          그림 없는 화면 왼쪽 아래 여백에 반투명 텍스트 버튼으로만 얹었다. */}
+          반투명 텍스트 버튼으로 얹었다. 우상단 이동 아이콘 바로 아래, KoTH 배너(top 26.48%) 위 여백. */}
       <button
         type="button"
         onClick={performLogout}
-        className="absolute bottom-[2%] left-[1%] rounded-[0.4cqw] border border-[#c9a86a]/60 bg-[#2b1609]/70 px-[0.9cqw] py-[0.45cqw] font-inria-serif text-[0.8cqw] text-[#f1e4c8] transition-colors hover:bg-[#2b1609]/90"
+        className="absolute right-[2%] top-[17.5%] rounded-[0.4cqw] border border-[#c9a86a]/60 bg-[#2b1609]/70 px-[0.9cqw] py-[0.45cqw] font-inria-serif text-[0.8cqw] text-[#f1e4c8] transition-colors hover:bg-[#2b1609]/90"
       >
         로그아웃
       </button>
