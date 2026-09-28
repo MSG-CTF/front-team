@@ -5,20 +5,18 @@ import {
   adjustMileage,
   banTeam,
   createAdminIdempotencyKey,
-  deleteAdminTeam,
   getAdminTeamDetail,
   getTeamSnapshots,
   moveBoardPosition,
   rollbackTeam,
   unbanTeam,
-  updateAdminTeam,
   updateBoardCell,
 } from "../../../api/admin.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
-import { TeamDeleteForm, TeamEditForm } from "../components/AdminTeamManageForms.jsx";
+import { AdminTeamDeleteDialog, AdminTeamEditDialog } from "../components/AdminTeamManagementDialogs.jsx";
 import { getAdminRequestError } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { mileageAttempt, validateMileageAdjustment } from "../utils/adminMileage.js";
@@ -336,6 +334,7 @@ export default function AdminTeamDetailPage() {
   const [isMutating, setIsMutating] = useState(false);
   const [actionError, setActionError] = useState("");
   const [actionMessage, setActionMessage] = useState("");
+  const [teamDialog, setTeamDialog] = useState(null);
   const pending = useRef(false);
 
   const runAction = async (action, fallbackMessage) => {
@@ -381,31 +380,6 @@ export default function AdminTeamDetailPage() {
     await runAction(() => unbanTeam(teamId), "처리에 실패했습니다.");
   };
 
-  const handleTeamUpdate = async (body) => {
-    const ok = await runAction(() => updateAdminTeam(teamId, body), "팀 정보 수정에 실패했습니다.");
-    if (ok) setActionMessage("팀 정보를 저장했습니다. 소속·팀장이 바뀐 계정은 다시 로그인해야 합니다.");
-    return ok;
-  };
-
-  // 삭제 후에는 상세를 다시 불러올 수 없으므로 runAction(재조회 포함)을 쓰지 않고 목록으로 보낸다.
-  const handleTeamDelete = async (reason) => {
-    if (pending.current) return;
-    pending.current = true;
-    setIsMutating(true);
-    setActionError("");
-    setActionMessage("");
-    try {
-      const response = await deleteAdminTeam(teamId, { reason });
-      if (!isSuccess(response.data)) throw new Error(response.data?.message || "팀 삭제에 실패했습니다.");
-      navigate(ROUTES.adminTeams, { replace: true });
-    } catch (error) {
-      setActionError(getAdminRequestError(error, "팀 삭제에 실패했습니다.").error);
-    } finally {
-      pending.current = false;
-      setIsMutating(false);
-    }
-  };
-
   const handleCellUpdate = (cellIndex, status, reason) =>
     runAction(() => updateBoardCell(teamId, cellIndex, { status, reason }), "칸 상태 변경에 실패했습니다.");
 
@@ -444,14 +418,18 @@ export default function AdminTeamDetailPage() {
                   <AdminBadge tone="good">정상</AdminBadge>
                 )}
               </div>
-              <button
-                type="button"
-                disabled={isMutating}
-                onClick={handleBanToggle}
-                className="rounded border border-admin-failed px-3 py-1 font-song-myung text-xs text-admin-failed disabled:opacity-50"
-              >
-                {data.is_banned ? "밴 해제" : "밴 처리"}
-              </button>
+              <div className="flex gap-2">
+                <button type="button" disabled={isMutating} onClick={() => setTeamDialog("edit")}
+                  className="rounded border border-admin-divider px-3 py-1 font-song-myung text-xs disabled:opacity-50">수정</button>
+                <button
+                  type="button"
+                  disabled={isMutating}
+                  onClick={handleBanToggle}
+                  className="rounded border border-admin-failed px-3 py-1 font-song-myung text-xs text-admin-failed disabled:opacity-50"
+                >
+                  {data.is_banned ? "밴 해제" : "밴 처리"}
+                </button>
+              </div>
             </div>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-1 font-song-myung text-sm md:grid-cols-4">
               <dt className="text-admin-muted">점수</dt>
@@ -481,11 +459,6 @@ export default function AdminTeamDetailPage() {
                 </li>
               ))}
             </ul>
-          </section>
-
-          <section>
-            <h2 className="mb-2 font-song-myung text-sm font-bold text-admin-muted">팀 정보 수정</h2>
-            <TeamEditForm team={data} isMutating={isMutating} onSubmit={handleTeamUpdate} />
           </section>
 
           <section>
@@ -540,11 +513,24 @@ export default function AdminTeamDetailPage() {
             <RollbackSection teamId={teamId} isMutating={isMutating} onRollback={handleRollback} />
           </section>
 
-          <section>
-            <h2 className="mb-2 font-song-myung text-sm font-bold text-admin-failed">팀 삭제</h2>
-            <TeamDeleteForm team={data} isMutating={isMutating} onSubmit={handleTeamDelete} />
+          <section className="rounded-lg border border-admin-failed/70 bg-white/30 p-4">
+            <h2 className="m-0 font-song-myung text-sm font-bold text-admin-failed">위험 조치</h2>
+            <p className="font-song-myung text-sm">팀과 소속 계정 및 모든 팀 기록을 영구 삭제합니다.</p>
+            <button type="button" disabled={isMutating} onClick={() => setTeamDialog("delete")}
+              className="rounded border border-admin-failed px-3 py-1.5 font-song-myung text-sm text-admin-failed disabled:opacity-50">팀 삭제...</button>
           </section>
         </div>
+      )}
+      {teamDialog === "edit" && data && (
+        <AdminTeamEditDialog team={data} onClose={() => setTeamDialog(null)} onSaved={async () => {
+          setTeamDialog(null);
+          const refreshed = await detail.reload();
+          setActionMessage(refreshed ? "팀 정보를 수정했습니다. 소속 또는 팀장 정보가 변경된 팀원은 다시 로그인해야 변경사항이 반영됩니다."
+            : "수정은 완료됐지만 상세 정보를 다시 불러오지 못했습니다. 새로고침해 확인하세요.");
+        }} />
+      )}
+      {teamDialog === "delete" && data && (
+        <AdminTeamDeleteDialog team={data} onClose={() => setTeamDialog(null)} onDeleted={() => navigate(ROUTES.adminTeams, { replace: true })} />
       )}
     </AdminLayout>
   );

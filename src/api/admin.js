@@ -71,19 +71,20 @@ export function getAdminTeamDetail(teamId, { historyLimit = 10 } = {}, config) {
   });
 }
 
-export function updateAdminTeam(teamId, body) {
+export function updateAdminTeam(teamId, changes) {
   // [백엔드: PR 대기] PATCH /admin/teams/{id} - team_name / add_user_ids / remove_user_ids /
-  // leader_user_id(null=공석) 중 하나 이상 + reason. 바뀐 항목만 보낸다(features/admin/utils/adminTeam.js).
-  // 소속/팀장이 바뀐 계정은 refresh_token이 폐기돼 다시 로그인해야 한다. TEAM_UPDATED(WARNING) 이벤트.
-  // 에러: 409 TEAM_NAME_TAKEN / 409 ACTIVE_INSTANCE_EXISTS(제외할 팀원 인스턴스 실행 중)
-  return apiClient.patch(`/admin/teams/${teamId}`, body, MUTATION_CONFIG);
+  // leader_user_id(null=공석) 중 하나 이상 + reason. 소속/팀장이 바뀐 계정은 다시 로그인해야 한다.
+  // TEAM_UPDATED(WARNING) 이벤트. 에러: 409 TEAM_NAME_TAKEN / 409 ACTIVE_INSTANCE_EXISTS
+  return apiClient.patch(`/admin/teams/${encodeURIComponent(teamId)}`, changes, MUTATION_CONFIG);
 }
 
-export function deleteAdminTeam(teamId, { reason }) {
-  // [백엔드: PR 대기] DELETE /admin/teams/{id} - Body { reason }. 되돌릴 수 없다: 소속 계정과
-  // 풀이/제출/마일리지/결제/보드/시그니처 기록이 함께 삭제되고, 푼 문제 점수가 재계산된다.
-  // TEAM_DELETED(CRITICAL) 이벤트. 에러: 409 ACTIVE_INSTANCE_EXISTS(실행 중 인스턴스 먼저 종료)
-  return apiClient.delete(`/admin/teams/${teamId}`, { ...MUTATION_CONFIG, data: { reason } });
+export function deleteAdminTeam(teamId, reason) {
+  // [백엔드: PR 대기] DELETE /admin/teams/{id} - Body { reason }. 되돌릴 수 없다(소속 계정과 팀 기록
+  // 연쇄 삭제, 푼 문제 점수 재계산). TEAM_DELETED(CRITICAL) 이벤트. 에러: 409 ACTIVE_INSTANCE_EXISTS
+  return apiClient.delete(`/admin/teams/${encodeURIComponent(teamId)}`, {
+    ...MUTATION_CONFIG,
+    data: { reason },
+  });
 }
 
 export function banTeam(teamId, { banReason }) {

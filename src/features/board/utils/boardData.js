@@ -245,18 +245,30 @@ export function getRemainingSeconds(targetIso, diceStatus, now = Date.now()) {
   return Math.max(0, Math.ceil((targetAt - estimatedServerNow) / 1000));
 }
 
-// board-grid.png의 36칸은 동일 간격의 타원 궤도에 배치되어 있다.
-// 이 좌표는 API 값이 아니라 고정된 Figma 보드 asset의 클릭/말 배치 좌표다.
-// 각도는 1번 칸(정중앙 하단)에서 시작해 시계 방향으로 증가한다(Figma 시안 기준).
+// board-grid.png (1772x1330)의 실제 칸 중심. START가 다른 칸보다 넓고
+// 일반 칸도 등각 타원이 아니므로 수식으로 균등 분할하면 칸마다 위치가 달라진다.
+// 이미지 원본 픽셀 좌표를 비율로 바꿔 반응형 보드에도 동일하게 적용한다.
+const BOARD_IMAGE_SIZE = { width: 1772, height: 1330 };
+const BOARD_CELL_CENTERS = [
+  [886, 1210], // 1 START
+  [655, 1187], [514, 1147], [395, 1092], [296, 1024], [211, 946],
+  [149, 858], [112, 763], [102, 660], [113, 559], [146, 465],
+  [198, 378], [270, 300], [355, 232], [451, 174], [555, 131],
+  [666, 99], [781, 80], [901, 74], [1017, 81], [1132, 89],
+  [1239, 137], [1339, 184], [1432, 244], [1514, 315], [1583, 394],
+  [1634, 483], [1663, 576], [1669, 679], [1653, 781], [1613, 874],
+  [1548, 960], [1458, 1039], [1354, 1106], [1234, 1155], [1101, 1188],
+];
+
 export function getBoardCellPosition(cellIndex) {
   const normalizedIndex = Math.min(
     BOARD_CELL_COUNT,
-    Math.max(1, Number(cellIndex) || 1),
+    Math.max(1, Math.round(Number(cellIndex) || 1)),
   );
-  const angle = (Math.PI / 2) + ((normalizedIndex - 1) * Math.PI * 2) / BOARD_CELL_COUNT;
+  const [x, y] = BOARD_CELL_CENTERS[normalizedIndex - 1];
 
   return {
-    x: 50 + 43.5 * Math.cos(angle),
-    y: 50 + 42.5 * Math.sin(angle),
+    x: (x / BOARD_IMAGE_SIZE.width) * 100,
+    y: (y / BOARD_IMAGE_SIZE.height) * 100,
   };
 }
