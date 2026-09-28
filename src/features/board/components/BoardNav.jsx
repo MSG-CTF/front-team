@@ -68,16 +68,17 @@ export default function BoardNav() {
       <button
         type="button"
         onClick={() => navigate(ROUTES.signatures)}
-        className="absolute bottom-[2%] right-[2%] border-0 bg-[#2b1609]/80 px-[1.1cqw] py-[0.55cqw] font-inria-serif text-[1cqw] text-[#f1e4c8] hover:bg-[#2b1609] focus-visible:outline focus-visible:outline-[#f1e4c8]"
+        className="absolute bottom-[2%] right-[3.65%] border-0 bg-[#2b1609]/80 px-[1.1cqw] py-[0.55cqw] font-inria-serif text-[1cqw] text-[#f1e4c8] hover:bg-[#2b1609] focus-visible:outline focus-visible:outline-[#f1e4c8]"
       >
         동아리 부스 둘러보기 →
       </button>
       {/* 로그아웃 - 이 3개 아이콘과 달리 Figma에 그려진 그림이 없어서(시안 없음)
-          반투명 텍스트 버튼으로 얹었다. 우상단 이동 아이콘 바로 아래, KoTH 배너(top 26.48%) 위 여백. */}
+          반투명 텍스트 버튼으로 얹었다. 우상단 이동 아이콘 바로 아래, KoTH 배너(top 26.48%) 위 여백.
+          오른쪽 끝(right 3.65%)은 스코어보드 아이콘·KoTH 배너·동아리 부스 버튼과 한 선. */}
       <button
         type="button"
         onClick={performLogout}
-        className="absolute right-[2%] top-[17.5%] rounded-[0.4cqw] border border-[#c9a86a]/60 bg-[#2b1609]/70 px-[0.9cqw] py-[0.45cqw] font-inria-serif text-[0.8cqw] text-[#f1e4c8] transition-colors hover:bg-[#2b1609]/90"
+        className="absolute right-[3.65%] top-[17.5%] rounded-[0.4cqw] border border-[#c9a86a]/60 bg-[#2b1609]/70 px-[0.9cqw] py-[0.45cqw] font-inria-serif text-[0.8cqw] text-[#f1e4c8] transition-colors hover:bg-[#2b1609]/90"
       >
         로그아웃
       </button>
