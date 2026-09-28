@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ROUTES } from "../../../routes/routePaths.js";
 import {
   adjustDiceRolls,
   adjustMileage,
@@ -13,6 +12,7 @@ import {
   unbanTeam,
   updateBoardCell,
 } from "../../../api/admin.js";
+import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
@@ -20,6 +20,14 @@ import { AdminTeamDeleteDialog, AdminTeamEditDialog } from "../components/AdminT
 import { getAdminRequestError } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { mileageAttempt, validateMileageAdjustment } from "../utils/adminMileage.js";
+import {
+  BOARD_CELL_MAX,
+  BOARD_CELL_MIN,
+  CELL_STATUSES_REQUIRING_OPENED_CHALLENGE,
+  parseBoardCellIndex,
+  validateBoardCellUpdate,
+  validateBoardPositionMove,
+} from "../utils/adminBoard.js";
 
 function MileageForm({ teamId, isMutating, onSubmit }) {
   const [amount, setAmount] = useState("");
@@ -73,8 +81,8 @@ function MileageForm({ teamId, isMutating, onSubmit }) {
   );
 }
 
-// 보드 강제 개입 3종 - clear 칸 관리(진행 중) / 말 위치 이동(진행 중) / 주사위
-// 지급/회수(PR 대기). README 8절, api/admin.js에 함수가 이미 있어 화면만 붙였다.
+// 보드 강제 개입 3종 - clear 칸 관리 / 말 위치 이동(백엔드 머지됨) / 주사위 지급/회수.
+// 칸 번호는 1(START)~36이다. 0번 칸은 없다(백엔드 #81~#85).
 function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMove, onDiceAdjust }) {
   const [cellIndex, setCellIndex] = useState("");
   const [cellStatus, setCellStatus] = useState("CLEARED");
@@ -92,8 +100,8 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          const idx = Number(cellIndex);
-          if (!Number.isInteger(idx) || idx < 0 || idx > 35 || !cellReason.trim()) return;
+          if (validateBoardCellUpdate({ cellIndex, status: cellStatus, reason: cellReason })) return;
+          const idx = parseBoardCellIndex(cellIndex);
           onCellUpdate(idx, cellStatus, cellReason.trim()).then((ok) => {
             if (ok) {
               setCellIndex("");
@@ -106,12 +114,12 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
         <span className="w-24 text-xs text-admin-muted">clear 칸 관리</span>
         <input
           type="number"
-          min={0}
-          max={35}
+          min={BOARD_CELL_MIN}
+          max={BOARD_CELL_MAX}
           value={cellIndex}
           onChange={(event) => setCellIndex(event.target.value)}
-          placeholder="칸 번호(0~35)"
-          className="w-28 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
+          placeholder={`칸 번호(${BOARD_CELL_MIN}~${BOARD_CELL_MAX})`}
+          className="w-36 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
         />
         <select
           value={cellStatus}
@@ -125,24 +133,30 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
         </select>
         <input
           value={cellReason}
+          maxLength={500}
           onChange={(event) => setCellReason(event.target.value)}
           placeholder="사유"
           className="w-40 rounded border border-admin-divider bg-white/60 px-2 py-1.5"
         />
         <button
           type="submit"
-          disabled={isMutating || cellIndex === "" || !cellReason.trim()}
+          disabled={isMutating || Boolean(validateBoardCellUpdate({ cellIndex, status: cellStatus, reason: cellReason }))}
           className="rounded border border-admin-ink px-3 py-1.5 disabled:opacity-50"
         >
           적용
         </button>
+        {CELL_STATUSES_REQUIRING_OPENED_CHALLENGE.includes(cellStatus) && (
+          <span className="basis-full pl-[6.5rem] text-xs text-admin-muted">
+            OPENED/CLEARED는 이 칸에서 이미 연 문제가 있어야 합니다. 없으면 서버가 400으로 거절합니다.
+          </span>
+        )}
       </form>
 
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          const pos = Number(position);
-          if (!Number.isInteger(pos) || pos < 0 || pos > 35 || !positionReason.trim()) return;
+          if (validateBoardPositionMove({ position, reason: positionReason })) return;
+          const pos = parseBoardCellIndex(position);
           onPositionMove(pos, consumeCell, positionReason.trim()).then((ok) => {
             if (ok) {
               setPosition("");
@@ -155,12 +169,12 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
         <span className="w-24 text-xs text-admin-muted">말 위치 이동</span>
         <input
           type="number"
-          min={0}
-          max={35}
+          min={BOARD_CELL_MIN}
+          max={BOARD_CELL_MAX}
           value={position}
           onChange={(event) => setPosition(event.target.value)}
-          placeholder="이동할 칸(0~35)"
-          className="w-28 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
+          placeholder={`이동할 칸(${BOARD_CELL_MIN}~${BOARD_CELL_MAX})`}
+          className="w-36 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
         />
         <label className="flex items-center gap-1 text-xs">
           <input type="checkbox" checked={consumeCell} onChange={(event) => setConsumeCell(event.target.checked)} />
@@ -168,13 +182,14 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
         </label>
         <input
           value={positionReason}
+          maxLength={500}
           onChange={(event) => setPositionReason(event.target.value)}
           placeholder="사유"
           className="w-40 rounded border border-admin-divider bg-white/60 px-2 py-1.5"
         />
         <button
           type="submit"
-          disabled={isMutating || position === "" || !positionReason.trim()}
+          disabled={isMutating || Boolean(validateBoardPositionMove({ position, reason: positionReason }))}
           className="rounded border border-admin-ink px-3 py-1.5 disabled:opacity-50"
         >
           이동
@@ -203,7 +218,7 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
           value={diceAmount}
           onChange={(event) => setDiceAmount(event.target.value)}
           placeholder="+지급 / -회수"
-          className="w-28 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
+          className="w-36 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
         />
         <input
           value={diceReason}

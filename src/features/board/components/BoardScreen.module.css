@@ -1,5 +1,7 @@
 .desktopOnly, .boardViewport { display: contents; }
 .mobileNav, .boardHint, .mobileQuarantineTitle { display: none; }
+/* 열린 문제 패널 제목은 데스크톱에선 패널 이미지에 그려져 있어 스크린리더에만 노출 */
+.mobileOpenTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 @media (max-width: 1100px) {
   .frame.frame { position: relative; min-height: 100svh; overflow: visible; background: #533018; }
@@ -83,4 +85,63 @@
   .quarantinePanel > form { display: flex; gap: 8px; padding: 0; }
   .quarantinePanel input, .quarantinePanel button { min-height: 44px; font-size: 16px; padding: 8px; }
   .quarantinePanel .quarantineClose { top: 8px; right: 8px; width: 44px; padding: 8px; }
+
+  /* 열린 문제(Figma 518:300): 버튼은 세로 흐름에 두고, 패널은 무인도 패널처럼 하단 시트로 */
+  .stage .openToggle { position: static; width: 100%; min-height: 44px; padding: 8px 12px; font-size: 16px; text-align: left; white-space: normal; background: #2b1609e8; border: 1px solid #9a6f3b; }
+  .stage .openPanel {
+    position: fixed;
+    inset: auto 12px 16px;
+    z-index: 45;
+    width: min(calc(100% - 24px), 520px);
+    height: auto;
+    max-height: 80dvh;
+    margin-inline: auto;
+    padding: 20px;
+    overflow-y: auto;
+    border: 8px solid transparent;
+    border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+    background: #eddbb6;
+    background-clip: padding-box;
+  }
+  .openPanel > img { display: none; }
+  .openPanel .mobileOpenTitle { position: static; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 48px 12px 0; font: 24px/1.4 "Song Myung", serif; color: #613d15; }
+  .openPanel > ol { position: static; width: auto; height: auto; max-height: 55dvh; }
+  .openPanel .openClose { top: 8px; left: auto; right: 8px; width: 44px; height: 44px; padding: 10px; }
+  .openPanel li button { height: auto; min-height: 56px; gap: 12px; padding: 8px 0; }
+  .openPanel li button > span:first-child { width: 28px; height: 30px; }
+  .openPanel li button > span:first-child > span { font-size: 12px; }
+  .openPanel li strong { font-size: 15px; }
+  .openPanel li strong + span { font-size: 13px; }
+  .openPanel li button > img { width: 18px; height: 22px; }
+  .openPanel .openEmpty { padding-top: 16px; font-size: 14px; }
+  .openPanel .openViewAll { position: static; display: block; width: 120px; height: 60px; margin: 12px auto 0; }
+
+  /* 기차여행(Figma 555:342): 안내는 화면 상단 고정, 확인은 하단 시트 */
+  .stage .airportHint { position: fixed; inset: 12px 12px auto; z-index: 45; white-space: normal; text-align: center; font-size: 18px; letter-spacing: 2px; line-height: 1.5; padding: 12px; background: #2b1609e8; border: 1px solid #9a6f3b; }
+  .stage .airportConfirm { position: fixed; inset: auto 12px 16px; z-index: 45; width: min(calc(100% - 24px), 520px); margin-inline: auto; padding: 20px; }
+  .airportConfirm h2 { font-size: 20px; }
+  .airportConfirm :is(p, button) { font-size: 14px; line-height: 1.6; }
+  .airportConfirm strong { font-size: 18px; }
+  .airportConfirm button { min-height: 44px; padding: 8px 16px; }
+
+  /* 룰렛(Figma 555:306): 시안 비율 그대로 화면 폭에 맞춰 줄인다. 패널이 무대 폭의 45.94%라
+     무대 역할을 하는 배경 상자를 (화면 폭 - 여백) / 0.4594 로 잡고, 글자만 px로 보정한다. */
+  .stage .rouletteBackdrop {
+    position: fixed;
+    inset: auto;
+    left: 50%;
+    top: 50%;
+    width: calc((100vw - 24px) / 0.4594);
+    height: auto;
+    aspect-ratio: 16 / 9;
+    transform: translate(-50%, -50%);
+    container-type: inline-size;
+    background: transparent;
+    box-shadow: 0 0 0 100vmax rgba(27, 13, 5, 0.55);
+  }
+  .rouletteBackdrop .rouletteText { font-size: 12px; line-height: 1.4; }
+  .rouletteBackdrop .rouletteCount { font-size: 20px; }
+  .rouletteBackdrop .rouletteValue { font-size: 12px; }
+  .rouletteBackdrop .rouletteUnit { font-size: 8px; }
+  .rouletteBackdrop .rouletteConfirm { font-size: 16px; }
 }

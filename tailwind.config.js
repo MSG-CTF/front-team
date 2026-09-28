@@ -28,6 +28,8 @@ export default {
         "kode-mono": ['"Kode Mono"', "ui-monospace", "monospace"],
         "inria-serif": ['"Inria Serif"', "ui-serif", "serif"],
         "song-myung": ['"Song Myung"', "ui-serif", "serif"],
+        pretendard: ["Pretendard", '"Apple SD Gothic Neo"', '"Malgun Gothic"', "sans-serif"],
+        abyssinica: ['"Abyssinica SIL"', "ui-serif", "serif"],
       },
     },
   },

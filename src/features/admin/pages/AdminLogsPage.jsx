@@ -2,20 +2,38 @@ import { useState } from "react";
 import AdminPagination from "../components/AdminPagination.jsx";
 import { getAdminEvents, getAdminResources } from "../../../api/admin.js";
 import { toKst } from "../../../utils/time.js";
-import AdminLayout, { AdminStatusMessage } from "../components/AdminLayout.jsx";
+import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
 import useAdminResource from "../hooks/useAdminResource.js";
+import {
+  ADMIN_EVENT_TYPES,
+  ADMIN_EVENT_TYPES_PENDING,
+  formatCollectedValue,
+  formatResourceAccountName,
+  getAdminEventSeverity,
+  getAdminEventTypeLabel,
+  isLongEventMessage,
+  previewEventMessage,
+} from "../utils/adminBoard.js";
 
-const EVENT_TYPES = [
-  "TEAM_BANNED", "TEAM_UNBANNED", "MILEAGE_ADJUSTED", "PAYMENT_REFUNDED",
-  "INSTANCE_FAILED", "INSTANCE_FORCED", "CHALLENGE_VISIBILITY_CHANGED",
-  "SETTINGS_CHANGED", "DICE_ADJUSTED", "BOARD_POSITION_MOVED",
-  "CELL_STATUS_CHANGED", "TEAM_UPDATED", "TEAM_DELETED", "ACCOUNT_CREATED",
-  "PAYMENT_PROCESSED", "CHALLENGE_CREATED",
-];
+// 조작 사유가 500자를 넘게 들어올 수 있어 기본은 줄여 보여주고 펼칠 수 있게 한다.
+function EventMessage({ message }) {
+  const [expanded, setExpanded] = useState(false);
+  if (!message) return "-";
+  const long = isLongEventMessage(message);
+  return (
+    <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+      {expanded || !long ? message : previewEventMessage(message)}
+      {long && (
+        <button type="button" onClick={() => setExpanded((value) => !value)} className="ml-2 text-xs text-admin-gold underline">
+          {expanded ? "접기" : "전체 보기"}
+        </button>
+      )}
+    </div>
+  );
+}
 
-// 로그/리소스 - README.md "8. 관리자 페이지 > 리소스/로그"(백엔드: 진행 중).
-// type/severity enum 전체 목록이 아직 미공개(Appendix B)라 관측된 값을
-// 그대로 텍스트로 보여준다(별도 배지 매핑 안 함).
+// 로그/리소스 - README.md "8. 관리자 페이지 > 리소스/로그".
+// 이벤트 type 11종, severity 4종(INFO/WARNING/CRITICAL/MANUAL_REVIEW)은 백엔드 #81~#85 기준.
 export default function AdminLogsPage() {
   const [page, setPage] = useState(1);
   const [type, setType] = useState("");
@@ -41,13 +59,13 @@ export default function AdminLogsPage() {
             {(resources.data.accounts ?? []).map((account) => (
               <div key={account.account_id} className="rounded-lg border border-admin-divider bg-white/30 p-3 text-sm">
                 <p className="m-0 font-bold">
-                  {account.account_name} - {account.status} ({account.running_instances}/{account.instance_quota})
+                  {formatResourceAccountName(account)} - {account.status} (실행 인스턴스 {formatCollectedValue(account.running_instances)})
                 </p>
                 <ul className="m-0 mt-2 flex flex-col gap-1 p-0 pl-4 text-xs text-admin-muted">
                   {(account.nodes ?? []).map((node) => (
                     <li key={node.node_id}>
-                      {node.node_name}: {node.status}, CPU {node.cpu_usage_percent == null ? "-" : `${node.cpu_usage_percent}%`}, 메모리{" "}
-                      {node.memory_usage_percent == null ? "-" : `${node.memory_usage_percent}%`}, 인스턴스 {node.running_instances}
+                      {node.node_name}: {node.status}, CPU {formatCollectedValue(node.cpu_usage_percent, "%")}, 메모리{" "}
+                      {formatCollectedValue(node.memory_usage_percent, "%")}, 인스턴스 {formatCollectedValue(node.running_instances)}
                     </li>
                   ))}
                 </ul>
@@ -58,9 +76,16 @@ export default function AdminLogsPage() {
       </section>
 
       <section className="overflow-x-auto">
-        <form onSubmit={(event) => { event.preventDefault(); setPage(1); setAppliedType(type.trim()); }} className="mb-3 flex flex-wrap gap-2">
-          <label>이벤트 유형 <input list="admin-event-types" value={type} onChange={(event) => setType(event.target.value)} placeholder="전체 또는 유형 선택" className="rounded border border-admin-divider bg-white/60 px-2 py-1"/></label>
-          <datalist id="admin-event-types">{EVENT_TYPES.map((eventType) => <option key={eventType} value={eventType} />)}</datalist>
+        <form onSubmit={(event) => { event.preventDefault(); setPage(1); setAppliedType(type); }} className="mb-3 flex flex-wrap gap-2">
+          <label>이벤트 유형{" "}
+            <select value={type} onChange={(event) => setType(event.target.value)} className="rounded border border-admin-divider bg-white/60 px-2 py-1">
+              <option value="">전체</option>
+              {ADMIN_EVENT_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
+              <optgroup label="백엔드 PR 대기 중">
+                {ADMIN_EVENT_TYPES_PENDING.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
+              </optgroup>
+            </select>
+          </label>
           <button type="submit" className="rounded border border-admin-divider px-3 py-1">필터 적용</button>
         </form>
         <h2 className="mb-2 text-sm font-bold text-admin-muted">최근 이벤트</h2>
@@ -79,10 +104,13 @@ export default function AdminLogsPage() {
             <tbody>
               {(events.data?.events ?? []).map((event) => (
                 <tr key={event.event_id} className="border-b border-admin-divider/40 last:border-0">
-                  <td className="px-2 py-1">{event.type}</td>
-                  <td className="px-2 py-1">{event.severity}</td>
-                  <td className="max-w-md break-words px-2 py-1">{event.message ?? "-"}</td>
+                  <td className="px-2 py-1" title={event.type}>{getAdminEventTypeLabel(event.type)}</td>
                   <td className="px-2 py-1">
+                    <AdminBadge tone={getAdminEventSeverity(event.severity).tone}>{getAdminEventSeverity(event.severity).label}</AdminBadge>
+                  </td>
+                  <td className="max-w-md px-2 py-1 align-top"><EventMessage message={event.message} /></td>
+                  <td className="px-2 py-1">
+                    {/* 삭제된 팀은 team_id/team_name이 null이고 정보는 message에 남는다 */}
                     {[event.team_name, event.challenge_title].filter(Boolean).join(" / ") || "-"}
                   </td>
                   <td className="px-2 py-1">{toKst(event.created_at)}</td>

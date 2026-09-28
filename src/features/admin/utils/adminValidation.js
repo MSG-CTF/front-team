@@ -28,6 +28,10 @@ export function getAdminRequestError(error, fallbackMessage) {
   const status = error?.response?.status;
   const code = error?.response?.data?.code;
   const unavailable = [405, 501].includes(status) || (status === 404 && (!code || code === "NOT_FOUND"));
+  // 리소스 브로커/Scheduler 연결 실패(GET /admin/resources, 인스턴스 강제 조작)
+  if (code === "SCHEDULER_UNAVAILABLE" || status === 503) {
+    return { status: "error", error: "리소스 브로커(Scheduler)에 연결하지 못했습니다. 잠시 후 다시 시도하세요" };
+  }
   return {
     status: unavailable ? "unavailable" : "error",
     error: unavailable ? "현재 서버에서 제공하지 않는 기능입니다"

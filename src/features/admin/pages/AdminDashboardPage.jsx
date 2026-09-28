@@ -374,7 +374,10 @@ export default function AdminDashboardPage() {
                       {(events.data?.events ?? []).map((event) => (
                         <tr key={event.event_id} className="border-b border-admin-divider/40 last:border-0">
                           <td className="py-2 pr-2 font-kode-mono text-xs">{toKst(event.created_at)}</td>
-                          <td className="py-2 pr-2">{event.message}</td>
+                          {/* 조작 사유가 500자를 넘게 올 수 있어 두 줄로 줄이고 전체는 title/로그 화면에서 본다 */}
+                          <td className="max-w-md py-2 pr-2">
+                            <span title={event.message} className="line-clamp-2 whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{event.message}</span>
+                          </td>
                           <td className="py-2 pr-2 text-admin-muted">
                             {[event.team_name, event.challenge_title].filter(Boolean).join(" · ") || "-"}
                           </td>
@@ -429,11 +432,11 @@ export default function AdminDashboardPage() {
                 </div>
                 <div>
                   <p className="m-0 text-xs text-admin-muted">노드 평균 CPU</p>
-                  <p className="m-0 font-kode-mono text-xl text-admin-ink">{resourceSummary.averageCpuUsagePercent == null ? "-" : `${resourceSummary.averageCpuUsagePercent}%`}</p>
+                  <p className="m-0 font-kode-mono text-xl text-admin-ink">{resourceSummary.averageCpuUsagePercent == null ? "미수집" : `${resourceSummary.averageCpuUsagePercent}%`}</p>
                 </div>
                 <div>
                   <p className="m-0 text-xs text-admin-muted">노드 평균 메모리</p>
-                  <p className="m-0 font-kode-mono text-xl text-admin-ink">{resourceSummary.averageMemoryUsagePercent == null ? "-" : `${resourceSummary.averageMemoryUsagePercent}%`}</p>
+                  <p className="m-0 font-kode-mono text-xl text-admin-ink">{resourceSummary.averageMemoryUsagePercent == null ? "미수집" : `${resourceSummary.averageMemoryUsagePercent}%`}</p>
                 </div>
 
               </div>

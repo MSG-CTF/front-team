@@ -34,6 +34,9 @@ export default function BoardTrack({
   onRollDice,
   canRoll,
   isRolling,
+  // 기차여행(Figma 555:342) 목적지 선택 중이면 고를 수 있는 칸 집합, 아니면 null
+  selectableCellIndexes = null,
+  highlightedCellIndex = null,
 }) {
   const [previewCell, setPreviewCell] = useState(hasFixedPreviewCell ? fixedPreviewCell : 1);
   useEffect(() => {
@@ -120,15 +123,27 @@ export default function BoardTrack({
         const cellState = cellStatesByIndex.get(cell.cellIndex);
         const isConsumed = consumedCellIndexes.includes(cell.cellIndex);
         const stateLabel = cellState?.status || (isConsumed ? "CONSUMED" : "미방문");
+        const isSelecting = selectableCellIndexes != null;
+        const isSelectable = isSelecting && selectableCellIndexes.has(cell.cellIndex);
+        const isHighlighted = highlightedCellIndex === cell.cellIndex;
+        const selectionClass = !isSelecting
+          ? ""
+          : isHighlighted
+            ? "shadow-[0_0_0_0.22cqw_#ffe090,0_0_1.2cqw_0.3cqw_rgba(255,214,120,0.9)]"
+            : isSelectable
+              ? "shadow-[0_0_0_0.12cqw_rgba(255,224,144,0.75),0_0_0.7cqw_rgba(255,214,120,0.55)] hover:shadow-[0_0_0_0.2cqw_#ffe090,0_0_1cqw_rgba(255,214,120,0.85)]"
+              : "cursor-not-allowed bg-[#1b0d05]/45";
 
         return (
           <button
             key={cell.cellIndex}
             type="button"
             onClick={() => onSelectCell(cell.cellIndex)}
-            aria-label={`${cell.cellIndex}번 ${cell.name || cell.type} 칸, ${stateLabel}`}
+            aria-disabled={isSelecting && !isSelectable ? true : undefined}
+            aria-pressed={isSelecting ? isHighlighted : undefined}
+            aria-label={`${cell.cellIndex}번 ${cell.name || cell.type} 칸, ${stateLabel}${isSelecting ? (isSelectable ? ", 이동 가능" : ", 이동 불가") : ""}`}
             style={{ left: `${coordinates.x}%`, top: `${coordinates.y}%` }}
-            className="absolute z-10 h-[11%] w-[8.5%] -translate-x-1/2 -translate-y-1/2 rounded-[45%] border-0 bg-transparent p-0 cursor-pointer focus-visible:outline focus-visible:outline-[0.2cqw] focus-visible:outline-[#ffe090]"
+            className={`absolute z-10 h-[11%] w-[8.5%] -translate-x-1/2 -translate-y-1/2 rounded-[45%] border-0 bg-transparent p-0 cursor-pointer transition-shadow focus-visible:outline focus-visible:outline-[0.2cqw] focus-visible:outline-[#ffe090] ${selectionClass}`}
           >
             {cellState?.status && (
               <span

@@ -1,6 +1,8 @@
 import { formatRemaining } from "../../../utils/time.js";
 import styles from "./BoardScreen.module.css";
 
+const MAX_DICE_ROLLS = 3;
+
 // Figma node 5:19 "주사위판" (캔버스 좌상단, 표시 영역 378x223). 주사위 그림 /
 // "Time remaining" 라벨 / 스노우플레이크 아이콘 / 진행바 테두리 + 샘플 값이 한 장에
 // 합쳐진 원본이다. asset 픽셀은 수정하지 않고, 샘플 값 영역만 런타임 readout으로
@@ -21,7 +23,7 @@ export default function DiceStatusPanel({
     <div
       className={`${styles.diceStatus} absolute left-[1.35%] top-0 w-[19.69%] h-[20.65%]`}
       role="status"
-      aria-label={`주사위 남은 횟수 ${rollsLeft}. ${statusLabel}${countdown == null ? "" : `, ${countdownLabel} ${formatRemaining(countdown)}`}`}
+      aria-label={`주사위 보유 ${rollsLeft}/${MAX_DICE_ROLLS}. ${statusLabel}${countdown == null ? "" : `, ${countdownLabel} ${formatRemaining(countdown)}`}`}
     >
       <img
         src="/assets/board/panel-dice-status.png"
@@ -31,7 +33,8 @@ export default function DiceStatusPanel({
       />
 
       <div className="absolute left-[12%] top-[47%] z-10 flex h-[12%] w-[78%] items-center justify-between bg-[#21150d] px-[0.35cqw] font-inria-serif text-[0.58cqw] text-[#f8ead0]">
-        <span>주사위 {rollsLeft}회</span>
+        {/* 기능 명세(2026-09-28): 보유 횟수/3 표시. 3/3이면 서버가 next_dice_reset_at을 비워 충전 타이머가 멈춘다. */}
+        <span>주사위 {rollsLeft}/{MAX_DICE_ROLLS}</span>
         {countdown != null && (
           <span>
             {countdownLabel} {formatRemaining(countdown)}

@@ -104,9 +104,9 @@ export function openCell({ challengeId, idempotencyKey }) {
   );
 }
 
-// ---- 찬스카드 (7종, 팀장만) ----
+// ---- 찬스카드 (5종, 팀장만 - 무인도 방어/무인도 이동 2종은 2026-09-28 명세에서 삭제) ----
 export function getChanceCatalog() {
-  // GET /board/chance/catalog (인증 없음) - 7종 정의.
+  // GET /board/chance/catalog (인증 없음) - 카드 정의(5종).
   return apiClient.get("/board/chance/catalog");
 }
 

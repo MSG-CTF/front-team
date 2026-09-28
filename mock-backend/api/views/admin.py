@@ -171,7 +171,7 @@ class AdminInstanceResetView(APIView):
         instance.status = "RESETTING"
         instance.save()
         _log_event(
-            "INSTANCE_FORCE_RESET",
+            "INSTANCE_FORCED",
             "인스턴스 강제 재시작",
             team_name=instance.team.team_name,
             challenge_title=instance.challenge.title,
@@ -209,7 +209,7 @@ class AdminInstanceDeleteView(APIView):
         instance.status = "STOPPING"
         instance.save()
         _log_event(
-            "INSTANCE_FORCE_STOP",
+            "INSTANCE_FORCED",
             "인스턴스 강제 종료",
             team_name=instance.team.team_name,
             challenge_title=instance.challenge.title,
@@ -228,6 +228,11 @@ class AdminInstanceDeleteView(APIView):
         )
 
 
+def _avg(nodes, key):
+    values = [n[key] for n in nodes if n.get(key) is not None]
+    return round(sum(values) / len(values), 1) if values else None
+
+
 class AdminResourcesView(APIView):
     """실제 리소스 관리자가 없는 로컬 목서버라, 그럴듯한 고정 형태만 흉내낸다."""
 
@@ -240,7 +245,7 @@ class AdminResourcesView(APIView):
             {
                 "node_id": "mock-node-1",
                 "node_name": "local-node-1",
-                "status": "ACTIVE",
+                "status": "HEALTHY",
                 "running_instances": running,
                 "cpu_usage_percent": 62.0,
                 "memory_usage_percent": 71.0,
@@ -249,7 +254,7 @@ class AdminResourcesView(APIView):
             {
                 "node_id": "mock-node-2",
                 "node_name": "local-node-2",
-                "status": "ACTIVE",
+                "status": "HEALTHY",
                 "running_instances": 0,
                 "cpu_usage_percent": 24.0,
                 "memory_usage_percent": 38.0,
@@ -258,7 +263,7 @@ class AdminResourcesView(APIView):
             {
                 "node_id": "mock-node-3",
                 "node_name": "local-node-3",
-                "status": "ACTIVE",
+                "status": "HEALTHY",
                 "running_instances": 0,
                 "cpu_usage_percent": 18.0,
                 "memory_usage_percent": 22.0,
@@ -267,31 +272,36 @@ class AdminResourcesView(APIView):
             {
                 "node_id": "mock-node-4",
                 "node_name": "local-node-4",
-                "status": "ACTIVE",
-                "running_instances": 0,
-                "cpu_usage_percent": 9.0,
-                "memory_usage_percent": 15.0,
+                "status": "HEALTHY",
+                # null은 "미수집"이다. 0으로 표시하면 안 된다(백엔드 PR #85).
+                "running_instances": None,
+                "cpu_usage_percent": None,
+                "memory_usage_percent": None,
                 "disk_usage_percent": 20.0,
             },
         ]
-        healthy = sum(1 for n in nodes if n["status"] == "ACTIVE")
+        # Notion 명세: VM은 사용량을 못 받으면 DEGRADED, 계정은 노드 전부 HEALTHY일 때만 HEALTHY
+        for node in nodes:
+            if node["cpu_usage_percent"] is None:
+                node["status"] = "DEGRADED"
+        healthy = sum(1 for n in nodes if n["status"] == "HEALTHY")
         return success(
             {
                 "accounts": [
                     {
                         "account_id": "mock-account-1",
-                        "account_name": "local-mock",
-                        "status": "ACTIVE",
+                        "provider": "GCP",
+                        "scope_id": "example-project",
+                        "status": "HEALTHY" if healthy == len(nodes) else "DEGRADED",
                         "running_instances": running,
-                        "instance_quota": 100,
                         "nodes": nodes,
                     }
                 ],
                 "summary": {
                     "nodes_total": len(nodes),
                     "nodes_healthy": healthy,
-                    "avg_cpu_usage_percent": round(sum(n["cpu_usage_percent"] for n in nodes) / len(nodes), 1),
-                    "avg_memory_usage_percent": round(sum(n["memory_usage_percent"] for n in nodes) / len(nodes), 1),
+                    "avg_cpu_usage_percent": _avg(nodes, "cpu_usage_percent"),
+                    "avg_memory_usage_percent": _avg(nodes, "memory_usage_percent"),
                     "avg_disk_usage_percent": round(sum(n["disk_usage_percent"] for n in nodes) / len(nodes), 1),
                 },
                 "total_count": 1,
@@ -369,7 +379,7 @@ class AdminTeamMileageView(APIView):
             reason=reason,
         )
         _log_event(
-            "MILEAGE_ADJUST",
+            "MILEAGE_ADJUSTED",
             f"마일리지 {'지급' if amount > 0 else '회수'} {amount:+d}",
             team_name=team.team_name,
             actor=request.user.nickname,
@@ -403,7 +413,7 @@ class AdminTeamBanView(APIView):
         team.banned_at = timezone.now()
         team.banned_by = request.user.nickname
         team.save()
-        _log_event("TEAM_BAN", "팀 벤(BAN) 처리", team_name=team.team_name, actor=request.user.nickname)
+        _log_event("TEAM_BANNED", "팀 벤(BAN) 처리", team_name=team.team_name, severity="WARNING", actor=request.user.nickname)
         return success(
             {
                 "team_id": str(team.id),
@@ -423,7 +433,7 @@ class AdminTeamBanView(APIView):
         team.is_banned = False
         team.ban_reason = None
         team.save()
-        _log_event("TEAM_UNBAN", "팀 벤(BAN) 해제", team_name=team.team_name, actor=request.user.nickname)
+        _log_event("TEAM_UNBANNED", "팀 벤(BAN) 해제", team_name=team.team_name, actor=request.user.nickname)
         return success(
             {
                 "team_id": str(team.id),
@@ -508,6 +518,12 @@ class AdminPaymentCheckoutView(APIView):
             team=team, item_name=item_name, amount=amount, processed_by=request.user.nickname
         )
         MileageHistory.objects.create(team=team, type="PURCHASE", amount=-amount, item_name=item_name)
+        _log_event(
+            "PAYMENT_PROCESSED",
+            f"결제 처리 {item_name} ({amount} 마일리지)",
+            team_name=team.team_name,
+            actor=request.user.nickname,
+        )
 
         return success(
             {
@@ -548,6 +564,13 @@ class AdminPaymentRefundView(APIView):
             amount=history.amount,
             item_name=history.item_name,
             ref_history_id=history.id,
+        )
+
+        _log_event(
+            "PAYMENT_REFUNDED",
+            f"결제 환불 {history.item_name} ({abs(history.amount)} 마일리지)",
+            team_name=team.team_name,
+            actor=request.user.nickname,
         )
 
         return success(
@@ -719,6 +742,120 @@ class AdminTeamDetailView(APIView):
         )
 
 
+    # PATCH/DELETE /admin/teams/{id} - Notion API명세서(2026-09-26, 백엔드 PR 대기)를 흉내낸다.
+    # 목서버는 refresh_token 폐기를 흉내내지 않는다(실서버는 소속/팀장 변경 계정을 재로그인시킴).
+    ACTIVE_INSTANCE_STATUSES = ("REQUESTED", "SCHEDULING", "PROVISIONING", "RUNNING", "RESTARTING", "RESETTING")
+
+    @staticmethod
+    def _reason(request):
+        reason = (request.data.get("reason") or "").strip()
+        if not (1 <= len(reason) <= 500):
+            raise ApiError("INVALID_REQUEST", "필수 항목이 누락되었습니다: reason", status=400)
+        return reason
+
+    def patch(self, request, team_id):
+        require_admin(request)
+        try:
+            team = Team.objects.get(id=team_id)
+        except Team.DoesNotExist:
+            raise ApiError("TEAM_NOT_FOUND", "존재하지 않는 팀입니다", status=404)
+        data = request.data
+        keys = ("team_name", "add_user_ids", "remove_user_ids", "leader_user_id")
+        if not any(k in data for k in keys):
+            raise ApiError("INVALID_REQUEST", "요청 값이 올바르지 않습니다", status=400)
+        reason = self._reason(request)
+        add_ids = [str(x) for x in data.get("add_user_ids") or []]
+        remove_ids = [str(x) for x in data.get("remove_user_ids") or []]
+        if set(add_ids) & set(remove_ids):
+            raise ApiError("INVALID_REQUEST", "같은 계정을 추가와 제외에 함께 넣을 수 없습니다", status=400)
+
+        if "team_name" in data:
+            name = (data.get("team_name") or "").strip()
+            if not (1 <= len(name) <= 100):
+                raise ApiError("INVALID_REQUEST", "팀 이름은 1~100자여야 합니다", status=400)
+            if Team.objects.filter(team_name=name).exclude(id=team.id).exists():
+                raise ApiError("TEAM_NAME_TAKEN", "이미 사용 중인 팀 이름입니다", status=409)
+            team.team_name = name
+
+        member_ids = {str(u.id) for u in team.members.all()}
+        for uid in remove_ids:
+            if uid not in member_ids:
+                raise ApiError("INVALID_REQUEST", "팀원이 아닌 계정은 제외할 수 없습니다", status=400)
+        if Instance.objects.filter(user_id__in=remove_ids, status__in=self.ACTIVE_INSTANCE_STATUSES).exists():
+            raise ApiError("ACTIVE_INSTANCE_EXISTS", "제외할 팀원의 인스턴스를 먼저 종료해야 합니다", status=409)
+        add_users = list(User.objects.filter(id__in=add_ids))
+        if len(add_users) != len(set(add_ids)):
+            raise ApiError("INVALID_REQUEST", "없는 계정이 있습니다", status=400)
+        for user in add_users:
+            if user.role == "ADMIN" or (user.team_id and str(user.team_id) != str(team.id)):
+                raise ApiError("INVALID_REQUEST", "무소속 참가자만 추가할 수 있습니다", status=400)
+
+        after_ids = (member_ids - set(remove_ids)) | {str(u.id) for u in add_users}
+        leader_given = "leader_user_id" in data
+        leader_id = data.get("leader_user_id")
+        if leader_given and leader_id is not None and str(leader_id) not in after_ids:
+            raise ApiError("INVALID_REQUEST", "팀장은 변경 후 팀원 중 한 명이어야 합니다", status=400)
+
+        User.objects.filter(id__in=remove_ids).update(team=None, is_leader=False)
+        for user in add_users:
+            user.team = team
+            user.is_leader = False
+            user.save()
+        if leader_given:
+            User.objects.filter(team=team).update(is_leader=False)
+            if leader_id is not None:
+                User.objects.filter(id=leader_id).update(is_leader=True)
+        team.save()
+
+        _log_event("TEAM_UPDATED", f"팀 정보 수정: {reason}", team_name=team.team_name, severity="WARNING", actor=request.user.nickname)
+        members = sorted(team.members.all(), key=lambda u: (not u.is_leader, u.nickname))
+        return success(
+            {
+                "team_id": str(team.id),
+                "team_name": team.team_name,
+                "member_count": len(members),
+                "members": [
+                    {"user_id": str(u.id), "login_id": u.login_id, "nickname": u.nickname, "role": u.role, "is_leader": u.is_leader}
+                    for u in members
+                ],
+                "updated_at": timezone.now(),
+                "updated_by": request.user.nickname,
+            },
+            message="팀 정보가 수정되었습니다",
+        )
+
+    def delete(self, request, team_id):
+        require_admin(request)
+        try:
+            team = Team.objects.get(id=team_id)
+        except Team.DoesNotExist:
+            raise ApiError("TEAM_NOT_FOUND", "존재하지 않는 팀입니다", status=404)
+        reason = self._reason(request)
+        if Instance.objects.filter(team=team, status__in=self.ACTIVE_INSTANCE_STATUSES).exists():
+            raise ApiError("ACTIVE_INSTANCE_EXISTS", "팀의 인스턴스를 먼저 종료해야 합니다", status=409)
+        team_name, deleted_id = team.team_name, str(team.id)
+        deleted_member_count = team.members.count()
+        team.members.all().delete()
+        team.delete()
+        # 삭제된 팀 정보는 message에만 남는다(team_name 연결 없음)
+        _log_event(
+            "TEAM_DELETED",
+            f"팀 삭제: {team_name} ({deleted_id}), 계정 {deleted_member_count}개 삭제 - {reason}",
+            severity="CRITICAL",
+            actor=request.user.nickname,
+        )
+        return success(
+            {
+                "team_id": deleted_id,
+                "team_name": team_name,
+                "deleted_member_count": deleted_member_count,
+                "deleted_at": timezone.now(),
+                "deleted_by": request.user.nickname,
+            },
+            message="팀이 삭제되었습니다",
+        )
+
+
 class AdminChallengesView(APIView):
     """GET /admin/challenges(README 8절, 백엔드: 논의)."""
 
@@ -797,7 +934,7 @@ class AdminChallengeVisibilityView(APIView):
         challenge.is_published = is_published
         challenge.save()
         _log_event(
-            "CHALLENGE_VISIBILITY",
+            "CHALLENGE_VISIBILITY_CHANGED",
             "문제 공개 상태 전환",
             challenge_title=f"{challenge.category} · {challenge.title}",
             actor=request.user.nickname,
@@ -887,6 +1024,7 @@ class AdminSettingsView(APIView):
 
         setting.updated_by = request.user.nickname
         setting.save()
+        _log_event("SETTINGS_CHANGED", f"대회 설정 변경 {request.data}", actor=request.user.nickname)
         return success(_settings_dict(setting))
 
 
@@ -938,7 +1076,7 @@ class AdminAccountRegisterView(APIView):
         )
 
         _log_event(
-            "ACCOUNT_REGISTER",
+            "ACCOUNT_CREATED",
             f"계정 등록 ({role})" + (" · 팀 신규 생성" if created_team else ""),
             team_name=team.team_name if team else "",
             actor=request.user.nickname,
@@ -1102,8 +1240,14 @@ class AdminBoardCellView(APIView):
         reason = request.data.get("reason", "")
         if status_value not in BOARD_CELL_STATUSES:
             raise ApiError("INVALID_REQUEST", f"status는 {BOARD_CELL_STATUSES} 중 하나여야 합니다", status=400)
-        if not (0 <= cell_index <= 35):
-            raise ApiError("INVALID_REQUEST", "cell_index는 0~35여야 합니다", status=400)
+        # 보드 칸은 1번(START)~36번이다. 0번 칸은 존재하지 않는다(백엔드 #81~#85).
+        if not (1 <= cell_index <= 36):
+            raise ApiError("INVALID_REQUEST", "cell_index는 1~36이어야 합니다", status=400)
+        # OPENED/CLEARED는 그 칸에서 이미 연 문제가 있어야 한다.
+        if status_value in ("OPENED", "CLEARED") and not any(
+            e.get("cell_index") == cell_index for e in team.opened_challenge_log
+        ):
+            raise ApiError("INVALID_REQUEST", "이 칸에서 연 문제가 없어 OPENED/CLEARED로 바꿀 수 없습니다", status=400)
 
         _snapshot_team(team, f"칸 #{cell_index} 상태 변경 직전", request.user.nickname)
 
@@ -1120,7 +1264,7 @@ class AdminBoardCellView(APIView):
         team.save()
 
         _log_event(
-            "BOARD_CELL_UPDATE",
+            "CELL_STATUS_CHANGED",
             "clear 칸 관리",
             team_name=f"{team.team_name} · 칸 #{cell_index}",
             actor=request.user.nickname,
@@ -1155,8 +1299,8 @@ class AdminBoardPositionView(APIView):
         position = request.data.get("position")
         consume_cell = bool(request.data.get("consume_cell", False))
         reason = request.data.get("reason", "")
-        if not isinstance(position, int) or not (0 <= position <= 35):
-            raise ApiError("INVALID_REQUEST", "position은 0~35의 정수여야 합니다", status=400)
+        if not isinstance(position, int) or isinstance(position, bool) or not (1 <= position <= 36):
+            raise ApiError("INVALID_REQUEST", "position은 1~36의 정수여야 합니다", status=400)
 
         _snapshot_team(team, "말 위치 이동 직전", request.user.nickname)
 
@@ -1166,7 +1310,7 @@ class AdminBoardPositionView(APIView):
         team.save()
 
         _log_event(
-            "BOARD_POSITION_MOVE",
+            "BOARD_POSITION_MOVED",
             "말 위치 이동",
             team_name=f"{team.team_name} · 칸 #{position}",
             actor=request.user.nickname,
@@ -1208,7 +1352,7 @@ class AdminBoardDiceView(APIView):
         team.save()
 
         _log_event(
-            "BOARD_DICE_ADJUST",
+            "DICE_ADJUSTED",
             f"주사위 {'지급' if amount > 0 else '회수'} {amount:+d}",
             team_name=team.team_name,
             actor=request.user.nickname,
