@@ -15,9 +15,9 @@ const STATUS = { loading: "순위를 불러오는 중", empty: "아직 등록된
 const formatValue = (value) => value == null ? "-" : new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(value);
 
 export default function RankingTable({ rankings, status }) {
-  return <div className={styles.tableContainer}>
+  return <div className={styles.tableContainer} tabIndex={0} role="region" aria-label="팀 순위표 가로 스크롤">
     <table className={styles.rankingGrid} aria-label="팀 순위표">
-      <colgroup>{COLUMNS.map((column) => <col key={column.key} style={{ width: column.width }} />)}</colgroup>
+      <colgroup>{COLUMNS.map((column) => <col key={column.key} style={{ "--column-width": `${column.width}px` }} />)}</colgroup>
       <thead><tr>{COLUMNS.map((column) => <th key={column.key} scope="col" title={column.title}
         className={column.key === "teamName" ? styles.teamNameCell : undefined}>{column.label}</th>)}</tr></thead>
       <tbody>

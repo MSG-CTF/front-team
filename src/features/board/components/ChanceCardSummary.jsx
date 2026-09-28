@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import styles from "./BoardScreen.module.css";
 
 const OFFSET_OPTIONS = [-3, -2, -1, 1, 2, 3];
 
@@ -42,7 +43,7 @@ export default function ChanceCardSummary({
   };
 
   return (
-    <aside className="absolute left-[2.2%] top-[19.3%] z-20 w-[19.5%] max-h-[45%] overflow-auto rounded-[0.55cqw] border border-[#946231] bg-[#2a180d]/90 px-[0.7cqw] py-[0.5cqw] font-inria-serif text-[#f5dca9] shadow-lg">
+    <aside className={`${styles.chancePanel} absolute left-[2.2%] top-[19.3%] z-20 w-[19.5%] max-h-[45%] overflow-auto rounded-[0.55cqw] border border-[#946231] bg-[#2a180d]/90 px-[0.7cqw] py-[0.5cqw] font-inria-serif text-[#f5dca9] shadow-lg`}>
       <h2 className="m-0 text-[0.72cqw] font-bold">보유 찬스카드</h2>
       {awaitingDiscard && (
         <p className="my-[0.25cqw] text-[0.52cqw] text-[#ffd36b]">

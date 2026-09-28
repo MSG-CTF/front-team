@@ -164,7 +164,6 @@ export default function AdminMileagePage() {
   return (
     <AdminLayout
       title="마일리지 / 결제 관리"
-      variant={tab === "payment" ? "payment" : undefined}
     >
       <div className={paymentStyles.tabs} aria-label="관리 항목">
         <button

@@ -9,7 +9,12 @@ export default function KothChallengeButton({ challenge, stale, onSelect }) {
     <button
       type="button"
       className={styles.challengeButton}
-      style={challenge.position}
+      style={{
+        "--card-left": challenge.position?.left,
+        "--card-top": challenge.position?.top,
+        "--card-width": challenge.position?.width,
+        "--card-height": challenge.position?.height,
+      }}
       disabled={availability.disabled}
       aria-label={`${challenge.clubName} ${challenge.title} KoTH ${availability.label}`}
       title={`${challenge.title} / ${availability.label}`}
@@ -17,6 +22,7 @@ export default function KothChallengeButton({ challenge, stale, onSelect }) {
       onClick={() => { if (!availability.disabled) onSelect(challenge); }}
     >
       <span className={styles.challengeCaption}>{challenge.clubName}</span>
+      <span className={styles.mobileChallengeTitle}>{challenge.title}</span>
       <img
         src={challenge.imageSrc}
         alt=""

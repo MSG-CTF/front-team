@@ -1,4 +1,3 @@
-import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
 import LeaderboardChart from "./LeaderboardChart.jsx";
 import LeaderboardScoreGraph from "./LeaderboardScoreGraph.jsx";
 import RankingTable from "./RankingTable.jsx";
@@ -22,7 +21,7 @@ export default function LeaderboardScreen({
   return (
     <main className={styles.page} data-leaderboard-source={dataStatus}>
       {/* 제목과 로고가 포함된 원화는 한 번만 그려 비율이 다른 화면에서도 중복되지 않게 한다 */}
-      <FixedAspectStage className={styles.stage}>
+      <div className={styles.stage}>
         <div className={styles.designCanvas}>
           <img
             src={`${ASSET_BASE}leaderboard-layout.png`}
@@ -36,6 +35,8 @@ export default function LeaderboardScreen({
               <img src={`${ASSET_BASE}icon-back.svg`} alt="" aria-hidden="true" />
             </span>
           </button>
+
+          <h1 className={styles.mobileTitle}>LEADERBOARD</h1>
 
           <ScoreBoard
             staticAssetSrc={`${ASSET_BASE}score.png`}
@@ -56,7 +57,7 @@ export default function LeaderboardScreen({
             {dataStatus}
           </p>
         </div>
-      </FixedAspectStage>
+      </div>
     </main>
   );
 }

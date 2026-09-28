@@ -1,4 +1,5 @@
 import { formatRemaining } from "../../../utils/time.js";
+import styles from "./BoardScreen.module.css";
 
 // Figma node 5:19 "주사위판" (캔버스 좌상단, 표시 영역 378x223). 주사위 그림 /
 // "Time remaining" 라벨 / 스노우플레이크 아이콘 / 진행바 테두리 + 샘플 값이 한 장에
@@ -18,7 +19,7 @@ export default function DiceStatusPanel({
 
   return (
     <div
-      className="absolute left-[1.35%] top-0 w-[19.69%] h-[20.65%]"
+      className={`${styles.diceStatus} absolute left-[1.35%] top-0 w-[19.69%] h-[20.65%]`}
       role="status"
       aria-label={`주사위 남은 횟수 ${rollsLeft}. ${statusLabel}${countdown == null ? "" : `, ${countdownLabel} ${formatRemaining(countdown)}`}`}
     >

@@ -22,7 +22,7 @@ export default function EventRegistration() {
           <p>{eventConfig.registrationPeriod}</p>
         </div>
         <p className="eligibility-note">
-          <strong>공통 참가 자격</strong>대회 당일 만 19세 이상인 학생
+          <strong>공통 참가 자격</strong>대회 당일 만 19세 이상인 학부 재학생·휴학생
           <br />
           2인 1팀, 팀원 두 명 모두 해당
         </p>
@@ -54,6 +54,8 @@ export default function EventRegistration() {
                 팀원 평균 학년이 낮은 팀 우선
                 <br />
                 평균이 같으면 먼저 신청한 팀 우선
+                <br />
+                휴학생은 복학 예정 학년 기준
               </p>
             </div>
           </div>

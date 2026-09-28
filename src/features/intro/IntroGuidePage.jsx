@@ -52,7 +52,7 @@ export default function IntroGuidePage() {
           <div>
             <dt>참가 자격</dt>
             <dd>
-              대회 당일 만 19세 이상인 학생
+              대회 당일 만 19세 이상인 학부 재학생·휴학생
               <br />
               팀장과 팀원 모두 충족해야 합니다
             </dd>
@@ -75,8 +75,9 @@ export default function IntroGuidePage() {
           소속되지 않아도 신청 가능합니다
         </p>
         <p>
-          학생 신분 인정 범위와 증빙 방법, 팀 구성 예외는 접수 공지에서
-          안내합니다
+          직장에 다니는 학부 재학생도 신청할 수 있으며 대학원생은 참가할 수 없습니다
+          <br />
+          팀원 각각의 재학 또는 휴학 증명서를 참가 신청 폼에 제출해 주세요
         </p>
         <div id="selection" className="selection-detail">
           <h3>외부 참가팀 선발</h3>
@@ -91,6 +92,7 @@ export default function IntroGuidePage() {
               <dd>먼저 신청한 팀</dd>
             </div>
           </dl>
+          <p>휴학생은 복학 예정 학년을 기준으로 평균을 계산합니다</p>
           <p>외부 모집 인원은 100명이며 2인 1팀으로 신청합니다</p>
         </div>
         <ApplyLink className="apply-button guide-apply" />
@@ -135,7 +137,7 @@ export default function IntroGuidePage() {
           주민등록증, 여권, 운전면허증 등 본인 확인이 가능한 신분증을 지참해
           주세요
           <br />
-          학생 신분 증빙 방법은 참가 확정 안내에서 별도로 공지합니다
+          재학 또는 휴학 증명서는 참가 신청 폼에서 미리 제출합니다
         </p>
         <p>추가 장비와 네트워크 연결 방식은 장소 확정 후 안내합니다</p>
         <p>대회는 오프라인으로 진행하며 참가자는 대회 현장에 참석합니다</p>
@@ -279,15 +281,29 @@ export default function IntroGuidePage() {
             <p>참가비는 {eventConfig.participationFee}입니다</p>
           </details>
           <details>
-            <summary>휴학생이나 대학원생도 참가할 수 있나요?</summary>
-            <p>학생 신분 인정 범위와 증빙 방법은 접수 공지에서 안내합니다</p>
+            <summary>휴학생이나 직장에 다니는 재학생도 참가할 수 있나요?</summary>
+            <p>
+              학부 재학생과 휴학생 모두 신청할 수 있습니다
+              <br />
+              직장에 다니는 학부 재학생도 가능하며 대학원생은 참가할 수 없습니다
+              <br />
+              팀원 두 명 모두 대회 당일 만 19세 이상이어야 합니다
+            </p>
+          </details>
+          <details>
+            <summary>학생 신분은 어떻게 확인하나요?</summary>
+            <p>
+              팀원 각각의 재학 또는 휴학 증명서를 참가 신청 폼에 제출해 주세요
+              <br />
+              현장에서는 주민등록증, 여권, 운전면허증 등으로 본인 여부를 확인합니다
+            </p>
           </details>
           <details>
             <summary>동아리에 소속되지 않아도 참가할 수 있나요?</summary>
             <p>
               네, 외부 트랙으로 신청할 수 있습니다
               <br />
-              팀원 두 명 모두 대회 당일 만 19세 이상인 학생이어야 합니다
+              팀원 두 명 모두 대회 당일 만 19세 이상인 학부 재학생·휴학생이어야 합니다
             </p>
           </details>
           <details>
@@ -307,6 +323,8 @@ export default function IntroGuidePage() {
               팀원 두 명의 평균 학년이 낮은 팀을 우선 선발합니다
               <br />
               평균 학년이 같으면 먼저 신청한 팀을 우선합니다
+              <br />
+              휴학생은 복학 예정 학년을 적어 주세요
             </p>
           </details>
           <details>
