@@ -8,6 +8,9 @@ import { ROUTES } from "../../../routes/routePaths.js";
 // ⚠️ 이벤트 제목, 라운드 숫자는 banner/button 그림에 구워진 값이다(현재 "KING OF
 // HILLS" / "1 ROUND"). GET /koth/clubs 연동 시 값 없는 plate로 교체하고 title/round를
 // 텍스트로 겹쳐 그릴 것.
+// 오른쪽 정렬선: 스코어보드 아이콘의 보이는 오른쪽 끝(무대 96.35%)에 배너의 보이는
+// 오른쪽 끝을 맞추려고 시안 좌표(80.99%, 84.27%)에서 0.46%(약 9px) 오른쪽으로 옮겼다.
+// 로그아웃/동아리 부스 버튼(BoardNav, right 3.65%)도 같은 선에 맞춘다.
 export default function KothEventBanner() {
   const navigate = useNavigate();
 
@@ -16,14 +19,14 @@ export default function KothEventBanner() {
       <img
         src="/assets/board/banner-koth-event.png"
         alt="KOTH 이벤트 배너"
-        className="absolute left-[80.99%] top-[26.48%] w-[17.66%] h-[58.06%] object-contain pointer-events-none"
+        className="absolute left-[81.45%] top-[26.48%] w-[17.66%] h-[58.06%] object-contain pointer-events-none"
       />
 
       <button
         type="button"
         onClick={() => navigate(ROUTES.koth)}
         aria-label="KOTH 페이지로 이동"
-        className="absolute left-[84.27%] top-[68.15%] w-[11.09%] h-[15.56%] border-0 bg-transparent p-0 cursor-pointer"
+        className="absolute left-[84.73%] top-[68.15%] w-[11.09%] h-[15.56%] border-0 bg-transparent p-0 cursor-pointer"
       >
         <img
           src="/assets/board/button-round.png"
