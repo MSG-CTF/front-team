@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { toKst } from "../../../utils/time.js";
 import { buildScoreSeries, niceAxisMax, createChartScales, scoreAtTime, toPolylinePoints } from "../utils/leaderboardChartData.js";
 import { clampRange, zoomRange, rangeFromDrag, tooltipLeft } from "../utils/leaderboardViewport.js";
@@ -6,7 +6,6 @@ import styles from "./LeaderboardScoreGraph.module.css";
 
 const VIEW_WIDTH = 1280;
 const VIEW_HEIGHT = 392;
-const PLOT = { left: 42, top: 30, right: 4, bottom: 48 };
 const TOOLTIP_WIDTH = 290;
 const STATUS_MESSAGE = { loading: "점수를 불러오는 중", empty: "아직 기록된 점수가 없습니다", error: "점수를 불러오지 못했습니다" };
 const formatScore = (score) => new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(score);
@@ -23,14 +22,29 @@ function nearestTime(times, targetX, scaleX) {
 
 export default function LeaderboardScoreGraph({ teams, status }) {
   const chartId = useId();
+  const graph = useRef(null);
+  const [size, setSize] = useState({ width: VIEW_WIDTH, height: VIEW_HEIGHT });
+  useEffect(() => {
+    if (!graph.current || typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (width > 0 && height > 0) setSize({ width, height });
+    });
+    observer.observe(graph.current);
+    return () => observer.disconnect();
+  }, []);
+  const compact = size.width < 720;
+  const PLOT = compact
+    ? { left: 54, top: 62, right: 24, bottom: 48 }
+    : { left: 42, top: 30, right: 4, bottom: 48 };
   const [hoverX, setHoverX] = useState(null);
   const [zoom, setZoom] = useState(null);
   const [drag, setDrag] = useState(null);
   const chartData = useMemo(() => buildScoreSeries(teams ?? []), [teams]);
   const fullRange = [chartData.minTime, chartData.maxTime];
   const range = clampRange(zoom, fullRange);
-  const plotWidth = VIEW_WIDTH - PLOT.left - PLOT.right;
-  const plotHeight = VIEW_HEIGHT - PLOT.top - PLOT.bottom;
+  const plotWidth = size.width - PLOT.left - PLOT.right;
+  const plotHeight = size.height - PLOT.top - PLOT.bottom;
   const hasSeries = chartData.series.length > 0 && range !== null;
   const scales = createChartScales({ minTime: range?.[0], maxTime: range?.[1], maxScore: chartData.maxScore, width: plotWidth, height: plotHeight });
   const zoomed = hasSeries && range[1] - range[0] < fullRange[1] - fullRange[0] - 1;
@@ -55,6 +69,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
   };
   const onPointerDown = (event) => {
     if (event.button !== 0) return;
+    if (event.pointerType === "touch") { setHoverX(pointerX(event)); return; }
     event.preventDefault();
     const x = pointerX(event);
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -84,7 +99,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
     setHoverX(scales.x(visibleTimes[next]));
   };
 
-  return <div className={styles.graph} onPointerLeave={() => { if (!drag) setHoverX(null); }}
+  return <div ref={graph} className={styles.graph} data-compact={compact} onPointerLeave={() => { if (!drag) setHoverX(null); }}
     data-range-start={range?.[0]} data-range-end={range?.[1]} data-full-start={fullRange[0]} data-full-end={fullRange[1]}>
     {hasSeries && <div className={styles.zoomControls} aria-label="그래프 확대 도구">
       <span className={styles.zoomHint}>드래그로 확대</span>
@@ -96,11 +111,11 @@ export default function LeaderboardScoreGraph({ teams, status }) {
       const value = niceAxisMax(chartData.maxScore) * index / 5;
       return <span key={index} className={styles.axisScore} style={{ top: PLOT.top + scales.y(value) - 10 }}>{formatScore(value)}</span>;
     })}
-    {hasSeries && Array.from({ length: 5 }, (_, index) => {
-      const time = range[0] + (range[1] - range[0]) * index / 4;
-      return <span key={index} className={styles.axisTime} style={{ left: PLOT.left + scales.x(time), top: VIEW_HEIGHT - PLOT.bottom + 17 }}>{formatTime(time, showSeconds)}</span>;
+    {hasSeries && Array.from({ length: compact ? 3 : 5 }, (_, index) => {
+      const time = range[0] + (range[1] - range[0]) * index / (compact ? 2 : 4);
+      return <span key={index} className={styles.axisTime} style={{ left: PLOT.left + scales.x(time), top: size.height - PLOT.bottom + 17 }}>{formatTime(time, showSeconds)}</span>;
     })}
-    {hasSeries && <svg className={styles.svg} viewBox={"0 0 " + VIEW_WIDTH + " " + VIEW_HEIGHT} preserveAspectRatio="none"
+    {hasSeries && <svg className={styles.svg} viewBox={"0 0 " + size.width + " " + size.height} preserveAspectRatio="none"
       role="img" tabIndex={0} onFocus={() => setHoverX(0)} onBlur={() => setHoverX(null)} onKeyDown={onKeyDown}
       aria-labelledby={chartId + "-title " + chartId + "-description"}>
       <title id={chartId + "-title"}>팀별 누적 점수 그래프</title>
@@ -115,8 +130,8 @@ export default function LeaderboardScoreGraph({ teams, status }) {
         <rect width={plotWidth} height={plotHeight} className={styles.keyboardFocus} />
         <g clipPath={"url(#" + clipId + ")"}>
           {chartData.series.map((entry) => <polyline key={entry.key} points={toPolylinePoints(entry.points, scales.x, scales.y)}
-            className={styles.scoreLine} style={{ filter: "url(#" + glowId + ")" }} fill="none" stroke={entry.color}
-            strokeWidth={entry.isTop3 ? 3.6 : 3} vectorEffect="non-scaling-stroke" data-is-top3={entry.isTop3 || undefined} />)}
+            className={styles.scoreLine} style={compact ? undefined : { filter: "url(#" + glowId + ")" }} fill="none" stroke={entry.color}
+            strokeWidth={compact ? 2 : entry.isTop3 ? 3.6 : 3} vectorEffect="non-scaling-stroke" data-is-top3={entry.isTop3 || undefined} />)}
           {hoverTime !== null && !drag && <>
             <line x1={scales.x(hoverTime)} x2={scales.x(hoverTime)} y1={0} y2={plotHeight} className={styles.hoverLine} />
             {chartData.series.map((entry) => <circle key={entry.key} cx={scales.x(hoverTime)} cy={scales.y(scoreAtTime(entry.points, hoverTime))}
@@ -131,7 +146,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
       </g>
     </svg>}
     {hasSeries && hoverTime !== null && !drag && <div className={styles.tooltip} role="tooltip"
-      style={{ left: tooltipLeft(PLOT.left + scales.x(hoverTime), PLOT.left, VIEW_WIDTH - PLOT.right, TOOLTIP_WIDTH), top: PLOT.top + 12, width: TOOLTIP_WIDTH }}>
+      style={{ left: tooltipLeft(PLOT.left + scales.x(hoverTime), compact ? 0 : PLOT.left, size.width - PLOT.right, Math.min(TOOLTIP_WIDTH, size.width - PLOT.right)), top: PLOT.top + 12, width: Math.min(TOOLTIP_WIDTH, size.width - PLOT.right) }}>
       <p className={styles.tooltipTime}>{formatTime(hoverTime, showSeconds)} KST</p>
       {chartData.series.map((entry) => <p key={entry.key} className={styles.tooltipRow}>
         <span className={styles.tooltipKey} style={{ backgroundColor: entry.color }} aria-hidden="true" />

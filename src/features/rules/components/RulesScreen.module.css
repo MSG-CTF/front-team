@@ -5,7 +5,7 @@
   inset: 0;
   min-height: 100vh;
   overflow: hidden;
-  background: #fff;
+  background: #674326 url("/assets/login/background-plaza.png") center / cover;
 }
 
 .stage {
@@ -66,34 +66,18 @@
 
 .rulesList {
   position: absolute;
-  inset: 0;
+  inset: 13% 9% 4% 2.6401%;
+  display: grid;
+  align-content: start;
+  gap: 16px;
+  overflow-y: auto;
+  scrollbar-color: #9b713d transparent;
+  padding-right: 12px;
 }
 
 .ruleItem {
-  position: absolute;
-  left: 2.6401%;
-  width: 86.156%;
+  position: relative;
   color: #613d15;
-}
-
-.ruleItem:nth-child(1) {
-  top: 13.8462%;
-}
-
-.ruleItem:nth-child(2) {
-  top: 29.2308%;
-}
-
-.ruleItem:nth-child(3) {
-  top: 44.6154%;
-}
-
-.ruleItem:nth-child(4) {
-  top: 59.8077%;
-}
-
-.ruleItem:nth-child(5) {
-  top: 74.8077%;
 }
 
 .ruleTitle,
@@ -104,7 +88,7 @@
 
 .ruleTitle {
   font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
-  font-size: 1.25cqw;
+  font-size: clamp(16px, 1.25cqw, 24px);
   font-weight: 700;
   line-height: 1.2917;
 }
@@ -112,10 +96,10 @@
 .ruleDescription {
   margin-top: 0.5208cqw;
   font-family: "IM FELL English", "Pretendard", "Apple SD Gothic Neo", serif;
-  font-size: 1.25cqw;
+  font-size: clamp(16px, 1.1cqw, 22px);
   font-weight: 400;
-  line-height: 1.1667;
-  white-space: nowrap;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .mainNavigationButton {
@@ -125,12 +109,39 @@
   display: block;
   width: 1.9271%;
   height: 3.1481%;
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
   margin: 0;
   border: 0;
   background: transparent;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 900px) {
+  .page { position: relative; min-height: 100svh; overflow: visible; padding: 20px 12px; }
+  .stage {
+    position: relative;
+    inset: auto;
+    width: min(100%, 680px);
+    height: auto;
+    margin: auto;
+    padding: 24px 20px;
+    transform: none;
+    border: 8px solid transparent;
+    border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+    background: #eedfbd;
+    background-clip: padding-box;
+  }
+  .background, .rulesPanelImage { display: none; }
+  .logo { position: static; width: 160px; height: 130px; margin: -16px auto 12px; object-fit: contain; }
+  .rulesPanel { position: static; width: 100%; height: auto; overflow: visible; }
+  .rulesPanel h1 { position: static; width: auto; height: auto; margin: 0 0 24px; clip: auto; overflow: visible; text-align: center; font: 24px/1.5 "Song Myung", serif; color: #613d15; }
+  .rulesList { position: static; overflow: visible; gap: 24px; padding: 0; }
+  .ruleTitle { font-size: 18px; }
+  .ruleDescription { margin-top: 8px; font-size: 16px; }
+  .mainNavigationButton { top: 10px; right: 10px; left: auto; width: 44px; height: 44px; padding: 10px; }
 }
 
 .mainNavigationButton:hover .layerImage {

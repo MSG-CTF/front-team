@@ -31,6 +31,15 @@
   pointer-events: none;
 }
 
+.mobileTitle, .mobileChallengeTitle { display: none; }
+.challengeGrid { display: contents; }
+.challengeButton {
+  left: var(--card-left);
+  top: var(--card-top);
+  width: var(--card-width);
+  height: var(--card-height);
+}
+
 .layerImage {
   display: block;
   width: 100%;
@@ -354,3 +363,91 @@
 .challengeDetail .panelCloseButton { min-width: 32px; min-height: 32px; }
 .detailFeedback { font-size: 13px; line-height: 1.7; }
 .detailFeedback button { padding: 0.25em 0.5em; border: 1px solid #8c653d; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+
+@media (max-width: 1100px) {
+  .page {
+    position: relative;
+    min-height: 100svh;
+    overflow: visible;
+    padding: 20px 12px;
+    background: #674326 url("/assets/login/background-plaza.png") center / cover fixed;
+  }
+  .stage {
+    position: relative;
+    inset: auto;
+    width: min(100%, 800px);
+    height: auto;
+    min-height: 65svh;
+    margin: auto;
+    padding: 24px 20px 32px;
+    transform: none;
+    border: 8px solid transparent;
+    border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
+    background: #eddbb6;
+    background-clip: padding-box;
+    font-size: 16px;
+  }
+  .background { display: none; }
+  .mobileTitle { display: block; margin: 6px 0 24px; padding-left: 36px; font: 28px/1.3 "IM Fell English", Georgia, serif; text-align: center; }
+  .mainNavigationButton { left: 8px; top: 20px; width: 44px; height: 44px; padding: 12px; }
+  .teamSummary {
+    position: relative;
+    inset: auto;
+    max-width: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 16px;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ad8a55;
+    font-size: 14px;
+    white-space: normal;
+  }
+  .teamSummary strong { max-width: none; white-space: nowrap; }
+  .teamSummary button { min-height: 44px; text-align: left; }
+  .teamSummary span:last-child { grid-column: 1 / -1; }
+  .challengeGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 20px; }
+  .challengeButton {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    min-width: 0;
+  }
+  .challengeButton > .layerImage { width: 100%; height: auto; max-width: 190px; }
+  .challengeCaption { position: static; order: 1; width: 100%; font-size: 14px; line-height: 1.5; }
+  .mobileChallengeTitle { display: block; order: 2; font: 16px/1.4 "IM Fell English", Georgia, serif; overflow-wrap: anywhere; }
+  .completionStamp { top: 0; left: 0; right: 0; bottom: 60px; }
+  .dataState, .mappingWarning { position: static; width: auto; margin: 16px 0; padding: 16px; font-size: 14px; line-height: 1.6; }
+  .dataState button, .mappingWarning button { min-height: 44px; font-size: 14px; }
+  .challengeDetail {
+    position: fixed;
+    inset: 8dvh 12px auto;
+    width: min(calc(100% - 24px), 640px);
+    max-height: 84dvh;
+    margin: 0 auto;
+    padding: 24px 20px;
+    overscroll-behavior: contain;
+    background: #f0dcb7;
+    box-shadow: 0 16px 60px #29150688;
+  }
+  .challengeDetail h2 { font-size: 24px; padding-right: 20px; }
+  .challengeDetail .challengeClub, .challengeDetail dt, .challengeDetail dd,
+  .challengeDetail .routeNotice, .challengeDetail .problemRanking, .detailFeedback { font-size: 14px; line-height: 1.6; }
+  .challengeDetail dl { gap: 16px 12px; }
+  .challengeDetail dd { white-space: normal; overflow-wrap: anywhere; }
+  .challengeDetail .panelCloseButton, .panelCloseButton { min-width: 44px; min-height: 44px; }
+  .connectButton, .detailFeedback button, .problemRanking button { min-height: 44px; padding: 10px 16px; }
+  .problemRanking table { table-layout: fixed; }
+  .tokenBackdrop { position: fixed; }
+  .tokenPanel { width: min(calc(100% - 24px), 520px); min-height: 0; max-height: 84dvh; overflow-y: auto; padding: 28px 20px; background: #f0dcb7; }
+  .tokenPanel h2 { font-size: 22px; padding-right: 20px; }
+  .tokenPanel p, .tokenPanel label, .tokenPanel button { font-size: 14px; line-height: 1.6; }
+  .tokenPanel input { font-size: 16px; min-height: 48px; }
+  .tokenPanel button { min-height: 44px; }
+}

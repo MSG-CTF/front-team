@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { formatRemaining } from "../../../utils/time.js";
 import { QUARANTINE_NOTICE_LINES } from "../data/boardContent.js";
+import styles from "./BoardScreen.module.css";
 
 // Figma node 309:100 "QuarantinePanel" (무인도 클릭, 146:19) - BoardGrid 위에 뜨는 오버레이.
 // 프레임 / 일러스트 / 모래시계 / 진행바 + 샘플 카운트다운이
@@ -28,9 +29,9 @@ export default function QuarantinePanel({
     // 백드롭이 없으면 quarantine-panel.png(pointer-events-none) 위나 패널의
     // 빈 여백을 클릭했을 때 클릭이 그대로 통과해 뒤에 있는 보드 칸(BoardTrack,
     // z-10) 버튼이 눌리는 문제가 있었다 - 닫기 버튼 근처를 눌러도 마찬가지였다.
-    <div className="absolute inset-0 z-40 bg-[#2b1609]/35" role="presentation">
+    <div className={`${styles.quarantineBackdrop} absolute inset-0 z-40 bg-[#2b1609]/35`} role="presentation">
       <div
-        className="absolute left-[24.22%] top-[30.09%] h-[51.76%] w-[46.67%]"
+        className={`${styles.quarantinePanel} absolute left-[24.22%] top-[30.09%] h-[51.76%] w-[46.67%]`}
         role="dialog"
         aria-modal="true"
         aria-label={
@@ -39,6 +40,7 @@ export default function QuarantinePanel({
             : `무인도 - 해제까지 ${formatRemaining(releasedInSeconds)}`
         }
       >
+        <h2 className={styles.mobileQuarantineTitle}>무인도</h2>
         {/* 위로 삐져나온 다람쥐 */}
         <img
           src="/assets/board/piece-squirrel.png"
@@ -106,7 +108,7 @@ export default function QuarantinePanel({
           type="button"
           onClick={onClose}
           aria-label="닫기"
-          className="absolute right-[10.5%] top-[19%] z-30 w-[4.5%] aspect-square border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95"
+          className={`${styles.quarantineClose} absolute right-[10.5%] top-[19%] z-30 w-[4.5%] aspect-square border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95`}
         >
           <img
             src="/assets/board/icon-close.png"

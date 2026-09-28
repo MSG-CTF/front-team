@@ -1,6 +1,7 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { performLogout } from "../../../api/auth.js";
 import { ROUTES } from "../../../routes/routePaths.js";
+import styles from "./BoardScreen.module.css";
 
 // Figma node 192:163 "설명서"(두루마리) / 97:439 "마이페이지로고" / 10:10 "스코어로".
 // 보드 화면 우상단의 3개 이동 버튼. 그림에 아이콘이 이미 그려져 있어 클릭 영역만 얹는다.
@@ -36,6 +37,15 @@ export default function BoardNav() {
 
   return (
     <>
+      <nav className={styles.mobileNav} aria-label="대회 메뉴">
+        <Link to={ROUTES.rules}>규칙</Link>
+        <Link to={ROUTES.mypage}>마이페이지</Link>
+        <Link to={ROUTES.leaderboard}>순위</Link>
+        <Link to={ROUTES.koth}>KoTH</Link>
+        <Link to={ROUTES.signatures}>동아리 부스</Link>
+        <button type="button" onClick={performLogout}>로그아웃</button>
+      </nav>
+      <div className={styles.desktopOnly}>
       {BUTTONS.map((button) => (
         <div
           key={button.key}
@@ -71,6 +81,7 @@ export default function BoardNav() {
       >
         로그아웃
       </button>
+      </div>
     </>
   );
 }
