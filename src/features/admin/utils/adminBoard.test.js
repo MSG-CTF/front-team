@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   ADMIN_EVENT_TYPES,
+  ADMIN_EVENT_TYPES_PENDING,
   formatCollectedValue,
   formatResourceAccountName,
   getAdminEventSeverity,
@@ -36,6 +37,15 @@ test("이벤트 type 11종에 새 보드 조작 3종이 포함된다", () => {
   assert.equal(new Set(values).size, 11);
   for (const value of ["DICE_ADJUSTED", "BOARD_POSITION_MOVED", "CELL_STATUS_CHANGED"]) assert.ok(values.includes(value));
   assert.equal(getAdminEventTypeLabel("UNKNOWN_TYPE"), "UNKNOWN_TYPE");
+});
+
+test("PR 대기 이벤트 5종은 확정 11종과 겹치지 않고 라벨이 있다", () => {
+  const confirmed = new Set(ADMIN_EVENT_TYPES.map((item) => item.value));
+  assert.equal(ADMIN_EVENT_TYPES_PENDING.length, 5);
+  for (const item of ADMIN_EVENT_TYPES_PENDING) {
+    assert.equal(confirmed.has(item.value), false);
+    assert.equal(getAdminEventTypeLabel(item.value), item.label);
+  }
 });
 
 test("severity는 4종을 매핑하고 모르는 값은 그대로 보여준다", () => {

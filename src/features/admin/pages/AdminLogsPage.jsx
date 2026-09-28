@@ -6,6 +6,7 @@ import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/Admin
 import useAdminResource from "../hooks/useAdminResource.js";
 import {
   ADMIN_EVENT_TYPES,
+  ADMIN_EVENT_TYPES_PENDING,
   formatCollectedValue,
   formatResourceAccountName,
   getAdminEventSeverity,
@@ -80,6 +81,9 @@ export default function AdminLogsPage() {
             <select value={type} onChange={(event) => setType(event.target.value)} className="rounded border border-admin-divider bg-white/60 px-2 py-1">
               <option value="">전체</option>
               {ADMIN_EVENT_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
+              <optgroup label="백엔드 PR 대기 중">
+                {ADMIN_EVENT_TYPES_PENDING.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
+              </optgroup>
             </select>
           </label>
           <button type="submit" className="rounded border border-admin-divider px-3 py-1">필터 적용</button>
@@ -106,6 +110,7 @@ export default function AdminLogsPage() {
                   </td>
                   <td className="max-w-md px-2 py-1 align-top"><EventMessage message={event.message} /></td>
                   <td className="px-2 py-1">
+                    {/* 삭제된 팀은 team_id/team_name이 null이고 정보는 message에 남는다 */}
                     {[event.team_name, event.challenge_title].filter(Boolean).join(" / ") || "-"}
                   </td>
                   <td className="px-2 py-1">{toKst(event.created_at)}</td>

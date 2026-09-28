@@ -6,7 +6,8 @@
 > - **칸 타입 5종**: `QUARANTINE`(무인도) 삭제, 무인도 방어/무인도 이동 찬스카드 2종 삭제(찬스카드 5종), 룰렛 50·100·150·200 마일리지, 룰렛칸 2개. → 0-14절, 2절
 > - **보드 화면 신규 3종(Figma)**: 518:300 "열린 문제" 좌측 패널, 555:342 "기차여행" 보드 칸 직접 선택, 555:306 "MILEAGE ROULETTE" 모달. → 2절 "2026-09-28 프론트 구현"
 > - **기능 명세 최신본**: [`docs/feature-spec-2026-09-28.md`](docs/feature-spec-2026-09-28.md) (MVP 기능 목록, 주사위 충전, KOTH, 시그니처 등)
-> - Notion API 명세서는 이번 갱신 때 연동 토큰 오류로 직접 읽지 못해 백엔드 공유 메시지를 기준으로 삼았다. Notion 원문과 다르면 Notion을 우선한다.
+> - **Notion API명세서 대조 완료(2026-09-28)**: 칸·위치·리소스는 공유 메시지와 동일. 추가로 반영한 것 - 이벤트 type PR 대기 5종(`TEAM_UPDATED`/`TEAM_DELETED`/`ACCOUNT_CREATED`/`PAYMENT_PROCESSED`/`CHALLENGE_CREATED`), 리소스 `status`는 `HEALTHY`/`DEGRADED` 2종, **신규 `PATCH`/`DELETE /admin/teams/{team_id}`(팀 수정/삭제, PR 대기)**. Notion "기능명세서" 페이지는 `docs/feature-spec-2026-09-28.md`와 동일.
+> - **Figma 시안 3종은 Figma MCP로 원본 에셋을 받아 적용**(패널, 버튼, 배지 등 `public/assets/board/`). 폰트 Pretendard(jsDelivr), Abyssinica SIL(Google Fonts) 추가.
 
 > 이 문서는 아래 3개 문서를 **하나로 통합한 단일 소스**입니다. 앞으로 이 리포에서 개발 작업을 시작할 때는 이 문서 하나만 읽으면 됩니다.
 >
@@ -333,9 +334,9 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 - "진행 중인 문제" 안내를 `active_challenge` 존재 여부가 아니라 `blocked_reason === "TIMER_RUNNING"` 기준으로 판정하도록 수정 - 제한시간이 지나면 문제 타이머 대신 충전 타이머가 뜨도록 함(`BoardEventPanel.jsx`, `BoardScreen.jsx`).
 
 **2026-09-28 프론트 구현 (Figma 신규 시안 3종 + 기능 명세 반영)**
-- **열린 문제 패널**(Figma 518:300, `OpenChallengesSidePanel.jsx`): 주사위판 아래 "열린 문제 목록 보기"를 누르면 보드 왼쪽에 양피지 세로 패널이 뜬다. `GET /board/opened_challenges` 순서대로 01, 02... 번호 배지 + 제목 + 분야, 푼 문제는 초록 ✓ 배지. 행 클릭 → 문제 상세, 하단 "전체 문제 보기" → 열린 문제 목록 페이지(10절).
-- **기차여행**(Figma 555:342, `AirportTravelOverlay.jsx`): Airport 칸에 도착하면 보드 가운데 "가고 싶은 장소를 골라주세요!" 안내가 뜨고, 이동 가능한 칸(미소모, 현재 칸 제외)에 금색 테두리가 생긴다. 보드 칸을 직접 누르면 확인 패널("N번 칸으로 이동할까요?")에서 `POST /board/airport/move`를 확정한다. 기존 드롭다운 패널은 제거. 주사위 결과 확정/카드 선택/카드 폐기가 남아 있으면 선택 모드를 띄우지 않는다.
-- **마일리지 룰렛**(Figma 555:306, `MileageRouletteModal.jsx`): "MILEAGE ROULETTE" 모달, 남은 기회 1/1, SPIN 버튼. 응답을 기다리는 동안 휠이 돌고, 응답의 `mileage_gained` 칸에 멈춘 뒤 결과(+N M, 총 마일리지)를 보여준다. 휠 숫자는 시안(20/30/300/500 등)이 아니라 명세 값 50·100·150·200으로 그렸다. `prefers-reduced-motion`이면 애니메이션 없이 바로 멈춘다. 이미지 에셋은 Figma 로그인 없이 내보낼 수 없어 CSS로 재현했다 - 시안 에셋을 받으면 교체 필요.
+- **열린 문제 패널**(Figma 518:300, `OpenChallengesSidePanel.jsx`): 주사위판 아래 "열린 문제 목록 보기"(Pretendard 24px)를 누르면 보드 왼쪽에 양피지 세로 패널이 뜬다. 패널(제목 포함), 번호 배지, 화살표, "전체 문제 보기", 닫기 버튼은 Figma 원본 에셋. `GET /board/opened_challenges` 순서대로 01, 02... 번호 배지 + 제목 + 분야, 푼 문제는 초록 ✓ 배지. 행 클릭 → 문제 상세, 하단 "전체 문제 보기" → 열린 문제 목록 페이지(10절).
+- **기차여행**(Figma 555:342, `AirportTravelOverlay.jsx`): Airport 칸에 도착하면 보드 가운데 "가고 싶은 장소를 골라주세요!"(시안 값 Pretendard Bold 36px, #e5dccc, 자간 6.12px) 안내가 뜨고, 이동 가능한 칸(미소모, 현재 칸 제외)에 금색 테두리가 생긴다. 보드 칸을 직접 누르면 확인 패널("N번 칸으로 이동할까요?")에서 `POST /board/airport/move`를 확정한다. 기존 드롭다운 패널은 제거. 주사위 결과 확정/카드 선택/카드 폐기가 남아 있으면 선택 모드를 띄우지 않는다.
+- **마일리지 룰렛**(Figma 555:306, `MileageRouletteModal.jsx`): 패널(`roulette-panel.png`, 제목/"남은 기회"/"/" 포함), SPIN 버튼, 닫기 버튼은 **Figma 원본 에셋**이고 좌표는 시안 그대로(1920x1080 무대 %). 응답을 기다리는 동안 휠이 돌고, 응답의 `mileage_gained` 칸에 멈춘 뒤 결과(+N 마일리지, 총 마일리지)를 보여주며 SPIN 자리가 "확인" 버튼으로 바뀐다. **휠만 CSS로 그렸다** - 시안 휠 이미지는 숫자(20/30/300/500)·포인터·받침대가 한 장이라 돌릴 수 없고 명세 값(50·100·150·200)과도 달라서다. 디자인팀에 명세 값 휠(숫자 없는 원판 + 포인터 분리) 요청 필요. 시안 문구 "Try you Luck"은 오타로 보고 "Try your Luck"으로 표기. `prefers-reduced-motion`이면 애니메이션 없이 바로 멈춘다.
 - 주사위 패널 문구를 "주사위 N회" → **"주사위 N/3"**으로 변경(기능 명세 "보유 횟수/3").
 - 룰북(`RulesPage.jsx`)의 무인도 항목을 출발 칸 규칙으로 바꾸고, 찬스카드 5종/룰렛 50~200/기차 1회 등 최신 명세로 문구 갱신.
 - `cell/current` 후보 제목은 `title`/`challenge_title` 둘 다 받도록 방어(필드명 미확정, Appendix B #5).
@@ -471,6 +472,8 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 | GET | `/admin/mileage_history` | 전체 마일리지 내역 조회(팀 구분 없이) | PR 대기 |
 | GET | `/admin/teams` | 팀별 목록(검색/정렬) | **완료** |
 | GET | `/admin/teams/{team_id}` | 팀 상세(벤 이력, 마일리지 요약, 최근 내역) | **완료** |
+| PATCH | `/admin/teams/{team_id}` | 팀 수정(이름, 팀원 추가/제외, 팀장) - 2026-09-26 신규 | PR 대기 |
+| DELETE | `/admin/teams/{team_id}` | 팀 삭제(소속 계정, 기록 연쇄 삭제) - 2026-09-26 신규 | PR 대기 |
 | POST | `/admin/teams/{team_id}/ban` | 팀 벤 처리 | **완료** |
 | DELETE | `/admin/teams/{team_id}/ban` | 팀 벤 해제 | **완료** |
 | POST | `/admin/teams/{team_id}/mileage` | 마일리지 지급/회수 | **완료** |
@@ -510,6 +513,8 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 - `GET /admin/teams/{team_id}` - Query `history_limit`(기본 10, 상한 50) -> 팀 목록 요약 + `{ ban_reason, banned_at, banned_by, created_at, mileage_summary: {total_earned, total_spent, purchase_count, refund_count}, recent_mileage_history: [{history_id, type, amount, reason, processed_by, created_at}] }`. `is_banned=false`면 `ban_*`는 null. `board_position_states`는 보드 앱 붙기 전 null. 보드 진행 상세, 인스턴스 목록은 별도 API. 추가 에러: `404 TEAM_NOT_FOUND`.
 - `POST /admin/teams/{team_id}/ban` - Req `{ ban_reason }`(1자 이상) -> `{ team_id, is_banned: true, ban_reason, banned_at, banned_by }`. 밴 시 쓰기 전면 차단(`403 TEAM_BANNED`, 0-6절). 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND` / `409 ALREADY_BANNED`(data `{team_id, ban_reason, banned_at}`).
 - `DELETE /admin/teams/{team_id}/ban` (Body 없음) -> `{ team_id, is_banned: false, unbanned_at, unbanned_by }`. 추가 에러: `404 TEAM_NOT_FOUND` / `409 NOT_BANNED`(data `{team_id, is_banned}`). ⚠️ **벤 해제가 자동 롤백까지 하지 않는다** - 롤백은 아래 `/rollback`으로 별도 조작(Notion 초안 전제, 팀 합의 대기 - Appendix B).
+- `PATCH /admin/teams/{team_id}` (2026-09-26 신규, 백엔드 PR 대기) - Req `{ team_name?(1~100자), add_user_ids?: [], remove_user_ids?: [], leader_user_id?: string|null, reason(1~500자, 필수) }`. 네 항목 중 하나 이상 필요, 같은 계정을 추가/제외에 함께 넣을 수 없다. `add_user_ids`는 **무소속 참가자만**(관리자 불가), 제외된 계정은 무소속이 된다. `leader_user_id`는 변경 **후** 팀원 중 한 명, `null`이면 팀장 공석, 생략하면 기존 팀장 유지(기존 팀장을 제외하면 공석). **소속/팀장이 바뀐 계정은 refresh_token이 폐기돼 다시 로그인해야 한다**(발급된 access_token은 최대 1시간 이전 값). -> `{ team_id, team_name, member_count, members: [{user_id, login_id, nickname, role, is_leader}](팀장 먼저, 닉네임 순), updated_at, updated_by }`. `TEAM_UPDATED`(WARNING) 이벤트. 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND` / `409 TEAM_NAME_TAKEN` / `409 ACTIVE_INSTANCE_EXISTS`(제외할 팀원 인스턴스 실행 중). 프론트: 팀 상세 "팀 정보 수정"(`AdminTeamManageForms.jsx`, 바뀐 항목만 전송 - `utils/adminTeam.js`).
+- `DELETE /admin/teams/{team_id}` (2026-09-26 신규, 백엔드 PR 대기) - Body `{ reason }`(1~500자, 필수). **되돌릴 수 없다** - 소속 계정과 풀이·제출·마일리지·결제·보드 진행·시그니처 기록이 함께 삭제되고, 이 팀이 푼 문제는 동적 점수를 재계산한다(다른 팀 점수도 오름). 관리자 이벤트 로그는 남되 팀 연결만 끊긴다. -> `{ team_id, team_name, deleted_member_count, deleted_at, deleted_by }`. `TEAM_DELETED`(CRITICAL) 이벤트. 추가 에러: `400 INVALID_REQUEST` / `404 TEAM_NOT_FOUND` / `409 ACTIVE_INSTANCE_EXISTS`(인스턴스 강제 종료 후 재요청). 프론트: 팀 상세 하단 "팀 삭제" - 팀 이름을 그대로 입력해야 버튼이 열리고, 성공하면 팀 목록으로 이동.
 - `POST /admin/teams/{team_id}/mileage` - Req `{ amount, reason }`(amount 0 불가, 양수=지급/음수=회수) -> `{ team_id, previous_mileage, amount, current_mileage, reason, adjusted_at, adjusted_by }`. `mileage_history.type`은 서버가 부호로 결정(`ADMIN_GRANT`/`ADMIN_DEDUCT`). 추가 에러: `400 INVALID_REQUEST` / `400 INVALID_AMOUNT`(0) / `400 INSUFFICIENT_MILEAGE`(data `{current_mileage, requested_amount}`, `requested_amount`는 항상 양수) / `404 TEAM_NOT_FOUND`.
 
 **팀 강제 개입 (백엔드는 "시작 전"/"진행 중"/"PR 대기" - 보드 도메인 PR #14 확정 후 구현 가능, 프론트는 목서버 기준으로 먼저 구현 완료)**
@@ -536,8 +541,8 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 **리소스 / 로그**
 
-- `GET /admin/resources` (2026-09-28, PR #85 리뷰 중) -> 있음 `{ accounts: [{account_id, provider, scope_id, status, running_instances, nodes: [{node_id, node_name, status, running_instances, cpu_usage_percent, memory_usage_percent}]}], total_count, collected_at }`. **`account_name`, `instance_quota` 삭제**(리소스 브로커가 주지 않는 값), **`provider`, `scope_id` 추가**(계정 식별용, 예 `GCP` / `example-project`). `cpu_usage_percent`, `memory_usage_percent`, `running_instances`는 **null 가능 = 미수집** - 0으로 표시하지 않는다(화면은 "미수집"). 수집된 VM이 없으면 `200` + `data: null`, 메시지 "수집된 리소스 정보가 없습니다". 리소스 브로커 연결 실패는 **`503 SCHEDULER_UNAVAILABLE`**(화면은 "리소스 브로커에 연결하지 못했습니다" + 다시 시도). `status` 관측값: `HEALTHY` / `DEGRADED`.
-- `GET /admin/events` (2026-09-28 main 머지 - 관리자 조작이 실제로 로그에 쌓임) - Query `type`(선택), `team_id`(선택), `page`, `size` -> `{ events: [{event_id, type, severity, message, team_id, team_name, challenge_id, challenge_title, instance_id, actor, created_at}], total_count, page, size }`. **`type` 11종**: `TEAM_BANNED`, `TEAM_UNBANNED`, `MILEAGE_ADJUSTED`, `PAYMENT_REFUNDED`, `INSTANCE_FAILED`, `INSTANCE_FORCED`, `CHALLENGE_VISIBILITY_CHANGED`, `SETTINGS_CHANGED`, `DICE_ADJUSTED`, `BOARD_POSITION_MOVED`, `CELL_STATUS_CHANGED`(뒤 3개 신규, 로그 화면 필터에 전부 노출). **`severity` 4종**: `INFO` / `WARNING` / `CRITICAL` / `MANUAL_REVIEW`(명세 예시의 `ERROR`는 없는 값 → `CRITICAL`로 정정). **`message`에 조작 사유가 잘리지 않고 500자 넘게 들어올 수 있음** - 로그 화면은 120자까지 줄여 보여주고 "전체 보기"로 펼치며, 대시보드는 두 줄 말줄임 + title. 팀, 문제, 인스턴스 무관 이벤트는 해당 필드 null. 없으면 `events: []`. 추가 에러: `400 INVALID_REQUEST`(type 값).
+- `GET /admin/resources` (2026-09-28, PR #85 리뷰 중) -> 있음 `{ accounts: [{account_id, provider, scope_id, status, running_instances, nodes: [{node_id, node_name, status, running_instances, cpu_usage_percent, memory_usage_percent}]}], total_count, collected_at }`. **`account_name`, `instance_quota` 삭제**(리소스 브로커가 주지 않는 값), **`provider`, `scope_id` 추가**(계정 식별용, 예 `GCP` / `example-project`). `cpu_usage_percent`, `memory_usage_percent`, `running_instances`는 **null 가능 = 미수집** - 0으로 표시하지 않는다(화면은 "미수집"). 수집된 VM이 없으면 `200` + `data: null`, 메시지 "수집된 리소스 정보가 없습니다". 리소스 브로커 연결 실패는 **`503 SCHEDULER_UNAVAILABLE`**(화면은 "리소스 브로커에 연결하지 못했습니다" + 다시 시도). `status`는 `HEALTHY` / `DEGRADED` 2종(Notion 2026-09-24): VM은 `RUNNING`이고 `enabled`·`account_enabled`·`runtime_ready`가 모두 참일 때만 `HEALTHY`, 계정은 노드 전부 `HEALTHY`일 때만 `HEALTHY`. `collected_at`은 브로커의 `generated_at`.
+- `GET /admin/events` (2026-09-28 main 머지 - 관리자 조작이 실제로 로그에 쌓임) - Query `type`(선택), `team_id`(선택), `page`, `size` -> `{ events: [{event_id, type, severity, message, team_id, team_name, challenge_id, challenge_title, instance_id, actor, created_at}], total_count, page, size }`. **`type` 11종**: `TEAM_BANNED`, `TEAM_UNBANNED`, `MILEAGE_ADJUSTED`, `PAYMENT_REFUNDED`, `INSTANCE_FAILED`, `INSTANCE_FORCED`, `CHALLENGE_VISIBILITY_CHANGED`, `SETTINGS_CHANGED`, `DICE_ADJUSTED`, `BOARD_POSITION_MOVED`, `CELL_STATUS_CHANGED`(뒤 3개 신규, 로그 화면 필터에 전부 노출), 그리고 **백엔드 PR 대기 5종** `TEAM_UPDATED` `TEAM_DELETED` `ACCOUNT_CREATED` `PAYMENT_PROCESSED` `CHALLENGE_CREATED`(그 밖은 400 - 로그 화면 필터에서는 "백엔드 PR 대기 중" 묶음으로 따로 표시). 관리자 조작은 `INFO`/`WARNING`, 팀 삭제만 `CRITICAL`. 팀이 삭제되면 `team_id`/`team_name`은 null이고 삭제된 팀 정보는 `message`에 남는다. **`severity` 4종**: `INFO` / `WARNING` / `CRITICAL` / `MANUAL_REVIEW`(명세 예시의 `ERROR`는 없는 값 → `CRITICAL`로 정정). **`message`에 조작 사유가 잘리지 않고 500자 넘게 들어올 수 있음** - 로그 화면은 120자까지 줄여 보여주고 "전체 보기"로 펼치며, 대시보드는 두 줄 말줄임 + title. 팀, 문제, 인스턴스 무관 이벤트는 해당 필드 null. 없으면 `events: []`. 추가 에러: `400 INVALID_REQUEST`(type 값).
 
 **결제**
 
@@ -554,9 +559,11 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 **제품 요구사항 <-> 엔드포인트 매핑**: 팀별 목록 -> `/admin/teams`, 팀 상세 -> `/admin/teams/{id}`, 문제 목록(인스턴스 현황) -> `/admin/challenges`, 운영 대시보드 -> `/admin/dashboard`, 로그 -> `/admin/events`, 설정 -> `/admin/settings`, clear 칸 관리 -> `.../board/cells/{i}`, 문제 공개상태 -> `.../visibility`, 전체 인스턴스 목록/집계/필터/실패표시 -> `/admin/instances`, 강제 재시작, 종료 -> `/admin/instances/{id}/reset`, `DELETE`, 리소스 -> `/admin/resources`, 마일리지 관리 -> `.../mileage`, 주사위 오류/임의 지급 -> `.../board/dice`, 칸 위치 이동 -> `.../board/position`, 벤 -> `.../ban`, 롤백 -> `.../snapshots`+`.../rollback`, Docker 이미지 -> `.../releases`(체계 교체).
 
-**여전히 미해결(Appendix B)**: 벤 해제 <-> 자동 롤백 여부(팀 합의), `GET /admin/resources` `status` enum(~~`/admin/events` enum~~ 2026-09-28 해소), `board_position_states` vs `position` 필드명(Appendix A #5), 인스턴스 `port`(단수) vs `ports`(복수, Appendix A #2), 보드 강제 개입 5종은 보드 도메인(PR #14) 모델 확정 후.
+**여전히 미해결(Appendix B)**: 벤 해제 <-> 자동 롤백 여부(팀 합의), (~~`/admin/events` enum~~, ~~`/admin/resources` `status` enum~~ 2026-09-28 해소), `board_position_states` vs `position` 필드명(Appendix A #5), 인스턴스 `port`(단수) vs `ports`(복수, Appendix A #2), 보드 강제 개입 5종은 보드 도메인(PR #14) 모델 확정 후.
 
-**목서버(mock-backend) 2026-09-28 변경**: 칸 번호 1~36 검증, OPENED/CLEARED 선행 조건(연 문제 없으면 400), 이벤트 type을 백엔드 11종 이름으로 교체(+ `PAYMENT_REFUNDED`, `SETTINGS_CHANGED` 기록, 밴은 `WARNING`), 리소스 응답을 `provider`/`scope_id` 형태로 바꾸고 노드 1개를 미수집(null)로 둠, 16번 칸 ROULETTE, 룰렛 50/100/150/200, 이미 문제를 연 칸의 `cell/current`는 후보 빈 배열. 계정 등록/롤백 이벤트(`ACCOUNT_REGISTER`/`TEAM_ROLLBACK`)는 11종 밖의 목서버 전용 값이라 화면에 원문 그대로 표시된다. 기존 `db.sqlite3`를 쓰면 `python manage.py seed_demo_data`를 한 번 더 돌려야 16번 칸이 바뀐다.
+**목서버(mock-backend) 2026-09-28 변경(Notion 대조 후 추가)**: `PATCH`/`DELETE /admin/teams/{id}` 구현(명세의 400/404/409 전부), 리소스 `status`를 `HEALTHY`/`DEGRADED`로(미수집 노드는 `DEGRADED`), 이벤트 `ACCOUNT_REGISTER` -> `ACCOUNT_CREATED`, 결제 처리 시 `PAYMENT_PROCESSED` 기록.
+
+**목서버(mock-backend) 2026-09-28 변경**: 칸 번호 1~36 검증, OPENED/CLEARED 선행 조건(연 문제 없으면 400), 이벤트 type을 백엔드 11종 이름으로 교체(+ `PAYMENT_REFUNDED`, `SETTINGS_CHANGED` 기록, 밴은 `WARNING`), 리소스 응답을 `provider`/`scope_id` 형태로 바꾸고 노드 1개를 미수집(null)로 둠, 16번 칸 ROULETTE, 룰렛 50/100/150/200, 이미 문제를 연 칸의 `cell/current`는 후보 빈 배열. 계정 등록/롤백 이벤트(`TEAM_ROLLBACK`)는 명세 밖의 목서버 전용 값이라 화면에 원문 그대로 표시된다. 기존 `db.sqlite3`를 쓰면 `python manage.py seed_demo_data`를 한 번 더 돌려야 16번 칸이 바뀐다.
 
 **목서버(mock-backend) 구현 메모**: 위 미해결/미착수 항목도 로컬 통합 테스트를 위해 전부 구현해뒀다. `TeamSnapshot`은 벤 처리, clear 칸 관리, 말 위치 이동, 주사위 지급/회수 직전마다 자동으로 한 장씩 남기고(팀당 최근 20개), 롤백은 그 스냅샷의 보드/점수/마일리지 필드를 그대로 복원하면서 "롤백 직전" 스냅샷도 하나 더 남겨 롤백 자체도 되돌릴 수 있게 했다. `AdminEvent`는 관리자 조작(벤, 마일리지 조정, 인스턴스 강제 재시작/종료, 문제 공개 전환, clear 칸/위치 이동/주사위 지급, 롤백, 계정 등록) 시점마다 한 행씩 남겨 대시보드 "최근 이벤트 로그"와 `/admin/events`가 실데이터로 동작한다. 실제 백엔드가 이 스키마와 다르게 나올 수 있으니 연동 시 재대조 필요.
 
@@ -662,7 +669,7 @@ API 문서 3개엔 없지만 원 기능명세(`archive/최초_MVP_기능요구�
 10. ~~`consumed_cell_indexes`가 opened/cleared 단계를 구분 못함.~~ 해소(2026-08-23). `cell_states: [{cell_index, status, category}]` 추가(`status`: `CONSUMED`/`OPENED`/`CLEARED`). ERD `team_cell_status` enum에 `consumed` 추가 필요.
 11. ~~`GET /timer`에 `server_time`/`contest_id` 없음.~~ `server_time`은 해소(2026-09-03, 7절). `contest_id`는 여전히 없음.
 12. ~~관리자 페이지 - 설정/clear칸/공개상태/주사위지급/칸이동 API 부재.~~ 해소(2026-08-26). 8절. 보드 강제 개입 5종은 백엔드 "논의" + 보드 도메인 PR #14 대기.
-13. `GET /admin/resources`의 `status`(관측 `HEALTHY`/`DEGRADED`) enum 전체 목록 미공개. ~~`GET /admin/events`의 `type`, `severity` enum~~ - 해소(2026-09-28): type 11종, severity `INFO`/`WARNING`/`CRITICAL`/`MANUAL_REVIEW`(8절).
+13. ~~`GET /admin/resources`의 `status`, `GET /admin/events`의 `type`, `severity` enum~~ - 해소(2026-09-28, Notion 대조): resources `status` `HEALTHY`/`DEGRADED`, events type 11종 + PR 대기 5종, severity `INFO`/`WARNING`/`CRITICAL`/`MANUAL_REVIEW`(8절).
 14. KOTH - "다음 문제 개방 남은 시간" 필드 여전히 없음(`open_group`은 순번, 시각 아님).
 15. ~~KOTH - `solves[].challenge_id`와 `koth_challenge_id` 동일 값 공간 미확인.~~ 부분 해소. Notion이 "동일 값"이라고 명시. `solves` 응답도 KOTH 항목은 `koth_challenge_id` 필드를 씀(6절).
 16. ~~`GET /teams/me/instance`가 "본인(user_id)" 기준.~~ 명시화. URL이 `/teams/me/instances`(복수)로 바뀌고 "본인 기준, 같은 팀 다른 사용자 미포함"이 스펙에 명기됨(3절).

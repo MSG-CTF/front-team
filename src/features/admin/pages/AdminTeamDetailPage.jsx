@@ -1,20 +1,24 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   adjustDiceRolls,
   adjustMileage,
   banTeam,
   createAdminIdempotencyKey,
+  deleteAdminTeam,
   getAdminTeamDetail,
   getTeamSnapshots,
   moveBoardPosition,
   rollbackTeam,
   unbanTeam,
+  updateAdminTeam,
   updateBoardCell,
 } from "../../../api/admin.js";
+import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
+import { TeamDeleteForm, TeamEditForm } from "../components/AdminTeamManageForms.jsx";
 import { getAdminRequestError } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { mileageAttempt, validateMileageAdjustment } from "../utils/adminMileage.js";
@@ -117,7 +121,7 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
           value={cellIndex}
           onChange={(event) => setCellIndex(event.target.value)}
           placeholder={`칸 번호(${BOARD_CELL_MIN}~${BOARD_CELL_MAX})`}
-          className="w-28 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
+          className="w-36 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
         />
         <select
           value={cellStatus}
@@ -172,7 +176,7 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
           value={position}
           onChange={(event) => setPosition(event.target.value)}
           placeholder={`이동할 칸(${BOARD_CELL_MIN}~${BOARD_CELL_MAX})`}
-          className="w-28 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
+          className="w-36 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
         />
         <label className="flex items-center gap-1 text-xs">
           <input type="checkbox" checked={consumeCell} onChange={(event) => setConsumeCell(event.target.checked)} />
@@ -216,7 +220,7 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
           value={diceAmount}
           onChange={(event) => setDiceAmount(event.target.value)}
           placeholder="+지급 / -회수"
-          className="w-28 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
+          className="w-36 rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-kode-mono"
         />
         <input
           value={diceReason}
@@ -323,6 +327,7 @@ function RollbackSection({ teamId, isMutating, onRollback }) {
 // 롤백/스냅샷도 이제 붙였다(목서버에 자동 스냅샷 + 롤백 엔드포인트 구현).
 export default function AdminTeamDetailPage() {
   const { teamId } = useParams();
+  const navigate = useNavigate();
   const detail = useAdminResource(
     (config) => getAdminTeamDetail(teamId, {}, config),
     [teamId],
@@ -374,6 +379,31 @@ export default function AdminTeamDetailPage() {
       return;
     }
     await runAction(() => unbanTeam(teamId), "처리에 실패했습니다.");
+  };
+
+  const handleTeamUpdate = async (body) => {
+    const ok = await runAction(() => updateAdminTeam(teamId, body), "팀 정보 수정에 실패했습니다.");
+    if (ok) setActionMessage("팀 정보를 저장했습니다. 소속·팀장이 바뀐 계정은 다시 로그인해야 합니다.");
+    return ok;
+  };
+
+  // 삭제 후에는 상세를 다시 불러올 수 없으므로 runAction(재조회 포함)을 쓰지 않고 목록으로 보낸다.
+  const handleTeamDelete = async (reason) => {
+    if (pending.current) return;
+    pending.current = true;
+    setIsMutating(true);
+    setActionError("");
+    setActionMessage("");
+    try {
+      const response = await deleteAdminTeam(teamId, { reason });
+      if (!isSuccess(response.data)) throw new Error(response.data?.message || "팀 삭제에 실패했습니다.");
+      navigate(ROUTES.adminTeams, { replace: true });
+    } catch (error) {
+      setActionError(getAdminRequestError(error, "팀 삭제에 실패했습니다.").error);
+    } finally {
+      pending.current = false;
+      setIsMutating(false);
+    }
   };
 
   const handleCellUpdate = (cellIndex, status, reason) =>
@@ -454,6 +484,11 @@ export default function AdminTeamDetailPage() {
           </section>
 
           <section>
+            <h2 className="mb-2 font-song-myung text-sm font-bold text-admin-muted">팀 정보 수정</h2>
+            <TeamEditForm team={data} isMutating={isMutating} onSubmit={handleTeamUpdate} />
+          </section>
+
+          <section>
             <h2 className="mb-2 font-song-myung text-sm font-bold text-admin-muted">마일리지 조정</h2>
             <MileageForm teamId={teamId} isMutating={isMutating} onSubmit={handleMileageAdjust} />
           </section>
@@ -503,6 +538,11 @@ export default function AdminTeamDetailPage() {
           <section>
             <h2 className="mb-2 font-song-myung text-sm font-bold text-admin-muted">롤백</h2>
             <RollbackSection teamId={teamId} isMutating={isMutating} onRollback={handleRollback} />
+          </section>
+
+          <section>
+            <h2 className="mb-2 font-song-myung text-sm font-bold text-admin-failed">팀 삭제</h2>
+            <TeamDeleteForm team={data} isMutating={isMutating} onSubmit={handleTeamDelete} />
           </section>
         </div>
       )}

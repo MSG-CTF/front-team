@@ -44,11 +44,22 @@ export const ADMIN_EVENT_TYPES = [
   { value: "CELL_STATUS_CHANGED", label: "칸 상태 변경" },
 ];
 
+// Notion 명세(2026-09-24): 아래 5종은 백엔드 PR 대기 중. 머지 전 필터로 보내면 400이므로
+// 필터에서는 따로 묶어 보여주고, 라벨 표시는 미리 해둔다.
+export const ADMIN_EVENT_TYPES_PENDING = [
+  { value: "TEAM_UPDATED", label: "팀 정보 수정" },
+  { value: "TEAM_DELETED", label: "팀 삭제" },
+  { value: "ACCOUNT_CREATED", label: "계정 등록" },
+  { value: "PAYMENT_PROCESSED", label: "결제 처리" },
+  { value: "CHALLENGE_CREATED", label: "문제 등록" },
+];
+
 export function getAdminEventTypeLabel(type) {
-  return ADMIN_EVENT_TYPES.find((item) => item.value === type)?.label ?? type ?? "-";
+  return [...ADMIN_EVENT_TYPES, ...ADMIN_EVENT_TYPES_PENDING].find((item) => item.value === type)?.label ?? type ?? "-";
 }
 
 // severity는 네 가지만 온다. 명세 초안의 ERROR는 없는 값(CRITICAL로 정정됨).
+// 관리자 조작은 INFO/WARNING, 팀 삭제(TEAM_DELETED)만 CRITICAL.
 export const ADMIN_EVENT_SEVERITIES = {
   INFO: { label: "정보", tone: "neutral" },
   WARNING: { label: "경고", tone: "warn" },
