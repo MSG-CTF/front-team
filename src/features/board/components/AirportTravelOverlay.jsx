@@ -2,6 +2,8 @@
 // "가고 싶은 장소를 골라주세요!" 안내가 뜨고, 참가자는 보드 칸을 직접 눌러 목적지를
 // 고른다. 고른 뒤에는 작은 확인 패널에서 이동을 확정한다(POST /board/airport/move, 팀장만).
 // 팀당 1회만 쓸 수 있고, 아직 소모하지 않은 칸만 고를 수 있다.
+import styles from "./BoardScreen.module.css";
+
 export default function AirportTravelOverlay({ destination, isMutating, onConfirm, onCancel }) {
   return (
     <>
@@ -9,7 +11,7 @@ export default function AirportTravelOverlay({ destination, isMutating, onConfir
         <p
           role="status"
           // 시안 555:366: Pretendard Bold 36px, #e5dccc, 자간 6.12px, 687,506 (1920x1080 무대)
-          className="pointer-events-none absolute left-[35.78%] top-[46.85%] z-30 m-0 whitespace-nowrap font-pretendard text-[1.875cqw] font-bold leading-none tracking-[0.319cqw] text-[#e5dccc] [text-shadow:0_0.08cqw_0.4cqw_rgba(0,0,0,0.75)]"
+          className={`${styles.airportHint} pointer-events-none absolute left-[35.78%] top-[46.85%] z-30 m-0 whitespace-nowrap font-pretendard text-[1.875cqw] font-bold leading-none tracking-[0.319cqw] text-[#e5dccc] [text-shadow:0_0.08cqw_0.4cqw_rgba(0,0,0,0.75)]`}
         >
           가고 싶은 장소를 골라주세요!
         </p>
@@ -18,7 +20,7 @@ export default function AirportTravelOverlay({ destination, isMutating, onConfir
       {destination && (
         <section
           aria-label="기차여행 목적지 확인"
-          className="absolute left-[36.6%] top-[40%] z-40 w-[23%] rounded-[0.55cqw] border-[0.16cqw] border-[#8a5a2b] bg-[#efe1c4]/95 px-[1cqw] py-[0.8cqw] text-center text-[#3b2616] shadow-[0_0.6cqw_1.6cqw_rgba(30,12,2,0.55),inset_0_0_0_0.12cqw_#f8eedb]"
+          className={`${styles.airportConfirm} absolute left-[36.6%] top-[40%] z-40 w-[23%] rounded-[0.55cqw] border-[0.16cqw] border-[#8a5a2b] bg-[#efe1c4]/95 px-[1cqw] py-[0.8cqw] text-center text-[#3b2616] shadow-[0_0.6cqw_1.6cqw_rgba(30,12,2,0.55),inset_0_0_0_0.12cqw_#f8eedb]`}
         >
           <h2 className="m-0 font-pretendard text-[0.95cqw] font-normal">기차여행</h2>
           <p className="m-0 mt-[0.45cqw] font-pretendard text-[0.72cqw]">

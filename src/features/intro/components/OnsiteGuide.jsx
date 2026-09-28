@@ -46,7 +46,7 @@ export default function OnsiteGuide() {
               주민등록증 / 여권 /{" "}
               <span className="no-break">운전면허증 등</span>
             </p>
-            <p className="onsite-note">학생 신분 증빙은 별도 안내</p>
+            <p className="onsite-note">재학·휴학 증명서는 참가 신청 폼에 제출</p>
           </div>
         </article>
       </div>

@@ -47,7 +47,7 @@ export default function LoginScreen({ onLogin, submitting = false, feedback = nu
 
         <img src={LOGO_SRC} alt="MSG CTF" className={styles.logo} />
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} className={styles.form}>
           <label htmlFor="login-username" className={styles.srOnly}>
             아이디
           </label>

@@ -40,6 +40,8 @@ export default function KothScreen({
           className={styles.background}
         />
 
+        <h1 className={styles.mobileTitle}>King of the Hill</h1>
+
         {requestStatus === "success" && (
           <aside className={styles.teamSummary} aria-label="내 팀 KoTH 점수">
             <strong>{formatValue(teamName || null)}</strong>
@@ -73,17 +75,19 @@ export default function KothScreen({
           </section>
         )}
 
-        {requestStatus === "success" && challenges.map((challenge) => (
-          <KothChallengeButton
-            key={challenge.kothChallengeId}
-            stale={clubsStale}
-            challenge={{
-              ...challenge,
-              selected: challenge.kothChallengeId === selectedChallenge?.kothChallengeId,
-            }}
-            onSelect={onSelectChallenge}
-          />
-        ))}
+        <div className={styles.challengeGrid}>
+          {requestStatus === "success" && challenges.map((challenge) => (
+            <KothChallengeButton
+              key={challenge.kothChallengeId}
+              stale={clubsStale}
+              challenge={{
+                ...challenge,
+                selected: challenge.kothChallengeId === selectedChallenge?.kothChallengeId,
+              }}
+              onSelect={onSelectChallenge}
+            />
+          ))}
+        </div>
 
         {requestStatus === "success" && unmappedChallengeCount > 0 && (
           <p className={styles.mappingWarning} role="alert">

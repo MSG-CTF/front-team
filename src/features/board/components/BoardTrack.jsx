@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BOARD_CELL_COUNT, getBoardCellPosition } from "../utils/boardData.js";
 import Dice3D from "./Dice3D.jsx";
+import styles from "./BoardScreen.module.css";
 
 // Figma node 309:78 "BoardGrid"(951x714) + 104:458 "주사위" + 100:454 "람쥐".
 // 36칸은 원본 board-grid.png에 합쳐져 있으므로 분해하지 않는다. API의 36개 cell을
@@ -71,7 +72,7 @@ export default function BoardTrack({
   };
 
   return (
-    <div className="absolute left-[23.33%] top-[26.76%] w-[49.53%] h-[66.11%]">
+    <div className={`${styles.track} absolute left-[23.33%] top-[26.76%] w-[49.53%] h-[66.11%]`}>
       <img
         src="/assets/board/board-grid.png"
         alt="게임 보드판"

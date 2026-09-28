@@ -19,6 +19,7 @@ import useAdminTeamOptions from "../hooks/useAdminTeamOptions.js";
 import { getAdminRequestError, summarizeAdminResources } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { mileageAttempt, validateMileageAdjustment } from "../utils/adminMileage.js";
+import layout from "../components/AdminLayout.module.css";
 
 // 운영 대시보드 - Figma node 384:396 "AdminDashboard_OpsOverview_v2".
 // 시안의 "빠른 작업" 4개 버튼(강제 재시작/강제 종료/마일리지 지급/롤백 실행)은
@@ -31,32 +32,25 @@ const BADGE_SRC = {
   FAILED: `${import.meta.env.BASE_URL}assets/admin/status-failed.png`,
 };
 
-const BUTTON_SRC = {
-  restart: `${import.meta.env.BASE_URL}assets/admin/btn-restart.png`,
-  stop: `${import.meta.env.BASE_URL}assets/admin/btn-stop.png`,
-  create: `${import.meta.env.BASE_URL}assets/admin/btn-create.png`,
-  extend: `${import.meta.env.BASE_URL}assets/admin/btn-extend.png`,
-};
-
 function StatCard({ value, label, tone }) {
   const toneClass = { running: "text-admin-running", failed: "text-admin-failed", gold: "text-admin-gold" }[tone];
   return (
     <div className="flex flex-1 flex-col items-center gap-1 px-4 py-2 text-center">
       <span className={`font-kode-mono text-4xl ${toneClass}`}>{value}</span>
-      <span className="font-song-myung text-sm text-admin-muted">{label}</span>
+      <span className="break-keep font-song-myung text-sm text-admin-muted">{label}</span>
     </div>
   );
 }
 
-function QuickActionButton({ variant, label, onClick }) {
+export function QuickActionButton({ variant, label, onClick }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-col items-center gap-2 transition-transform hover:scale-[1.03]"
+      className={layout.quickAction}
+      data-action={variant}
     >
-      <img src={BUTTON_SRC[variant]} alt={label} className="h-[62px] w-[154px] object-contain" />
-      <span className="font-song-myung text-xs text-admin-ink">{label}</span>
+      {label}
     </button>
   );
 }
@@ -420,8 +414,8 @@ export default function AdminDashboardPage() {
             <div className="flex flex-wrap gap-6">
               <QuickActionButton variant="restart" label="강제 재시작" onClick={() => setOpenModal("restart")} />
               <QuickActionButton variant="stop" label="강제 종료" onClick={() => setOpenModal("stop")} />
-              <QuickActionButton variant="create" label="마일리지 지급" onClick={() => setOpenModal("mileage")} />
-              <QuickActionButton variant="extend" label="롤백 실행" onClick={() => setOpenModal("rollback")} />
+              <QuickActionButton variant="mileage" label="마일리지 지급" onClick={() => setOpenModal("mileage")} />
+              <QuickActionButton variant="rollback" label="롤백 실행" onClick={() => setOpenModal("rollback")} />
             </div>
           </section>
 

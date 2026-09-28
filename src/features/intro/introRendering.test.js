@@ -78,12 +78,19 @@ test("신청과 현장 안내, 상세 안내와 FAQ에 무료 참가비를 표�
 });
 test("신청 자격과 내부, 외부 선발 기준을 유지한다", () => {
   for (const html of [main, guide]) {
-    assert.match(html, /대회 당일 만 19세 이상인 학생/);
+    assert.match(html, /대회 당일 만 19세 이상인 학부 재학생·휴학생/);
+    assert.match(html, /휴학생은 복학 예정 학년/);
     assert.match(html, /동아리에 소속되지 않아도 신청 가능/);
     assert.match(html, /seKUrity/);
     assert.doesNotMatch(html, /SeKurity|KOTH|보드 활동/);
   }
   assert.match(main, /track-external[\s\S]*팀원 평균 학년이 낮은 팀 우선/);
+});
+test("학부 재학과 휴학 자격, 직장인 재학생, 증명서 제출 시점을 명확히 안내한다", () => {
+  assert.match(guide, /직장에 다니는 학부 재학생도 신청할 수 있으며 대학원생은 참가할 수 없습니다/);
+  assert.match(guide, /재학 또는 휴학 증명서를 참가 신청 폼에 제출/);
+  assert.match(main, /재학·휴학 증명서는 참가 신청 폼에 제출/);
+  assert.doesNotMatch(main + guide, /학생 신분 (인정 범위와 증빙 방법|증빙은 별도 안내|증빙 방법은 참가 확정 안내)/);
 });
 test("올해 모집 인원과 작년 실적을 분리하고 원본 포스터를 연결한다", () => {
   assert.match(main, /75팀, 150명/);

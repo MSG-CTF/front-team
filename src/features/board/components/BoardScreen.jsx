@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import { getRemainingSeconds } from "../utils/boardData.js";
@@ -12,6 +12,7 @@ import DiceStatusPanel from "./DiceStatusPanel.jsx";
 import KothEventBanner from "./KothEventBanner.jsx";
 import OpenChallengesSidePanel, { OpenChallengesToggle } from "./OpenChallengesSidePanel.jsx";
 import QuarantinePanel from "./QuarantinePanel.jsx";
+import styles from "./BoardScreen.module.css";
 
 // Figma node 3:2 "BoardPage" (1920x1080) + 146:19 "무인도 클릭"(무인도 모달 상태)
 // + 518:300 "열린 문제"(좌측 패널) + 555:342 "기차여행"(목적지 선택) + 555:306 "룰렛"(모달).
@@ -58,6 +59,14 @@ export default function BoardScreen({
 }) {
   const [now, setNow] = useState(Date.now());
   const [isOpenListVisible, setIsOpenListVisible] = useState(false);
+  const boardViewport = useRef(null);
+
+  useEffect(() => {
+    const viewport = boardViewport.current;
+    if (viewport && viewport.scrollWidth > viewport.clientWidth) {
+      viewport.scrollLeft = (viewport.scrollWidth - viewport.clientWidth) / 2;
+    }
+  }, []);
 
   useEffect(() => {
     const timerId = window.setInterval(() => setNow(Date.now()), 1000);
@@ -111,7 +120,7 @@ export default function BoardScreen({
     : null;
 
   return (
-    <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080.png">
+    <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080.png" frameClassName={styles.frame} className={styles.stage}>
       <DiceStatusPanel
         rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
         canRoll={canRoll}
@@ -128,20 +137,23 @@ export default function BoardScreen({
 
       <BoardNav />
 
-      <KothEventBanner />
+      <div className={styles.desktopOnly}><KothEventBanner /></div>
 
-      <BoardTrack
-        cells={cells}
-        cellStatesByIndex={cellStatesByIndex}
-        consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
-        piecePosition={displayPosition}
-        canRoll={canRoll}
-        isRolling={isMutating}
-        onRollDice={onRollDice}
-        onSelectCell={onSelectCell}
-        selectableCellIndexes={airportSelectableCellIndexes}
-        highlightedCellIndex={airportDestination?.cellIndex ?? null}
-      />
+      <p className={styles.boardHint}>보드를 좌우로 밀어 확인하세요</p>
+      <div ref={boardViewport} className={styles.boardViewport} role="region" aria-label="게임 보드 가로 스크롤" tabIndex={0}>
+        <BoardTrack
+          cells={cells}
+          cellStatesByIndex={cellStatesByIndex}
+          consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
+          piecePosition={displayPosition}
+          canRoll={canRoll}
+          isRolling={isMutating}
+          onRollDice={onRollDice}
+          onSelectCell={onSelectCell}
+          selectableCellIndexes={airportSelectableCellIndexes}
+          highlightedCellIndex={airportDestination?.cellIndex ?? null}
+        />
+      </div>
 
       <ChanceCardSummary
         cards={ownedChanceCards}
@@ -199,20 +211,20 @@ export default function BoardScreen({
       )}
 
       {isLoading && (
-        <div className="absolute inset-0 z-50 grid place-items-center bg-[#2b1609]/35 font-inria-serif text-[1.2cqw] text-[#fff0c4]">
+        <div className={`${styles.loading} absolute inset-0 z-50 grid place-items-center bg-[#2b1609]/35 font-inria-serif text-[1.2cqw] text-[#fff0c4]`}>
           보드 정보를 불러오는 중입니다.
         </div>
       )}
 
       {!isLoading && boardDefinition && cells.length === 0 && (
-        <div className="absolute left-[34%] top-[47%] z-40 w-[30%] rounded-[0.6cqw] border border-[#8a5728] bg-[#f2d7a7]/95 p-[1cqw] text-center font-inria-serif text-[0.85cqw] text-[#3e2818]">
+        <div className={`${styles.empty} absolute left-[34%] top-[47%] z-40 w-[30%] rounded-[0.6cqw] border border-[#8a5728] bg-[#f2d7a7]/95 p-[1cqw] text-center font-inria-serif text-[0.85cqw] text-[#3e2818]`}>
           표시할 보드 칸이 없습니다.
         </div>
       )}
 
       {error && (
         <div
-          className="absolute left-[31%] top-[16%] z-[60] flex w-[38%] items-center gap-[0.65cqw] rounded-[0.55cqw] border border-[#9c3f28] bg-[#3a160f]/95 px-[0.8cqw] py-[0.55cqw] font-inria-serif text-[0.7cqw] text-[#ffe8c4] shadow-xl"
+          className={`${styles.error} absolute left-[31%] top-[16%] z-[60] flex w-[38%] items-center gap-[0.65cqw] rounded-[0.55cqw] border border-[#9c3f28] bg-[#3a160f]/95 px-[0.8cqw] py-[0.55cqw] font-inria-serif text-[0.7cqw] text-[#ffe8c4] shadow-xl`}
           role="alert"
         >
           <span className="min-w-0 flex-1">

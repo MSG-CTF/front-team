@@ -12,9 +12,9 @@
 // — 배경(자유 반응형)과 무대(고정 16:9) 두 레이어는 서로 다른 비율로 축소되므로
 // 같은 카드 그림을 양쪽에 겹치면 두 겹으로 보인다. 카드/패널의 실제 모양은
 // 무대 안 프레임 컴포넌트(children)가 각자의 에셋으로 그린다.
-export default function FixedAspectStage({ backdropSrc, children, className = "" }) {
+export default function FixedAspectStage({ backdropSrc, children, className = "", frameClassName = "" }) {
   return (
-    <div className="fixed inset-0 overflow-hidden">
+    <div className={`fixed inset-0 overflow-hidden ${frameClassName}`}>
       {backdropSrc && <img
         src={backdropSrc}
         alt=""

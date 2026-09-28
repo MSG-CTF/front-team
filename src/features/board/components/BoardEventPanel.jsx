@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import MileageRouletteModal from "./MileageRouletteModal.jsx";
+import styles from "./BoardScreen.module.css";
 
 const OFFSET_OPTIONS = [-3, -2, -1, 1, 2, 3];
 
 function PanelShell({ title, children, onClose }) {
   return (
     <section
-      className="absolute left-[33%] top-[36%] z-30 max-h-[43%] w-[31%] overflow-auto rounded-[1.1cqw] border-[0.16cqw] border-[#8a5728] bg-[#f2d7a7]/95 px-[1.2cqw] py-[0.9cqw] font-inria-serif text-[#3e2818] shadow-[0_0.5cqw_1.5cqw_rgba(40,19,4,0.35)]"
+      className={`${styles.eventPanel} absolute left-[33%] top-[36%] z-30 max-h-[43%] w-[31%] overflow-auto rounded-[1.1cqw] border-[0.16cqw] border-[#8a5728] bg-[#f2d7a7]/95 px-[1.2cqw] py-[0.9cqw] font-inria-serif text-[#3e2818] shadow-[0_0.5cqw_1.5cqw_rgba(40,19,4,0.35)]`}
       aria-label={title}
     >
       <div className="flex items-center justify-between gap-[1cqw]">

@@ -1,4 +1,5 @@
 import { formatOpenChallengeNumber } from "../utils/boardOverlays.js";
+import styles from "./BoardScreen.module.css";
 
 // Figma node 518:300 "열린 문제" - 주사위판 아래 "열린 문제 목록 보기"를 누르면 보드
 // 왼쪽에 뜨는 양피지 세로 패널. 패널/번호 배지/화살표/"전체 문제 보기"/닫기 버튼은
@@ -13,7 +14,7 @@ export function OpenChallengesToggle({ isOpen, count, onToggle }) {
       aria-expanded={isOpen}
       aria-controls="board-open-challenges-panel"
       // 닫힘 시안(555:319) 62,165 / 열림 시안(518:317) 56,155
-      className={`absolute z-30 whitespace-nowrap border-0 bg-transparent p-0 font-pretendard text-[1.25cqw] leading-normal text-white [text-shadow:0_0.08cqw_0.25cqw_rgba(0,0,0,0.85)] hover:text-[#ffd98a] focus-visible:outline focus-visible:outline-[0.12cqw] focus-visible:outline-[#ffe090] ${isOpen ? "left-[2.92%] top-[14.35%]" : "left-[3.23%] top-[15.28%]"}`}
+      className={`${styles.openToggle} absolute z-30 whitespace-nowrap border-0 bg-transparent p-0 font-pretendard text-[1.25cqw] leading-normal text-white [text-shadow:0_0.08cqw_0.25cqw_rgba(0,0,0,0.85)] hover:text-[#ffd98a] focus-visible:outline focus-visible:outline-[0.12cqw] focus-visible:outline-[#ffe090] ${isOpen ? "left-[2.92%] top-[14.35%]" : "left-[3.23%] top-[15.28%]"}`}
     >
       {/* 시안은 열린 상태에서도 같은 문구를 쓴다. 열림 여부는 aria-expanded로 전달 */}
       열린 문제 목록 보기
@@ -27,7 +28,7 @@ export default function OpenChallengesSidePanel({ challenges, onSelectChallenge,
     <aside
       id="board-open-challenges-panel"
       aria-label="열린 문제"
-      className="absolute left-[1.67%] top-[16.57%] z-40 h-[75.37%] w-[14.79%]"
+      className={`${styles.openPanel} absolute left-[1.67%] top-[16.57%] z-40 h-[75.37%] w-[14.79%]`}
     >
       <img
         src="/assets/board/open-challenges-panel.png"
@@ -35,13 +36,14 @@ export default function OpenChallengesSidePanel({ challenges, onSelectChallenge,
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 h-full w-full object-fill"
       />
-      <h2 className="sr-only">열린 문제</h2>
+      {/* 데스크톱은 패널 이미지에 제목이 그려져 있어 모바일에서만 보이는 제목 */}
+      <h2 className={styles.mobileOpenTitle}>열린 문제</h2>
 
       <button
         type="button"
         onClick={onClose}
         aria-label="열린 문제 패널 닫기"
-        className="absolute left-[76.06%] top-[5.41%] h-[2.58%] w-[8.1%] border-0 bg-transparent p-0 hover:brightness-125"
+        className={`${styles.openClose} absolute left-[76.06%] top-[5.41%] h-[2.58%] w-[8.1%] border-0 bg-transparent p-0 hover:brightness-125`}
       >
         <img src="/assets/board/icon-close-round.png" alt="" aria-hidden="true" className="h-full w-full object-contain" />
       </button>
@@ -84,7 +86,7 @@ export default function OpenChallengesSidePanel({ challenges, onSelectChallenge,
           </li>
         ))}
         {challenges.length === 0 && (
-          <li className="pt-[1cqw] text-center font-pretendard text-[0.62cqw] leading-relaxed text-[#613d15]">
+          <li className={`${styles.openEmpty} pt-[1cqw] text-center font-pretendard text-[0.62cqw] leading-relaxed text-[#613d15]`}>
             아직 연 문제가 없습니다.
             <br />
             문제 칸에 도착하면 문제를 골라 열 수 있습니다.
@@ -96,7 +98,7 @@ export default function OpenChallengesSidePanel({ challenges, onSelectChallenge,
         type="button"
         onClick={onViewAll}
         aria-label="전체 문제 보기"
-        className="absolute left-[32.39%] top-[85.01%] h-[6.14%] w-[34.51%] border-0 bg-transparent p-0 hover:brightness-110"
+        className={`${styles.openViewAll} absolute left-[32.39%] top-[85.01%] h-[6.14%] w-[34.51%] border-0 bg-transparent p-0 hover:brightness-110`}
       >
         <img src="/assets/board/open-challenges-view-all.png" alt="" aria-hidden="true" className="h-full w-full object-contain" />
       </button>

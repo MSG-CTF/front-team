@@ -1,4 +1,5 @@
 import { formatRemaining } from "../../../utils/time.js";
+import styles from "./BoardScreen.module.css";
 
 const MAX_DICE_ROLLS = 3;
 
@@ -20,7 +21,7 @@ export default function DiceStatusPanel({
 
   return (
     <div
-      className="absolute left-[1.35%] top-0 w-[19.69%] h-[20.65%]"
+      className={`${styles.diceStatus} absolute left-[1.35%] top-0 w-[19.69%] h-[20.65%]`}
       role="status"
       aria-label={`주사위 보유 ${rollsLeft}/${MAX_DICE_ROLLS}. ${statusLabel}${countdown == null ? "" : `, ${countdownLabel} ${formatRemaining(countdown)}`}`}
     >

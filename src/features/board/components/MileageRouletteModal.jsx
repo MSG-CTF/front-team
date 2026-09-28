@@ -5,6 +5,7 @@ import {
   buildRouletteGradient,
   getRouletteRotation,
 } from "../utils/boardOverlays.js";
+import styles from "./BoardScreen.module.css";
 
 const SPIN_DURATION_MS = 3200;
 
@@ -53,7 +54,7 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
   const chancesLeft = isSuccess ? 0 : 1;
 
   return (
-    <div className="absolute inset-0 z-50 bg-[#1b0d05]/35" role="presentation">
+    <div className={`${styles.rouletteBackdrop} absolute inset-0 z-50 bg-[#1b0d05]/35`} role="presentation">
       <section
         role="dialog"
         aria-modal="true"
@@ -104,8 +105,8 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
                 >
                   {/* 시안처럼 멈춘 휠에서 숫자가 똑바로 서 보이도록 칸 각도만큼 되돌린다 */}
                   <span className="block" style={{ transform: `rotate(${-angle}deg)` }}>
-                    <span className={`block text-[1.05cqw] ${index % 2 === 0 ? "text-[#f3e6cc]" : "text-[#3a1a10]"}`}>{value}</span>
-                    <span className={`mt-[0.1cqw] block text-[0.62cqw] ${index % 2 === 0 ? "text-[#f3e6cc]/85" : "text-[#3a1a10]/85"}`}>M</span>
+                    <span className={`${styles.rouletteValue} block text-[1.05cqw] ${index % 2 === 0 ? "text-[#f3e6cc]" : "text-[#3a1a10]"}`}>{value}</span>
+                    <span className={`${styles.rouletteUnit} mt-[0.1cqw] block text-[0.62cqw] ${index % 2 === 0 ? "text-[#f3e6cc]/85" : "text-[#3a1a10]/85"}`}>M</span>
                   </span>
                 </span>
               );
@@ -117,7 +118,7 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
         </div>
 
         {/* 오른쪽 문구: 시안 555:340 (16px, #613d15) */}
-        <p className="absolute left-[59.4%] top-[38.18%] m-0 w-[32.9%] text-center font-pretendard text-[0.83cqw] leading-normal text-[#613d15]" role="status" aria-live="polite">
+        <p className={`${styles.rouletteText} absolute left-[59.4%] top-[38.18%] m-0 w-[32.9%] text-center font-pretendard text-[0.83cqw] leading-normal text-[#613d15]`} role="status" aria-live="polite">
           {showResult
             ? `+${mileageGained} 마일리지 획득! 총 ${event.result?.totalMileage ?? "-"}`
             : isSpinning || isSettling
@@ -127,15 +128,15 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
 
         {/* 남은 기회 N / 1 - "남은 기회"와 "/"는 패널 이미지, 숫자만 얹는다(555:337, 555:338) */}
         <span className="sr-only">남은 기회 {chancesLeft} / 1</span>
-        <span aria-hidden="true" className="absolute left-[72.2%] top-[53.8%] -translate-x-1/2 font-pretendard text-[1.67cqw] leading-normal text-black">{chancesLeft}</span>
-        <span aria-hidden="true" className="absolute left-[79.4%] top-[53.8%] -translate-x-1/2 font-pretendard text-[1.67cqw] leading-normal text-black">1</span>
+        <span aria-hidden="true" className={`${styles.rouletteCount} absolute left-[72.2%] top-[53.8%] -translate-x-1/2 font-pretendard text-[1.67cqw] leading-normal text-black`}>{chancesLeft}</span>
+        <span aria-hidden="true" className={`${styles.rouletteCount} absolute left-[79.4%] top-[53.8%] -translate-x-1/2 font-pretendard text-[1.67cqw] leading-normal text-black`}>1</span>
 
         {/* SPIN 버튼(555:336). 결과가 나오면 같은 자리에서 확인(닫기) 버튼으로 바뀐다 */}
         {showResult ? (
           <button
             type="button"
             onClick={onClose}
-            className="absolute left-[58.28%] top-[66.81%] h-[14.75%] w-[35.83%] rounded-[0.5cqw] border-[0.15cqw] border-[#b98a3e] bg-[linear-gradient(#7a2320,#5a1714)] font-abyssinica text-[1.35cqw] tracking-[0.08em] text-[#f1dfb8] shadow-[inset_0_0_0_0.12cqw_#3a0e0c] hover:brightness-110"
+            className={`${styles.rouletteConfirm} absolute left-[58.28%] top-[66.81%] h-[14.75%] w-[35.83%] rounded-[0.5cqw] border-[0.15cqw] border-[#b98a3e] bg-[linear-gradient(#7a2320,#5a1714)] font-abyssinica text-[1.35cqw] tracking-[0.08em] text-[#f1dfb8] shadow-[inset_0_0_0_0.12cqw_#3a0e0c] hover:brightness-110`}
           >
             확인
           </button>
@@ -152,7 +153,7 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
         )}
 
         {/* 시안 555:341 문구는 "Try you Luck"(오타)이라 "Try your Luck"로 표기 */}
-        <p aria-hidden="true" className="absolute left-[59.4%] top-[82.9%] m-0 w-[32.9%] text-center font-abyssinica text-[0.83cqw] leading-normal text-[#613d15]">
+        <p aria-hidden="true" className={`${styles.rouletteText} absolute left-[59.4%] top-[82.9%] m-0 w-[32.9%] text-center font-abyssinica text-[0.83cqw] leading-normal text-[#613d15]`}>
           Try your Luck
         </p>
       </section>
