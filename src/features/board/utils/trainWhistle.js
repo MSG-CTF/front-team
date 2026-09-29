@@ -1,3 +1,5 @@
+import { scheduleTrainChuffs } from "./trainChuff.js";
+
 export const TRAIN_WHISTLE_PULSES = Object.freeze([
   { offset: 0, duration: .26 },
   { offset: .4, duration: .44 },
@@ -68,8 +70,9 @@ export function createTrainWhistlePlayer(createContext = () => {
 }) {
   let context = null;
   let stopSound = null;
+  let stopChuffs = null;
   let disposed = false;
-  const stop = () => { stopSound?.(); stopSound = null; };
+  const stop = () => { stopSound?.(); stopChuffs?.(); stopSound = null; stopChuffs = null; };
   return {
     // 사용자가 이동 버튼을 누른 시점에만 준비한다 실제 재생은 이동 성공 후다
     prepare() {
@@ -79,11 +82,14 @@ export function createTrainWhistlePlayer(createContext = () => {
         if (context && context.state !== "running") Promise.resolve(context.resume()).catch(() => {});
       } catch { /* 오디오가 막혀도 이동 요청은 계속한다 */ }
     },
-    play() {
+    play(journey) {
       stop();
       if (disposed || context?.state !== "running") return false;
-      try { stopSound = scheduleTrainWhistle(context); return true; }
-      catch { return false; }
+      try {
+        stopSound = scheduleTrainWhistle(context);
+        stopChuffs = scheduleTrainChuffs(context, journey);
+        return true;
+      } catch { stop(); return false; }
     },
     stop,
     dispose() {

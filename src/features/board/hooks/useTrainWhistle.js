@@ -15,8 +15,8 @@ export default function useTrainWhistle() {
     player.current.prepare();
   }, []);
   const stop = useCallback(() => { player.current?.stop(); }, []);
-  const play = useCallback(() => {
-    if (enabledRef.current && !document.hidden) player.current?.play();
+  const play = useCallback((journey) => {
+    if (enabledRef.current && !document.hidden) player.current?.play(journey);
   }, []);
   const toggle = useCallback(() => {
     const next = !enabledRef.current;

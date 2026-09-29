@@ -49,3 +49,15 @@ test("기차의 반복 디테일은 GPU 리소스를 공유하고 종료할 때 
   assert.equal(disposed.size, geometries.size + materials.size);
   for (const count of disposed.values()) assert.equal(count, 1);
 });
+
+test("차체와 바퀴는 같은 이동 거리를 사용하고 시간만 지나도 혼자 흔들리지 않는다", () => {
+  const model = createTrainModel();
+  const body = model.object.getObjectByName("locomotive-body");
+  model.update({ distance: 230, progress: .5, elapsed: 300 });
+  const pose = [body.position.y, body.rotation.x];
+  model.update({ distance: 230, progress: .5, elapsed: 1200 });
+  assert.deepEqual([body.position.y, body.rotation.x], pose);
+  model.update({ distance: 230, progress: 1, elapsed: 1500 });
+  assert.deepEqual([body.position.y, body.rotation.x], [0, 0]);
+  model.dispose();
+});

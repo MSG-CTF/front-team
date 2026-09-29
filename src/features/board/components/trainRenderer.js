@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { createTrainModel } from "./trainModel.js";
+import { createTrainChuffPlan } from "../utils/trainMotion.js";
 
 // 연기와 빛은 부드러운 알파 텍스처를 공유한다 외부 이미지 요청은 없다
 function createSoftTexture() {
@@ -17,7 +18,8 @@ function createSoftTexture() {
   return new THREE.CanvasTexture(source);
 }
 
-export function createTrainRenderer(canvas) {
+export function createTrainRenderer(canvas, journey = { duration: 3000 }) {
+  const chuffs = createTrainChuffPlan(journey.duration);
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "low-power" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
   renderer.setClearColor(0, 0);
@@ -95,12 +97,17 @@ export function createTrainRenderer(canvas) {
   return {
     render(pose, elapsed, progress) {
       model.update({ ...pose, elapsed, progress });
+      const latest = chuffs.findLastIndex(chuff => chuff.at <= elapsed);
       for (const { puff, index } of puffs) {
-        const life = (elapsed / 1650 + index / puffs.length) % 1;
-        puff.position.set(.91 - life * 1.45, 2.12 + life * 1.35, Math.sin(life * 4 + index) * .13);
+        let beat = Math.floor(latest / puffs.length) * puffs.length + index;
+        if (beat > latest) beat -= puffs.length;
+        const chuff = chuffs[beat];
+        const life = chuff ? (elapsed - chuff.at) / 950 : -1;
+        if (life < 0 || life >= 1) { puff.material.opacity = 0; continue; }
+        puff.position.set(.91 - life * (1.2 + chuff.speedRatio * .7), 2.12 + life * 1.35, Math.sin(life * 4 + index) * .13);
         puff.scale.setScalar(.19 + life * .92);
         puff.material.rotation = life * .4 + index;
-        puff.material.opacity = Math.sin(life * Math.PI) * .37 * Math.min(1, elapsed / 180);
+        puff.material.opacity = Math.sin(life * Math.PI) * (.3 + chuff.speedRatio * .1);
       }
       glow.material.opacity = .55 + Math.sin(elapsed * .004) * .06;
       renderer.render(scene, camera);

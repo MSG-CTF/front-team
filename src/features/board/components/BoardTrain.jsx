@@ -22,10 +22,10 @@ export default function BoardTrain({ journey, onComplete, onProgress, onStart, o
       if (disposed) return;
       if (!module) { finish(); return; }
       try {
-        renderer = module.createTrainRenderer(canvas.current);
+        renderer = module.createTrainRenderer(canvas.current, journey);
         // 첫 셰이더 준비 시간이 실제 주행 시간을 줄이지 않도록 먼저 한 프레임 준비한다
         renderer.render(sampleTrainJourney(journey, 0), 0, 0);
-        callbacks.current.onStart?.();
+        callbacks.current.onStart?.(journey);
         const start = performance.now();
         const animate = (now) => {
           if (disposed) return;

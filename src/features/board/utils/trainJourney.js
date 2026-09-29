@@ -1,5 +1,6 @@
 import { BOARD_CELL_COUNT, BOARD_IMAGE_SIZE, getBoardCellPosition } from "./boardData.js";
 import { TRAIN_CAR_OFFSETS, TRAIN_FLOOR_PROJECTION, TRAIN_WORLD_SCALE, relativeTrainCarPose } from "./trainLayout.js";
+import { getTrainMotion } from "./trainMotion.js";
 
 const validCell = (value) => Number.isInteger(value) && value >= 1 && value <= BOARD_CELL_COUNT;
 
@@ -48,7 +49,7 @@ export function createTrainJourney(result) {
   }
   const originDistance = samples[leadCount * 12].distance;
   samples.forEach(sample => { sample.distance -= originDistance; });
-  return { cells, samples, distance: samples.at(-1).distance, duration: Math.min(3100, 1250 + (cells.length - 1) * 65) };
+  return { cells, samples, distance: samples.at(-1).distance, duration: Math.min(4400, 2200 + (cells.length - 1) * 85) };
 }
 
 function sampleDistance(journey, distance) {
@@ -69,11 +70,12 @@ function sampleDistance(journey, distance) {
 
 export function sampleTrainJourney(journey, progress) {
   const t = Math.max(0, Math.min(1, Number.isFinite(progress) ? progress : 0));
-  const distance = t * t * (3 - 2 * t) * journey.distance;
+  const motion = getTrainMotion(t);
+  const distance = motion.distanceRatio * journey.distance;
   const head = sampleDistance(journey, distance);
   const cars = TRAIN_CAR_OFFSETS.map(offset => relativeTrainCarPose(head, sampleDistance(journey, distance - offset * TRAIN_WORLD_SCALE)));
   return { ...head, x: head.x / BOARD_IMAGE_SIZE.width * 100, y: head.y / BOARD_IMAGE_SIZE.height * 100,
-    cellIndex: t === 1 ? journey.cells.at(-1) : head.cellIndex, cars };
+    cellIndex: t === 1 ? journey.cells.at(-1) : head.cellIndex, speedRatio: motion.speedRatio, cars };
 }
 
 // 장식 실패/화면 종료가 이미 성공한 이동 요청의 오류나 재전송으로 바뀌면 안 된다

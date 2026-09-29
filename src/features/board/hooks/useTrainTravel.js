@@ -31,7 +31,7 @@ export default function useTrainTravel() {
     if (!next) return Promise.resolve();
     return new Promise((resolve) => {
       // WebGL이나 지연 로딩이 실패해도 이동 잠금이 남지 않도록 한다
-      pending.current = { resolve, timer: setTimeout(finish, 4800) };
+      pending.current = { resolve, timer: setTimeout(finish, next.duration + 2000) };
       setJourney(next);
     });
   }, [finish]);

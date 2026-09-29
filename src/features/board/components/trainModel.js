@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 import { TRAIN_CAR_OFFSETS, TRAIN_WORLD_SCALE } from "../utils/trainLayout.js";
+import { getTrainMotion } from "../utils/trainMotion.js";
 
 // 장식 재질과 지오메트리를 공유하는 황동 증기 기관차
 export function createTrainModel() {
@@ -246,11 +247,13 @@ export function createTrainModel() {
   let disposed = false;
   return {
     object,
-    update({ heading = 0, distance = 0, elapsed = 0, progress = 0, turn = 0, cars }) {
-      const speed = Math.max(0, 4 * progress * (1 - progress));
+    update({ heading = 0, distance = 0, progress = 0, speedRatio, turn = 0, cars }) {
+      const speed = speedRatio ?? getTrainMotion(progress).speedRatio;
+      const worldUnits = distance / TRAIN_WORLD_SCALE;
+      const phase = -worldUnits / driverRadius;
       object.rotation.y = heading;
-      body.position.y = Math.sin(elapsed * .028) * .009 * speed;
-      body.rotation.x = Math.sin(elapsed * .014) * .007 * speed;
+      body.position.y = speed > 0 ? Math.sin(phase * 2) * .009 * speed : 0;
+      body.rotation.x = speed > 0 ? Math.sin(phase) * .007 * speed : 0;
       tender.rotation.y = Math.max(-.22, Math.min(.22, turn));
       if (cars?.length === 3) {
         [tender, ...coaches].forEach((car, index) => {
@@ -261,9 +264,7 @@ export function createTrainModel() {
           car.position.z = pose.z + center * Math.sin(pose.heading);
         });
       }
-      const worldUnits = distance / TRAIN_WORLD_SCALE;
       for (const { pivot, radius } of wheels) pivot.rotation.z = -worldUnits / radius;
-      const phase = -worldUnits / driverRadius;
       for (const rod of rods) {
         rod.position.x = -.16 + Math.cos(phase) * driverRadius * .43;
         rod.position.y = driverRadius + .025 + Math.sin(phase) * driverRadius * .43;

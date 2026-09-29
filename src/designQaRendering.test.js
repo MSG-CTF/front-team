@@ -66,7 +66,7 @@ test("기차 효과음은 출발 준비와 실제 재생을 분리하고 화면�
   const hook = readFileSync(new URL("./features/board/hooks/useTrainWhistle.js", import.meta.url), "utf8");
   assert.match(screen, /trainWhistle.prepare\(\);\s+return onMoveAirport/);
   assert.match(screen, /onStart: trainWhistle.play, onStop: trainWhistle.stop/);
-  assert.ok(train.indexOf("renderer.render(sampleTrainJourney") < train.indexOf("callbacks.current.onStart?.()"));
+  assert.ok(train.indexOf("renderer.render(sampleTrainJourney") < train.indexOf("callbacks.current.onStart?.(journey)"));
   assert.match(train, /callbacks.current.onStop\?\.\(\)/);
   assert.match(hook, /if \(document.hidden\) stop\(\)/);
   assert.match(hook, /player.current\?\.dispose\(\)/);
