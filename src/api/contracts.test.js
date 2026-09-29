@@ -2,6 +2,7 @@ import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
 import apiClient from "./client.js";
 import { getChallengeDetail, submitFlag } from "./challenges.js";
+import { getOpenedChallenges } from "./board.js";
 import { createInstance, extendInstance, getMyInstances, resetInstance, stopInstance } from "./instances.js";
 import { getLeaderboard, getRankings, getMyMemberRanking } from "./leaderboard.js";
 import { getMyProfile, getMyMileageHistory, getMySolves, issueMyQrToken } from "./mypage.js";
@@ -70,6 +71,15 @@ test("참가자 시그니처 제출은 flag만 보내며 공백, 취소 신호�
   assert.equal(calls.at(-1).url, "/koth/clubs/club%2Fa%3Fb");
   await getSignature("signature/a?b");
   assert.equal(calls.at(-1).url, "/signatures/signature%2Fa%3Fb");
+});
+
+test("보드 목록 조회는 같은 경로에 취소 신호와 10초 제한을 전달한다", async () => {
+  const controller = new AbortController();
+  await getOpenedChallenges({ signal: controller.signal, timeout: 10000 });
+  assert.equal(calls.at(-1).url, "/board/opened_challenges");
+  assert.equal(calls.at(-1).method, "get");
+  assert.equal(calls.at(-1).signal, controller.signal);
+  assert.equal(calls.at(-1).timeout, 10000);
 });
 
 test("랭킹과 관리자 내역은 페이지와 snake_case 필터를 그대로 전달한다", async () => {

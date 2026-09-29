@@ -255,3 +255,40 @@ test("보드 목록은 얇은 스크롤을 유지하고 모바일 패널을 이�
   });
   assert.ok(highContrastFallback);
 });
+
+test("보드 펼쳐보기에서 검색과 상태 선택, 현재 인스턴스 진입을 제공한다", () => {
+  const challenges = [
+    { challengeId: "one", title: "푼 문제", category: "WEB", clubName: "MJSEC", isSolved: true },
+    { challengeId: "two", title: "진행할 문제", category: "PWN", clubName: "SWING", isSolved: false },
+  ];
+  const html = render("OpenChallengesPanel", {
+    challenges, initialView: { query: "SWING", category: "PWN", status: "unsolved" },
+    instanceInfo: { instance: { challengeId: "two", status: "RUNNING" } },
+  });
+  assert.match(html, /role="search" aria-label="열린 문제 검색"/);
+  assert.match(html, /value="SWING"/);
+  assert.match(html, /02번 진행할 문제 상세 보기/);
+  assert.doesNotMatch(html, /01번 푼 문제 상세 보기/);
+  assert.match(html, /내 인스턴스/);
+});
+
+test("목록 조회 중과 실패를 문제 없음으로 표시하지 않는다", () => {
+  for (const props of [{ loading: true }, { error: "목록 확인 실패" }]) {
+    const html = render("OpenChallengesPanel", { challenges: [], ...props });
+    assert.doesNotMatch(html, /아직 연 문제가 없습니다/);
+    assert.match(html, /목록 확인 중|목록 확인 실패/);
+  }
+  const legacy = readFileSync(new URL("./features/challenges/pages/OpenChallengesPage.jsx", import.meta.url), "utf8");
+  assert.match(legacy, /<Navigate to=\{ROUTES.boardChallenges\}[^>]+replace/);
+  assert.doesNotMatch(legacy, /useOpenChallenges|OpenChallengesScreen/);
+  const routes = readFileSync(new URL("./routes/AppRoutes.jsx", import.meta.url), "utf8");
+  assert.match(routes, /path="\/challenges\/:challengeId"/);
+});
+
+test("인스턴스 재조회 중에도 기존 바로가기를 유지하고 목록 실패와 분리한다", () => {
+  const instance = { challengeId: "two", challengeTitle: "확인 중인 문제", status: "RUNNING" };
+  const html = render("OpenChallengesPanel", { challenges: [], error: "목록 확인 실패", instanceInfo: { instance, loading: true } });
+  assert.match(html, /<button[^>]+title="확인 중인 문제"/);
+  assert.doesNotMatch(html, /내 인스턴스 확인 중/);
+  assert.match(html, /목록 확인 실패/);
+});

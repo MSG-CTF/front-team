@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getChallengeDeadline } from "../../../utils/time.js";
+import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
 import {
   confirmChanceCard,
   confirmDice,
@@ -29,7 +30,6 @@ import {
   adaptDiceStatus,
   adaptMovementResult,
   adaptMyBoard,
-  adaptOpenedChallenges,
   adaptRouletteResult,
   getBoardError,
   getRemainingSeconds,
@@ -56,6 +56,10 @@ export default function useBoardController() {
   const [currentCell, setCurrentCell] = useState(null);
   const [chanceCatalog, setChanceCatalog] = useState([]);
   const [openedChallenges, setOpenedChallenges] = useState([]);
+  const [openedChallengesLoading, setOpenedChallengesLoading] = useState(true);
+  const [openedChallengesError, setOpenedChallengesError] = useState("");
+  const openedRequest = useRef(0);
+  const openedController = useRef(null);
   const [now, setNow] = useState(Date.now());
   const diceResyncedForRef = useRef(null);
   const challengeResyncedForRef = useRef(null);
@@ -79,20 +83,31 @@ export default function useBoardController() {
     }
   }, []);
 
-  // opened_challenges는 "이미 연 칸 재클릭 -> 문제 상세 재진입" 편의 기능용
-  // 보조 데이터라, 이게 실패한다고 보드 전체 로딩이 막히면 안 된다(실제로 이
-  // 엔드포인트가 아직 없는 백엔드/목서버에서 board 전체가 깨지는 걸 방지).
+  // 목록 조회 실패는 보드와 분리해서 표시하고 마지막으로 받은 목록은 보존한다
   const requestOpenedChallenges = useCallback(async () => {
+    const request = ++openedRequest.current;
+    openedController.current?.abort();
+    openedController.current = new AbortController();
+    if (mountedRef.current) setOpenedChallengesLoading(true);
     try {
-      return adaptOpenedChallenges(unwrapBoardResponse(await getOpenedChallenges()));
+      const data = unwrapBoardResponse(await getOpenedChallenges({ signal: openedController.current.signal, timeout: 10000 }));
+      const { challenges } = readOpenChallenges(data);
+      if (request === openedRequest.current && mountedRef.current) {
+        setOpenedChallenges(challenges);
+        setOpenedChallengesError("");
+      }
     } catch {
-      return [];
+      if (request === openedRequest.current && mountedRef.current) setOpenedChallengesError("열린 문제를 불러오지 못했습니다");
+    } finally {
+      if (request === openedRequest.current && mountedRef.current) setOpenedChallengesLoading(false);
     }
   }, []);
+  const reloadOpenedChallenges = requestOpenedChallenges;
 
   const load = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    const openedTask = requestOpenedChallenges();
 
     try {
       const [boardResponse, myBoardResponse, diceResponse, catalogResponse] =
@@ -108,7 +123,7 @@ export default function useBoardController() {
       const nextMyBoard = adaptMyBoard(unwrapBoardResponse(myBoardResponse));
       const nextDiceStatus = adaptDiceStatus(unwrapBoardResponse(diceResponse));
       const nextCatalog = adaptChanceCatalog(unwrapBoardResponse(catalogResponse));
-      const nextOpenedChallenges = await requestOpenedChallenges();
+      await openedTask;
       const nextCurrentCell = await requestCurrentCell();
 
       if (!mountedRef.current) return;
@@ -116,7 +131,6 @@ export default function useBoardController() {
       setMyBoard(nextMyBoard);
       setDiceStatus(nextDiceStatus);
       setChanceCatalog(nextCatalog);
-      setOpenedChallenges(nextOpenedChallenges);
       setCurrentCell(nextCurrentCell);
       setDisplayPosition(nextMyBoard.position);
       setAwaitingDiscard(false);
@@ -134,6 +148,8 @@ export default function useBoardController() {
     load();
     return () => {
       mountedRef.current = false;
+      ++openedRequest.current;
+      openedController.current?.abort();
     };
   }, [load]);
 
@@ -155,13 +171,12 @@ export default function useBoardController() {
       ]);
       const nextMyBoard = adaptMyBoard(unwrapBoardResponse(myBoardResponse));
       const nextDiceStatus = adaptDiceStatus(unwrapBoardResponse(diceResponse));
-      const nextOpenedChallenges = await requestOpenedChallenges();
+      await requestOpenedChallenges();
       const nextCurrentCell = includeCurrentCell ? await requestCurrentCell() : null;
 
       if (!mountedRef.current) return;
       setMyBoard(nextMyBoard);
       setDiceStatus(nextDiceStatus);
-      setOpenedChallenges(nextOpenedChallenges);
       if (includeCurrentCell) setCurrentCell(nextCurrentCell);
       if (!preserveDisplayPosition) setDisplayPosition(nextMyBoard.position);
     },
@@ -600,6 +615,9 @@ export default function useBoardController() {
     ownedChanceCards,
     cellStatesByIndex,
     openedChallenges,
+    openedChallengesLoading,
+    openedChallengesError,
+    reloadOpenedChallenges,
     openedChallengesByCell,
     selectedCell,
     isLoading,

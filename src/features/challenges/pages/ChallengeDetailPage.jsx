@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { submitFlag } from "../../../api/challenges.js";
 import {
   createInstance,
@@ -35,6 +35,7 @@ export default function ChallengeDetailPage() {
 
 function ChallengeDetailContent({ challengeId }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const detail = useChallengeDetailData(challengeId);
   const actionInFlight = useRef(false);
   const mounted = useRef(true);
@@ -243,7 +244,7 @@ function ChallengeDetailContent({ challengeId }) {
       onConfirmAction={confirmAction}
       onCancelAction={() => setConfirmation(null)}
       onRetry={detail.retry}
-      onBack={() => navigate(ROUTES.openChallenges)}
+      onBack={() => navigate(ROUTES.boardChallenges, { state: { boardList: location.state?.boardList } })}
     />
   );
 }
