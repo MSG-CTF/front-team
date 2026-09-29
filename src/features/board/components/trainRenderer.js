@@ -2,6 +2,9 @@ import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { createTrainModel } from "./trainModel.js";
 import { createTrainChuffPlan } from "../utils/trainMotion.js";
+import { sampleTrainJourney } from "../utils/trainJourney.js";
+import { BOARD_IMAGE_SIZE } from "../utils/boardData.js";
+import { TRAIN_FLOOR_PROJECTION, TRAIN_WORLD_SCALE } from "../utils/trainLayout.js";
 
 // 연기와 빛은 부드러운 알파 텍스처를 공유한다 외부 이미지 요청은 없다
 function createSoftTexture() {
@@ -19,7 +22,10 @@ function createSoftTexture() {
 }
 
 export function createTrainRenderer(canvas, journey = { duration: 3000 }) {
-  const chuffs = createTrainChuffPlan(journey.duration);
+  const chuffs = createTrainChuffPlan(journey.duration).map(beat => ({
+    ...beat,
+    pose: journey.samples ? sampleTrainJourney(journey, beat.at / journey.duration) : null,
+  }));
   const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "low-power" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
   renderer.setClearColor(0, 0);
@@ -87,7 +93,7 @@ export function createTrainRenderer(canvas, journey = { duration: 3000 }) {
     const mat = new THREE.SpriteMaterial({ map: soft, color: index % 2 ? 0xbfc4ba : 0xf4ead8, transparent: true, opacity: 0, depthWrite: false });
     resources.add(mat);
     const puff = new THREE.Sprite(mat);
-    model.object.add(puff);
+    scene.add(puff);
     return { puff, index };
   });
   const resize = () => renderer.setSize(Math.max(1, canvas.clientWidth), Math.max(1, canvas.clientHeight), false);
@@ -104,10 +110,18 @@ export function createTrainRenderer(canvas, journey = { duration: 3000 }) {
         const chuff = chuffs[beat];
         const life = chuff ? (elapsed - chuff.at) / 950 : -1;
         if (life < 0 || life >= 1) { puff.material.opacity = 0; continue; }
-        puff.position.set(.91 - life * (1.2 + chuff.speedRatio * .7), 2.12 + life * 1.35, Math.sin(life * 4 + index) * .13);
+        const emitted = chuff.pose ?? pose;
+        const cos = Math.cos(emitted.heading);
+        const sin = Math.sin(emitted.heading);
+        const dx = chuff.pose ? (emitted.x - pose.x) / 100 * BOARD_IMAGE_SIZE.width / TRAIN_WORLD_SCALE : -cos * life * 1.5;
+        const dz = chuff.pose ? (emitted.y - pose.y) / 100 * BOARD_IMAGE_SIZE.height / TRAIN_WORLD_SCALE / TRAIN_FLOOR_PROJECTION : sin * life * 1.5;
+        const drift = life * .45;
+        puff.position.set(dx + cos * (.91 - drift), 2.12 + life * 1.55, dz - sin * (.91 - drift) + Math.sin(life * 4 + index) * .13);
         puff.scale.setScalar(.19 + life * .92);
         puff.material.rotation = life * .4 + index;
-        puff.material.opacity = Math.sin(life * Math.PI) * (.3 + chuff.speedRatio * .1);
+        // 최근 연기만 남겨 이동 캔버스의 가장자리에서 갑자기 잘리지 않게 한다
+        const edgeFade = Math.max(0, Math.min(1, (6.5 - Math.hypot(dx, dz)) / 2));
+        puff.material.opacity = Math.sin(life * Math.PI) * (.3 + chuff.speedRatio * .1) * edgeFade;
       }
       glow.material.opacity = .55 + Math.sin(elapsed * .004) * .06;
       renderer.render(scene, camera);

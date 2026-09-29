@@ -122,9 +122,11 @@ test("기차는 보드 안의 장식 캔버스로 분리하고 화면 좌표나 
   assert.match(html, /data-board-train="moving"/);
   assert.match(html, /aria-hidden="true"/);
   assert.match(html, /<canvas/);
-  assert.doesNotMatch(html, /<button|<img/);
+  assert.doesNotMatch(html, /<button/);
+  assert.match(html, /data-board-piece="2"/);
   const root = css("features/board/components/BoardTrain.module.css");
   assert.ok(declarations(root, ".actor").some(([key, value]) => key === "pointer-events" && value === "none"));
+  assert.ok(declarations(root, ".arrival").some(([key, value]) => key === "pointer-events" && value === "none"));
   assert.ok(root.nodes.some(node => node.type === "atrule" && node.params === "(prefers-reduced-motion: reduce)"));
 });
 

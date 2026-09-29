@@ -48,7 +48,12 @@ export function createTrainJourney(result) {
     }
   }
   const originDistance = samples[leadCount * 12].distance;
-  samples.forEach(sample => { sample.distance -= originDistance; });
+  samples.forEach((sample, index) => {
+    sample.distance -= originDistance;
+    const before = samples[Math.max(0, index - 1)];
+    const after = samples[Math.min(samples.length - 1, index + 1)];
+    sample.heading = -Math.atan2((after.y - before.y) / TRAIN_FLOOR_PROJECTION, after.x - before.x);
+  });
   return { cells, samples, distance: samples.at(-1).distance, duration: Math.min(4400, 2200 + (cells.length - 1) * 85) };
 }
 
@@ -62,7 +67,7 @@ function sampleDistance(journey, distance) {
   return {
     x: before.x + (after.x - before.x) * fraction,
     y: before.y + (after.y - before.y) * fraction,
-    heading: -Math.atan2((after.y - before.y) / TRAIN_FLOOR_PROJECTION, after.x - before.x),
+    heading: before.heading + Math.atan2(Math.sin(after.heading - before.heading), Math.cos(after.heading - before.heading)) * fraction,
     cellIndex: after.cellIndex,
     distance,
   };

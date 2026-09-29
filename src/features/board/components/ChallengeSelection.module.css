@@ -72,6 +72,18 @@
 }
 .card[data-tone="1"] { left: 33.122029%; top: 7.961783%; width: 33.597464%; height: 92.038217%; }
 .card[data-tone="2"] { left: 70.047544%; top: 14.649682%; width: 29.952456%; }
+.card::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  bottom: -5%;
+  width: 84%;
+  height: 12%;
+  background: radial-gradient(ellipse, #130905a0 0%, #13090548 38%, transparent 72%);
+  opacity: .72;
+  pointer-events: none;
+  transition: transform 200ms ease, opacity 200ms ease;
+}
 .cards[data-count="1"] .card { left: 35.103011%; }
 .cards[data-count="2"] .card:first-child { left: 16.561014%; }
 .cards[data-count="2"] .card:nth-child(2) { left: 49.683043%; }
@@ -90,6 +102,17 @@
   mask-repeat: no-repeat;
 }
 .pickEffects { position: absolute; inset: 0; pointer-events: none; }
+.cardSurface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(120deg, #fff1ca30, transparent 47%, #d5a85212);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
 .crumble {
   visibility: hidden;
   position: absolute;
@@ -179,6 +202,7 @@
 .artwork { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; }
 .category {
   position: absolute;
+  z-index: 2;
   top: 19.762846%;
   left: 8%;
   width: 84%;
@@ -194,6 +218,7 @@
 .card[data-tone="2"] .category { top: 20.948617%; }
 .titleArea {
   position: absolute;
+  z-index: 2;
   left: 12%;
   top: 43.333992%;
   display: flex;
@@ -257,8 +282,11 @@
   transform: translate3d(0, -8px, 0) scale(1.025);
 }
 .card:focus-visible .title { text-decoration: underline; text-underline-offset: .2em; }
+.card:not(:disabled):focus-visible .cardSurface::before { opacity: .75; }
 @media (hover: hover) and (pointer: fine) {
   .card:not(:disabled):hover { z-index: 2; }
+  .card:not(:disabled):hover::before { opacity: .55; transform: scale(.92); }
+  .card:not(:disabled):hover .cardSurface::before { opacity: .75; }
   .card:not(:disabled):hover .cardFace {
     transform: translate3d(0, -8px, 0) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg)) scale(1.025);
   }
@@ -271,6 +299,8 @@
   opacity: .45;
   transform: translate3d(0, 5px, 0) scale(.96);
 }
+.cards[data-busy="true"] .card:not([data-opening="true"])::before { opacity: 0; transform: scale(.75); }
+.card[data-opening="true"]::before { opacity: .3; transform: scale(.9); }
 .card:disabled { cursor: wait; }
 .card[data-opening="true"] { z-index: 3; }
 .card[data-opening="true"] .cardFace {
@@ -314,6 +344,7 @@
   .card[data-crumbling="true"] .cardSurface { opacity: .45; animation: none; }
   .cardDeal { animation: none; }
   .cardFace { transition: none; }
+  .card::before, .cardSurface::before { transition: none; }
   .pickEffects, .card[data-opening="true"] .cardSurface::after { display: none; }
   .card .cardFace,
   .card:not(:disabled):hover .cardFace,
@@ -328,7 +359,7 @@
   .card, .reopen { border: 2px solid ButtonText; }
   .card:focus-visible { outline: 3px solid Highlight; outline-offset: 3px; }
   .cardSurface { mask-image: none; }
-  .artwork, .squirrel, .pickEffects, .cardSurface::after { display: none; }
+  .artwork, .squirrel, .pickEffects, .card::before, .cardSurface::before, .cardSurface::after { display: none; }
   .category { background: none; -webkit-text-fill-color: ButtonText; }
   .title { color: ButtonText; text-shadow: none; }
 }
