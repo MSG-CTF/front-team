@@ -248,7 +248,7 @@ export function getRemainingSeconds(targetIso, diceStatus, now = Date.now()) {
 // board-grid.png (1772x1330)의 실제 칸 중심. START가 다른 칸보다 넓고
 // 일반 칸도 등각 타원이 아니므로 수식으로 균등 분할하면 칸마다 위치가 달라진다.
 // 이미지 원본 픽셀 좌표를 비율로 바꿔 반응형 보드에도 동일하게 적용한다.
-const BOARD_IMAGE_SIZE = { width: 1772, height: 1330 };
+export const BOARD_IMAGE_SIZE = Object.freeze({ width: 1772, height: 1330 });
 const BOARD_CELL_CENTERS = [
   [886, 1210], // 1 START
   [655, 1187], [514, 1147], [395, 1092], [296, 1024], [211, 946],

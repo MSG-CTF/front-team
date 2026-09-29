@@ -111,7 +111,6 @@ export default function BoardPage() {
       }}
       onCancelAirportDestination={() => setAirportDestinationIndex(null)}
       onOpenChallengeDetail={(challengeId) => navigate(ROUTES.challengeDetail(challengeId))}
-      onViewAllChallenges={() => navigate(ROUTES.openChallenges)}
       onUseChanceCard={(cardId, options) =>
         runBoardAction(() => board.useChanceCard(cardId, options))
       }

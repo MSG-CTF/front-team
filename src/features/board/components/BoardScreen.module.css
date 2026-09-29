@@ -1,44 +1,117 @@
-.desktopOnly, .boardViewport { display: contents; }
-.mobileNav, .boardHint, .mobileQuarantineTitle { display: none; }
+.desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene { display: contents; }
+.mobileNav, .boardControls, .boardHint, .mobileQuarantineTitle, .sceneBackdrop { display: none; }
 /* 열린 문제 패널 제목은 데스크톱에선 패널 이미지에 그려져 있어 스크린리더에만 노출 */
 .mobileOpenTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
+.visitedOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+/* 사용한 칸은 나무결을 남긴 채 빛을 잃고, 가장자리 음영으로 깊이를 준다 */
+.visitedArtwork { filter: saturate(0.52) brightness(0.5) contrast(1.08); }
+
+.lineOverlay { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+.lineCell path { stroke: none; }
+.lineCellSelected { opacity: 0.36; }
+.lineClaimFlash { animation: line-claim-flash 800ms ease-out both; }
+@keyframes line-claim-flash { from { opacity: 0; } 25% { opacity: 0.6; } to { opacity: 0; } }
+.lineClaimCrest { pointer-events: all; cursor: pointer; outline: none; }
+.lineCrestArtwork { filter: drop-shadow(0 6px 4px #21140bab); transform-box: fill-box; transform-origin: center; }
+.lineCrestCaption { opacity: 0; fill: #f7deb0; stroke: #332015; stroke-width: 4px; stroke-linejoin: round; paint-order: stroke; font: 29px "Song Myung", serif; pointer-events: none; transition: opacity 120ms ease; }
+.lineClaimCrest:hover .lineCrestCaption, .lineClaimCrest:focus-visible .lineCrestCaption { opacity: 1; }
+.lineClaimCrest:focus-visible .lineCrestArtwork { filter: drop-shadow(0 0 4px #fff0a5) drop-shadow(0 4px 4px #21140b); }
+.lineClaimCrest[data-celebrating="true"] .lineCrestArtwork { animation: line-crest-reveal 650ms ease-out both; }
+@keyframes line-crest-reveal { from { opacity: 0; transform: scale(0.88); } 60% { opacity: 1; transform: scale(1.04); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .lineClaimFlash { display: none; animation: none; }
+  .lineCrestArtwork, .lineClaimCrest[data-celebrating="true"] .lineCrestArtwork { animation: none; }
+  .lineCrestCaption { transition: none; }
+}
+.openPanelBody { position: absolute; left: 15.14%; top: 26.41%; width: 69.4%; height: 65%; overflow-y: auto; overscroll-behavior: contain; }
+.openChallengeList li button { min-height: 44px; }
+.openChallengeList li button > span:first-child { width: 20px; height: 22px; }
+.openChallengeList li button > span:first-child > span { font-size: 10px; }
+.openChallengeList li strong { font-size: clamp(12px, 0.78cqw, 15px); }
+.openChallengeList li strong + span { font-size: clamp(11px, 0.65cqw, 13px); }
+.openChallengeList li button > img { width: 12px; height: 16px; }
+.openPanel .openClose { min-width: 44px; min-height: 44px; padding: 12px; transform: translate(-25%, -25%); }
+.lineSummary { margin-bottom: 12px; border-bottom: 1px solid #9c754875; color: #513717; font: clamp(12px, 0.95cqw, 16px)/1.5 "Song Myung", serif; }
+.lineSummary > summary { min-height: 44px; padding: 10px 0; cursor: pointer; }
+.lineSummary > summary::marker { color: #805726; }
+.lineSummary > summary > span { float: right; margin-left: 8px; color: #795c39; }
+.lineSummaryLead { margin: 2px 0 12px; color: #795c39; font-size: 0.9em; word-break: keep-all; }
+.lineList { list-style: none; padding: 0; margin: 0; }
+.lineList li + li { border-top: 1px solid #9c75483d; }
+.lineList li button { display: flex; justify-content: space-between; align-items: center; gap: 6px; width: 100%; min-height: 44px; padding: 8px 2px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.lineList li button[aria-pressed="true"] { background: #d0ad7240; }
+.lineList li button span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.lineList li button span:last-child { white-space: nowrap; font-size: 0.9em; }
+.lineSummary .completedLineRow { color: #78501c; font-weight: 700; }
+.lineSummary :is(button, summary):focus-visible { outline: 2px solid #825725; outline-offset: -2px; }
+.lineDetail { margin-top: 16px; padding-top: 14px; border-top: 1px solid #9c754875; }
+.lineDetail h3 { margin: 0 0 4px; font-size: 1.1em; font-weight: 400; overflow-wrap: anywhere; }
+.lineDetail p { margin: 4px 0; }
+.lineCellNumbers { color: #795c39; font-size: 0.9em; overflow-wrap: anywhere; }
+.linePreviewNote { margin: 12px 0; color: #795c39; font-size: 0.9em; line-height: 1.6; word-break: keep-all; }
+
 @media (max-width: 1100px) {
-  .frame.frame { position: relative; min-height: 100svh; overflow: visible; background: #533018; }
-  .frame > img { position: fixed; }
+  .frame.frame { position: relative; min-height: 100svh; overflow: visible; background: #21150d; }
+  .frame > img { display: none; }
   .frame .stage {
     position: relative;
     inset: auto;
-    width: min(100%, 800px);
+    width: min(100%, 900px);
     height: auto;
     min-height: 100svh;
     margin: auto;
-    padding: 12px;
+    padding: 0 0 24px;
     transform: none;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 0;
   }
   .desktopOnly { display: none; }
   .mobileNav {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     order: -2;
-    border-bottom: 1px solid #b58a56;
-    background: #2b1609e8;
+    padding: 6px 12px 0;
     color: #f3dfb9;
-    font-size: 14px;
+    font: 14px/1.4 "Song Myung", serif;
   }
-  .mobileNav a, .mobileNav button { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px; text-decoration: none; border: 0; background: none; color: inherit; font: inherit; }
+  .mobileNav a, .mobileNav button { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 4px; text-decoration: none; border: 0; background: none; color: inherit; font: inherit; }
+  .mobileNav a.mobileNavPrimary { flex-direction: row; gap: 4px; padding: 0; font-size: 13px; white-space: nowrap; }
+  .mobileNavIcon { position: relative; display: block; flex: 0 0 28px; width: 28px; height: 28px; overflow: hidden; }
+  .mobileNavIcon img { position: absolute; left: 50%; top: 50%; height: auto; max-width: none; pointer-events: none; }
+  .mobileNav a:hover, .mobileNav button:hover { color: #ffd98a; }
   .mobileNav a:focus-visible, .mobileNav button:focus-visible { outline: 2px solid #f1cb79; outline-offset: -3px; }
-  .stage .diceStatus { position: relative; inset: auto; order: -1; width: 100%; height: auto; padding: 16px; background: #2b1609e8; border: 1px solid #9a6f3b; }
+  .stage .diceStatus { position: relative; inset: auto; order: -1; width: auto; height: auto; margin: 0 16px; padding: 9px 0 3px; border-top: 1px solid #b58a5640; }
   .diceStatus > img, .diceStatus > div:nth-of-type(2) { display: none; }
-  .diceStatus > div:first-of-type { position: static; width: auto; height: auto; padding: 0; gap: 12px; flex-wrap: wrap; background: none; font-size: 16px; line-height: 1.6; }
-  .diceStatus > p { position: static; width: auto; margin-top: 8px; font-size: 14px; white-space: normal; text-align: left; line-height: 1.6; }
-  .boardHint { display: block; margin: 0; text-align: center; font-size: 14px; color: #fff0ca; text-shadow: 0 1px 4px #1d1008; }
-  .boardViewport { display: block; width: 100%; overflow-x: auto; overscroll-behavior-x: contain; background: #2b160959; }
-  .stage .track { position: relative; inset: auto; width: max(100%, 620px); height: auto; aspect-ratio: 951 / 714; }
-  .stage .chancePanel { position: relative; inset: auto; width: 100%; max-height: none; padding: 16px; }
+  .diceStatus > div:first-of-type { position: static; width: auto; height: auto; padding: 0; gap: 6px 12px; flex-wrap: wrap; background: none; font-size: 16px; line-height: 1.5; }
+  .diceStatus > p { position: static; width: auto; margin-top: 4px; font-size: 13px; white-space: normal; text-align: left; line-height: 1.6; color: #d7bd96; }
+  .diceStatus[data-roll-ready="true"] > p { display: none; }
+  .boardArea { display: flex; flex-direction: column; min-width: 0; }
+  .boardTools { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 16px; }
+  .boardControls { display: flex; align-items: center; color: #f3dfb9; text-shadow: 0 1px 4px #1d1008; }
+  .boardHint { display: none; }
+  .boardZoomButton { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 4px; border: 0; background: none; color: inherit; font: inherit; font-size: 14px; cursor: pointer; }
+  .boardZoomButton svg { width: 20px; height: 20px; }
+  .boardZoomButton:focus-visible { outline: 2px solid #ffe090; outline-offset: 2px; }
+  .boardZoomButton:disabled { opacity: 0.5; cursor: not-allowed; }
+  .boardViewport { display: block; width: 100%; min-width: 0; overflow: hidden; mask-image: linear-gradient(to bottom, transparent, #000 32px, #000 calc(100% - 24px), transparent); }
+  /* 원본 무대의 x=448, y=120, 951×960 영역을 같은 비율로 표시한다
+     원판의 원본 위치(448, 289)도 이 장면 안에 고정해 바닥 문양에서 미끄러지지 않게 한다 */
+  .boardScene { display: block; position: relative; width: 100%; aspect-ratio: 951 / 960; overflow: hidden; isolation: isolate; }
+  .sceneBackdrop { display: block; position: absolute; left: -47.1083%; top: -12.5%; width: 201.8927%; height: 112.5%; max-width: none; pointer-events: none; user-select: none; }
+  .stage .track { position: absolute; inset: auto; left: 0; top: 17.6042%; width: 100%; height: auto; aspect-ratio: 1772 / 1330; }
+  .boardViewport[data-zoomed="true"] { overflow-x: auto; overscroll-behavior-x: contain; }
+  .boardViewport[data-zoomed="true"] .boardScene { width: max(150%, 620px); }
+  .lineSummary { font-size: 15px; }
+  .stage .chancePanel { position: relative; inset: auto; width: auto; max-height: none; margin: 16px 20px 0; padding: 16px; }
   .chancePanel h2 { font-size: 18px; margin-bottom: 12px; }
   .chancePanel :is(li, p, span, select, button) { font-size: 14px; line-height: 1.6; }
   .chancePanel li { margin-top: 12px; padding: 12px; }
@@ -87,7 +160,7 @@
   .quarantinePanel .quarantineClose { top: 8px; right: 8px; width: 44px; padding: 8px; }
 
   /* 열린 문제(Figma 518:300): 버튼은 세로 흐름에 두고, 패널은 무인도 패널처럼 하단 시트로 */
-  .stage .openToggle { position: static; width: 100%; min-height: 44px; padding: 8px 12px; font-size: 16px; text-align: left; white-space: normal; background: #2b1609e8; border: 1px solid #9a6f3b; }
+  .stage .openToggle { position: static; width: auto; min-height: 44px; padding: 8px 0; font-size: 14px; text-align: left; white-space: normal; color: #f3dfb9; }
   .stage .openPanel {
     position: fixed;
     inset: auto 12px 16px;
@@ -105,16 +178,15 @@
   }
   .openPanel > img { display: none; }
   .openPanel .mobileOpenTitle { position: static; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 48px 12px 0; font: 24px/1.4 "Song Myung", serif; color: #613d15; }
-  .openPanel > ol { position: static; width: auto; height: auto; max-height: 55dvh; }
-  .openPanel .openClose { top: 8px; left: auto; right: 8px; width: 44px; height: 44px; padding: 10px; }
-  .openPanel li button { height: auto; min-height: 56px; gap: 12px; padding: 8px 0; }
-  .openPanel li button > span:first-child { width: 28px; height: 30px; }
-  .openPanel li button > span:first-child > span { font-size: 12px; }
-  .openPanel li strong { font-size: 15px; }
-  .openPanel li strong + span { font-size: 13px; }
-  .openPanel li button > img { width: 18px; height: 22px; }
+  .openPanel .openPanelBody { position: static; width: auto; height: auto; max-height: 60dvh; }
+  .openPanel .openClose { top: 8px; left: auto; right: 8px; width: 44px; height: 44px; padding: 10px; transform: none; }
+  .openChallengeList li button { height: auto; min-height: 56px; gap: 12px; padding: 8px 0; }
+  .openChallengeList li button > span:first-child { width: 28px; height: 30px; }
+  .openChallengeList li button > span:first-child > span { font-size: 12px; }
+  .openChallengeList li strong { font-size: 15px; }
+  .openChallengeList li strong + span { font-size: 13px; }
+  .openChallengeList li button > img { width: 18px; height: 22px; }
   .openPanel .openEmpty { padding-top: 16px; font-size: 14px; }
-  .openPanel .openViewAll { position: static; display: block; width: 120px; height: 60px; margin: 12px auto 0; }
 
   /* 기차여행(Figma 555:342): 안내는 화면 상단 고정, 확인은 하단 시트 */
   .stage .airportHint { position: fixed; inset: 12px 12px auto; z-index: 45; white-space: normal; text-align: center; font-size: 18px; letter-spacing: 2px; line-height: 1.5; padding: 12px; background: #2b1609e8; border: 1px solid #9a6f3b; }

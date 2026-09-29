@@ -1,17 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { BOARD_CELL_COUNT, getBoardCellPosition } from "../utils/boardData.js";
+import { getBoardCellVisitState } from "../utils/boardVisited.js";
+import BoardVisitedOverlay from "./BoardVisitedOverlay.jsx";
+import BoardLineOverlay from "./BoardLineOverlay.jsx";
 import Dice3D from "./Dice3D.jsx";
 import styles from "./BoardScreen.module.css";
 
 // Figma node 309:78 "BoardGrid"(951x714) + 104:458 "주사위" + 100:454 "람쥐".
 // 36칸은 원본 board-grid.png에 합쳐져 있으므로 분해하지 않는다. API의 36개 cell을
 // 같은 궤도의 클릭 영역과 상태 표시에 결합하고, 팀 말만 현재 position으로 이동한다.
-const CELL_STATE_COLORS = Object.freeze({
-  CONSUMED: "bg-[#8d6035]",
-  OPENED: "bg-[#2c6b8f]",
-  CLEARED: "bg-[#477a38]",
-});
-
 // Temporary visual-only preview: open the board with ?diceAnimationTest=1 in Vite dev.
 // Removing this flag and the branch in handleRollDice removes the test mode.
 const diceAnimationTest = import.meta.env.DEV &&
@@ -34,6 +31,9 @@ export default function BoardTrack({
   onRollDice,
   canRoll,
   isRolling,
+  lines = [],
+  selectedLineId = null,
+  onSelectLine,
   // 기차여행(Figma 555:342) 목적지 선택 중이면 고를 수 있는 칸 집합, 아니면 null
   selectableCellIndexes = null,
   highlightedCellIndex = null,
@@ -52,6 +52,10 @@ export default function BoardTrack({
   const rollingRef = useRef(false);
   const [rolling, setRolling] = useState(false);
   const [diceReady, setDiceReady] = useState(false);
+  const visitedCellIndexes = cells
+    .filter((cell) => getBoardCellVisitState(cell.cellIndex, consumedCellIndexes, cellStatesByIndex).isVisited)
+    .map((cell) => cell.cellIndex);
+  const linesByCell = new Map(lines.flatMap((line) => line.cellIndexes.map((index) => [index, line])));
 
   const handleRollDice = async () => {
     if ((!canRoll && !diceAnimationTest) || !diceReady || rollingRef.current) return;
@@ -72,12 +76,16 @@ export default function BoardTrack({
   };
 
   return (
-    <div className={`${styles.track} absolute left-[23.33%] top-[26.76%] w-[49.53%] h-[66.11%]`}>
+    <div data-board-layer="track" className={`${styles.track} absolute left-[23.33%] top-[26.76%] w-[49.53%] h-[66.11%]`}>
       <img
         src="/assets/board/board-grid.png"
         alt="게임 보드판"
+        draggable={false}
         className="absolute inset-0 w-full h-full object-contain pointer-events-none"
       />
+
+      <BoardVisitedOverlay visitedCellIndexes={visitedCellIndexes} />
+      <BoardLineOverlay lines={lines} selectedLineId={selectedLineId} onSelectLine={onSelectLine} />
 
       {renderedPiecePosition != null && (
         <img
@@ -120,9 +128,8 @@ export default function BoardTrack({
 
       {cells.map((cell) => {
         const coordinates = getBoardCellPosition(cell.cellIndex);
-        const cellState = cellStatesByIndex.get(cell.cellIndex);
-        const isConsumed = consumedCellIndexes.includes(cell.cellIndex);
-        const stateLabel = cellState?.status || (isConsumed ? "CONSUMED" : "미방문");
+        const cellLine = linesByCell.get(cell.cellIndex);
+        const visitState = getBoardCellVisitState(cell.cellIndex, consumedCellIndexes, cellStatesByIndex);
         const isSelecting = selectableCellIndexes != null;
         const isSelectable = isSelecting && selectableCellIndexes.has(cell.cellIndex);
         const isHighlighted = highlightedCellIndex === cell.cellIndex;
@@ -132,7 +139,7 @@ export default function BoardTrack({
             ? "shadow-[0_0_0_0.22cqw_#ffe090,0_0_1.2cqw_0.3cqw_rgba(255,214,120,0.9)]"
             : isSelectable
               ? "shadow-[0_0_0_0.12cqw_rgba(255,224,144,0.75),0_0_0.7cqw_rgba(255,214,120,0.55)] hover:shadow-[0_0_0_0.2cqw_#ffe090,0_0_1cqw_rgba(255,214,120,0.85)]"
-              : "cursor-not-allowed bg-[#1b0d05]/45";
+              : "cursor-not-allowed";
 
         return (
           <button
@@ -141,16 +148,11 @@ export default function BoardTrack({
             onClick={() => onSelectCell(cell.cellIndex)}
             aria-disabled={isSelecting && !isSelectable ? true : undefined}
             aria-pressed={isSelecting ? isHighlighted : undefined}
-            aria-label={`${cell.cellIndex}번 ${cell.name || cell.type} 칸, ${stateLabel}${isSelecting ? (isSelectable ? ", 이동 가능" : ", 이동 불가") : ""}`}
+            aria-label={`${cell.cellIndex}번 ${cell.name || cell.type} 칸, ${visitState.label}${cellLine ? `, ${cellLine.label}${cellLine.isCompleted ? ", 라인 독점 완료" : ""}` : ""}${isSelecting ? (isSelectable ? ", 이동 가능" : ", 이동 불가") : ""}`}
+            data-visited={visitState.isVisited}
             style={{ left: `${coordinates.x}%`, top: `${coordinates.y}%` }}
             className={`absolute z-10 h-[11%] w-[8.5%] -translate-x-1/2 -translate-y-1/2 rounded-[45%] border-0 bg-transparent p-0 cursor-pointer transition-shadow focus-visible:outline focus-visible:outline-[0.2cqw] focus-visible:outline-[#ffe090] ${selectionClass}`}
           >
-            {cellState?.status && (
-              <span
-                className={`absolute right-[3%] top-[4%] h-[0.55cqw] w-[0.55cqw] rounded-full border border-[#f5d793] shadow ${CELL_STATE_COLORS[cellState.status] || "bg-[#8d6035]"}`}
-                aria-hidden="true"
-              />
-            )}
             <span className="sr-only">
               {cell.cellIndex}번 {cell.name || cell.type} 칸
             </span>
