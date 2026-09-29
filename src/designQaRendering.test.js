@@ -232,3 +232,26 @@ test("라인 완성과 열린 문제는 기존 펼쳐보기 한 곳에 두고 �
   assert.doesNotMatch(screen, /BoardLinePanel|lineToggle|onViewAllChallenges/);
   assert.match(screen, /<OpenChallengesSidePanel[\s\S]*<BoardLineSummary[\s\S]*<\/OpenChallengesSidePanel>/);
 });
+
+test("보드 목록은 얇은 스크롤을 유지하고 모바일 패널을 이중 스크롤로 만들지 않는다", () => {
+  const root = css("features/board/components/BoardScreen.module.css");
+  const body = Object.fromEntries(declarations(root, ".openPanelBody"));
+  assert.equal(body["overflow-y"], "auto");
+  assert.equal(body["scrollbar-width"], "thin");
+  assert.equal(body["scrollbar-color"], "var(--board-scroll-thumb) transparent");
+  assert.equal(body["scrollbar-gutter"], "stable");
+  assert.equal(body["overscroll-behavior"], "contain");
+  const panel = Object.fromEntries(declarations(root, ".stage .openPanel"));
+  assert.equal(panel.display, "flex");
+  assert.equal(panel.overflow, "hidden");
+  assert.equal(panel["overflow-y"], undefined);
+  const mobileBody = Object.fromEntries(declarations(root, ".openPanel .openPanelBody"));
+  assert.equal(mobileBody["min-height"], "0");
+  assert.equal(mobileBody.flex, "0 1 auto");
+  let highContrastFallback = false;
+  root.walkAtRules("media", (media) => {
+    if (media.params !== "(forced-colors: active)") return;
+    media.walkDecls("scrollbar-color", (decl) => { if (decl.value === "auto") highContrastFallback = true; });
+  });
+  assert.ok(highContrastFallback);
+});

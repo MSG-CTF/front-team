@@ -31,7 +31,55 @@
   .lineCrestArtwork, .lineClaimCrest[data-celebrating="true"] .lineCrestArtwork { animation: none; }
   .lineCrestCaption { transition: none; }
 }
-.openPanelBody { position: absolute; left: 15.14%; top: 26.41%; width: 69.4%; height: 65%; overflow-y: auto; overscroll-behavior: contain; }
+/* 보드 화면에서만 문서와 내부 스크롤을 같은 재질로 맞춘다 */
+:global(html):has(.frame), .boardViewport {
+  --board-scroll-thumb: #a28253;
+  --board-scroll-hover: #c09d65;
+  scrollbar-width: thin;
+  scrollbar-color: var(--board-scroll-thumb) transparent;
+}
+.openPanelBody {
+  --board-scroll-thumb: #967345;
+  --board-scroll-hover: #70502c;
+  position: absolute;
+  left: 15.14%;
+  top: 26.41%;
+  width: 69.4%;
+  height: 65%;
+  padding-inline-end: 8px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--board-scroll-thumb) transparent;
+  scrollbar-gutter: stable;
+  scroll-padding-block: 8px;
+}
+/* Chromium과 Safari는 둥근 손잡이와 화살표 없는 레일을 사용한다 */
+@supports selector(::-webkit-scrollbar) {
+  :global(html):has(.frame), .openPanelBody, .boardViewport { scrollbar-width: auto; scrollbar-color: auto; }
+}
+:global(html):has(.frame)::-webkit-scrollbar,
+:is(.openPanelBody, .boardViewport)::-webkit-scrollbar { width: 6px; height: 6px; }
+:global(html):has(.frame)::-webkit-scrollbar-track,
+:is(.openPanelBody, .boardViewport)::-webkit-scrollbar-track { background: transparent; }
+:global(html):has(.frame)::-webkit-scrollbar-thumb,
+:is(.openPanelBody, .boardViewport)::-webkit-scrollbar-thumb { min-height: 40px; border-radius: 6px; background: var(--board-scroll-thumb); }
+:global(html):has(.frame)::-webkit-scrollbar-thumb:hover,
+:is(.openPanelBody, .boardViewport)::-webkit-scrollbar-thumb:hover { background: var(--board-scroll-hover); }
+:global(html):has(.frame)::-webkit-scrollbar-button,
+:is(.openPanelBody, .boardViewport)::-webkit-scrollbar-button { display: none; }
+:global(html):has(.frame)::-webkit-scrollbar-corner,
+:is(.openPanelBody, .boardViewport)::-webkit-scrollbar-corner { background: transparent; }
+:global(html):has(.frame)::-webkit-scrollbar-track { background: #21150d; }
+@media (forced-colors: active) {
+  :global(html):has(.frame), .openPanelBody, .boardViewport { scrollbar-color: auto; scrollbar-width: auto; }
+  :global(html):has(.frame)::-webkit-scrollbar,
+  :is(.openPanelBody, .boardViewport)::-webkit-scrollbar { width: auto; height: auto; }
+  :global(html):has(.frame)::-webkit-scrollbar-thumb,
+  :is(.openPanelBody, .boardViewport)::-webkit-scrollbar-thumb { background: ButtonText; }
+  :global(html):has(.frame)::-webkit-scrollbar-track,
+  :is(.openPanelBody, .boardViewport)::-webkit-scrollbar-track { background: Canvas; }
+}
 .openChallengeList li button { min-height: 44px; }
 .openChallengeList li button > span:first-child { width: 20px; height: 22px; }
 .openChallengeList li button > span:first-child > span { font-size: 10px; }
@@ -168,17 +216,19 @@
     width: min(calc(100% - 24px), 520px);
     height: auto;
     max-height: 80dvh;
+    display: flex;
+    flex-direction: column;
     margin-inline: auto;
     padding: 20px;
-    overflow-y: auto;
+    overflow: hidden;
     border: 8px solid transparent;
     border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
     background: #eddbb6;
     background-clip: padding-box;
   }
   .openPanel > img { display: none; }
-  .openPanel .mobileOpenTitle { position: static; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 48px 12px 0; font: 24px/1.4 "Song Myung", serif; color: #613d15; }
-  .openPanel .openPanelBody { position: static; width: auto; height: auto; max-height: 60dvh; }
+  .openPanel .mobileOpenTitle { position: static; flex-shrink: 0; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 48px 12px 0; font: 24px/1.4 "Song Myung", serif; color: #613d15; }
+  .openPanel .openPanelBody { position: static; flex: 0 1 auto; min-height: 0; width: auto; height: auto; max-height: 60dvh; }
   .openPanel .openClose { top: 8px; left: auto; right: 8px; width: 44px; height: 44px; padding: 10px; transform: none; }
   .openChallengeList li button { height: auto; min-height: 56px; gap: 12px; padding: 8px 0; }
   .openChallengeList li button > span:first-child { width: 28px; height: 30px; }
