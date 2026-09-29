@@ -1,15 +1,17 @@
+import { useEffect, useRef } from "react";
 import { formatOpenChallengeNumber } from "../utils/boardOverlays.js";
 import styles from "./BoardScreen.module.css";
 
 // Figma node 518:300 "열린 문제" - 주사위판 아래 "열린 문제 목록 보기"를 누르면 보드
-// 왼쪽에 뜨는 양피지 세로 패널. 패널/번호 배지/화살표/"전체 문제 보기"/닫기 버튼은
+// 왼쪽에 뜨는 양피지 세로 패널. 패널/번호 배지/화살표/닫기 버튼은
 // Figma 원본 에셋이고, 좌표는 1920x1080 무대 기준 %로 옮겼다(패널 32,179 / 284x814).
-// 행을 누르면 문제 상세로, 하단 버튼은 열린 문제 목록 페이지로 이동한다.
+// 문제 목록과 라인 완성은 이 패널 안에서 확인하고 문제를 고를 때만 상세로 이동한다.
 // 데이터는 GET /board/opened_challenges(연 순서 오름차순).
-export function OpenChallengesToggle({ isOpen, count, onToggle }) {
+export function OpenChallengesToggle({ isOpen, count, onToggle, buttonRef }) {
   return (
     <button
       type="button"
+      ref={buttonRef}
       onClick={onToggle}
       aria-expanded={isOpen}
       aria-controls="board-open-challenges-panel"
@@ -23,11 +25,14 @@ export function OpenChallengesToggle({ isOpen, count, onToggle }) {
   );
 }
 
-export default function OpenChallengesSidePanel({ challenges, onSelectChallenge, onViewAll, onClose }) {
+export default function OpenChallengesSidePanel({ challenges, onSelectChallenge, onClose, children }) {
+  const closeButton = useRef(null);
+  useEffect(() => { closeButton.current?.focus({ preventScroll: true }); }, []);
   return (
     <aside
       id="board-open-challenges-panel"
       aria-label="열린 문제"
+      onKeyDown={(event) => { if (event.key === "Escape") { event.stopPropagation(); onClose(); } }}
       className={`${styles.openPanel} absolute left-[1.67%] top-[16.57%] z-40 h-[75.37%] w-[14.79%]`}
     >
       <img
@@ -41,6 +46,7 @@ export default function OpenChallengesSidePanel({ challenges, onSelectChallenge,
 
       <button
         type="button"
+        ref={closeButton}
         onClick={onClose}
         aria-label="열린 문제 패널 닫기"
         className={`${styles.openClose} absolute left-[76.06%] top-[5.41%] h-[2.58%] w-[8.1%] border-0 bg-transparent p-0 hover:brightness-125`}
@@ -48,7 +54,9 @@ export default function OpenChallengesSidePanel({ challenges, onSelectChallenge,
         <img src="/assets/board/icon-close-round.png" alt="" aria-hidden="true" className="h-full w-full object-contain" />
       </button>
 
-      <ol className="absolute left-[15.14%] top-[26.41%] m-0 flex h-[57.2%] w-[69.4%] list-none flex-col overflow-y-auto p-0">
+      <div className={styles.openPanelBody}>
+      {children}
+      <ol className={`${styles.openChallengeList} m-0 flex list-none flex-col p-0`}>
         {challenges.map((challenge, index) => (
           <li key={challenge.challengeId} className="shrink-0 border-b border-[#844618]">
             <button
@@ -93,15 +101,7 @@ export default function OpenChallengesSidePanel({ challenges, onSelectChallenge,
           </li>
         )}
       </ol>
-
-      <button
-        type="button"
-        onClick={onViewAll}
-        aria-label="전체 문제 보기"
-        className={`${styles.openViewAll} absolute left-[32.39%] top-[85.01%] h-[6.14%] w-[34.51%] border-0 bg-transparent p-0 hover:brightness-110`}
-      >
-        <img src="/assets/board/open-challenges-view-all.png" alt="" aria-hidden="true" className="h-full w-full object-contain" />
-      </button>
+      </div>
     </aside>
   );
 }

@@ -6,6 +6,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { StaticRouter } from "react-router-dom";
 import { createServer } from "vite";
 import postcss from "postcss";
+import { prepareBoardLines } from "./features/board/utils/boardLines.js";
+import { getBoardCellMaskPath } from "./features/board/utils/boardVisited.js";
 
 let server;
 const components = {};
@@ -21,6 +23,12 @@ before(async () => {
     Leaderboard: "leaderboard/components/LeaderboardScreen",
     Rules: "rules/components/RulesScreen",
     Koth: "koth/components/KothScreen",
+    BoardNav: "board/components/BoardNav",
+    DiceStatusPanel: "board/components/DiceStatusPanel",
+    BoardVisitedOverlay: "board/components/BoardVisitedOverlay",
+    BoardLineOverlay: "board/components/BoardLineOverlay",
+    BoardLineSummary: "board/components/BoardLineSummary",
+    OpenChallengesPanel: "board/components/OpenChallengesSidePanel",
     AdminLayout: "admin/components/AdminLayout",
     AdminDashboard: "admin/pages/AdminDashboardPage",
     AdminMileage: "admin/pages/AdminMileagePage",
@@ -127,4 +135,123 @@ test("모바일 로그인과 리더보드는 전체 캔버스 축소를 해제�
   }
   const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
   assert.ok(declarations(root, ".pagination button, .refreshControls button").some(([property, value]) => property === "height" && value === "44px"));
+});
+
+test("모바일 보드 메뉴는 기존 금색 아이콘과 여섯 이동 기능을 유지한다", () => {
+  const html = render("BoardNav");
+  const mobileNav = html.match(/<nav[^>]*aria-label="대회 메뉴"[\s\S]*?<\/nav>/)?.[0];
+  assert.ok(mobileNav);
+  for (const image of ["nav-rules.png", "nav-mypage.png", "nav-scoreboard.png"]) {
+    assert.ok(mobileNav.includes(`/assets/board/${image}`));
+  }
+  for (const path of ["/rules", "/mypage", "/leaderboard", "/koth", "/signatures"]) {
+    assert.ok(mobileNav.includes(`href="${path}"`));
+  }
+  assert.match(mobileNav, /<button[^>]*>로그아웃<\/button>/);
+  const root = css("features/board/components/BoardScreen.module.css");
+  assert.ok(declarations(root, ".mobileNav a, .mobileNav button").some(([property, value]) => property === "min-height" && value === "44px"));
+});
+
+test("방문한 칸은 중복 없이 각자의 곡선 윤곽으로 표시하고 잘못된 번호를 무시한다", () => {
+  const html = render("BoardVisitedOverlay", { visitedCellIndexes: [0, 2, 2, 21, 37] });
+  assert.match(html, /viewBox="0 0 1772 1330"/);
+  assert.equal((html.match(/data-visited-cell=/g) || []).length, 2);
+  assert.match(html, /data-visited-cell="2"/);
+  assert.match(html, /data-visited-cell="21"/);
+  assert.match(html, /<path[^>]*d="M[^"]* Q/);
+  assert.match(html, /<g clip-path="url\(#[^"]+\)"><image[^>]+>/);
+  assert.equal((html.match(/data-visited-surface=/g) || []).length, 2);
+  assert.match(html, /<radialGradient/);
+  assert.match(html, /<linearGradient/);
+  assert.doesNotMatch(html, /visitedInset|stroke=/);
+  assert.doesNotMatch(html, /<polygon/);
+  assert.equal(render("BoardVisitedOverlay", { visitedCellIndexes: [] }), "");
+});
+
+test("모바일에서 반복 안내를 줄여도 주사위 상태와 제한 시간은 접근성 정보에 남는다", () => {
+  const ready = render("DiceStatusPanel", { rollsLeft: 3, canRoll: true });
+  assert.match(ready, /data-roll-ready="true"/);
+  assert.match(ready, /aria-label="주사위 보유 3\/3\. 주사위를 굴릴 수 있습니다\./);
+  const waiting = render("DiceStatusPanel", {
+    rollsLeft: 2, canRoll: false, blockedMessage: "문제 풀이 제한 시간이 끝나면 다시 이동할 수 있습니다", challengeRemainingSeconds: 900,
+  });
+  assert.match(waiting, /data-roll-ready="false"/);
+  assert.match(waiting, /문제 제한 15:00/);
+  assert.match(waiting, /<p[^>]*>문제 풀이 제한 시간이 끝나면 다시 이동할 수 있습니다<\/p>/);
+  const root = css("features/board/components/BoardScreen.module.css");
+  assert.deepEqual(declarations(root, '.diceStatus[data-roll-ready="true"] > p'), [["display", "none"]]);
+});
+
+test("라인 데이터가 없으면 표시하지 않고 풀이 진행과 완료를 별도로 렌더링한다", () => {
+  assert.equal(render("BoardLineOverlay"), "");
+  const lines = prepareBoardLines([
+    { lineId: "a", label: "1번 라인", cellIndexes: [2,3,4,5,6], solvedCellIndexes: [2,3], isCompleted: false },
+    { lineId: "b", label: "2번 라인", cellIndexes: [8,9,10,11,12], solvedCellIndexes: [8,9,10,11,12], isCompleted: true },
+  ]);
+  const html = render("BoardLineOverlay", { lines });
+  assert.match(html, /1번 라인, 2\/5 해결/);
+  assert.match(html, /2번 라인, 독점 완료, 상세 보기/);
+  assert.equal((html.match(/data-solved="true"/g) || []).length, 7);
+  assert.equal((html.match(/data-line-cell=/g) || []).length, 10);
+  assert.equal((html.match(/data-line-badge=/g) || []).length, 1);
+  assert.equal((html.match(/<clipPath /g) || []).length, 10);
+  assert.match(html, /<image[^>]+href="\/assets\/board\/line-complete-crest-v1\.png"/);
+  assert.doesNotMatch(html, /lineClaimFlash|lineSweep|lineRail|lineClaimRibbon|lineCellBand|lineSolveMark|lineCellSelected/);
+  const selected = render("BoardLineOverlay", { lines, selectedLineId: "a" });
+  assert.equal((selected.match(/class="[^"]*lineCellSelected/g) || []).length, 5);
+  for (const index of lines.flatMap((line) => line.cellIndexes)) {
+    assert.ok(html.includes(`d="${getBoardCellMaskPath(index)}"`));
+  }
+});
+
+test("라인 시안에는 가짜 지급 점수를 표시하지 않고 0점과 미제공을 구분한다", () => {
+  const make = (bonusScore) => prepareBoardLines([{ lineId: "a", label: "1번 라인", cellIndexes: [2,3], solvedCellIndexes: [2,3], isCompleted: true, bonusScore }]);
+  const props = { selectedLineId: "a", onSelectLine: () => {} };
+  const preview = render("BoardLineSummary", { ...props, lines: make(500), isPreview: true });
+  assert.match(preview, /실제 점수에는 반영되지 않습니다/);
+  assert.doesNotMatch(preview, /500점/);
+  assert.match(render("BoardLineSummary", { ...props, lines: make(0) }), /지급된 보너스 0점/);
+  assert.match(render("BoardLineSummary", { ...props, lines: make(null) }), /보너스 지급 정보 확인 중/);
+  assert.match(preview, /<details[^>]*id="board-line-progress"/);
+  assert.doesNotMatch(preview, /<details[^>]*\sopen=""|라인 현황 닫기/);
+});
+
+test("라인 완성과 열린 문제는 기존 펼쳐보기 한 곳에 두고 중복 이동 버튼을 만들지 않는다", () => {
+  const summary = createElement(components.BoardLineSummary, {
+    lines: prepareBoardLines([{ lineId: "a", label: "1번 라인", cellIndexes: [2], solvedCellIndexes: [], isCompleted: false }]),
+  });
+  const html = render("OpenChallengesPanel", {
+    challenges: [{ challengeId: 7, title: "미니 암호", category: "CRYPTO", isSolved: false }], children: summary,
+  });
+  assert.match(html, /id="board-open-challenges-panel"/);
+  assert.match(html, /<details[^>]*id="board-line-progress"/);
+  assert.match(html, /01번 미니 암호 상세 보기/);
+  assert.doesNotMatch(html, /전체 문제 보기|open-challenges-view-all|board-line-panel/);
+  assert.equal((html.match(/<aside/g) || []).length, 1);
+  const screen = readFileSync(new URL("./features/board/components/BoardScreen.jsx", import.meta.url), "utf8");
+  assert.doesNotMatch(screen, /BoardLinePanel|lineToggle|onViewAllChallenges/);
+  assert.match(screen, /<OpenChallengesSidePanel[\s\S]*<BoardLineSummary[\s\S]*<\/OpenChallengesSidePanel>/);
+});
+
+test("보드 목록은 얇은 스크롤을 유지하고 모바일 패널을 이중 스크롤로 만들지 않는다", () => {
+  const root = css("features/board/components/BoardScreen.module.css");
+  const body = Object.fromEntries(declarations(root, ".openPanelBody"));
+  assert.equal(body["overflow-y"], "auto");
+  assert.equal(body["scrollbar-width"], "thin");
+  assert.equal(body["scrollbar-color"], "var(--board-scroll-thumb) transparent");
+  assert.equal(body["scrollbar-gutter"], "stable");
+  assert.equal(body["overscroll-behavior"], "contain");
+  const panel = Object.fromEntries(declarations(root, ".stage .openPanel"));
+  assert.equal(panel.display, "flex");
+  assert.equal(panel.overflow, "hidden");
+  assert.equal(panel["overflow-y"], undefined);
+  const mobileBody = Object.fromEntries(declarations(root, ".openPanel .openPanelBody"));
+  assert.equal(mobileBody["min-height"], "0");
+  assert.equal(mobileBody.flex, "0 1 auto");
+  let highContrastFallback = false;
+  root.walkAtRules("media", (media) => {
+    if (media.params !== "(forced-colors: active)") return;
+    media.walkDecls("scrollbar-color", (decl) => { if (decl.value === "auto") highContrastFallback = true; });
+  });
+  assert.ok(highContrastFallback);
 });

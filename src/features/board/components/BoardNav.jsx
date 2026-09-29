@@ -10,7 +10,10 @@ const BUTTONS = [
     key: "rules",
     to: ROUTES.rules,
     label: "규칙 설명서",
+    mobileLabel: "규칙",
     src: "/assets/board/nav-rules.png",
+    mobileImageWidth: "192.31%",
+    mobileImageAnchor: "translate(-49.5%, -46%)",
     className: "left-[75.42%] top-[2.96%] w-[10.47%] h-[12.41%]",
     hitArea: "left-[49.5%] top-[46%] w-[52%]",
   },
@@ -18,7 +21,10 @@ const BUTTONS = [
     key: "mypage",
     to: ROUTES.mypage,
     label: "마이 페이지",
+    mobileLabel: "마이페이지",
     src: "/assets/board/nav-mypage.png",
+    mobileImageWidth: "256.41%",
+    mobileImageAnchor: "translate(-50%, -48%)",
     className: "left-[80.68%] top-[1.2%] w-[13.39%] h-[15.83%]",
     hitArea: "left-1/2 top-[48%] w-[39%]",
   },
@@ -26,7 +32,10 @@ const BUTTONS = [
     key: "scoreboard",
     to: ROUTES.leaderboard,
     label: "스코어보드",
+    mobileLabel: "순위",
     src: "/assets/board/nav-scoreboard.png",
+    mobileImageWidth: "238.1%",
+    mobileImageAnchor: "translate(-50%, -48%)",
     className: "left-[87.76%] top-[1.2%] w-[12.24%] h-[14.54%]",
     hitArea: "left-1/2 top-[48%] w-[42%]",
   },
@@ -38,9 +47,19 @@ export default function BoardNav() {
   return (
     <>
       <nav className={styles.mobileNav} aria-label="대회 메뉴">
-        <Link to={ROUTES.rules}>규칙</Link>
-        <Link to={ROUTES.mypage}>마이페이지</Link>
-        <Link to={ROUTES.leaderboard}>순위</Link>
+        {BUTTONS.map((button) => (
+          <Link key={button.key} to={button.to} className={styles.mobileNavPrimary}>
+            <span className={styles.mobileNavIcon} aria-hidden="true">
+              <img
+                src={button.src}
+                alt=""
+                draggable={false}
+                style={{ width: button.mobileImageWidth, transform: button.mobileImageAnchor }}
+              />
+            </span>
+            <span>{button.mobileLabel}</span>
+          </Link>
+        ))}
         <Link to={ROUTES.koth}>KoTH</Link>
         <Link to={ROUTES.signatures}>동아리 부스</Link>
         <button type="button" onClick={performLogout}>로그아웃</button>

@@ -23,6 +23,7 @@ export default function DiceStatusPanel({
     <div
       className={`${styles.diceStatus} absolute left-[1.35%] top-0 w-[19.69%] h-[20.65%]`}
       role="status"
+      data-roll-ready={canRoll && !blockedMessage}
       aria-label={`주사위 보유 ${rollsLeft}/${MAX_DICE_ROLLS}. ${statusLabel}${countdown == null ? "" : `, ${countdownLabel} ${formatRemaining(countdown)}`}`}
     >
       <img
