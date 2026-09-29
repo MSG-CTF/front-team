@@ -1,9 +1,9 @@
 import { Suspense, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { ContactShadows, useGLTF } from "@react-three/drei";
-import { createDiceMotion, DICE_FLOOR_Y, DICE_STARTS, restingDie, sampleDiceMotion } from "./diceMotion.js";
+import { createDiceMotion, DICE_CAMERA, DICE_FLOOR_Y, DICE_LOOK_AT, DICE_STARTS, restingDie, sampleDiceMotion } from "./diceMotion.js";
 
-const SHADOW_SCALE = [12, 12];
+const SHADOW_SCALE = [16, 16];
 
 const DicePair = forwardRef(function DicePair({ onReady, reducedMotion }, ref) {
   const { scene } = useGLTF("/models/dice.glb");
@@ -28,7 +28,7 @@ const DicePair = forwardRef(function DicePair({ onReady, reducedMotion }, ref) {
   useImperativeHandle(ref, () => ({
     startRoll(result) {
       if (animation.current) return animation.current.promise;
-      const motions = createDiceMotion(dice.map((object) => ({ position: object.position, quaternion: object.quaternion })), result);
+      const motions = createDiceMotion(dice.map((object) => ({ position: object.position, quaternion: object.quaternion })), result, Math.random, reducedMotion);
       if (!motions) return Promise.resolve();
       let resolve;
       const promise = new Promise((done) => { resolve = done; });
@@ -36,7 +36,7 @@ const DicePair = forwardRef(function DicePair({ onReady, reducedMotion }, ref) {
       invalidate();
       return promise;
     },
-  }), [dice, invalidate]);
+  }), [dice, invalidate, reducedMotion]);
 
   // 그림자 패스를 그리기 전에 위치를 갱신한다
   useFrame(() => {
@@ -71,21 +71,21 @@ const Dice3D = forwardRef(function Dice3D({ onReady }, ref) {
   useImperativeHandle(ref, () => ({ startRoll: (result) => pairRef.current?.startRoll(result) }), []);
 
   return (
-    <div className="absolute left-[-25%] top-[-50%] h-[200%] w-[150%] pointer-events-none" aria-hidden="true">
+    <div className="absolute left-[-18.182%] top-[-25%] h-[150%] w-[136.364%] pointer-events-none" aria-hidden="true">
       <Canvas
-        camera={{ position: [0, 8.2, 11.6], fov: 26, near: 0.1, far: 40 }}
-        onCreated={({ camera }) => camera.lookAt(0, 0, -0.6)}
+        camera={DICE_CAMERA}
+        onCreated={({ camera }) => camera.lookAt(...DICE_LOOK_AT)}
         gl={{ alpha: true, antialias: true }}
         dpr={[1, 1.5]}
         frameloop="demand"
-        fallback={<img src="/assets/board/dice.png" alt="" className="absolute left-[16.667%] top-[25%] h-1/2 w-2/3 object-contain" />}
+        fallback={<img src="/assets/board/dice.png" alt="" className="absolute left-1/4 top-1/3 h-1/3 w-1/2 object-contain" />}
       >
         <ambientLight intensity={0.85} />
         <hemisphereLight args={["#ffe4b5", "#67452d", 0.65]} />
         <directionalLight position={[-3, 5, 6]} intensity={2.4} color="#fff0d5" />
         <Suspense fallback={null}>
           <DicePair ref={pairRef} onReady={onReady} reducedMotion={reducedMotion} />
-          <ContactShadows position={[0, DICE_FLOOR_Y - 0.01, 0]} scale={SHADOW_SCALE} resolution={256} blur={1.4} opacity={0.6} far={3.5} color="#392416" />
+          <ContactShadows position={[0, DICE_FLOOR_Y - 0.01, 0]} scale={SHADOW_SCALE} resolution={256} blur={1.4} opacity={0.64} far={5.5} color="#392416" />
         </Suspense>
       </Canvas>
     </div>

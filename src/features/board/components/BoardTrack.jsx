@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { BOARD_CELL_COUNT, getBoardCellPosition } from "../utils/boardData.js";
 import { getBoardCellVisitState } from "../utils/boardVisited.js";
 import BoardVisitedOverlay from "./BoardVisitedOverlay.jsx";
 import BoardLineOverlay from "./BoardLineOverlay.jsx";
-import Dice3D from "./Dice3D.jsx";
 import styles from "./BoardScreen.module.css";
+
+const Dice3D = lazy(() => import("./Dice3D.jsx"));
 
 // Figma node 309:78 "BoardGrid"(951x714) + 104:458 "주사위" + 100:454 "람쥐".
 // 36칸은 원본 board-grid.png에 합쳐져 있으므로 분해하지 않는다. API의 36개 cell을
@@ -120,9 +121,11 @@ export default function BoardTrack({
         onClick={handleRollDice}
         disabled={(!canRoll && !diceAnimationTest) || !diceReady || rolling}
         aria-label={isRolling || rolling ? "주사위 처리 중" : "주사위 굴리기"}
-        className="absolute left-[35%] top-[39%] z-20 w-[30%] h-[16%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95 disabled:cursor-not-allowed disabled:brightness-90"
+        className="absolute left-[28%] top-[31%] z-20 w-[44%] h-[32%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95 disabled:cursor-not-allowed disabled:brightness-90"
       >
-        <Dice3D ref={diceRef} onReady={() => setDiceReady(true)} />
+        <Suspense fallback={<img src="/assets/board/dice.png" alt="" className="absolute left-[15.91%] top-1/4 w-[68.18%] h-1/2 object-contain" />}>
+          <Dice3D ref={diceRef} onReady={() => setDiceReady(true)} />
+        </Suspense>
         <span className="sr-only">주사위 굴리기</span>
       </button>
 
