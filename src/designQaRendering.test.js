@@ -8,6 +8,7 @@ import { createServer } from "vite";
 import postcss from "postcss";
 import { prepareBoardLines } from "./features/board/utils/boardLines.js";
 import { getBoardCellMaskPath } from "./features/board/utils/boardVisited.js";
+import { getBoardCellPosition } from "./features/board/utils/boardData.js";
 
 let server;
 const components = {};
@@ -26,6 +27,12 @@ before(async () => {
     BoardNav: "board/components/BoardNav",
     DiceStatusPanel: "board/components/DiceStatusPanel",
     BoardVisitedOverlay: "board/components/BoardVisitedOverlay",
+    BoardArtwork: "board/components/BoardArtwork",
+    BoardPiece: "board/components/BoardPiece",
+    BoardTrain: "board/components/BoardTrain",
+    Dice3D: "board/components/Dice3D",
+    BoardEventPanel: "board/components/BoardEventPanel",
+    ChallengeSelection: "board/components/ChallengeSelection",
     BoardLineOverlay: "board/components/BoardLineOverlay",
     BoardLineSummary: "board/components/BoardLineSummary",
     OpenChallengesPanel: "board/components/OpenChallengesSidePanel",
@@ -37,12 +44,14 @@ before(async () => {
     components[name] = (await server.ssrLoadModule(`/src/features/${path}.jsx`)).default;
   }
   components.QuickAction = (await server.ssrLoadModule("/src/features/admin/pages/AdminDashboardPage.jsx")).QuickActionButton;
+  components.DiceFallback = (await server.ssrLoadModule("/src/features/board/components/DiceFallback.jsx")).DiceFallback;
 });
 after(async () => server?.close());
 
 function render(name, props = {}) {
+  const view = createElement(components[name], props);
   return renderToStaticMarkup(createElement(StaticRouter, { location: "/" },
-    createElement(components[name], props)));
+    name === "BoardArtwork" ? createElement("svg", null, view) : view));
 }
 function css(path) {
   return postcss.parse(readFileSync(new URL(`./${path}`, import.meta.url), "utf8"));
@@ -52,6 +61,67 @@ function declarations(root, selector) {
   root.walkRules(selector, (rule) => rule.walkDecls((decl) => result.push([decl.prop, decl.value])));
   return result;
 }
+
+test("문제 후보가 0개면 재조회 안내를 띄우고 다음 칸으로 넘기지 않는다", () => {
+  const props = { myBoard: {}, currentCell: { type: "CHALLENGE", challengeCandidates: [] }, blockedReason: "CHALLENGE_NOT_SELECTED", ownedChanceCards: [] };
+  const html = render("BoardEventPanel", props);
+  assert.match(html, /선택할 수 있는 문제가 없어요/);
+  assert.match(html, /운영진에 문의하고 잠시 후 다시 조회해주세요/);
+  assert.match(html, /문제 다시 불러오기/);
+  assert.doesNotMatch(html, /다음 칸|이동 확정/);
+  assert.match(render("BoardEventPanel", { ...props, isLoading: true }), /disabled=""/);
+  assert.doesNotMatch(render("BoardEventPanel", { ...props, blockedReason: null }), /문제 다시 불러오기/);
+});
+
+test("3D를 쓸 수 없어도 대체 주사위는 전달받은 두 눈만 표시한다", () => {
+  const idle = render("DiceFallback");
+  assert.match(idle, /\/assets\/board\/dice.png/);
+  const rolled = render("DiceFallback", { result: { diceA: 2, diceB: 6 } });
+  assert.equal((rolled.match(/<circle /g) || []).length, 8);
+  assert.equal((rolled.match(/<rect /g) || []).length, 2);
+  assert.doesNotMatch(rolled, /<img/);
+  assert.match(render("DiceFallback", { result: { diceA: 0, diceB: 8 } }), /\/assets\/board\/dice.png/);
+});
+
+test("넓어진 주사위 3D 캔버스는 주변 보드 칸의 클릭을 가로채지 않는다", () => {
+  const html = render("Dice3D");
+  assert.match(html, /data-dice-visual="true"/);
+  assert.match(html, /<canvas/);
+  // R3F Canvas의 기본 pointer-events:auto가 실제 렌더링 결과에서 사라져야 한다
+  assert.match(html, /pointer-events:none/);
+  assert.doesNotMatch(html, /pointer-events:auto/);
+});
+
+test("기차는 보드 안의 장식 캔버스로 분리하고 화면 좌표나 별도 UI를 덮지 않는다", () => {
+  const journey = { samples: [{ x: 886, y: 1210, distance: 0, cellIndex: 1 }, { x: 655, y: 1187, distance: 232, cellIndex: 2 }], cells: [1,2], distance: 232, duration: 1315 };
+  const html = render("BoardTrain", { journey });
+  assert.match(html, /data-board-train="moving"/);
+  assert.match(html, /aria-hidden="true"/);
+  assert.match(html, /<canvas/);
+  assert.doesNotMatch(html, /<button|<img/);
+  const root = css("features/board/components/BoardTrain.module.css");
+  assert.ok(declarations(root, ".actor").some(([key, value]) => key === "pointer-events" && value === "none"));
+  assert.ok(root.nodes.some(node => node.type === "atrule" && node.params === "(prefers-reduced-motion: reduce)"));
+});
+
+test("카드 조각은 작은 경계만 그리고 모션 축소와 고대비에서는 원래 내용을 남긴다", () => {
+  const root = css("features/board/components/ChallengeSelection.module.css");
+  assert.ok(declarations(root, ".fragment").some(([key, value]) => key === "background-image" && value === "var(--card-artwork)"));
+  assert.ok(!declarations(root, ".fragment").some(([key]) => key === "inset"));
+  const crumbleFrames = root.nodes.find(node => node.type === "atrule" && node.params === "card-crumble");
+  crumbleFrames.walkDecls(declaration => assert.ok(["transform", "opacity"].includes(declaration.prop)));
+  assert.ok(declarations(root, ".crumble").some(([key, value]) => key === "pointer-events" && value === "none"));
+  root.walkRules(rule => {
+    if (rule.selector?.includes(".cardFace")) {
+      rule.walkDecls("filter", () => assert.fail("움직이는 카드 전체에 필터를 적용하면 조각까지 매 프레임 다시 그린다"));
+    }
+  });
+  for (const query of ["(prefers-reduced-motion: reduce)", "(forced-colors: active)"]) {
+    const media = root.nodes.find(node => node.type === "atrule" && node.params === query);
+    assert.ok(declarations(media, '.crumble, .card[data-crumbling="true"] .crumble').some(([key, value]) => key === "display" && value === "none"));
+    assert.ok(declarations(media, '.card[data-crumbling="true"] .cardSurface').some(([key, value]) => key === "opacity" && Number(value) > 0));
+  }
+});
 
 test("반응형 로그인도 입력 라벨, 자동 완성, 요청 중 잠금과 오류 메시지를 유지한다", () => {
   const html = render("Login", { submitting: true, feedback: { type: "error", message: "입력 정보를 확인해 주세요" } });
@@ -159,13 +229,159 @@ test("방문한 칸은 중복 없이 각자의 곡선 윤곽으로 표시하고 
   assert.match(html, /data-visited-cell="2"/);
   assert.match(html, /data-visited-cell="21"/);
   assert.match(html, /<path[^>]*d="M[^"]* Q/);
-  assert.match(html, /<g clip-path="url\(#[^"]+\)"><image[^>]+>/);
+  assert.match(html, /<g clip-path="url\(#[^"]+\)"><g[^>]*data-board-artwork="true"><image[^>]+>/);
   assert.equal((html.match(/data-visited-surface=/g) || []).length, 2);
   assert.match(html, /<radialGradient/);
   assert.match(html, /<linearGradient/);
   assert.doesNotMatch(html, /visitedInset|stroke=/);
   assert.doesNotMatch(html, /<polygon/);
   assert.equal(render("BoardVisitedOverlay", { visitedCellIndexes: [] }), "");
+});
+
+test("룰렛과 황금열쇠 문양은 서버 칸 종류를 확인하고 방문 음영에도 동일하게 쓴다", () => {
+  const cells = [{ cellIndex: 7, type: "CHANCE" }, { cellIndex: 16, type: "ROULETTE" }];
+  const artwork = render("BoardArtwork", { cells });
+  const visited = render("BoardVisitedOverlay", { cells, visitedCellIndexes: [7, 16] });
+  for (const html of [artwork, visited]) {
+    assert.match(html, /data-cell-artwork="16-roulette"/);
+    assert.match(html, /data-cell-artwork="7-chance"/);
+    assert.ok(html.includes(getBoardCellMaskPath(16)));
+    assert.ok(html.includes(getBoardCellMaskPath(7)));
+  }
+  assert.doesNotMatch(render("BoardArtwork", { cells: [{ cellIndex: 16, type: "QUARANTINE" }] }), /data-cell-artwork/);
+  assert.doesNotMatch(render("BoardArtwork", { cells: [{ cellIndex: 7, type: "ROULETTE" }] }), /data-cell-artwork/);
+});
+
+test("보드 말은 36칸의 기존 좌표를 따르며 고해상도 투명 이미지를 사용한다", () => {
+  for (let position = 1; position <= 36; position++) {
+    const { x, y } = getBoardCellPosition(position);
+    const html = render("BoardPiece", { position });
+    assert.match(html, /src="\/assets\/board\/selection-squirrel-refined\.webp"/);
+    assert.ok(html.includes(`내 팀 말 (현재 ${position}번 칸)`));
+    assert.ok(html.includes(`left:${x}%;top:${y}%`));
+    assert.match(html, /draggable="false"/);
+    assert.doesNotMatch(html, /piece-squirrel\.png/);
+  }
+  assert.equal(render("BoardPiece", { position: null }), "");
+  const track = readFileSync(new URL("./features/board/components/BoardTrack.jsx", import.meta.url), "utf8");
+  assert.match(track, /<BoardPiece position=\{renderedPiecePosition\}/);
+});
+
+test("보드 말의 투명 여백을 보정해 칸 중심과 실제 윤곽 중심이 일치한다", () => {
+  const root = css("features/board/components/BoardScreen.module.css");
+  const piece = Object.fromEntries(declarations(root, ".boardPiece"));
+  assert.equal(piece.width, "6%");
+  assert.equal(piece.transform, "translate(-47.02725%, -48.113934%) scaleX(-1)");
+  assert.equal(piece["pointer-events"], "none");
+  assert.equal(piece["object-fit"], "contain");
+  const visibleCenter = { x: (208 + 1075) / 2 / 1211, y: (48 + 1202) / 2 / 1299 };
+  for (const trackWidth of [320, 390, 620, 951, 1772]) {
+    const width = trackWidth * .06;
+    const height = width * 1299 / 1211;
+    assert.ok(Math.abs((1 - visibleCenter.x - .4702725) * width) < .001);
+    assert.ok(Math.abs((visibleCenter.y - .48113934) * height) < .001);
+    const oldVisibleWidth = trackWidth * .12 * 58 / 165;
+    const newVisibleWidth = width * 867 / 1211;
+    assert.ok(Math.abs(newVisibleWidth / oldVisibleWidth - 1) < .03);
+  }
+});
+
+test("문제 선택은 실제 후보 수만큼 표시하며 긴 제목, 0점, 동아리명을 유지한다", () => {
+  const candidates = [1, 2, 3].map((id) => ({ challengeId: id, title: "긴문제제목".repeat(30), category: "WEB", clubName: "seKUrity", score: 0 }));
+  for (const count of [1, 2, 3]) {
+    const html = render("ChallengeSelection", { candidates: candidates.slice(0, count), isMutating: false });
+    assert.match(html, /role="dialog" aria-modal="true"/);
+    assert.equal((html.match(/data-tone=/g) || []).length, count);
+    assert.equal((html.match(/data-opening="false"/g) || []).length, count);
+    assert.ok(html.includes(candidates[0].title));
+    assert.match(html, /seKUrity/);
+    assert.match(html, /0점 /);
+    assert.equal((html.match(/src="\/assets\/board\/challenge-card-(?:brown|slate|olive)-refined\.webp/g) || []).length, count);
+    assert.match(html, /data-choice-layer="scene"/);
+    assert.doesNotMatch(html, /data-choice-layer="background"|bg-1920x1080/);
+    assert.doesNotMatch(html, /undefined|NaN/);
+  }
+});
+
+test("문제 선택은 피그마 기반 보정 에셋과 로컬 Alegreya Medium을 사용하고 원본도 보존한다", () => {
+  const root = css("features/board/components/ChallengeSelection.module.css");
+  const fontFaces = [];
+  root.walkAtRules("font-face", (face) => {
+    const values = {};
+    face.walkDecls((decl) => { values[decl.prop] = decl.value; });
+    fontFaces.push(values);
+  });
+  const alegreya = fontFaces.find((face) => face["font-family"] === '"Alegreya"');
+  assert.equal(alegreya["font-weight"], "500");
+  assert.match(alegreya.src, /\/assets\/fonts\/alegreya\/Alegreya-Medium\.ttf/);
+  const html = render("ChallengeSelection", { candidates: [{ challengeId: 1, title: "AFTERIMAGE", category: "WEB" }] });
+  assert.match(html, /selection-squirrel-refined\.webp/);
+  assert.doesNotMatch(html, /piece-squirrel\.png/);
+  assert.doesNotMatch(html, /<svg|floorMark|cardFrame/);
+  for (const tone of ["brown", "slate", "olive"]) {
+    const asset = readFileSync(new URL(`../public/assets/board/challenge-card-${tone}.png`, import.meta.url));
+    assert.equal(asset.subarray(1, 4).toString(), "PNG");
+  }
+});
+
+test("보정 카드와 다람쥐는 투명도를 가진 고해상도 WebP로 제공한다", () => {
+  for (const name of ["challenge-card-brown", "challenge-card-slate", "challenge-card-olive", "selection-squirrel"]) {
+    const asset = readFileSync(new URL(`../public/assets/board/${name}-refined.webp`, import.meta.url));
+    assert.equal(asset.subarray(0, 4).toString(), "RIFF");
+    assert.equal(asset.subarray(8, 12).toString(), "WEBP");
+    assert.equal(asset.subarray(12, 16).toString(), "VP8X");
+    assert.ok(asset[20] & 0x10, `${name}: alpha channel must be retained`);
+    assert.ok(asset.readUIntLE(24, 3) + 1 >= 1000, `${name}: keep high-resolution artwork`);
+    assert.ok(asset.length < 800_000, `${name}: web asset must stay below 800 KB`);
+  }
+});
+
+test("카드 색상에 따라 제목 너비를 더 줄이지 않아 보통 길이의 단어가 잘리지 않는다", () => {
+  const root = css("features/board/components/ChallengeSelection.module.css");
+  for (const selector of ['.card[data-tone="1"] .title', '.card[data-tone="2"] .title']) {
+    const widths = declarations(root, selector).filter(([property]) => property === "max-width");
+    assert.ok(widths.length > 0);
+    assert.ok(widths.every(([, value]) => value === "100%"));
+  }
+});
+
+test("문제를 여는 중에는 세 후보와 닫기를 모두 잠그고 서버 오류도 선택창 안에 보여준다", () => {
+  const html = render("ChallengeSelection", { candidates: [1, 2, 3].map((challengeId) => ({ challengeId, title: `문제${challengeId}` })), isMutating: true, errorMessage: "이미 열린 문제입니다" });
+  assert.equal((html.match(/disabled=""/g) || []).length, 4);
+  assert.match(html, /aria-busy="true"/);
+  assert.match(html, /role="alert">이미 열린 문제입니다/);
+  assert.doesNotMatch(html, /undefined|NaN|>null</);
+});
+
+test("카드와 광택은 같은 투명 윤곽을 쓰고 눌림과 뽑기 레이어를 분리한다", () => {
+  const html = render("ChallengeSelection", { candidates: [1, 2, 3].map((challengeId) => ({ challengeId, title: `문제${challengeId}` })) });
+  assert.equal((html.match(/data-card-layer="face"/g) || []).length, 3);
+  assert.equal((html.match(/data-pressed="false"/g) || []).length, 3);
+  for (const delay of [0, 80, 160]) assert.ok(html.includes(`--deal-delay:${delay}ms`));
+  const root = css("features/board/components/ChallengeSelection.module.css");
+  assert.ok(declarations(root, ".cardSurface").some(([property, value]) => property === "mask-image" && value === "var(--card-artwork)"));
+  assert.ok(declarations(root, ".cardSurface").some(([property, value]) => property === "mask-size" && value === "100% 100%"));
+  assert.ok(!declarations(root, ".cardSurface").some(([property]) => property === "clip-path"));
+  assert.equal((html.match(/--card-artwork:url/g) || []).length, 3);
+  assert.ok(declarations(root, ".card:focus").some(([property, value]) => property === "outline" && value === "none"));
+  assert.ok(declarations(root, ".card:focus-visible .title").some(([property, value]) => property === "text-decoration" && value === "underline"));
+});
+
+test("모션 축소 설정에서는 카드 등장과 이동을 끄고 고대비 모드에는 키보드 외곽선을 남긴다", () => {
+  const root = css("features/board/components/ChallengeSelection.module.css");
+  const reduced = root.nodes.find((node) => node.type === "atrule" && node.params === "(prefers-reduced-motion: reduce)");
+  assert.ok(reduced);
+  assert.deepEqual(declarations(reduced, ".cardDeal"), [["animation", "none"]]);
+  assert.deepEqual(declarations(reduced, ".cardFace"), [["transition", "none"]]);
+  assert.deepEqual(declarations(reduced, '.pickEffects, .card[data-opening="true"] .cardSurface::after'), [["display", "none"]]);
+  assert.match(reduced.toString(), /transform: none/);
+  const contrast = root.nodes.find((node) => node.type === "atrule" && node.params === "(forced-colors: active)");
+  assert.ok(declarations(contrast, ".card:focus-visible").some(([property, value]) => property === "outline" && value === "3px solid Highlight"));
+  assert.ok(declarations(contrast, ".cardSurface").some(([property, value]) => property === "mask-image" && value === "none"));
+  assert.ok(declarations(root, ".pickEffects").some(([property, value]) => property === "pointer-events" && value === "none"));
+  for (const selector of [".pickAura", ".pickRays", ".pickSpark"]) {
+    assert.ok(!declarations(root, selector).some(([property, value]) => property === "animation" && value.includes("infinite")));
+  }
 });
 
 test("모바일에서 반복 안내를 줄여도 주사위 상태와 제한 시간은 접근성 정보에 남는다", () => {

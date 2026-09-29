@@ -50,7 +50,8 @@ export default function BoardPage() {
 
   const handleOpenChallenge = async (challengeId, view) => {
     try {
-      const openedChallenge = await board.openChallenge(challengeId);
+      // 성공한 문제 열기 응답으로 바로 이동하고 보드는 돌아올 때 다시 조회한다
+      const openedChallenge = await board.openChallenge(challengeId, { refreshBoard: false });
       if (!openedChallenge) return;
       navigate(ROUTES.challengeDetail(openedChallenge.challengeId), {
         state: { boardAccess: openedChallenge, boardList: normalizeBoardListView(view ?? location.state?.boardList) },
@@ -77,6 +78,7 @@ export default function BoardPage() {
   // 이미 문제를 오픈해둔 칸을 다시 클릭하면 칸 정보 패널 대신 바로 문제
   // 상세로 재진입한다(README 2절 opened_challenges 기준).
   const handleSelectCell = (cellIndex, view) => {
+    if (board.isMutating) return;
     if (isAirportSelecting) {
       const selectable = getAirportSelectableCellIndexes(
         board.boardDefinition?.cells,
@@ -130,9 +132,10 @@ export default function BoardPage() {
       onRollDice={(options) => runBoardAction(() => board.rollDice(options))}
       onConfirmDice={() => runBoardAction(board.confirmDice)}
       onOpenChallenge={handleOpenChallenge}
-      onMoveAirport={async (destinationIndex) => {
-        const result = await runBoardAction(() => board.moveAirport(destinationIndex));
+      onMoveAirport={async (destinationIndex, options) => {
+        const result = await runBoardAction(() => board.moveAirport(destinationIndex, options));
         if (result) setAirportDestinationIndex(null);
+        return result;
       }}
       onCancelAirportDestination={() => setAirportDestinationIndex(null)}
       onOpenChallengeDetail={openChallengeDetail}

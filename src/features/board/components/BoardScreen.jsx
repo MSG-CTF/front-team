@@ -3,8 +3,11 @@ import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import { getRemainingSeconds } from "../utils/boardData.js";
 import { getBoardZoomScrollLeft } from "../utils/boardViewport.js";
+import useTrainTravel from "../hooks/useTrainTravel.js";
+import { preloadBoardTrain } from "./BoardTrain.jsx";
 import { prepareBoardLines } from "../utils/boardLines.js";
 import { normalizeBoardListView } from "../utils/boardChallengeList.js";
+import { getChallengeSelectionKey } from "../utils/challengeSelection.js";
 import { getAirportSelectableCellIndexes, isAirportSelectionMode } from "../utils/boardOverlays.js";
 import AirportTravelOverlay from "./AirportTravelOverlay.jsx";
 import BoardEventPanel from "./BoardEventPanel.jsx";
@@ -22,7 +25,7 @@ import styles from "./BoardScreen.module.css";
 const NO_LINES = Object.freeze([]);
 
 // Figma node 3:2 "BoardPage" (1920x1080) + 146:19 "무인도 클릭"(무인도 모달 상태)
-// + 518:300 "열린 문제"(좌측 패널) + 555:342 "기차여행"(목적지 선택) + 555:306 "룰렛"(모달).
+// + 518:300 "열린 문제" + 555:342 "기차여행" + 555:306 "룰렛" + 104:502 "칸 눌럿음~".
 // 데스크톱은 기존 16:9 무대 좌표를 유지한다
 // 모바일은 BoardScene 안에서 배경 바닥과 원판을 함께 확대·스크롤한다
 export default function BoardScreen({
@@ -84,6 +87,7 @@ export default function BoardScreen({
   const [isBoardZoomed, setIsBoardZoomed] = useState(false);
   const [isLineSummaryOpen, setIsLineSummaryOpen] = useState(false);
   const [selectedLineId, setSelectedLineId] = useState(null);
+  const [dismissedSelectionKey, setDismissedSelectionKey] = useState(null);
   const openListTrigger = useRef(null);
   const openListToggle = useRef(null);
   const lineSummary = useRef(null);
@@ -92,6 +96,16 @@ export default function BoardScreen({
   const activeLineId = lines.find((line) => line.lineId === selectedLineId)?.lineId ?? lines[0]?.lineId ?? null;
   const boardRegionId = useId();
   const boardViewport = useRef(null);
+  const trainTravel = useTrainTravel();
+  const followTrain = (pose) => {
+    const viewport = boardViewport.current;
+    if (!isBoardZoomed || !viewport) return;
+    const track = viewport.querySelector('[data-board-layer="track"]');
+    if (!track) return;
+    // 확대 보드에서는 칸 단위 점프 없이 기차의 실제 화면 좌표를 따라간다
+    const center = track.offsetLeft + track.clientWidth * pose.x / 100;
+    viewport.scrollLeft = Math.max(0, Math.min(viewport.scrollWidth - viewport.clientWidth, center - viewport.clientWidth / 2));
+  };
 
   const openLineSummary = (lineId) => {
     openListTrigger.current = document.activeElement;
@@ -196,6 +210,14 @@ export default function BoardScreen({
   const airportDestination = isAirportSelecting && airportDestinationIndex != null
     ? cells.find((cell) => cell.cellIndex === airportDestinationIndex) ?? null
     : null;
+  useEffect(() => { if (isAirportSelecting) void preloadBoardTrain(); }, [isAirportSelecting]);
+  const selectionKey = getChallengeSelectionKey({
+    myBoard, currentCell, awaitingDiscard, pendingChanceChoice, pendingRoll,
+    blockedReason: diceStatus?.blockedReason, cellEvent, showQuarantine, isLoading,
+  });
+  const isChallengeSelectionOpen = selectionKey !== null && dismissedSelectionKey !== selectionKey;
+
+  useEffect(() => { setDismissedSelectionKey(null); }, [selectionKey]);
 
   return (
     <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080.png" frameClassName={styles.frame} className={styles.stage}>
@@ -260,15 +282,25 @@ export default function BoardScreen({
               cellStatesByIndex={cellStatesByIndex}
               consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
               piecePosition={displayPosition}
+              trainTravel={{ ...trainTravel, onProgress: followTrain }}
               canRoll={canRoll}
               isRolling={isMutating}
               onRollDice={onRollDice}
-              onSelectCell={(cellIndex) => { setIsOpenListVisible(false); setIsLineSummaryOpen(false); onSelectCell(cellIndex, openListView.current); }}
+              onSelectCell={(cellIndex) => {
+                if (isMutating || trainTravel.journey) return;
+                setIsOpenListVisible(false);
+                setIsLineSummaryOpen(false);
+                if (selectionKey !== null && currentCell.cellIndex === cellIndex) {
+                  setDismissedSelectionKey(null);
+                  return;
+                }
+                onSelectCell(cellIndex, openListView.current);
+              }}
               lines={lines}
               selectedLineId={isOpenListVisible && isLineSummaryOpen ? activeLineId : null}
               onSelectLine={openLineSummary}
-              selectableCellIndexes={airportSelectableCellIndexes}
-              highlightedCellIndex={airportDestination?.cellIndex ?? null}
+              selectableCellIndexes={trainTravel.journey ? null : airportSelectableCellIndexes}
+              highlightedCellIndex={trainTravel.journey ? null : airportDestination?.cellIndex ?? null}
             />
           </BoardScene>
         </div>
@@ -304,11 +336,12 @@ export default function BoardScreen({
         </OpenChallengesSidePanel>
       )}
 
-      {isAirportSelecting && (
+      {trainTravel.journey && <p className="sr-only" role="status">선택한 {trainTravel.journey.cells.at(-1)}번 칸으로 기차 이동 중</p>}
+      {isAirportSelecting && !trainTravel.journey && (
         <AirportTravelOverlay
           destination={airportDestination}
           isMutating={isMutating}
-          onConfirm={onMoveAirport}
+          onConfirm={(destination) => onMoveAirport(destination, { onTravelResult: trainTravel.play })}
           onCancel={onCancelAirportDestination}
         />
       )}
@@ -326,6 +359,8 @@ export default function BoardScreen({
           selectedCell={selectedCell}
           isMutating={isMutating}
           isAirportSelecting={isAirportSelecting}
+          isLoading={isLoading}
+          onReload={onReload}
           onConfirmDice={onConfirmDice}
           onOpenChallenge={(challengeId) => onOpenChallenge(challengeId, openListView.current)}
           onUseChanceCard={onUseChanceCard}
@@ -335,6 +370,10 @@ export default function BoardScreen({
           onRetryChanceDraw={onRetryChanceDraw}
           onCloseCellEvent={onCloseCellEvent}
           onClearSelectedCell={onClearSelectedCell}
+          isChallengeSelectionOpen={isChallengeSelectionOpen}
+          onCloseChallengeSelection={() => setDismissedSelectionKey(selectionKey)}
+          onReopenChallengeSelection={() => setDismissedSelectionKey(null)}
+          errorMessage={error?.message}
         />
       )}
 

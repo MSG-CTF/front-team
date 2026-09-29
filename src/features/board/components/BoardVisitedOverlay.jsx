@@ -2,8 +2,9 @@ import { useId } from "react";
 import { BOARD_IMAGE_SIZE } from "../utils/boardData.js";
 import { getBoardCellMaskPath } from "../utils/boardVisited.js";
 import styles from "./BoardScreen.module.css";
+import BoardArtwork from "./BoardArtwork.jsx";
 
-export default function BoardVisitedOverlay({ visitedCellIndexes }) {
+export default function BoardVisitedOverlay({ visitedCellIndexes, cells = [] }) {
   const clipId = `board-visited-${useId().replace(/:/g, "")}`;
   const visitedCells = [...new Set(visitedCellIndexes)]
     .map((cellIndex) => ({ cellIndex, path: getBoardCellMaskPath(cellIndex) }))
@@ -37,12 +38,7 @@ export default function BoardVisitedOverlay({ visitedCellIndexes }) {
         </clipPath>
       </defs>
       <g clipPath={`url(#${clipId})`}>
-        <image
-          href="/assets/board/board-grid.png"
-          width={BOARD_IMAGE_SIZE.width}
-          height={BOARD_IMAGE_SIZE.height}
-          className={styles.visitedArtwork}
-        />
+        <BoardArtwork cells={cells} className={styles.visitedArtwork} />
         {visitedCells.map(({ cellIndex, path }) => (
           <g key={cellIndex} data-visited-surface={cellIndex}>
             <path d={path} fill={`url(#${clipId}-shade)`} />

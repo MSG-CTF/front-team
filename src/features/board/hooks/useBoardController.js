@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getChallengeDeadline } from "../../../utils/time.js";
+import { openChallengeAccess } from "../utils/openChallengeAccess.js";
+import { presentTrainJourney } from "../utils/trainJourney.js";
 import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
 import {
   confirmChanceCard,
@@ -283,29 +284,20 @@ export default function useBoardController() {
   );
 
   const handleOpenChallenge = useCallback(
-    (challengeId) =>
+    (challengeId, { refreshBoard = true } = {}) =>
       runMutation({
         actionId: `cell-open:${challengeId}`,
         prefix: "cell-open",
-        request: async (idempotencyKey) => {
-          const openResult = unwrapBoardResponse(
-            await openCell({ challengeId, idempotencyKey }),
-          );
-          await syncProgress();
-          return {
-            cellIndex: openResult.cell_index,
-            challengeId: openResult.challenge_id,
-            openedAt: openResult.opened_at,
-            solveDeadlineAt: getChallengeDeadline(openResult.opened_at),
-            remainingSeconds: openResult.remaining_seconds,
-          };
-        },
+        request: (idempotencyKey) => openChallengeAccess(
+          { challengeId, idempotencyKey, refreshBoard },
+          { openCell, syncProgress },
+        ),
       }),
     [runMutation, syncProgress],
   );
 
   const handleAirportMove = useCallback(
-    (destinationIndex) =>
+    (destinationIndex, { onTravelResult } = {}) =>
       runMutation({
         actionId: `airport-move:${destinationIndex}`,
         prefix: "airport-move",
@@ -316,7 +308,8 @@ export default function useBoardController() {
               await moveAirport({ destinationIndex, idempotencyKey }),
             ),
           );
-          await animateMovement(moveResult.movementPath);
+          await presentTrainJourney(moveResult, onTravelResult, animateMovement);
+          if (mountedRef.current) setDisplayPosition(moveResult.currentPosition);
           await syncProgress();
           return moveResult;
         },

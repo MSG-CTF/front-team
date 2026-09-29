@@ -3,6 +3,10 @@ import { BOARD_CELL_COUNT, getBoardCellPosition } from "../utils/boardData.js";
 import { getBoardCellVisitState } from "../utils/boardVisited.js";
 import BoardVisitedOverlay from "./BoardVisitedOverlay.jsx";
 import BoardLineOverlay from "./BoardLineOverlay.jsx";
+import BoardArtwork from "./BoardArtwork.jsx";
+import BoardPiece from "./BoardPiece.jsx";
+import BoardTrain from "./BoardTrain.jsx";
+import { DiceErrorBoundary, DiceFallback } from "./DiceFallback.jsx";
 import styles from "./BoardScreen.module.css";
 
 const Dice3D = lazy(() => import("./Dice3D.jsx"));
@@ -28,6 +32,7 @@ export default function BoardTrack({
   cellStatesByIndex,
   consumedCellIndexes,
   piecePosition,
+  trainTravel,
   onSelectCell,
   onRollDice,
   canRoll,
@@ -38,6 +43,7 @@ export default function BoardTrack({
   // 기차여행(Figma 555:342) 목적지 선택 중이면 고를 수 있는 칸 집합, 아니면 null
   selectableCellIndexes = null,
   highlightedCellIndex = null,
+  isHidden = false,
 }) {
   const [previewCell, setPreviewCell] = useState(hasFixedPreviewCell ? fixedPreviewCell : 1);
   useEffect(() => {
@@ -77,31 +83,22 @@ export default function BoardTrack({
   };
 
   return (
-    <div data-board-layer="track" className={`${styles.track} absolute left-[23.33%] top-[26.76%] w-[49.53%] h-[66.11%]`}>
-      <img
-        src="/assets/board/board-grid.png"
-        alt="게임 보드판"
-        draggable={false}
+    <div data-board-layer="track" style={{ visibility: isHidden ? "hidden" : undefined }} className={`${styles.track} absolute left-[23.33%] top-[26.76%] w-[49.53%] h-[66.11%]`}>
+      <svg
+        viewBox="0 0 1772 1330"
+        role="img"
+        aria-label="게임 보드판"
         className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-      />
+      >
+        <BoardArtwork cells={cells} />
+      </svg>
 
-      <BoardVisitedOverlay visitedCellIndexes={visitedCellIndexes} />
+      <BoardVisitedOverlay visitedCellIndexes={visitedCellIndexes} cells={cells} />
       <BoardLineOverlay lines={lines} selectedLineId={selectedLineId} onSelectLine={onSelectLine} />
 
-      {renderedPiecePosition != null && (
-        <img
-          src="/assets/board/piece-squirrel.png"
-          alt={`내 팀 말 (현재 ${renderedPiecePosition}번 칸)`}
-          // Mirrored PNG visible bounds: x=56..114, y=9..86 in a 165x110 canvas.
-          // Anchor its visible center, not its transparent image box or feet.
-          style={{
-            left: `${pieceCoordinates.x}%`,
-            top: `${pieceCoordinates.y}%`,
-            transform: "translate(-48.5%, -43.2%) scaleX(-1)",
-          }}
-          className="absolute z-20 w-[12%] object-contain pointer-events-none transition-[left,top] duration-150 ease-linear"
-        />
-      )}
+      {trainTravel?.journey
+        ? <BoardTrain journey={trainTravel.journey} onComplete={trainTravel.finish} onProgress={trainTravel.onProgress} />
+        : <BoardPiece position={renderedPiecePosition} />}
 
       {isPiecePositionTest && (
         <>
@@ -123,9 +120,11 @@ export default function BoardTrack({
         aria-label={isRolling || rolling ? "주사위 처리 중" : "주사위 굴리기"}
         className="absolute left-[28%] top-[31%] z-20 w-[44%] h-[32%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95 disabled:cursor-not-allowed disabled:brightness-90"
       >
-        <Suspense fallback={<img src="/assets/board/dice.png" alt="" className="absolute left-[15.91%] top-1/4 w-[68.18%] h-1/2 object-contain" />}>
-          <Dice3D ref={diceRef} onReady={() => setDiceReady(true)} />
-        </Suspense>
+        <DiceErrorBoundary fallback={<DiceFallback ref={diceRef} onReady={() => setDiceReady(true)} />}>
+          <Suspense fallback={<img src="/assets/board/dice.png" alt="" className="absolute left-[15.91%] top-1/4 w-[68.18%] h-1/2 object-contain" />}>
+            <Dice3D ref={diceRef} onReady={() => setDiceReady(true)} />
+          </Suspense>
+        </DiceErrorBoundary>
         <span className="sr-only">주사위 굴리기</span>
       </button>
 
@@ -148,6 +147,7 @@ export default function BoardTrack({
           <button
             key={cell.cellIndex}
             type="button"
+            disabled={isRolling || Boolean(trainTravel?.journey)}
             onClick={() => onSelectCell(cell.cellIndex)}
             aria-disabled={isSelecting && !isSelectable ? true : undefined}
             aria-pressed={isSelecting ? isHighlighted : undefined}
