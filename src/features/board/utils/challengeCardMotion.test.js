@@ -66,7 +66,7 @@ test("선택 모션은 취소 가능한 애니메이션을 반환하고 마지�
   const result = animateChallengeCardPick({ animate: (input, config) => { frames = input; options = config; return animation; } });
   assert.equal(result, animation);
   assert.equal(options.duration, CARD_PICK_DURATION);
-  assert.equal(options.duration, 240);
+  assert.equal(options.duration, 420);
   assert.equal(frames.at(-1).transform, "translate3d(0, -20px, 0) rotateZ(0deg) scale(1.065)");
   assert.equal(frames[0].offset, 0);
   assert.equal(frames.at(-1).offset, 1);

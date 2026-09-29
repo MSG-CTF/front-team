@@ -104,7 +104,7 @@
 .card[data-crumbling="true"] .crumble { visibility: visible; }
 .card[data-crumbling="true"] .fragment {
   will-change: transform, opacity;
-  animation: card-crumble 480ms cubic-bezier(.16,.5,.38,1) var(--shard-delay) both;
+  animation: card-crumble 600ms cubic-bezier(.16,.5,.38,1) var(--shard-delay) both;
 }
 @keyframes card-crumble {
   from { opacity: 1; transform: translate3d(0, 0, 0) rotate(0deg) scale(1); }
@@ -122,14 +122,14 @@
   position: absolute;
   inset: -22%;
   background: radial-gradient(ellipse, #ffe6aba0 12%, #ffc36575 42%, #df932930 57%, transparent 72%);
-  animation: pick-aura 360ms ease-out both;
+  animation: pick-aura 680ms ease-out both;
 }
 .pickRays {
   position: absolute;
   inset: -30%;
   background: repeating-conic-gradient(from 12deg, transparent 0deg 22deg, #ffdf926e 24deg, #fff0bda8 25deg, transparent 27deg 45deg);
   mask-image: radial-gradient(ellipse, transparent 37%, #000 44%, transparent 72%);
-  animation: pick-rays 360ms ease-out both;
+  animation: pick-rays 680ms ease-out both;
 }
 .pickSpark {
   position: absolute;
@@ -141,7 +141,7 @@
   background: #fff2ce;
   box-shadow: 0 0 8px 2px #ffc66bc0;
   clip-path: polygon(50% 0, 62% 36%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 36%);
-  animation: pick-spark 380ms ease-out var(--spark-delay) both;
+  animation: pick-spark 620ms ease-out var(--spark-delay) both;
 }
 .card[data-opening="true"] .cardSurface::after {
   content: "";
@@ -150,7 +150,7 @@
   pointer-events: none;
   background: linear-gradient(110deg, transparent 30%, #ffd97b18 41%, #fff1c990 49%, #ffe4ab38 54%, transparent 65%);
   mix-blend-mode: screen;
-  animation: pick-sheen 280ms ease-out both;
+  animation: pick-sheen 520ms ease-out both;
 }
 @keyframes pick-aura {
   0% { opacity: 0; transform: scale(.75); }

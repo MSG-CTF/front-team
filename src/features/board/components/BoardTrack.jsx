@@ -97,7 +97,7 @@ export default function BoardTrack({
       <BoardLineOverlay lines={lines} selectedLineId={selectedLineId} onSelectLine={onSelectLine} />
 
       {trainTravel?.journey
-        ? <BoardTrain journey={trainTravel.journey} onComplete={trainTravel.finish} onProgress={trainTravel.onProgress} />
+        ? <BoardTrain journey={trainTravel.journey} onComplete={trainTravel.finish} onProgress={trainTravel.onProgress} onStart={trainTravel.onStart} onStop={trainTravel.onStop} />
         : <BoardPiece position={renderedPiecePosition} />}
 
       {isPiecePositionTest && (

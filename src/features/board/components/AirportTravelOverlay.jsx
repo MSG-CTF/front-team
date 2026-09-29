@@ -4,7 +4,7 @@
 // 팀당 1회만 쓸 수 있고, 아직 소모하지 않은 칸만 고를 수 있다.
 import styles from "./BoardScreen.module.css";
 
-export default function AirportTravelOverlay({ destination, isMutating, onConfirm, onCancel }) {
+export default function AirportTravelOverlay({ destination, isMutating, onConfirm, onCancel, soundEnabled = true, onToggleSound }) {
   return (
     <>
       {!destination && (
@@ -22,7 +22,17 @@ export default function AirportTravelOverlay({ destination, isMutating, onConfir
           aria-label="기차여행 목적지 확인"
           className={`${styles.airportConfirm} absolute left-[36.6%] top-[40%] z-40 w-[23%] rounded-[0.55cqw] border-[0.16cqw] border-[#8a5a2b] bg-[#efe1c4]/95 px-[1cqw] py-[0.8cqw] text-center text-[#3b2616] shadow-[0_0.6cqw_1.6cqw_rgba(30,12,2,0.55),inset_0_0_0_0.12cqw_#f8eedb]`}
         >
-          <h2 className="m-0 font-pretendard text-[0.95cqw] font-normal">기차여행</h2>
+          <div className={styles.airportTitleRow}>
+            <h2 className="m-0 font-pretendard text-[0.95cqw] font-normal">기차여행</h2>
+            {onToggleSound && <button type="button" className={styles.trainSoundButton}
+              aria-label={soundEnabled ? "기차 효과음 끄기" : "기차 효과음 켜기"} aria-pressed={soundEnabled}
+              title={soundEnabled ? "기차 효과음 끄기" : "기차 효과음 켜기"} onClick={onToggleSound}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M11 5 6 9H3v6h3l5 4Z" />
+                {soundEnabled ? <><path d="M15 8a6 6 0 0 1 0 8" /><path d="M18 5a10 10 0 0 1 0 14" /></> : <path d="m16 9 5 6m0-6-5 6" />}
+              </svg>
+            </button>}
+          </div>
           <p className="m-0 mt-[0.45cqw] font-pretendard text-[0.72cqw]">
             <strong className="font-inria-serif text-[0.9cqw] text-[#7a2420]">{destination.cellIndex}번</strong>{" "}
             {destination.name ? `${destination.name} ` : ""}칸으로 이동할까요?

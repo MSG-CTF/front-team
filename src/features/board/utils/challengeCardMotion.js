@@ -1,4 +1,4 @@
-export const CARD_PICK_DURATION = 240;
+export const CARD_PICK_DURATION = 420;
 
 // 흔들린 삼각 분할을 공유해 조각 사이가 겹치거나 네모 격자로 남지 않게 한다
 export function createCardFragments(columns = 2, rows = 3) {

@@ -1,6 +1,15 @@
 .desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene { display: contents; }
 .mobileNav, .boardControls, .boardHint, .mobileQuarantineTitle, .sceneBackdrop { display: none; }
 .frame { background: #21150d; }
+.airportTitleRow { position: relative; display: flex; align-items: center; justify-content: center; min-height: 36px; }
+.airportConfirm .trainSoundButton {
+  position: absolute; right: -4px; display: grid; place-items: center;
+  width: 44px; min-height: 44px; padding: 10px;
+  border: 0; border-radius: 50%; background: transparent; color: #72502e; cursor: pointer;
+}
+.trainSoundButton svg { width: 22px; height: 22px; }
+.trainSoundButton:hover { background: #8a5a2b16; }
+.trainSoundButton:focus-visible { outline: 2px solid #79532b; outline-offset: 1px; }
 /* 1211×1299 이미지의 불투명 윤곽: x208..1075, y48..1202
    좌우 반전한 실제 캐릭터 중심을 칸 좌표에 맞추고 기존 말 크기를 유지한다 */
 .boardPiece {

@@ -1,6 +1,7 @@
 import { memo, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { animateChallengeCardPick, CARD_CRUMBLE_FRAGMENTS, CARD_PICK_SPARKS, fitCardTitleSize, getChallengeCardTilt } from "../utils/challengeCardMotion.js";
+import { createChallengeReveal } from "../utils/challengeReveal.js";
 import styles from "./ChallengeSelection.module.css";
 
 const CARD_ARTWORK = ["brown", "slate", "olive"];
@@ -123,6 +124,7 @@ export default function ChallengeSelection({ candidates, isMutating, onOpenChall
   const keyHandler = useRef(null);
   const mounted = useRef(false);
   const pickAnimation = useRef(null);
+  const reveal = useRef(null);
   const [openingId, setOpeningId] = useState(null);
   const [requestError, setRequestError] = useState("");
   const busy = isMutating || openingId !== null;
@@ -143,6 +145,7 @@ export default function ChallengeSelection({ candidates, isMutating, onOpenChall
     return () => {
       mounted.current = false;
       pickAnimation.current?.cancel();
+      reveal.current?.cancel();
       document.removeEventListener("keydown", handleDialogKey, true);
       document.body.style.overflow = previousOverflow;
       background.forEach(({ element, inert }) => { element.inert = inert; });
@@ -180,15 +183,19 @@ export default function ChallengeSelection({ candidates, isMutating, onOpenChall
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const animation = animateChallengeCardPick(face, reducedMotion);
       pickAnimation.current = animation;
-      // 화면 이동으로 모션이 취소돼도 요청은 이미 시작된 상태를 유지한다
+      const presentation = createChallengeReveal(reducedMotion || window.matchMedia("(forced-colors: active)").matches);
+      reveal.current = presentation;
       animation?.finished.catch(() => {});
-      await onOpenChallenge(challengeId);
+      // 요청은 바로 보내고, 성공 응답 뒤의 화면 전환만 짧게 맞춘다
+      await onOpenChallenge(challengeId, { beforeNavigate: presentation.wait });
     } catch {
       if (mounted.current) setRequestError("문제를 열지 못했어요 다시 선택해주세요");
     } finally {
       locked.current = false;
       pickAnimation.current?.cancel();
       pickAnimation.current = null;
+      reveal.current?.cancel();
+      reveal.current = null;
       if (mounted.current) setOpeningId(null);
     }
   };

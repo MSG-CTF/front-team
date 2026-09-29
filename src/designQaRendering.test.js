@@ -30,6 +30,7 @@ before(async () => {
     BoardArtwork: "board/components/BoardArtwork",
     BoardPiece: "board/components/BoardPiece",
     BoardTrain: "board/components/BoardTrain",
+    AirportTravelOverlay: "board/components/AirportTravelOverlay",
     Dice3D: "board/components/Dice3D",
     BoardEventPanel: "board/components/BoardEventPanel",
     ChallengeSelection: "board/components/ChallengeSelection",
@@ -47,6 +48,29 @@ before(async () => {
   components.DiceFallback = (await server.ssrLoadModule("/src/features/board/components/DiceFallback.jsx")).DiceFallback;
 });
 after(async () => server?.close());
+
+test("기차 확인창의 효과음 버튼은 켜짐과 꺼짐을 구분하고 이동 버튼을 유지한다", () => {
+  for (const enabled of [true, false]) {
+    const html = renderToStaticMarkup(createElement(components.AirportTravelOverlay, {
+      destination: { cellIndex: 22, name: "문제" }, soundEnabled: enabled, onToggleSound() {}, onConfirm() {}, onCancel() {},
+    }));
+    assert.match(html, new RegExp(`aria-label="기차 효과음 ${enabled ? "끄기" : "켜기"}"`));
+    assert.match(html, new RegExp(`aria-pressed="${enabled}"`));
+    assert.match(html, /이동하기/);
+  }
+});
+
+test("기차 효과음은 출발 준비와 실제 재생을 분리하고 화면을 떠날 때 정리한다", () => {
+  const screen = readFileSync(new URL("./features/board/components/BoardScreen.jsx", import.meta.url), "utf8");
+  const train = readFileSync(new URL("./features/board/components/BoardTrain.jsx", import.meta.url), "utf8");
+  const hook = readFileSync(new URL("./features/board/hooks/useTrainWhistle.js", import.meta.url), "utf8");
+  assert.match(screen, /trainWhistle.prepare\(\);\s+return onMoveAirport/);
+  assert.match(screen, /onStart: trainWhistle.play, onStop: trainWhistle.stop/);
+  assert.ok(train.indexOf("renderer.render(sampleTrainJourney") < train.indexOf("callbacks.current.onStart?.()"));
+  assert.match(train, /callbacks.current.onStop\?\.\(\)/);
+  assert.match(hook, /if \(document.hidden\) stop\(\)/);
+  assert.match(hook, /player.current\?\.dispose\(\)/);
+});
 
 function render(name, props = {}) {
   const view = createElement(components[name], props);

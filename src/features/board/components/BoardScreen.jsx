@@ -4,6 +4,7 @@ import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import { getRemainingSeconds } from "../utils/boardData.js";
 import { getBoardZoomScrollLeft } from "../utils/boardViewport.js";
 import useTrainTravel from "../hooks/useTrainTravel.js";
+import useTrainWhistle from "../hooks/useTrainWhistle.js";
 import { preloadBoardTrain } from "./BoardTrain.jsx";
 import { prepareBoardLines } from "../utils/boardLines.js";
 import { normalizeBoardListView } from "../utils/boardChallengeList.js";
@@ -97,6 +98,7 @@ export default function BoardScreen({
   const boardRegionId = useId();
   const boardViewport = useRef(null);
   const trainTravel = useTrainTravel();
+  const trainWhistle = useTrainWhistle();
   const followTrain = (pose) => {
     const viewport = boardViewport.current;
     if (!isBoardZoomed || !viewport) return;
@@ -282,7 +284,7 @@ export default function BoardScreen({
               cellStatesByIndex={cellStatesByIndex}
               consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
               piecePosition={displayPosition}
-              trainTravel={{ ...trainTravel, onProgress: followTrain }}
+              trainTravel={{ ...trainTravel, onProgress: followTrain, onStart: trainWhistle.play, onStop: trainWhistle.stop }}
               canRoll={canRoll}
               isRolling={isMutating}
               onRollDice={onRollDice}
@@ -341,7 +343,12 @@ export default function BoardScreen({
         <AirportTravelOverlay
           destination={airportDestination}
           isMutating={isMutating}
-          onConfirm={(destination) => onMoveAirport(destination, { onTravelResult: trainTravel.play })}
+          soundEnabled={trainWhistle.enabled}
+          onToggleSound={trainWhistle.toggle}
+          onConfirm={(destination) => {
+            trainWhistle.prepare();
+            return onMoveAirport(destination, { onTravelResult: trainTravel.play });
+          }}
           onCancel={onCancelAirportDestination}
         />
       )}
@@ -362,7 +369,7 @@ export default function BoardScreen({
           isLoading={isLoading}
           onReload={onReload}
           onConfirmDice={onConfirmDice}
-          onOpenChallenge={(challengeId) => onOpenChallenge(challengeId, openListView.current)}
+          onOpenChallenge={(challengeId, options) => onOpenChallenge(challengeId, openListView.current, options)}
           onUseChanceCard={onUseChanceCard}
           onConfirmChance={onConfirmChance}
           onDiscardChance={onDiscardChance}

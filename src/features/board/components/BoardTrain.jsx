@@ -8,11 +8,11 @@ export function preloadBoardTrain() {
   return rendererModule;
 }
 
-export default function BoardTrain({ journey, onComplete, onProgress }) {
+export default function BoardTrain({ journey, onComplete, onProgress, onStart, onStop }) {
   const actor = useRef(null);
   const canvas = useRef(null);
-  const callbacks = useRef({ onComplete, onProgress });
-  callbacks.current = { onComplete, onProgress };
+  const callbacks = useRef({ onComplete, onProgress, onStart, onStop });
+  callbacks.current = { onComplete, onProgress, onStart, onStop };
   useEffect(() => {
     let disposed = false;
     let renderer;
@@ -25,6 +25,7 @@ export default function BoardTrain({ journey, onComplete, onProgress }) {
         renderer = module.createTrainRenderer(canvas.current);
         // 첫 셰이더 준비 시간이 실제 주행 시간을 줄이지 않도록 먼저 한 프레임 준비한다
         renderer.render(sampleTrainJourney(journey, 0), 0, 0);
+        callbacks.current.onStart?.();
         const start = performance.now();
         const animate = (now) => {
           if (disposed) return;
@@ -52,6 +53,7 @@ export default function BoardTrain({ journey, onComplete, onProgress }) {
     return () => {
       disposed = true;
       cancelAnimationFrame(frame);
+      callbacks.current.onStop?.();
       element.removeEventListener("webglcontextlost", contextLost);
       renderer?.dispose();
     };

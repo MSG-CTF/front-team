@@ -54,13 +54,13 @@ test("문제 열기가 거절되거나 통신에 실패하면 상세 진입 정�
   }
 });
 
-test("카드 모션 완료를 기다리지 않고 상세 이동 경로만 보드 재조회를 생략한다", () => {
+test("문제 요청은 바로 보내고 성공 뒤의 카드 연출과 상세 이동만 연결한다", () => {
   const selection = readFileSync(new URL("../components/ChallengeSelection.jsx", import.meta.url), "utf8");
   const page = readFileSync(new URL("../pages/BoardPage.jsx", import.meta.url), "utf8");
   const controller = readFileSync(new URL("../hooks/useBoardController.js", import.meta.url), "utf8");
   assert.doesNotMatch(selection, /await\s+animation(?:\?\.)?\.?(?:finished)/);
-  assert.match(selection, /await onOpenChallenge\(challengeId\)/);
-  assert.match(page, /await board.openChallenge\(challengeId, \{ refreshBoard: false \}\)/);
-  assert.match(page, /if \(!openedChallenge\) return/);
+  assert.match(selection, /await onOpenChallenge\(challengeId, \{ beforeNavigate: presentation.wait \}\)/);
+  assert.match(page, /request: \(\) => board.openChallenge\(challengeId, \{ refreshBoard: false \}\)/);
+  assert.match(page, /await openChallengeWithReveal\(/);
   assert.match(controller, /\(challengeId, \{ refreshBoard = true \} = \{\}\)/);
 });
