@@ -42,9 +42,9 @@
   --board-scroll-thumb: #967345;
   --board-scroll-hover: #70502c;
   position: absolute;
-  left: 15.14%;
+  left: 11%;
   top: 26.41%;
-  width: 69.4%;
+  width: 78%;
   height: 65%;
   padding-inline-end: 8px;
   overflow-y: auto;
@@ -86,6 +86,23 @@
 .openChallengeList li strong { font-size: clamp(12px, 0.78cqw, 15px); }
 .openChallengeList li strong + span { font-size: clamp(11px, 0.65cqw, 13px); }
 .openChallengeList li button > img { width: 12px; height: 16px; }
+.openFilters { margin: 0 0 12px; color: #654522; font: 12px/1.5 "Pretendard", sans-serif; }
+.openSearch { display: flex; align-items: center; gap: 5px; min-height: 44px; border-bottom: 1px solid #9c754875; }
+.openSearch svg { width: 15px; height: 15px; flex-shrink: 0; }
+.openSearch input { width: 100%; min-width: 0; min-height: 44px; padding: 4px 0; border: 0; border-radius: 0; background: transparent; color: #372413; font: inherit; }
+.openSearch input::placeholder { color: #806341; opacity: 1; }
+.openFilterRow { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 4px; }
+.openFilterRow label { min-width: 0; }
+.openFilterRow select { width: 100%; min-width: 0; min-height: 44px; padding: 2px 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: 11px "Pretendard", sans-serif; }
+.openCounts { display: flex; justify-content: space-between; gap: 4px; margin: 0; padding-bottom: 6px; border-bottom: 1px solid #9c754875; font-size: 11px; }
+.openCounts span { color: #816645; }
+.openInstance { margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid #9c75483d; color: #654522; font: 11px/1.5 "Pretendard", sans-serif; }
+.openInstance > span { display: block; }
+.openInstance button, .openInstance strong { display: block; width: 100%; min-width: 0; margin-top: 4px; border: 0; background: none; color: #482d12; font: 600 12px/1.5 "Pretendard", sans-serif; overflow-wrap: anywhere; text-align: left; }
+.openInstance button { min-height: 44px; cursor: pointer; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.openNotice { margin: 10px 0; color: #795b38; font: 12px/1.6 "Pretendard", sans-serif; word-break: keep-all; }
+.openNotice button { display: block; min-height: 44px; padding: 4px 0; border: 0; background: none; color: #654018; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.openPanelBody :is(input, select, button):focus-visible, .openPanelBody:focus-visible { outline: 2px solid #825725; outline-offset: -2px; }
 .openPanel .openClose { min-width: 44px; min-height: 44px; padding: 12px; transform: translate(-25%, -25%); }
 .lineSummary { margin-bottom: 12px; border-bottom: 1px solid #9c754875; color: #513717; font: clamp(12px, 0.95cqw, 16px)/1.5 "Song Myung", serif; }
 .lineSummary > summary { min-height: 44px; padding: 10px 0; cursor: pointer; }
@@ -105,6 +122,11 @@
 .lineDetail p { margin: 4px 0; }
 .lineCellNumbers { color: #795c39; font-size: 0.9em; overflow-wrap: anywhere; }
 .linePreviewNote { margin: 12px 0; color: #795c39; font-size: 0.9em; line-height: 1.6; word-break: keep-all; }
+
+@media (min-width: 1101px) and (max-width: 1500px) {
+  .openFilterRow { grid-template-columns: minmax(0, 1fr); }
+  .openFilterRow select { font-size: 12px; }
+}
 
 @media (max-width: 1100px) {
   .frame.frame { position: relative; min-height: 100svh; overflow: visible; background: #21150d; }
@@ -237,6 +259,10 @@
   .openChallengeList li strong + span { font-size: 13px; }
   .openChallengeList li button > img { width: 18px; height: 22px; }
   .openPanel .openEmpty { padding-top: 16px; font-size: 14px; }
+  .openFilters, .openNotice, .openInstance { font-size: 14px; }
+  .openSearch input, .openFilterRow select { font-size: 16px; }
+  .openCounts, .openInstance button, .openInstance strong { font-size: 14px; }
+  .openFilterRow { gap: 14px; }
 
   /* 기차여행(Figma 555:342): 안내는 화면 상단 고정, 확인은 하단 시트 */
   .stage .airportHint { position: fixed; inset: 12px 12px auto; z-index: 45; white-space: normal; text-align: center; font-size: 18px; letter-spacing: 2px; line-height: 1.5; padding: 12px; background: #2b1609e8; border: 1px solid #9a6f3b; }

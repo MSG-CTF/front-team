@@ -38,9 +38,9 @@ export function getDiceStatus() {
   return apiClient.get("/board/dice/status");
 }
 
-export function getOpenedChallenges() {
-  // GET /board/opened_challenges - 열어둔 문제 목록 + is_solved. 열린 문제 목록 페이지(10절)도 이걸 씀.
-  return apiClient.get("/board/opened_challenges");
+export function getOpenedChallenges(config) {
+  // GET /board/opened_challenges - 보드 펼쳐보기의 열린 문제 목록 + is_solved
+  return apiClient.get("/board/opened_challenges", config);
 }
 
 export function getCurrentCell() {

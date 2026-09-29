@@ -605,7 +605,15 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 - 즉 이 페이지 프론트는 `/board/opened_challenges` + `/teams/me/instances` 조합으로 구현하면 되고, 별도 API 그룹을 기다릴 필요 없다.
 - **제품 요구사항(기능명세 원문)**: 현재 인스턴스 표시, 열린 문제 목록, 푼 문제 표시, 클릭 시 문제 상세 페이지로 이동.
 
-**프론트 구현 상태(2026-09-06)**: `OpenChallengesPage`가 계속 "준비 중" 스텁이던 걸 위 방식(`/board/opened_challenges` + `/teams/me/instances`) 그대로 구현했다. Figma 시안이 없어(전용 화면 자체가 없음) 기능 우선으로 구현(`OpenChallengesScreen.jsx`에 TODO로 표시).
+**프론트 구현 상태(2026-09-29)**: 별도 목록 화면을 보드의 기존 양피지 펼쳐보기로 합침
+
+- `/challenges`로 들어오면 `/board?panel=challenges`로 이동하며 기존 상세 주소는 유지
+- 제목·출제 동아리 검색, 분야·풀이 상태 필터, 본인 인스턴스 바로가기 제공
+- 문제 상세에서 돌아오면 필터와 목록 스크롤 복원
+- 조회 실패는 빈 목록과 구분하고 다시 불러오기 제공
+- API 경로와 응답 계약은 변경하지 않음
+
+화면·주사위 검수 기록: [보드 목록 통합과 주사위 모션](docs/board-challenge-flow-dice.md)
 
 ---
 

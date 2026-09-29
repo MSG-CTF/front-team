@@ -4,6 +4,7 @@ import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import { getRemainingSeconds } from "../utils/boardData.js";
 import { getBoardZoomScrollLeft } from "../utils/boardViewport.js";
 import { prepareBoardLines } from "../utils/boardLines.js";
+import { normalizeBoardListView } from "../utils/boardChallengeList.js";
 import { getAirportSelectableCellIndexes, isAirportSelectionMode } from "../utils/boardOverlays.js";
 import AirportTravelOverlay from "./AirportTravelOverlay.jsx";
 import BoardEventPanel from "./BoardEventPanel.jsx";
@@ -38,6 +39,13 @@ export default function BoardScreen({
   cellStatesByIndex,
   selectedCell,
   openedChallenges = [],
+  openedChallengesLoading = false,
+  openedChallengesError = "",
+  onRetryOpenedChallenges,
+  openListVisible,
+  onOpenListVisibleChange,
+  initialOpenListView,
+  instanceInfo,
   // 명세 확정 후 연결할 화면용 데이터 실제 API 응답에서 추측해 생성하지 않는다
   lineProgress = NO_LINES,
   lineProgressPreview = false,
@@ -66,7 +74,13 @@ export default function BoardScreen({
   onCancelAirportDestination,
 }) {
   const [now, setNow] = useState(Date.now());
-  const [isOpenListVisible, setIsOpenListVisible] = useState(false);
+  const [localOpenListVisible, setLocalOpenListVisible] = useState(false);
+  const isOpenListVisible = openListVisible ?? localOpenListVisible;
+  const setIsOpenListVisible = (open) => {
+    setLocalOpenListVisible(open);
+    onOpenListVisibleChange?.(open);
+  };
+  const openListView = useRef(normalizeBoardListView(initialOpenListView));
   const [isBoardZoomed, setIsBoardZoomed] = useState(false);
   const [isLineSummaryOpen, setIsLineSummaryOpen] = useState(false);
   const [selectedLineId, setSelectedLineId] = useState(null);
@@ -249,7 +263,7 @@ export default function BoardScreen({
               canRoll={canRoll}
               isRolling={isMutating}
               onRollDice={onRollDice}
-              onSelectCell={(cellIndex) => { setIsOpenListVisible(false); setIsLineSummaryOpen(false); onSelectCell(cellIndex); }}
+              onSelectCell={(cellIndex) => { setIsOpenListVisible(false); setIsLineSummaryOpen(false); onSelectCell(cellIndex, openListView.current); }}
               lines={lines}
               selectedLineId={isOpenListVisible && isLineSummaryOpen ? activeLineId : null}
               onSelectLine={openLineSummary}
@@ -275,6 +289,12 @@ export default function BoardScreen({
       {isOpenListVisible && (
         <OpenChallengesSidePanel
           challenges={openedChallenges}
+          loading={openedChallengesLoading}
+          error={openedChallengesError}
+          onRetry={onRetryOpenedChallenges}
+          initialView={openListView.current}
+          onViewChange={(view) => { openListView.current = view; }}
+          instanceInfo={instanceInfo}
           onSelectChallenge={onOpenChallengeDetail}
           onClose={closeOpenList}
         >
@@ -307,7 +327,7 @@ export default function BoardScreen({
           isMutating={isMutating}
           isAirportSelecting={isAirportSelecting}
           onConfirmDice={onConfirmDice}
-          onOpenChallenge={onOpenChallenge}
+          onOpenChallenge={(challengeId) => onOpenChallenge(challengeId, openListView.current)}
           onUseChanceCard={onUseChanceCard}
           onConfirmChance={onConfirmChance}
           onDiscardChance={onDiscardChance}

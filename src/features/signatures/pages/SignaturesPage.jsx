@@ -94,7 +94,7 @@ export function SignatureFestivalScreen({ state }) {
       <div className={styles.scene}>
         <nav className={styles.navigation} aria-label="부스 화면 이동">
           <Link to={ROUTES.board}>← 보드로 돌아가기</Link>
-          <Link to={ROUTES.openChallenges}>JEOPARDY →</Link>
+          <Link to={ROUTES.boardChallenges}>JEOPARDY →</Link>
         </nav>
         <header className={styles.festivalHeader}>
           <p>MSG CTF</p>
