@@ -7,6 +7,7 @@ import {
   formatOpenChallengeNumber,
   getAirportSelectableCellIndexes,
   getRouletteRotation,
+  getRouletteSegmentGeometry,
   getRouletteSegmentAt,
   isAirportSelectionMode,
 } from "./boardOverlays.js";
@@ -30,6 +31,22 @@ test("룰렛은 서버가 준 마일리지 칸에 멈추고 항상 앞으로 여
 
 test("휠에 없는 마일리지는 회전각을 만들지 않는다", () => {
   assert.equal(getRouletteRotation(30, 0), null);
+});
+
+test("표시한 숫자의 중심과 서버 결과로 멈추는 칸의 중심이 일치한다", () => {
+  for (const value of ROULETTE_VALUES) {
+    for (const pick of [0, 0.99]) {
+      const rotation = getRouletteRotation(value, 278.2, () => pick);
+      const matches = ROULETTE_SEGMENTS.flatMap((v, index) => v === value ? [index] : []);
+      const chosen = matches[Math.floor(pick * matches.length)];
+      const geometry = getRouletteSegmentGeometry(chosen);
+      assert.ok(Math.abs((geometry.labelAngle + rotation) % 360) < 0.00001);
+      assert.ok(Math.abs(Math.hypot(geometry.labelX - 160, geometry.labelY - 160) - 101) < 0.00001);
+      assert.match(geometry.path, /^M160 160 L.+ A144 144 0 0 1 .+ Z$/);
+      assert.equal(getRouletteSegmentAt(rotation), value);
+    }
+  }
+  for (const index of [-1, 8, 0.5, "2", undefined]) assert.equal(getRouletteSegmentGeometry(index), null);
 });
 
 test("기차여행 선택 모드는 먼저 끝낼 단계가 없고 아직 쓰지 않았을 때만 켜진다", () => {

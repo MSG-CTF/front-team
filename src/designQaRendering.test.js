@@ -27,6 +27,8 @@ before(async () => {
     BoardNav: "board/components/BoardNav",
     DiceStatusPanel: "board/components/DiceStatusPanel",
     BoardVisitedOverlay: "board/components/BoardVisitedOverlay",
+    BoardSurface: "board/components/BoardSurface",
+    MileageRoulette: "board/components/MileageRouletteModal",
     BoardArtwork: "board/components/BoardArtwork",
     BoardPiece: "board/components/BoardPiece",
     BoardTrain: "board/components/BoardTrain",
@@ -75,7 +77,7 @@ test("기차 효과음은 출발 준비와 실제 재생을 분리하고 화면�
 function render(name, props = {}) {
   const view = createElement(components[name], props);
   return renderToStaticMarkup(createElement(StaticRouter, { location: "/" },
-    name === "BoardArtwork" ? createElement("svg", null, view) : view));
+    ["BoardArtwork", "BoardVisitedOverlay"].includes(name) ? createElement("svg", null, view) : view));
 }
 function css(path) {
   return postcss.parse(readFileSync(new URL(`./${path}`, import.meta.url), "utf8"));
@@ -250,24 +252,23 @@ test("모바일 보드 메뉴는 기존 금색 아이콘과 여섯 이동 기능
 
 test("방문한 칸은 중복 없이 각자의 곡선 윤곽으로 표시하고 잘못된 번호를 무시한다", () => {
   const html = render("BoardVisitedOverlay", { visitedCellIndexes: [0, 2, 2, 21, 37] });
-  assert.match(html, /viewBox="0 0 1772 1330"/);
   assert.equal((html.match(/data-visited-cell=/g) || []).length, 2);
   assert.match(html, /data-visited-cell="2"/);
   assert.match(html, /data-visited-cell="21"/);
   assert.match(html, /<path[^>]*d="M[^"]* Q/);
-  assert.match(html, /<g clip-path="url\(#[^"]+\)"><g[^>]*data-board-artwork="true"><image[^>]+>/);
+  assert.match(html, /fill="#170e0a" fill-opacity="0.62"/);
   assert.equal((html.match(/data-visited-surface=/g) || []).length, 2);
   assert.match(html, /<radialGradient/);
   assert.match(html, /<linearGradient/);
   assert.doesNotMatch(html, /visitedInset|stroke=/);
   assert.doesNotMatch(html, /<polygon/);
-  assert.equal(render("BoardVisitedOverlay", { visitedCellIndexes: [] }), "");
+  assert.equal(render("BoardVisitedOverlay", { visitedCellIndexes: [] }), "<svg></svg>");
 });
 
 test("룰렛과 황금열쇠 문양은 서버 칸 종류를 확인하고 방문 음영에도 동일하게 쓴다", () => {
   const cells = [{ cellIndex: 7, type: "CHANCE" }, { cellIndex: 16, type: "ROULETTE" }];
   const artwork = render("BoardArtwork", { cells });
-  const visited = render("BoardVisitedOverlay", { cells, visitedCellIndexes: [7, 16] });
+  const visited = render("BoardSurface", { cells, visitedCellIndexes: [7, 16] });
   for (const html of [artwork, visited]) {
     assert.match(html, /data-cell-artwork="16-roulette"/);
     assert.match(html, /data-cell-artwork="7-chance"/);
@@ -276,6 +277,37 @@ test("룰렛과 황금열쇠 문양은 서버 칸 종류를 확인하고 방문 
   }
   assert.doesNotMatch(render("BoardArtwork", { cells: [{ cellIndex: 16, type: "QUARANTINE" }] }), /data-cell-artwork/);
   assert.doesNotMatch(render("BoardArtwork", { cells: [{ cellIndex: 7, type: "ROULETTE" }] }), /data-cell-artwork/);
+});
+
+test("방문 음영과 보드 원판은 한 SVG 좌표계를 공유하고 보드 이미지를 복제하지 않는다", () => {
+  const html = render("BoardSurface", { cells: [], visitedCellIndexes: [2, 7, 16, 21, 25, 30] });
+  assert.equal((html.match(/<svg/g) || []).length, 1);
+  assert.equal((html.match(/board-grid.png/g) || []).length, 1);
+  assert.equal((html.match(/data-visited-cell=/g) || []).length, 6);
+  assert.match(html, /viewBox="0 0 1772 1330"/);
+  assert.match(html, /data-board-visited="true"/);
+  assert.doesNotMatch(html, /filter=|<filter|visitedArtwork/);
+});
+
+test("룰렛의 숫자는 SVG 원판 안에 있고 회전하지 않는 포인터는 밖에 있다", () => {
+  const html = render("MileageRoulette", { event: { token: "25:ROULETTE", status: "ready" }, onSpin() {}, onClose() {} });
+  assert.equal((html.match(/data-roulette-segment=/g) || []).length, 8);
+  assert.equal((html.match(/data-roulette-value=/g) || []).length, 8);
+  assert.match(html, /viewBox="0 0 320 320"/);
+  assert.match(html, /text-anchor="middle"/);
+  assert.match(html, /남은 기회 1 \/ 1/);
+  assert.match(html, /aria-label="룰렛 닫기"/);
+  assert.match(html, /aria-label="룰렛 돌리기\(SPIN\)"/);
+  assert.match(html, /<svg[^>]+viewBox="0 0 36 48"/);
+  assert.doesNotMatch(html, /conic-gradient|roulette-idle-spin/);
+  const busy = render("MileageRoulette", { event: { token: "25:ROULETTE", status: "ready" }, isMutating: true });
+  assert.match(busy, /aria-busy="true"/);
+  assert.match(busy, /aria-label="룰렛 돌리는 중"/);
+  assert.match(busy, /돌아가는 중입니다/);
+  const received = render("MileageRoulette", { event: { token: "25:ROULETTE", status: "success", result: { mileageGained: 50, totalMileage: 1250 } } });
+  assert.match(received, /aria-busy="true"/);
+  assert.match(received, /aria-label="룰렛 돌리는 중"/);
+  assert.doesNotMatch(received, /룰렛을 돌려 마일리지를 받아보세요/);
 });
 
 test("보드 말은 36칸의 기존 좌표를 따르며 고해상도 투명 이미지를 사용한다", () => {

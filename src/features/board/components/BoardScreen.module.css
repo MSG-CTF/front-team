@@ -48,17 +48,6 @@
 /* 열린 문제 패널 제목은 데스크톱에선 패널 이미지에 그려져 있어 스크린리더에만 노출 */
 .mobileOpenTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.visitedOverlay {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-/* 사용한 칸은 나무결을 남긴 채 빛을 잃고, 가장자리 음영으로 깊이를 준다 */
-.visitedArtwork { filter: saturate(0.52) brightness(0.5) contrast(1.08); }
-
 .lineOverlay { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
 .lineCell path { stroke: none; }
 .lineCellSelected { opacity: 0.36; }
@@ -317,24 +306,4 @@
   .airportConfirm strong { font-size: 18px; }
   .airportConfirm button { min-height: 44px; padding: 8px 16px; }
 
-  /* 룰렛(Figma 555:306): 시안 비율 그대로 화면 폭에 맞춰 줄인다. 패널이 무대 폭의 45.94%라
-     무대 역할을 하는 배경 상자를 (화면 폭 - 여백) / 0.4594 로 잡고, 글자만 px로 보정한다. */
-  .stage .rouletteBackdrop {
-    position: fixed;
-    inset: auto;
-    left: 50%;
-    top: 50%;
-    width: calc((100vw - 24px) / 0.4594);
-    height: auto;
-    aspect-ratio: 16 / 9;
-    transform: translate(-50%, -50%);
-    container-type: inline-size;
-    background: transparent;
-    box-shadow: 0 0 0 100vmax rgba(27, 13, 5, 0.55);
-  }
-  .rouletteBackdrop .rouletteText { font-size: 12px; line-height: 1.4; }
-  .rouletteBackdrop .rouletteCount { font-size: 20px; }
-  .rouletteBackdrop .rouletteValue { font-size: 12px; }
-  .rouletteBackdrop .rouletteUnit { font-size: 8px; }
-  .rouletteBackdrop .rouletteConfirm { font-size: 16px; }
 }

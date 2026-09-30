@@ -1,16 +1,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* 보드 마일리지 룰렛(Figma 555:306) - 서버 응답을 기다리는 동안 휠을 계속 돌린다. */
-@keyframes roulette-idle-spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .roulette-wheel {
-    animation: none !important;
-    transition: none !important;
-  }
-}

@@ -1,162 +1,218 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   ROULETTE_SEGMENTS,
-  ROULETTE_SEGMENT_ANGLE,
-  buildRouletteGradient,
   getRouletteRotation,
+  getRouletteSegmentGeometry,
 } from "../utils/boardOverlays.js";
-import styles from "./BoardScreen.module.css";
+import styles from "./MileageRouletteModal.module.css";
 
 const SPIN_DURATION_MS = 3200;
 
-// Figma node 555:306 "룰렛" - 보드 위 가운데 뜨는 MILEAGE ROULETTE 모달.
-// 패널(555:330, 제목/"남은 기회"/"/" 포함), SPIN 버튼(555:336), 닫기 버튼(555:331)은
-// Figma 원본 에셋이고 좌표는 1920x1080 무대 기준 %로 옮겼다(패널 483,359 / 882x461).
-// 휠(555:335) 원본은 숫자(20/30/300/500)와 포인터·받침대가 한 장에 그려져 있어 돌릴 수
-// 없고 명세 값(50·100·150·200)과도 달라, 같은 자리에 명세 값으로 휠을 그린다.
-// 결과는 서버 응답(mileage_gained) 칸에 멈춘 뒤 보여준다. 룰렛칸마다 1회라 남은 기회는 1/1 -> 0/1.
-export default function MileageRouletteModal({ event, isMutating, onSpin, onClose }) {
+// 데스크톱은 Figma 555:306 원본 패널을 사용한다
+// 모바일에서는 같은 원판과 버튼을 세로로 배치한다 결과는 서버 값만 사용한다
+export default function MileageRouletteModal({ event, isMutating, onSpin, onClose, errorMessage }) {
+  const id = `mileage-roulette-${useId().replace(/:/g, "")}`;
   const [rotation, setRotation] = useState(0);
   const [isSettling, setIsSettling] = useState(false);
-  // 결과 칸에 멈춘 뒤에만 결과를 보여준다(응답 직후 한 프레임 먼저 보이는 것 방지)
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [spinError, setSpinError] = useState("");
   const [revealedToken, setRevealedToken] = useState(null);
+  const [reducedMotion, setReducedMotion] = useState(() =>
+    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   const rotationRef = useRef(0);
-  const settledTokenRef = useRef(null);
+  const targetRef = useRef(null);
+  const revealedRef = useRef(null);
+  const requestRef = useRef(false);
+  const wheelRef = useRef(null);
+  const panelRef = useRef(null);
+  const confirmRef = useRef(null);
 
   const isSuccess = event.status === "success";
   const mileageGained = event.result?.mileageGained;
+  const isSpinning = (isMutating || isRequesting) && !isSuccess;
+  const showResult = isSuccess && revealedToken === event.token;
+  const isBusy = isSpinning || isSettling || (isSuccess && !showResult);
+  const chancesLeft = isSuccess ? 0 : 1;
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const update = () => setReducedMotion(media.matches);
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+
+  useEffect(() => {
+    const trigger = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    panelRef.current?.focus({ preventScroll: true });
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      if (trigger?.isConnected && typeof trigger.focus === "function") trigger.focus({ preventScroll: true });
+    };
+  }, []);
+
+  useEffect(() => {
+    if (showResult) confirmRef.current?.focus({ preventScroll: true });
+  }, [showResult]);
+
+  useEffect(() => {
+    if (isBusy) panelRef.current?.focus({ preventScroll: true });
+  }, [isBusy]);
+
+  // 응답 대기 중의 회전각을 유지하고 그 위치부터 감속한다
+  useEffect(() => {
+    if (!isSpinning || reducedMotion) return undefined;
+    let frame;
+    let previous = null;
+    const advance = (now) => {
+      if (previous !== null) rotationRef.current += Math.min(now - previous, 64) * 0.4;
+      previous = now;
+      if (wheelRef.current) wheelRef.current.style.transform = `rotate(${rotationRef.current}deg)`;
+      frame = window.requestAnimationFrame(advance);
+    };
+    frame = window.requestAnimationFrame(advance);
+    return () => window.cancelAnimationFrame(frame);
+  }, [isSpinning, reducedMotion]);
 
   useEffect(() => {
     if (!isSuccess) return undefined;
     const token = event.token;
-    if (settledTokenRef.current !== token) {
-      settledTokenRef.current = token;
-      const next = getRouletteRotation(mileageGained, rotationRef.current);
-      if (next == null) {
-        // 휠에 없는 값이 와도 결과는 그대로 보여준다
-        setRevealedToken(token);
-        return undefined;
-      }
-      rotationRef.current = next;
-      setRotation(next);
-      setIsSettling(true);
+    if (targetRef.current?.token !== token || targetRef.current?.value !== mileageGained) {
+      targetRef.current = { token, value: mileageGained, rotation: getRouletteRotation(mileageGained, rotationRef.current) };
     }
-    // StrictMode에서 effect가 다시 실행돼도 공개 타이머는 새로 건다
-    const timer = window.setTimeout(() => {
+    const next = targetRef.current.rotation;
+    const reveal = () => {
       setIsSettling(false);
+      revealedRef.current = token;
       setRevealedToken(token);
-    }, SPIN_DURATION_MS);
-    return () => window.clearTimeout(timer);
-  }, [event.token, isSuccess, mileageGained]);
+    };
+    if (next == null || reducedMotion || revealedRef.current === token) {
+      if (next != null) {
+        rotationRef.current = next;
+        setRotation(next);
+      }
+      reveal();
+      return undefined;
+    }
+    setRotation(rotationRef.current);
+    setIsSettling(false);
+    let timer;
+    const frame = window.requestAnimationFrame(() => {
+      rotationRef.current = next;
+      setIsSettling(true);
+      setRotation(next);
+      timer = window.setTimeout(reveal, SPIN_DURATION_MS);
+    });
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+    };
+  }, [event.token, isSuccess, mileageGained, reducedMotion]);
 
-  const isSpinning = isMutating && !isSuccess;
-  const showResult = isSuccess && revealedToken === event.token;
-  const chancesLeft = isSuccess ? 0 : 1;
+  const spin = async () => {
+    if (requestRef.current || isMutating || isSuccess || isSettling) return;
+    requestRef.current = true;
+    setIsRequesting(true);
+    setSpinError("");
+    try {
+      await onSpin(event.token);
+    } catch {
+      setSpinError("룰렛을 돌리지 못했어요 다시 시도해주세요");
+    } finally {
+      requestRef.current = false;
+      setIsRequesting(false);
+    }
+  };
 
-  return (
-    <div className={`${styles.rouletteBackdrop} absolute inset-0 z-50 bg-[#1b0d05]/35`} role="presentation">
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="mileage-roulette-title"
-        className="absolute left-[25.16%] top-[33.24%] h-[42.69%] w-[45.94%] drop-shadow-[0_1cqw_1.6cqw_rgba(20,8,2,0.6)]"
-      >
-        <img
-          src="/assets/board/roulette-panel.png"
-          alt=""
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 h-full w-full object-fill"
-        />
-        {/* 제목은 패널 이미지에 그려져 있다 */}
-        <h2 id="mileage-roulette-title" className="sr-only">마일리지 룰렛</h2>
+  const handleKeyDown = (keyEvent) => {
+    if (keyEvent.key === "Escape" && showResult) { keyEvent.preventDefault(); onClose(); }
+    if (keyEvent.key !== "Tab") return;
+    const buttons = [...panelRef.current.querySelectorAll("button:not([disabled])")];
+    if (!buttons.length) { keyEvent.preventDefault(); return; }
+    const first = buttons[0];
+    const last = buttons.at(-1);
+    const index = buttons.indexOf(document.activeElement);
+    if (keyEvent.shiftKey && index <= 0) { keyEvent.preventDefault(); last.focus(); }
+    else if (!keyEvent.shiftKey && (index < 0 || index === buttons.length - 1)) { keyEvent.preventDefault(); first.focus(); }
+  };
 
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={!showResult}
-          aria-label="룰렛 닫기"
-          title={showResult ? "닫기" : "룰렛을 돌린 뒤 닫을 수 있습니다"}
-          className="absolute left-[93.2%] top-[11.5%] h-[5.42%] w-[3.06%] border-0 bg-transparent p-0 hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <img src="/assets/board/icon-close-round.png" alt="" aria-hidden="true" className="h-full w-full object-contain" />
+  const message = showResult
+    ? <><strong className={styles.reward}>+{mileageGained} M</strong><span>마일리지를 받았어요</span><span className={styles.total}>보유 마일리지 {event.result?.totalMileage ?? "-"} M</span></>
+    : isBusy
+      ? "룰렛이 돌아가는 중입니다"
+      : spinError || errorMessage || "룰렛을 돌려 마일리지를 받아보세요";
+
+  const view = (
+    <div className={styles.backdrop} role="presentation">
+      <section ref={panelRef} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-status`}
+        aria-busy={isBusy} className={styles.panel} onKeyDown={handleKeyDown} tabIndex={-1}>
+        <img src="/assets/board/roulette-panel.png" alt="" aria-hidden="true" className={styles.panelArtwork} />
+        <h2 id={`${id}-title`} className={styles.title}>MILEAGE ROULETTE</h2>
+        <button type="button" onClick={onClose} disabled={!showResult} aria-label="룰렛 닫기"
+          title={showResult ? "닫기" : "룰렛을 돌린 뒤 닫을 수 있습니다"} className={styles.close}>
+          <img src="/assets/board/icon-close-round.png" alt="" aria-hidden="true" />
         </button>
 
-        {/* 휠: 시안 휠 원판 중심(30.1%, 56.1%), 지름 = 패널 폭 35.3% */}
-        <div className="absolute left-[12.51%] top-[22.41%] h-[67.46%] w-[35.26%]">
-          <span aria-hidden="true" className="absolute left-1/2 top-[-6%] z-20 h-0 w-0 -translate-x-1/2 border-x-[0.6cqw] border-t-[1.3cqw] border-x-transparent border-t-[#b98a3e] drop-shadow" />
-          <span aria-hidden="true" className="absolute left-1/2 top-[-4.8%] z-30 h-[0.5cqw] w-[0.5cqw] -translate-x-1/2 rounded-full bg-[#b3261e] shadow-[0_0_0.3cqw_#ff8a70]" />
-          <div
-            aria-hidden="true"
-            className="roulette-wheel absolute inset-0 rounded-full border-[0.45cqw] border-[#8f6427] shadow-[0_0.3cqw_0.8cqw_rgba(0,0,0,0.45),inset_0_0_0_0.18cqw_#5a1714]"
-            style={{
-              background: buildRouletteGradient(["#6e1d1a", "#eadcc2"]),
-              transform: `rotate(${rotation}deg)`,
-              transition: isSettling ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.12, 0.7, 0.18, 1)` : "none",
-              animation: isSpinning ? "roulette-idle-spin 0.9s linear infinite" : "none",
-            }}
-          >
-            {ROULETTE_SEGMENTS.map((value, index) => {
-              const angle = index * ROULETTE_SEGMENT_ANGLE + ROULETTE_SEGMENT_ANGLE / 2;
-              return (
-                <span
-                  key={index}
-                  className="absolute left-1/2 top-0 h-1/2 w-[2.2cqw] -translate-x-1/2 origin-bottom pt-[9%] text-center font-abyssinica leading-none"
-                  style={{ transform: `rotate(${angle}deg)` }}
-                >
-                  {/* 시안처럼 멈춘 휠에서 숫자가 똑바로 서 보이도록 칸 각도만큼 되돌린다 */}
-                  <span className="block" style={{ transform: `rotate(${-angle}deg)` }}>
-                    <span className={`${styles.rouletteValue} block text-[1.05cqw] ${index % 2 === 0 ? "text-[#f3e6cc]" : "text-[#3a1a10]"}`}>{value}</span>
-                    <span className={`${styles.rouletteUnit} mt-[0.1cqw] block text-[0.62cqw] ${index % 2 === 0 ? "text-[#f3e6cc]/85" : "text-[#3a1a10]/85"}`}>M</span>
-                  </span>
-                </span>
-              );
-            })}
-            <span className="absolute left-1/2 top-1/2 grid h-[34%] w-[34%] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full border-[0.3cqw] border-[#9a6c2b] bg-[radial-gradient(circle,#7b5a36_0%,#3a2414_72%)] text-[1.6cqw] text-[#e5c68a] shadow-[inset_0_0_0.6cqw_rgba(0,0,0,0.6)]">
-              ✦
-            </span>
+        <div className={styles.wheelArea} aria-hidden="true">
+          <div ref={wheelRef} className={styles.wheel}
+            data-roulette-rotation={rotation} data-roulette-settling={isSettling}
+            style={{ transform: `rotate(${rotation}deg)`, transition: isSettling ? `transform ${SPIN_DURATION_MS}ms cubic-bezier(0.12, 0.7, 0.18, 1)` : "none" }}>
+            <svg viewBox="0 0 320 320" width="320" height="320" focusable="false">
+              <defs>
+                <linearGradient id={`${id}-gold`} x1="0" y1="0" x2="1" y2="1">
+                  <stop stopColor="#f2dc9b" /><stop offset="0.42" stopColor="#9c6b2c" /><stop offset="0.7" stopColor="#e2c17c" /><stop offset="1" stopColor="#795023" />
+                </linearGradient>
+                <radialGradient id={`${id}-hub`}>
+                  <stop stopColor="#886842" /><stop offset="1" stopColor="#382314" />
+                </radialGradient>
+              </defs>
+              <circle cx="160" cy="160" r="156" fill={`url(#${id}-gold)`} stroke="#4b2c15" strokeWidth="3" />
+              <circle cx="160" cy="160" r="147" fill="#3e1711" />
+              {ROULETTE_SEGMENTS.map((value, index) => {
+                const geometry = getRouletteSegmentGeometry(index);
+                return <g key={index} data-roulette-segment={index} data-roulette-value={value}>
+                  <path d={geometry.path} fill={index % 2 === 0 ? "#71231f" : "#ebddbd"} stroke="#b79764" strokeWidth="0.7" />
+                  <g transform={`translate(${geometry.labelX} ${geometry.labelY}) rotate(${geometry.labelAngle})`}
+                    fill={index % 2 === 0 ? "#f4e6c8" : "#422411"} textAnchor="middle" className={styles.segmentLabel}>
+                    <text fontSize="22" fontWeight="700">{value}</text><text y="15" fontSize="11" letterSpacing="2">M</text>
+                  </g>
+                </g>;
+              })}
+              <circle cx="160" cy="160" r="144" fill="none" stroke="#f0d494" strokeWidth="1.5" />
+              <circle cx="160" cy="160" r="50" fill={`url(#${id}-gold)`} stroke="#4b2c15" strokeWidth="2" />
+              <circle cx="160" cy="160" r="45" fill={`url(#${id}-hub)`} stroke="#d1ad65" />
+              <path d="M160 128 L165 153 L186 160 L165 165 L160 190 L155 165 L134 160 L155 153 Z" fill="#dfc58a" stroke="#ac8547" />
+              <circle cx="160" cy="160" r="4" fill="#572c19" stroke="#f0d99c" />
+            </svg>
           </div>
+          <svg className={styles.pointer} viewBox="0 0 36 48" focusable="false">
+            <path d="M4 6 L32 6 L18 43 Z" fill="#c19a52" stroke="#623b1e" strokeWidth="2" />
+            <path d="M9 9 L27 9 L18 33 Z" fill="#ecd598" />
+            <circle cx="18" cy="7" r="5" fill="#96392c" stroke="#e2bd75" strokeWidth="2" />
+          </svg>
         </div>
 
-        {/* 오른쪽 문구: 시안 555:340 (16px, #613d15) */}
-        <p className={`${styles.rouletteText} absolute left-[59.4%] top-[38.18%] m-0 w-[32.9%] text-center font-pretendard text-[0.83cqw] leading-normal text-[#613d15]`} role="status" aria-live="polite">
-          {showResult
-            ? `+${mileageGained} 마일리지 획득! 총 ${event.result?.totalMileage ?? "-"}`
-            : isSpinning || isSettling
-              ? "룰렛이 돌아가는 중입니다"
-              : "룰렛을 돌려 마일리지를 획득하세요"}
-        </p>
-
-        {/* 남은 기회 N / 1 - "남은 기회"와 "/"는 패널 이미지, 숫자만 얹는다(555:337, 555:338) */}
-        <span className="sr-only">남은 기회 {chancesLeft} / 1</span>
-        <span aria-hidden="true" className={`${styles.rouletteCount} absolute left-[72.2%] top-[53.8%] -translate-x-1/2 font-pretendard text-[1.67cqw] leading-normal text-black`}>{chancesLeft}</span>
-        <span aria-hidden="true" className={`${styles.rouletteCount} absolute left-[79.4%] top-[53.8%] -translate-x-1/2 font-pretendard text-[1.67cqw] leading-normal text-black`}>1</span>
-
-        {/* SPIN 버튼(555:336). 결과가 나오면 같은 자리에서 확인(닫기) 버튼으로 바뀐다 */}
-        {showResult ? (
-          <button
-            type="button"
-            onClick={onClose}
-            className={`${styles.rouletteConfirm} absolute left-[58.28%] top-[66.81%] h-[14.75%] w-[35.83%] rounded-[0.5cqw] border-[0.15cqw] border-[#b98a3e] bg-[linear-gradient(#7a2320,#5a1714)] font-abyssinica text-[1.35cqw] tracking-[0.08em] text-[#f1dfb8] shadow-[inset_0_0_0_0.12cqw_#3a0e0c] hover:brightness-110`}
-          >
-            확인
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => onSpin(event.token)}
-            disabled={isMutating || isSuccess}
-            aria-label={isSpinning || isSettling ? "룰렛 돌리는 중" : "룰렛 돌리기(SPIN)"}
-            className="absolute left-[58.28%] top-[66.81%] h-[14.75%] w-[35.83%] border-0 bg-transparent p-0 hover:brightness-110 disabled:cursor-wait disabled:brightness-75"
-          >
-            <img src="/assets/board/roulette-spin-button.png" alt="" aria-hidden="true" className="h-full w-full object-contain" />
-          </button>
-        )}
-
-        {/* 시안 555:341 문구는 "Try you Luck"(오타)이라 "Try your Luck"로 표기 */}
-        <p aria-hidden="true" className={`${styles.rouletteText} absolute left-[59.4%] top-[82.9%] m-0 w-[32.9%] text-center font-abyssinica text-[0.83cqw] leading-normal text-[#613d15]`}>
-          Try your Luck
+        <p id={`${id}-status`} className={`${styles.status}${showResult ? ` ${styles.resultStatus}` : ""}`} role="status" aria-live="polite">{message}</p>
+        <div className={styles.chances} aria-label={`남은 기회 ${chancesLeft} / 1`}>
+          <span className={styles.chancesLabel} aria-hidden="true">남은 기회</span>
+          <span className={styles.chancesValue} aria-hidden="true">
+            <span>{chancesLeft}</span><span className={styles.chancesSeparator}>/</span><span>1</span>
+          </span>
+        </div>
+        <div className={styles.action}>
+          {showResult ? <button ref={confirmRef} type="button" onClick={onClose} className={styles.confirm}>확인</button>
+            : <button type="button" onClick={spin} disabled={isBusy || isSuccess}
+              aria-label={isBusy ? "룰렛 돌리는 중" : "룰렛 돌리기(SPIN)"} className={styles.spin}>
+              <img src="/assets/board/roulette-spin-button.png" alt="" aria-hidden="true" />
+            </button>}
+        </div>
+        <p className={`${styles.luck}${showResult ? ` ${styles.luckResult}` : ""}`} aria-hidden="true">
+          {showResult ? `보유 마일리지 ${event.result?.totalMileage ?? "-"} M` : "Try your Luck"}
         </p>
       </section>
     </div>
   );
+  return typeof document === "undefined" ? view : createPortal(view, document.body);
 }
