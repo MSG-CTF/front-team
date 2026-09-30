@@ -224,8 +224,12 @@ export default function ChallengeSelection({ candidates, isMutating, onOpenChall
   return typeof document === "undefined" ? content : createPortal(content, document.body);
 }
 
-export function ReopenChallengeSelection({ onClick }) {
+export function ReopenBoardEvent({ onClick, children }) {
   const button = useRef(null);
   useEffect(() => { button.current?.focus({ preventScroll: true }); }, []);
-  return <button ref={button} type="button" className={styles.reopen} onClick={onClick}>문제 선택하기</button>;
+  return <button ref={button} type="button" className={styles.reopen} onClick={onClick}>{children}</button>;
+}
+
+export function ReopenChallengeSelection({ onClick }) {
+  return <ReopenBoardEvent onClick={onClick}>문제 선택하기</ReopenBoardEvent>;
 }

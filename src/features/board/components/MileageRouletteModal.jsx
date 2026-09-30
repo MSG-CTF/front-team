@@ -13,17 +13,24 @@ const SPIN_DURATION_MS = 3200;
 // 모바일에서는 같은 원판과 버튼을 세로로 배치한다 결과는 서버 값만 사용한다
 export default function MileageRouletteModal({ event, isMutating, onSpin, onClose, errorMessage }) {
   const id = `mileage-roulette-${useId().replace(/:/g, "")}`;
-  const [rotation, setRotation] = useState(0);
+  // 닫았다 다시 연 결과는 재추첨하거나 애니메이션을 다시 기다리지 않는다
+  const [initialResult] = useState(() => event.status === "success" ? {
+    token: event.token,
+    value: event.result?.mileageGained,
+    rotation: getRouletteRotation(event.result?.mileageGained, 0, () => 0),
+  } : null);
+  const [rotation, setRotation] = useState(initialResult?.rotation ?? 0);
   const [isSettling, setIsSettling] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
   const [spinError, setSpinError] = useState("");
-  const [revealedToken, setRevealedToken] = useState(null);
+  const [revealedToken, setRevealedToken] = useState(initialResult?.token ?? null);
   const [reducedMotion, setReducedMotion] = useState(() =>
     typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-  const rotationRef = useRef(0);
-  const targetRef = useRef(null);
-  const revealedRef = useRef(null);
+  const rotationRef = useRef(rotation);
+  const targetRef = useRef(initialResult);
+  const revealedRef = useRef(initialResult?.token ?? null);
   const requestRef = useRef(false);
+  const mountedRef = useRef(false);
   const wheelRef = useRef(null);
   const panelRef = useRef(null);
   const confirmRef = useRef(null);
@@ -43,11 +50,13 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     const trigger = document.activeElement;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     panelRef.current?.focus({ preventScroll: true });
     return () => {
+      mountedRef.current = false;
       document.body.style.overflow = previousOverflow;
       if (trigger?.isConnected && typeof trigger.focus === "function") trigger.focus({ preventScroll: true });
     };
@@ -119,15 +128,15 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
     try {
       await onSpin(event.token);
     } catch {
-      setSpinError("룰렛을 돌리지 못했어요 다시 시도해주세요");
+      if (mountedRef.current) setSpinError("룰렛을 돌리지 못했어요 다시 시도해주세요");
     } finally {
       requestRef.current = false;
-      setIsRequesting(false);
+      if (mountedRef.current) setIsRequesting(false);
     }
   };
 
   const handleKeyDown = (keyEvent) => {
-    if (keyEvent.key === "Escape" && showResult) { keyEvent.preventDefault(); onClose(); }
+    if (keyEvent.key === "Escape") { keyEvent.preventDefault(); onClose(); }
     if (keyEvent.key !== "Tab") return;
     const buttons = [...panelRef.current.querySelectorAll("button:not([disabled])")];
     if (!buttons.length) { keyEvent.preventDefault(); return; }
@@ -150,8 +159,7 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
         aria-busy={isBusy} className={styles.panel} onKeyDown={handleKeyDown} tabIndex={-1}>
         <img src="/assets/board/roulette-panel.png" alt="" aria-hidden="true" className={styles.panelArtwork} />
         <h2 id={`${id}-title`} className={styles.title}>MILEAGE ROULETTE</h2>
-        <button type="button" onClick={onClose} disabled={!showResult} aria-label="룰렛 닫기"
-          title={showResult ? "닫기" : "룰렛을 돌린 뒤 닫을 수 있습니다"} className={styles.close}>
+        <button type="button" onClick={onClose} aria-label="룰렛 닫기" title="닫기" className={styles.close}>
           <img src="/assets/board/icon-close-round.png" alt="" aria-hidden="true" />
         </button>
 
