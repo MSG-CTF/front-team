@@ -305,9 +305,46 @@ test("룰렛의 숫자는 SVG 원판 안에 있고 회전하지 않는 포인터
   assert.match(busy, /aria-label="룰렛 돌리는 중"/);
   assert.match(busy, /돌아가는 중입니다/);
   const received = render("MileageRoulette", { event: { token: "25:ROULETTE", status: "success", result: { mileageGained: 50, totalMileage: 1250 } } });
-  assert.match(received, /aria-busy="true"/);
-  assert.match(received, /aria-label="룰렛 돌리는 중"/);
+  assert.match(received, /aria-busy="false"/);
+  assert.match(received, /\+50 M/);
+  assert.match(received, /보유 마일리지 1250 M/);
+  assert.match(received, />확인<\/button>/);
+  assert.doesNotMatch(received, /aria-label="룰렛 돌리는 중"|aria-label="룰렛 돌리기\(SPIN\)"/);
   assert.doesNotMatch(received, /룰렛을 돌려 마일리지를 받아보세요/);
+});
+
+test("룰렛 닫기는 시작 전과 응답 대기 중에도 열려 있고 완료 결과는 즉시 다시 볼 수 있다", () => {
+  for (const props of [
+    { event: { token: "roulette-ready", status: "ready" } },
+    { event: { token: "roulette-pending", status: "ready" }, isMutating: true },
+    { event: { token: "roulette-error", status: "ready" }, errorMessage: "잠시 후 다시 시도해주세요" },
+    { event: { token: "roulette-done", status: "success", result: { mileageGained: 200, totalMileage: 1400 } } },
+  ]) {
+    const html = render("MileageRoulette", props);
+    const close = html.match(/<button\b[^>]*aria-label="룰렛 닫기"[^>]*>/)?.[0];
+    assert.ok(close);
+    assert.doesNotMatch(close, /disabled/);
+    assert.match(close, /title="닫기"/);
+  }
+  const source = readFileSync(new URL("./features/board/components/MileageRouletteModal.jsx", import.meta.url), "utf8");
+  assert.match(source, /if \(keyEvent.key === "Escape"\) \{ keyEvent.preventDefault\(\); onClose\(\); \}/);
+});
+
+test("닫은 룰렛은 대기와 결과 도착 후에도 숨겨두고 중복 요청 없이 다시 보기만 제공한다", () => {
+  for (const event of [
+    { type: "ROULETTE", token: "same-visit", status: "ready" },
+    { type: "ROULETTE", token: "same-visit", status: "success", result: { mileageGained: 100, totalMileage: 1300 } },
+  ]) {
+    const html = render("BoardEventPanel", {
+      myBoard: { position: 25 }, cellEvent: event, isRouletteOpen: false, isMutating: true,
+      ownedChanceCards: [], onReopenRoulette() {},
+    });
+    assert.match(html, />룰렛 다시 보기<\/button>/);
+    assert.doesNotMatch(html, /role="dialog"|aria-label="룰렛 돌리기\(SPIN\)"|disabled/);
+  }
+  const source = readFileSync(new URL("./features/board/components/BoardScreen.jsx", import.meta.url), "utf8");
+  assert.match(source, /dismissedRouletteToken !== cellEvent.token/);
+  assert.match(source, /if \(cellEvent\?\.type === "ROULETTE"\) \{[\s\S]*?setDismissedRouletteToken\(cellEvent.token\);\s+return;\s+\}\s+onCloseCellEvent\?\.\(\);/);
 });
 
 test("보드 말은 36칸의 기존 좌표를 따르며 고해상도 투명 이미지를 사용한다", () => {

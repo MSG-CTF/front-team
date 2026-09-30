@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import MileageRouletteModal from "./MileageRouletteModal.jsx";
-import ChallengeSelection, { ReopenChallengeSelection } from "./ChallengeSelection.jsx";
+import ChallengeSelection, { ReopenBoardEvent, ReopenChallengeSelection } from "./ChallengeSelection.jsx";
 import { isChallengeSelectionEmpty } from "../utils/challengeSelection.js";
 import styles from "./BoardScreen.module.css";
 
@@ -235,6 +235,8 @@ export default function BoardEventPanel({
   onSpinRoulette,
   onRetryChanceDraw,
   onCloseCellEvent,
+  isRouletteOpen = true,
+  onReopenRoulette,
   onClearSelectedCell,
   isChallengeSelectionOpen = true,
   onCloseChallengeSelection,
@@ -290,6 +292,7 @@ export default function BoardEventPanel({
   }
 
   if (cellEvent?.type === "ROULETTE") {
+    if (!isRouletteOpen) return <ReopenBoardEvent onClick={onReopenRoulette}>룰렛 다시 보기</ReopenBoardEvent>;
     return (
       <MileageRouletteModal
         key={cellEvent.token}

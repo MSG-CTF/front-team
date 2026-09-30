@@ -89,6 +89,7 @@ export default function BoardScreen({
   const [isLineSummaryOpen, setIsLineSummaryOpen] = useState(false);
   const [selectedLineId, setSelectedLineId] = useState(null);
   const [dismissedSelectionKey, setDismissedSelectionKey] = useState(null);
+  const [dismissedRouletteToken, setDismissedRouletteToken] = useState(null);
   const openListTrigger = useRef(null);
   const openListToggle = useRef(null);
   const lineSummary = useRef(null);
@@ -218,6 +219,15 @@ export default function BoardScreen({
     blockedReason: diceStatus?.blockedReason, cellEvent, showQuarantine, isLoading,
   });
   const isChallengeSelectionOpen = selectionKey !== null && dismissedSelectionKey !== selectionKey;
+  const isRouletteOpen = cellEvent?.type !== "ROULETTE" || dismissedRouletteToken !== cellEvent.token;
+  const closeCellEvent = () => {
+    if (cellEvent?.type === "ROULETTE") {
+      // 창만 숨긴다 요청과 결과를 보존해야 늦은 응답이 창을 다시 열지 않는다
+      setDismissedRouletteToken(cellEvent.token);
+      return;
+    }
+    onCloseCellEvent?.();
+  };
 
   useEffect(() => { setDismissedSelectionKey(null); }, [selectionKey]);
 
@@ -292,6 +302,10 @@ export default function BoardScreen({
                 if (isMutating || trainTravel.journey) return;
                 setIsOpenListVisible(false);
                 setIsLineSummaryOpen(false);
+                if (cellEvent?.type === "ROULETTE" && currentCell?.cellIndex === cellIndex) {
+                  setDismissedRouletteToken(null);
+                  return;
+                }
                 if (selectionKey !== null && currentCell.cellIndex === cellIndex) {
                   setDismissedSelectionKey(null);
                   return;
@@ -375,7 +389,9 @@ export default function BoardScreen({
           onDiscardChance={onDiscardChance}
           onSpinRoulette={onSpinRoulette}
           onRetryChanceDraw={onRetryChanceDraw}
-          onCloseCellEvent={onCloseCellEvent}
+          onCloseCellEvent={closeCellEvent}
+          isRouletteOpen={isRouletteOpen}
+          onReopenRoulette={() => setDismissedRouletteToken(null)}
           onClearSelectedCell={onClearSelectedCell}
           isChallengeSelectionOpen={isChallengeSelectionOpen}
           onCloseChallengeSelection={() => setDismissedSelectionKey(selectionKey)}
