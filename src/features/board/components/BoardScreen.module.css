@@ -1,5 +1,50 @@
 .desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene { display: contents; }
 .mobileNav, .boardControls, .boardHint, .mobileQuarantineTitle, .sceneBackdrop { display: none; }
+.frame { background: #21150d; }
+.airportTitleRow { position: relative; display: flex; align-items: center; justify-content: center; min-height: 36px; }
+.airportConfirm .trainSoundButton {
+  position: absolute; right: -4px; display: grid; place-items: center;
+  width: 44px; min-height: 44px; padding: 10px;
+  border: 0; border-radius: 50%; background: transparent; color: #72502e; cursor: pointer;
+}
+.trainSoundButton svg { width: 22px; height: 22px; }
+.trainSoundButton:hover { background: #8a5a2b16; }
+.trainSoundButton:focus-visible { outline: 2px solid #79532b; outline-offset: 1px; }
+/* 1211×1299 이미지의 불투명 윤곽: x208..1075, y48..1202
+   좌우 반전한 실제 캐릭터 중심을 칸 좌표에 맞추고 기존 말 크기를 유지한다 */
+.boardPiece {
+  position: absolute;
+  z-index: 20;
+  width: 6%;
+  height: auto;
+  object-fit: contain;
+  transform: translate(-47.02725%, -48.113934%) scaleX(-1);
+  filter: drop-shadow(0 1px 1px #25120685);
+  pointer-events: none;
+  user-select: none;
+  transition: left 150ms linear, top 150ms linear;
+}
+@media (prefers-reduced-motion: reduce) {
+  .boardPiece { transition: none; }
+}
+/* 바닥 문양도 보드와 같은 1920×1080 좌표를 쓴다
+   화면을 채우는 cover 배경으로 두면 16:9 밖에서 원판과 축척이 달라진다 */
+@media (min-width: 1101px) {
+  .frame {
+    --board-scene-width: min(100vw, calc(100vh * 16 / 9));
+    --board-scene-height: calc(var(--board-scene-width) * 9 / 16);
+  }
+  .frame > img, .frame > .stage {
+    position: absolute;
+    inset: auto;
+    left: 50%;
+    top: 50%;
+    width: var(--board-scene-width);
+    height: var(--board-scene-height);
+    transform: translate(-50%, -50%);
+  }
+  .frame > img { object-fit: contain; }
+}
 /* 열린 문제 패널 제목은 데스크톱에선 패널 이미지에 그려져 있어 스크린리더에만 노출 */
 .mobileOpenTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 

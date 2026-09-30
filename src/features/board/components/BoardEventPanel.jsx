@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import MileageRouletteModal from "./MileageRouletteModal.jsx";
+import ChallengeSelection, { ReopenChallengeSelection } from "./ChallengeSelection.jsx";
+import { isChallengeSelectionEmpty } from "../utils/challengeSelection.js";
 import styles from "./BoardScreen.module.css";
 
 const OFFSET_OPTIONS = [-3, -2, -1, 1, 2, 3];
@@ -39,41 +41,6 @@ function ActionButton({ children, disabled, onClick }) {
     >
       {children}
     </button>
-  );
-}
-
-function ChallengeCandidates({ candidates, isMutating, onOpenChallenge }) {
-  return (
-    <PanelShell title="문제 선택">
-      <p className="my-[0.45cqw] text-[0.72cqw]">
-        현재 칸에서 도전할 문제를 선택해주세요.
-      </p>
-      <div className="grid gap-[0.4cqw]">
-        {candidates.map((candidate) => (
-          <button
-            key={candidate.challengeId}
-            type="button"
-            disabled={isMutating}
-            onClick={() => onOpenChallenge(candidate.challengeId)}
-            className="flex min-h-[2.25cqw] items-center justify-between gap-[0.7cqw] rounded-[0.35cqw] border border-[#9a6539] bg-[#fff2cf]/90 px-[0.65cqw] py-[0.35cqw] text-left text-[#3e2818] hover:brightness-105 disabled:cursor-wait disabled:opacity-60"
-          >
-            <span className="min-w-0">
-              <strong className="block truncate text-[0.78cqw]">
-                {candidate.title}
-              </strong>
-              <span className="block text-[0.6cqw] opacity-80">
-                {[candidate.category, candidate.clubName]
-                  .filter(Boolean)
-                  .join(" / ")}
-              </span>
-            </span>
-            <span className="shrink-0 text-[0.72cqw] font-bold">
-              {candidate.score} P
-            </span>
-          </button>
-        ))}
-      </div>
-    </PanelShell>
   );
 }
 
@@ -258,6 +225,8 @@ export default function BoardEventPanel({
   selectedCell,
   isMutating,
   isAirportSelecting,
+  isLoading,
+  onReload,
   onConfirmDice,
   onOpenChallenge,
   onUseChanceCard,
@@ -267,6 +236,10 @@ export default function BoardEventPanel({
   onRetryChanceDraw,
   onCloseCellEvent,
   onClearSelectedCell,
+  isChallengeSelectionOpen = true,
+  onCloseChallengeSelection,
+  onReopenChallengeSelection,
+  errorMessage,
 }) {
   if (!myBoard) return null;
 
@@ -329,14 +302,32 @@ export default function BoardEventPanel({
 
   if (
     currentCell?.type === "CHALLENGE" &&
-    currentCell.challengeCandidates.length > 0
+    currentCell.challengeCandidates?.length > 0
   ) {
+    if (!isChallengeSelectionOpen) return <ReopenChallengeSelection onClick={onReopenChallengeSelection} />;
     return (
-      <ChallengeCandidates
+      <ChallengeSelection
+        key={JSON.stringify([currentCell.cellIndex, currentCell.challengeCandidates.map((candidate) => candidate.challengeId)])}
         candidates={currentCell.challengeCandidates}
         isMutating={isMutating}
         onOpenChallenge={onOpenChallenge}
+        onClose={onCloseChallengeSelection}
+        errorMessage={errorMessage}
       />
+    );
+  }
+
+  if (isChallengeSelectionEmpty({ myBoard, currentCell, blockedReason })) {
+    return (
+      <PanelShell title="선택할 수 있는 문제가 없어요">
+        <p className="my-[0.55cqw] text-[0.76cqw]" role="status">
+          현재 이 칸에서 선택할 수 있는 공개 문제가 없어요<br />
+          운영진에 문의하고 잠시 후 다시 조회해주세요
+        </p>
+        <ActionButton disabled={isLoading || isMutating} onClick={onReload}>
+          {isLoading ? "불러오는 중" : "문제 다시 불러오기"}
+        </ActionButton>
+      </PanelShell>
     );
   }
 

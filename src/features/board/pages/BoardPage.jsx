@@ -5,6 +5,7 @@ import BoardScreen from "../components/BoardScreen.jsx";
 import useBoardController from "../hooks/useBoardController.js";
 import useBoardInstance from "../hooks/useBoardInstance.js";
 import { normalizeBoardListView } from "../utils/boardChallengeList.js";
+import { openChallengeWithReveal } from "../utils/challengeReveal.js";
 import { getAirportSelectableCellIndexes, isAirportSelectionMode } from "../utils/boardOverlays.js";
 
 // 문제 리스트(보드) 페이지 - README.md "2. 문제 리스트(보드) 페이지".
@@ -48,12 +49,15 @@ export default function BoardPage() {
     if (!board.myBoard?.isQuarantined) setQuarantineDismissed(false);
   }, [board.myBoard?.isQuarantined]);
 
-  const handleOpenChallenge = async (challengeId, view) => {
+  const handleOpenChallenge = async (challengeId, view, { beforeNavigate } = {}) => {
     try {
-      const openedChallenge = await board.openChallenge(challengeId);
-      if (!openedChallenge) return;
-      navigate(ROUTES.challengeDetail(openedChallenge.challengeId), {
-        state: { boardAccess: openedChallenge, boardList: normalizeBoardListView(view ?? location.state?.boardList) },
+      // 보드는 돌아올 때 다시 조회하고, 첫 선택에만 짧은 카드 연출을 보장한다
+      await openChallengeWithReveal({
+        request: () => board.openChallenge(challengeId, { refreshBoard: false }),
+        beforeNavigate,
+        navigate: (openedChallenge) => navigate(ROUTES.challengeDetail(openedChallenge.challengeId), {
+          state: { boardAccess: openedChallenge, boardList: normalizeBoardListView(view ?? location.state?.boardList) },
+        }),
       });
     } catch {
       // Board controller가 백엔드의 code/message를 화면 오류 상태로 보존한다.
@@ -77,6 +81,7 @@ export default function BoardPage() {
   // 이미 문제를 오픈해둔 칸을 다시 클릭하면 칸 정보 패널 대신 바로 문제
   // 상세로 재진입한다(README 2절 opened_challenges 기준).
   const handleSelectCell = (cellIndex, view) => {
+    if (board.isMutating) return;
     if (isAirportSelecting) {
       const selectable = getAirportSelectableCellIndexes(
         board.boardDefinition?.cells,
@@ -130,9 +135,10 @@ export default function BoardPage() {
       onRollDice={(options) => runBoardAction(() => board.rollDice(options))}
       onConfirmDice={() => runBoardAction(board.confirmDice)}
       onOpenChallenge={handleOpenChallenge}
-      onMoveAirport={async (destinationIndex) => {
-        const result = await runBoardAction(() => board.moveAirport(destinationIndex));
+      onMoveAirport={async (destinationIndex, options) => {
+        const result = await runBoardAction(() => board.moveAirport(destinationIndex, options));
         if (result) setAirportDestinationIndex(null);
+        return result;
       }}
       onCancelAirportDestination={() => setAirportDestinationIndex(null)}
       onOpenChallengeDetail={openChallengeDetail}

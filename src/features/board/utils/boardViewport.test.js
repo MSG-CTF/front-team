@@ -1,7 +1,124 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import postcss from "postcss";
 import { getBoardZoomScrollLeft } from "./boardViewport.js";
+
+function mediaRule(path, condition, selector) {
+  const root = postcss.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
+  const values = {};
+  root.walkAtRules("media", (media) => {
+    if (media.params !== condition) return;
+    media.walkRules(selector, (rule) => rule.walkDecls((decl) => { values[decl.prop] = decl.value; }));
+  });
+  return values;
+}
+
+test("모바일 두 후보는 데스크톱의 개별 left 좌표를 남기지 않는다", () => {
+  const rule = mediaRule("../components/ChallengeSelection.module.css", "(max-width: 600px)",
+    '.cards[data-count="2"] .card:first-child, .cards[data-count="2"] .card:nth-child(2)');
+  assert.equal(rule.left, "auto");
+});
+
+test("데스크톱 바닥과 무대는 같은 크기와 중심을 사용하고 다른 화면에는 영향을 주지 않는다", () => {
+  const path = "../components/BoardScreen.module.css";
+  const condition = "(min-width: 1101px)";
+  const frame = mediaRule(path, condition, ".frame");
+  const scene = mediaRule(path, condition, ".frame > img, .frame > .stage");
+  const background = mediaRule(path, condition, ".frame > img");
+  assert.equal(frame["--board-scene-width"], "min(100vw, calc(100vh * 16 / 9))");
+  assert.equal(frame["--board-scene-height"], "calc(var(--board-scene-width) * 9 / 16)");
+  assert.deepEqual(scene, {
+    position: "absolute", inset: "auto", left: "50%", top: "50%",
+    width: "var(--board-scene-width)", height: "var(--board-scene-height)",
+    transform: "translate(-50%, -50%)",
+  });
+  assert.equal(background["object-fit"], "contain");
+  const common = readFileSync(new URL("../../../components/common/FixedAspectStage.jsx", import.meta.url), "utf8");
+  assert.match(common, /object-cover/);
+});
+
+test("16:9, 16:10, 세로로 긴 창과 울트라와이드에서 배경과 카드의 축척이 같다", () => {
+  // 바로 위 테스트에서 이 계산과 실제 CSS 선언의 일치를 확인한다
+  for (const [width, height] of [[1920, 1080], [1280, 720], [1440, 900], [1280, 1008], [2560, 1080], [1101, 900], [1600, 600]]) {
+    const sceneWidth = Math.min(width, height * 16 / 9);
+    const sceneHeight = sceneWidth * 9 / 16;
+    const scale = sceneWidth / 1920;
+    const left = (width - sceneWidth) / 2;
+    const top = (height - sceneHeight) / 2;
+    assert.ok(left >= -0.001 && top >= -0.001);
+    assert.ok(Math.abs(sceneHeight / 1080 - scale) < 1e-10);
+    for (const [x, y] of [[448, 289], [596, 482], [805, 460], [1038, 481]]) {
+      const backgroundPoint = [left + x * scale, top + y * scale];
+      const stagePoint = [left + sceneWidth * x / 1920, top + sceneHeight * y / 1080];
+      assert.ok(Math.abs(backgroundPoint[0] - stagePoint[0]) < 1e-9);
+      assert.ok(Math.abs(backgroundPoint[1] - stagePoint[1]) < 1e-9);
+    }
+  }
+});
+
+test("카드 선택은 보드를 없애지 않고 전체 화면을 반투명하게 어둡게 한다", () => {
+  const path = "../components/ChallengeSelection.module.css";
+  const root = postcss.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
+  const properties = selector => {
+    const rule = root.nodes.find(node => node.type === "rule" && node.selector === selector);
+    return Object.fromEntries(rule.nodes.filter(node => node.type === "decl").map(node => [node.prop, node.value]));
+  };
+  const backdrop = properties(".backdrop");
+  assert.equal(backdrop.position, "fixed");
+  assert.equal(backdrop.inset, "0");
+  assert.equal(backdrop.background, "rgb(8 6 4 / 68%)");
+  assert.equal(backdrop["backdrop-filter"], undefined);
+  assert.equal(backdrop["overflow-x"], "hidden");
+  assert.equal(backdrop["overflow-y"], "auto");
+  assert.ok(Number(backdrop["z-index"]) > 80);
+  const scene = properties(".scene");
+  assert.equal(scene["min-height"], "100%");
+  assert.equal(scene["container-type"], "inline-size");
+  assert.equal(properties(".selection").width, "var(--choice-width)");
+  assert.equal(properties(".selection")["aspect-ratio"], "782 / 314");
+  const source = readFileSync(new URL("../components/ChallengeSelection.jsx", import.meta.url), "utf8");
+  assert.match(source, /createPortal\(content, document.body\)/);
+  assert.doesNotMatch(source, /bg-1920x1080|sceneBackdrop/);
+  const screen = readFileSync(new URL("../components/BoardScreen.jsx", import.meta.url), "utf8");
+  assert.doesNotMatch(screen, /isHidden=\{isChallengeSelectionOpen\}/);
+});
+
+test("카드 선택을 닫으면 배경 스크롤과 이전 포커스를 되돌린다", () => {
+  const source = readFileSync(new URL("../components/ChallengeSelection.jsx", import.meta.url), "utf8");
+  assert.match(source, /previousOverflow = document.body.style.overflow/);
+  assert.match(source, /document.body.style.overflow = "hidden"/);
+  assert.match(source, /document.body.style.overflow = previousOverflow/);
+  assert.match(source, /element.inert = true/);
+  assert.match(source, /element.inert = inert/);
+  assert.match(source, /previous\?\.isConnected/);
+  const reduced = mediaRule("../components/ChallengeSelection.module.css", "(prefers-reduced-motion: reduce)", ".backdrop");
+  assert.equal(reduced.animation, "none");
+});
+
+test("검은 선택창에서도 후보 수와 화면 높이가 카드 비율을 바꾸지 않는다", () => {
+  const path = "../components/ChallengeSelection.module.css";
+  const portrait = mediaRule(path, "(max-width: 600px)", ".scene");
+  assert.equal(portrait["--choice-width"], "min(100cqw, 410px)");
+  assert.equal(portrait.padding, "84px 22px 32px");
+  const tablet = mediaRule(path, "(max-width: 1100px)", ".scene");
+  assert.equal(tablet["--choice-width"], "min(100cqw, 782px)");
+  const close = mediaRule(path, "(max-width: 600px)", ".close");
+  assert.ok(parseFloat(close.top) + parseFloat(close.height) <= -50);
+  const root = postcss.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
+  root.walkRules((rule) => {
+    if (rule.selector !== ".scene") return;
+    rule.walkDecls((decl) => {
+      if (decl.prop === "--choice-width") assert.doesNotMatch(decl.value, /(?:vh|svh|dvh|cqh)/);
+    });
+  });
+  for (const width of [320, 390, 600, 768, 1024, 1440]) {
+    const padding = width <= 600 ? 44 : width <= 1100 ? 48 : 64;
+    const choiceWidth = Math.min(width - padding, width <= 600 ? 410 : width <= 1100 ? 782 : 1000);
+    assert.ok(choiceWidth <= width - padding);
+    assert.ok((choiceWidth - 18) / 2 >= 120);
+  }
+});
 
 test("모바일 보드의 기본 너비는 화면에 맞추고 확대한 상태에만 최소 너비를 둔다", () => {
   const css = readFileSync(new URL("../components/BoardScreen.module.css", import.meta.url), "utf8");
