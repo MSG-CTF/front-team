@@ -8,6 +8,26 @@ export const ROULETTE_SEGMENTS = Object.freeze([50, 100, 150, 200, 50, 100, 150,
 export const ROULETTE_SEGMENT_ANGLE = 360 / ROULETTE_SEGMENTS.length;
 const ROULETTE_BASE_TURNS = 5;
 
+// 원판 조각과 숫자를 같은 극좌표로 그린다 CSS transform 정렬값과 섞지 않는다
+export function getRouletteSegmentGeometry(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= ROULETTE_SEGMENTS.length) return null;
+  const angle = index * ROULETTE_SEGMENT_ANGLE;
+  const labelAngle = angle + ROULETTE_SEGMENT_ANGLE / 2;
+  const pointAt = (degrees, radius) => {
+    const radians = (degrees - 90) * Math.PI / 180;
+    return [160 + Math.cos(radians) * radius, 160 + Math.sin(radians) * radius];
+  };
+  const start = pointAt(angle, 144);
+  const end = pointAt(angle + ROULETTE_SEGMENT_ANGLE, 144);
+  const [labelX, labelY] = pointAt(labelAngle, 101);
+  return {
+    path: `M160 160 L${start.join(" ")} A144 144 0 0 1 ${end.join(" ")} Z`,
+    labelX,
+    labelY,
+    labelAngle,
+  };
+}
+
 // 휠의 i번째 칸은 [i*각도, (i+1)*각도) 구간(12시 방향 기준 시계방향)에 그려진다.
 // 12시 포인터 아래에 targetIndex 칸의 가운데가 오도록 하는 누적 회전각을 돌려준다.
 export function getRouletteRotation(mileage, currentRotation = 0, pick = Math.random) {

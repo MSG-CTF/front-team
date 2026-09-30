@@ -1,9 +1,8 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { BOARD_CELL_COUNT, getBoardCellPosition } from "../utils/boardData.js";
 import { getBoardCellVisitState } from "../utils/boardVisited.js";
-import BoardVisitedOverlay from "./BoardVisitedOverlay.jsx";
 import BoardLineOverlay from "./BoardLineOverlay.jsx";
-import BoardArtwork from "./BoardArtwork.jsx";
+import BoardSurface from "./BoardSurface.jsx";
 import BoardPiece from "./BoardPiece.jsx";
 import BoardTrain from "./BoardTrain.jsx";
 import { DiceErrorBoundary, DiceFallback } from "./DiceFallback.jsx";
@@ -84,16 +83,7 @@ export default function BoardTrack({
 
   return (
     <div data-board-layer="track" style={{ visibility: isHidden ? "hidden" : undefined }} className={`${styles.track} absolute left-[23.33%] top-[26.76%] w-[49.53%] h-[66.11%]`}>
-      <svg
-        viewBox="0 0 1772 1330"
-        role="img"
-        aria-label="게임 보드판"
-        className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-      >
-        <BoardArtwork cells={cells} />
-      </svg>
-
-      <BoardVisitedOverlay visitedCellIndexes={visitedCellIndexes} cells={cells} />
+      <BoardSurface cells={cells} visitedCellIndexes={visitedCellIndexes} />
       <BoardLineOverlay lines={lines} selectedLineId={selectedLineId} onSelectLine={onSelectLine} />
 
       {trainTravel?.journey

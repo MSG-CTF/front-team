@@ -292,10 +292,12 @@ export default function BoardEventPanel({
   if (cellEvent?.type === "ROULETTE") {
     return (
       <MileageRouletteModal
+        key={cellEvent.token}
         event={cellEvent}
         isMutating={isMutating}
         onSpin={onSpinRoulette}
         onClose={onCloseCellEvent}
+        errorMessage={errorMessage}
       />
     );
   }
