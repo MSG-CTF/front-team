@@ -138,6 +138,27 @@ test("화면에서 쓰는 모든 원본 이미지가 저장소 안에 있고 링
       );
     }
 });
+test("다람쥐 세 자세는 눈과 팔다리 털색을 맞춘 이미지를 원래 순서로 표시한다", () => {
+  const images = [...main.matchAll(/src="(\/assets\/intro\/mascot-dice-[^"]+)"/g)]
+    .map((match) => match[1]);
+  assert.deepEqual(images, [
+    "/assets/intro/mascot-dice-ready-v3.png",
+    "/assets/intro/mascot-dice-throw-v3.png",
+    "/assets/intro/mascot-dice-land-v4.png",
+  ]);
+});
+test("수정한 주사위 이미지는 투명 정사각형 크기와 기존 파일 용량 이내를 유지한다", () => {
+  const root = new URL("../../../", import.meta.url);
+  for (const [pose, version] of [["ready", 3], ["throw", 3], ["land", 4]]) {
+    const original = readFileSync(new URL(`public/assets/intro/mascot-dice-${pose}-v2.png`, root));
+    const corrected = readFileSync(new URL(`public/assets/intro/mascot-dice-${pose}-v${version}.png`, root));
+    assert.equal(corrected.subarray(0, 8).toString("hex"), "89504e470d0a1a0a");
+    assert.equal(corrected.readUInt32BE(16), 1254);
+    assert.equal(corrected.readUInt32BE(20), 1254);
+    assert.equal(corrected[25], 6, `${pose}: RGBA transparency`);
+    assert.ok(corrected.length <= original.length, `${pose}: image byte budget`);
+  }
+});
 test("인트로 CSS는 게임 페이지에 적용되는 전역 선택자를 추가하지 않는다", () => {
   const css = readFileSync(new URL("./intro.css", import.meta.url), "utf8");
   const parsed = postcss.parse(css);

@@ -3,6 +3,11 @@ import useInView from "../hooks/useInView.js";
 import { MotionControl, useMotion } from "./MotionProvider.jsx";
 
 const POSES = ["ready", "throw", "land"];
+const POSE_IMAGES = {
+  ready: "/assets/intro/mascot-dice-ready-v3.png",
+  throw: "/assets/intro/mascot-dice-throw-v3.png",
+  land: "/assets/intro/mascot-dice-land-v4.png",
+};
 const HOLD_MS = [1600, 850, 2200];
 
 export default function MascotSequence() {
@@ -57,7 +62,7 @@ export default function MascotSequence() {
               images.current[index] = image;
             }}
             className={`mascot-pose${index === activeFrame ? " is-active" : ""}`}
-            src={`/assets/intro/mascot-dice-${pose}-v2.png`}
+            src={POSE_IMAGES[pose]}
             width="1254"
             height="1254"
             alt=""
