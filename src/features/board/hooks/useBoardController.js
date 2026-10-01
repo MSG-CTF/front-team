@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { openChallengeAccess } from "../utils/openChallengeAccess.js";
 import { presentTrainJourney } from "../utils/trainJourney.js";
+import { createStartRewardRecorder } from "../utils/boardStartReward.js";
 import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
 import {
   confirmChanceCard,
@@ -51,6 +52,8 @@ export default function useBoardController() {
   const mutationLockRef = useRef(false);
   const mutationKeysRef = useRef(new Map());
   const processedCellEventsRef = useRef(new Set());
+  const startRewardRecorder = useRef(null);
+  if (startRewardRecorder.current === null) startRewardRecorder.current = createStartRewardRecorder();
   const [boardDefinition, setBoardDefinition] = useState(null);
   const [myBoard, setMyBoard] = useState(null);
   const [diceStatus, setDiceStatus] = useState(null);
@@ -68,6 +71,7 @@ export default function useBoardController() {
   const [pendingRoll, setPendingRoll] = useState(null);
   const [pendingChanceChoice, setPendingChanceChoice] = useState(null);
   const [cellEvent, setCellEvent] = useState(null);
+  const [startRewardEvent, setStartRewardEvent] = useState(null);
   const [awaitingDiscard, setAwaitingDiscard] = useState(false);
   const [selectedCellIndex, setSelectedCellIndex] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -164,6 +168,12 @@ export default function useBoardController() {
     }
   }, []);
 
+  const showStartReward = useCallback((result, token, source) => {
+    if (!mountedRef.current) return;
+    const reward = startRewardRecorder.current(result, token, source);
+    if (reward) setStartRewardEvent(reward);
+  }, []);
+
   const syncProgress = useCallback(
     async ({ includeCurrentCell = true, preserveDisplayPosition = false } = {}) => {
       const [myBoardResponse, diceResponse] = await Promise.all([
@@ -256,13 +266,14 @@ export default function useBoardController() {
             });
           } else {
             if (mountedRef.current) setPendingRoll(null);
+            showStartReward(rollResult, idempotencyKey);
             await syncProgress();
           }
 
           return rollResult;
         },
       }),
-    [animateMovement, runMutation, syncProgress],
+    [animateMovement, runMutation, showStartReward, syncProgress],
   );
 
   const handleConfirmDice = useCallback(
@@ -276,11 +287,12 @@ export default function useBoardController() {
           );
           await animateMovement(confirmResult.movementPath);
           if (mountedRef.current) setPendingRoll(null);
+          showStartReward(confirmResult, idempotencyKey);
           await syncProgress();
           return confirmResult;
         },
       }),
-    [animateMovement, runMutation, syncProgress],
+    [animateMovement, runMutation, showStartReward, syncProgress],
   );
 
   const handleOpenChallenge = useCallback(
@@ -310,11 +322,12 @@ export default function useBoardController() {
           );
           await presentTrainJourney(moveResult, onTravelResult, animateMovement);
           if (mountedRef.current) setDisplayPosition(moveResult.currentPosition);
+          showStartReward(moveResult, idempotencyKey, "airport");
           await syncProgress();
           return moveResult;
         },
       }),
-    [animateMovement, runMutation, syncProgress],
+    [animateMovement, runMutation, showStartReward, syncProgress],
   );
 
   const handleDrawChance = useCallback(
@@ -604,6 +617,7 @@ export default function useBoardController() {
     pendingRoll,
     pendingChanceChoice,
     cellEvent,
+    startRewardEvent,
     awaitingDiscard,
     ownedChanceCards,
     cellStatesByIndex,

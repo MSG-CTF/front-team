@@ -1,10 +1,13 @@
 import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { BOARD_CELL_COUNT, getBoardCellPosition } from "../utils/boardData.js";
-import { getBoardCellVisitState } from "../utils/boardVisited.js";
+import { getBoardCellVisitState, getBoardSpentSpecialCells } from "../utils/boardVisited.js";
+import { getBoardSolvedCellIndexes } from "../utils/boardLines.js";
 import BoardLineOverlay from "./BoardLineOverlay.jsx";
 import BoardSurface from "./BoardSurface.jsx";
+import BoardCellTarget from "./BoardCellTarget.jsx";
 import BoardPiece from "./BoardPiece.jsx";
 import BoardTrain from "./BoardTrain.jsx";
+import BoardStartReward from "./BoardStartReward.jsx";
 import { DiceErrorBoundary, DiceFallback } from "./DiceFallback.jsx";
 import styles from "./BoardScreen.module.css";
 
@@ -32,6 +35,7 @@ export default function BoardTrack({
   consumedCellIndexes,
   piecePosition,
   trainTravel,
+  startRewardEvent = null,
   onSelectCell,
   onRollDice,
   canRoll,
@@ -59,9 +63,11 @@ export default function BoardTrack({
   const [rolling, setRolling] = useState(false);
   const [diceReady, setDiceReady] = useState(false);
   const visitedCellIndexes = cells
-    .filter((cell) => getBoardCellVisitState(cell.cellIndex, consumedCellIndexes, cellStatesByIndex).isVisited)
+    .filter((cell) => getBoardCellVisitState(cell.cellIndex, consumedCellIndexes, cellStatesByIndex, cell.type).isVisited)
     .map((cell) => cell.cellIndex);
   const linesByCell = new Map(lines.flatMap((line) => line.cellIndexes.map((index) => [index, line])));
+  const solvedCellIndexes = getBoardSolvedCellIndexes(cells, cellStatesByIndex);
+  const spentSpecialCells = getBoardSpentSpecialCells(cells, consumedCellIndexes, cellStatesByIndex);
 
   const handleRollDice = async () => {
     if ((!canRoll && !diceAnimationTest) || !diceReady || rollingRef.current) return;
@@ -84,7 +90,9 @@ export default function BoardTrack({
   return (
     <div data-board-layer="track" style={{ visibility: isHidden ? "hidden" : undefined }} className={`${styles.track} absolute left-[23.33%] top-[26.76%] w-[49.53%] h-[66.11%]`}>
       <BoardSurface cells={cells} visitedCellIndexes={visitedCellIndexes} />
-      <BoardLineOverlay lines={lines} selectedLineId={selectedLineId} onSelectLine={onSelectLine} />
+      <BoardLineOverlay lines={lines} solvedCellIndexes={solvedCellIndexes} spentSpecialCells={spentSpecialCells} selectedLineId={selectedLineId} onSelectLine={onSelectLine}
+        isInteractive={!isRolling && !rolling && !trainTravel?.journey && selectableCellIndexes == null} />
+      <BoardStartReward reward={startRewardEvent} />
 
       {trainTravel?.journey
         ? <BoardTrain journey={trainTravel.journey} onComplete={trainTravel.finish} onProgress={trainTravel.onProgress} onStart={trainTravel.onStart} onStop={trainTravel.onStop} />
@@ -121,31 +129,28 @@ export default function BoardTrack({
       {cells.map((cell) => {
         const coordinates = getBoardCellPosition(cell.cellIndex);
         const cellLine = linesByCell.get(cell.cellIndex);
-        const visitState = getBoardCellVisitState(cell.cellIndex, consumedCellIndexes, cellStatesByIndex);
+        const visitState = getBoardCellVisitState(cell.cellIndex, consumedCellIndexes, cellStatesByIndex, cell.type);
         const isSelecting = selectableCellIndexes != null;
         const isSelectable = isSelecting && selectableCellIndexes.has(cell.cellIndex);
         const isHighlighted = highlightedCellIndex === cell.cellIndex;
-        const selectionClass = !isSelecting
-          ? ""
-          : isHighlighted
-            ? "shadow-[0_0_0_0.22cqw_#ffe090,0_0_1.2cqw_0.3cqw_rgba(255,214,120,0.9)]"
-            : isSelectable
-              ? "shadow-[0_0_0_0.12cqw_rgba(255,224,144,0.75),0_0_0.7cqw_rgba(255,214,120,0.55)] hover:shadow-[0_0_0_0.2cqw_#ffe090,0_0_1cqw_rgba(255,214,120,0.85)]"
-              : "cursor-not-allowed";
+        const selectionState = !isSelecting ? undefined : !isSelectable ? "unavailable" : isHighlighted ? "selected" : "available";
 
         return (
           <button
             key={cell.cellIndex}
             type="button"
             disabled={isRolling || Boolean(trainTravel?.journey)}
-            onClick={() => onSelectCell(cell.cellIndex)}
+            onClick={() => { if (!isSelecting || isSelectable) onSelectCell(cell.cellIndex); }}
+            tabIndex={isSelecting && !isSelectable ? -1 : undefined}
             aria-disabled={isSelecting && !isSelectable ? true : undefined}
             aria-pressed={isSelecting ? isHighlighted : undefined}
             aria-label={`${cell.cellIndex}번 ${cell.name || cell.type} 칸, ${visitState.label}${cellLine ? `, ${cellLine.label}${cellLine.isCompleted ? ", 라인 독점 완료" : ""}` : ""}${isSelecting ? (isSelectable ? ", 이동 가능" : ", 이동 불가") : ""}`}
             data-visited={visitState.isVisited}
+            data-selection-state={selectionState}
             style={{ left: `${coordinates.x}%`, top: `${coordinates.y}%` }}
-            className={`absolute z-10 h-[11%] w-[8.5%] -translate-x-1/2 -translate-y-1/2 rounded-[45%] border-0 bg-transparent p-0 cursor-pointer transition-shadow focus-visible:outline focus-visible:outline-[0.2cqw] focus-visible:outline-[#ffe090] ${selectionClass}`}
+            className={styles.boardCellButton}
           >
+            <BoardCellTarget cellIndex={cell.cellIndex} />
             <span className="sr-only">
               {cell.cellIndex}번 {cell.name || cell.type} 칸
             </span>

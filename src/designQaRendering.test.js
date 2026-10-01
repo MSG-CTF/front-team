@@ -28,6 +28,7 @@ before(async () => {
     DiceStatusPanel: "board/components/DiceStatusPanel",
     BoardVisitedOverlay: "board/components/BoardVisitedOverlay",
     BoardSurface: "board/components/BoardSurface",
+    BoardCellTarget: "board/components/BoardCellTarget",
     MileageRoulette: "board/components/MileageRouletteModal",
     BoardArtwork: "board/components/BoardArtwork",
     BoardPiece: "board/components/BoardPiece",
@@ -37,6 +38,7 @@ before(async () => {
     BoardEventPanel: "board/components/BoardEventPanel",
     ChallengeSelection: "board/components/ChallengeSelection",
     BoardLineOverlay: "board/components/BoardLineOverlay",
+    BoardStartReward: "board/components/BoardStartReward",
     BoardLineSummary: "board/components/BoardLineSummary",
     OpenChallengesPanel: "board/components/OpenChallengesSidePanel",
     AdminLayout: "admin/components/AdminLayout",
@@ -87,6 +89,23 @@ function declarations(root, selector) {
   root.walkRules(selector, (rule) => rule.walkDecls((decl) => result.push([decl.prop, decl.value])));
   return result;
 }
+
+test("출발칸 보상은 게임 화면을 막지 않고 실제 금액과 실제 충전량만 보여준다", () => {
+  assert.equal(render("BoardStartReward"), "");
+  const mileage = render("BoardStartReward", { reward: { token: "lap-1", kind: "lap", mileageGained: 100, rollGained: 0 } });
+  assert.match(mileage, /한 바퀴 완주/);
+  assert.match(mileage, /100 마일리지 적립/);
+  assert.match(mileage, /\+100/);
+  assert.doesNotMatch(mileage, /주사위.*충전|role="dialog"|<button/);
+  assert.match(mileage, /aria-live="polite"/);
+  const start = render("BoardStartReward", { reward: { token: "land-1", kind: "start", mileageGained: 100, rollGained: 1 } });
+  assert.match(start, /출발칸 보상/);
+  assert.match(start, /주사위 1개 충전/);
+  const root = css("features/board/components/BoardScreen.module.css");
+  assert.ok(declarations(root, ".startReward").some(([key, value]) => key === "pointer-events" && value === "none"));
+  const reduced = root.nodes.find(node => node.type === "atrule" && node.params === "(prefers-reduced-motion: reduce)" && declarations(node, ".startRewardVisual").length > 0);
+  assert.ok(declarations(reduced, ".startRewardVisual").some(([key, value]) => key === "animation" && value === "none"));
+});
 
 test("문제 후보가 0개면 재조회 안내를 띄우고 다음 칸으로 넘기지 않는다", () => {
   const props = { myBoard: {}, currentCell: { type: "CHALLENGE", challengeCandidates: [] }, blockedReason: "CHALLENGE_NOT_SELECTED", ownedChanceCards: [] };
@@ -287,6 +306,39 @@ test("방문 음영과 보드 원판은 한 SVG 좌표계를 공유하고 보드
   assert.match(html, /viewBox="0 0 1772 1330"/);
   assert.match(html, /data-board-visited="true"/);
   assert.doesNotMatch(html, /filter=|<filter|visitedArtwork/);
+});
+
+test("방문한 카드와 룰렛은 문양을 남기고 일반 문제의 방문 음영은 그대로 둔다", () => {
+  const cells = [2, 7, 16, 25, 30].map((cellIndex) => ({ cellIndex, type: cellIndex === 2 ? "CHALLENGE" : [7, 30].includes(cellIndex) ? "CHANCE" : "ROULETTE" }));
+  const html = render("BoardSurface", { cells, visitedCellIndexes: [2, 7, 16, 25, 30] });
+  assert.match(html, /data-visited-surface="2"><path[^>]*fill-opacity="0.62"/);
+  for (const index of [7, 16, 25, 30]) {
+    assert.match(html, new RegExp(`data-visited-surface="${index}" data-visited-special="true"><path[^>]*fill-opacity="0.44"`));
+  }
+  assert.equal((html.match(/data-visited-special="true"/g) || []).length, 4);
+  assert.match(html, /data-cell-artwork="16-roulette"/);
+  assert.match(html, /data-cell-artwork="7-chance"/);
+});
+
+test("기차 목적지 선택선은 36칸 모두 원본 면에 붙고 금테 밖으로 퍼지지 않는다", () => {
+  for (let cellIndex = 1; cellIndex <= 36; cellIndex++) {
+    const html = render("BoardCellTarget", { cellIndex });
+    assert.match(html, new RegExp(`data-cell-target="${cellIndex}"`));
+    assert.ok(html.includes(`d="${getBoardCellMaskPath(cellIndex)}"`));
+    assert.match(html, /clipPathUnits="userSpaceOnUse"/);
+    assert.match(html, /clip-path="url\(#[^\"]+\)"/);
+    assert.match(html, /vector-effect="non-scaling-stroke"/);
+    assert.match(html, /aria-hidden="true"/);
+    assert.doesNotMatch(html, /<ellipse|<circle|<filter|<image|role="button"/);
+  }
+  assert.equal(render("BoardCellTarget", { cellIndex: 0 }), "");
+  const track = readFileSync(new URL("./features/board/components/BoardTrack.jsx", import.meta.url), "utf8");
+  assert.match(track, /if \(!isSelecting \|\| isSelectable\) onSelectCell\(cell.cellIndex\)/);
+  assert.match(track, /tabIndex=\{isSelecting && !isSelectable \? -1 : undefined\}/);
+  assert.doesNotMatch(track, /selectionClass|transition-shadow|hover:shadow|focus-visible:outline/);
+  const root = css("features/board/components/BoardScreen.module.css");
+  assert.ok(declarations(root, ".cellTargetLayer").some(([property, value]) => property === "pointer-events" && value === "none"));
+  assert.ok(declarations(root, ".cellTargetOutline").some(([property, value]) => property === "stroke-width" && value === "3px"));
 });
 
 test("룰렛의 숫자는 SVG 원판 안에 있고 회전하지 않는 포인터는 밖에 있다", () => {
@@ -497,7 +549,7 @@ test("라인 데이터가 없으면 표시하지 않고 풀이 진행과 완료�
   assert.equal(render("BoardLineOverlay"), "");
   const lines = prepareBoardLines([
     { lineId: "a", label: "1번 라인", cellIndexes: [2,3,4,5,6], solvedCellIndexes: [2,3], isCompleted: false },
-    { lineId: "b", label: "2번 라인", cellIndexes: [8,9,10,11,12], solvedCellIndexes: [8,9,10,11,12], isCompleted: true },
+    { lineId: "b", label: "2번 라인", cellIndexes: [8,9,10,11,12], solvedCellIndexes: [8,9,10,11,12], isCompleted: true, bonusScore: 200 },
   ]);
   const html = render("BoardLineOverlay", { lines });
   assert.match(html, /1번 라인, 2\/5 해결/);
@@ -506,7 +558,16 @@ test("라인 데이터가 없으면 표시하지 않고 풀이 진행과 완료�
   assert.equal((html.match(/data-line-cell=/g) || []).length, 10);
   assert.equal((html.match(/data-line-badge=/g) || []).length, 1);
   assert.equal((html.match(/<clipPath /g) || []).length, 10);
-  assert.match(html, /<image[^>]+href="\/assets\/board\/line-complete-crest-v1\.png"/);
+  assert.equal((html.match(/data-line-outline=/g) || []).length, 7);
+  assert.match(html, /data-line-outline="8"/);
+  assert.match(html, /data-line-outline="2"/);
+  assert.doesNotMatch(html, /data-line-outline="4"/);
+  assert.equal((html.match(/data-outline-state="solved"/g) || []).length, 2);
+  assert.equal((html.match(/data-outline-state="claimed"/g) || []).length, 5);
+  assert.equal((html.match(/data-line-finish=/g) || []).length, 5);
+  assert.equal((html.match(/vector-effect="non-scaling-stroke"/g) || []).length, 12);
+  assert.doesNotMatch(html, /<image|line-complete-crest-v1/);
+  assert.equal((html.match(/data-line-region-caption=/g) || []).length, 1);
   assert.doesNotMatch(html, /lineClaimFlash|lineSweep|lineRail|lineClaimRibbon|lineCellBand|lineSolveMark|lineCellSelected/);
   const selected = render("BoardLineOverlay", { lines, selectedLineId: "a" });
   assert.equal((selected.match(/class="[^"]*lineCellSelected/g) || []).length, 5);
@@ -515,16 +576,209 @@ test("라인 데이터가 없으면 표시하지 않고 풀이 진행과 완료�
   }
 });
 
-test("라인 시안에는 가짜 지급 점수를 표시하지 않고 0점과 미제공을 구분한다", () => {
-  const make = (bonusScore) => prepareBoardLines([{ lineId: "a", label: "1번 라인", cellIndexes: [2,3], solvedCellIndexes: [2,3], isCompleted: true, bonusScore }]);
+test("방문하거나 일부 문제만 푼 라인에는 배점이나 점수 표식을 만들지 않는다", () => {
+  const lines = prepareBoardLines([
+    { lineId: "a", label: "1번 라인", cellIndexes: [2,3,4,5,6], solvedCellIndexes: [2,3], consumedCellIndexes: [2,3,4,5,6], rewardScore: 150 },
+    { lineId: "b", label: "2번 라인", cellIndexes: [8,9,10,11,12], solvedCellIndexes: [], rewardScore: 200 },
+  ]);
+  const html = render("BoardLineOverlay", { lines });
+  assert.doesNotMatch(html, /data-line-region=|data-line-region-score=|data-line-anchor-cell=|data-line-tile-plate=|150 pts|200 pts|미정/);
+  assert.equal((html.match(/data-line-outline=/g) || []).length, 2);
+  assert.doesNotMatch(html, /data-line-outline="8"|data-line-badge=|line-complete-crest-v1/);
+  assert.doesNotMatch(html, /<rect|<foreignObject|>\+ 150 pts/);
+  assert.match(html, /2번 라인, 0\/5 해결/);
+});
+
+test("칸에 새긴 점수는 독점 완료와 실제 지급값이 확인된 라인에만 표시한다", () => {
+  const create = (isCompleted, bonusScore) => prepareBoardLines([
+    { lineId: "a", label: "1번 라인", cellIndexes: [2,3,4,5,6], solvedCellIndexes: [2,3,4,5,6], rewardScore: 200, isCompleted, bonusScore },
+  ]);
+  const completed = render("BoardLineOverlay", { lines: create(true, 150) });
+  assert.match(completed, /data-line-region-name="a">획득/);
+  assert.match(completed, /data-line-region-score="a">150<tspan[^>]*>pts<\/tspan>/);
+  assert.match(completed, /aria-label="1번 라인, 독점 완료, 상세 보기, 획득 150 pts"/);
+  assert.match(completed, /data-line-badge="a"/);
+  assert.match(completed, /data-line-anchor-cell="4"/);
+  assert.match(completed, /clip-path="url\(#[^"]+-4\)"[^>]*data-line-region="a"/);
+  assert.match(completed, /<path[^>]*fill="transparent"[^>]*data-line-region-hit="a"/);
+  assert.doesNotMatch(completed, /<ellipse/);
+  assert.doesNotMatch(completed, /<image|lineTilePlate|lineTileEtching|data-line-tile-plate=|data-line-region-score="a">200|data-line-region-score="a">\+/);
+  const pending = render("BoardLineOverlay", { lines: create(false, 150) });
+  assert.match(pending, /완료 확인 중/);
+  assert.doesNotMatch(pending, /data-line-region=|data-line-region-score=|data-line-badge=|data-line-region-hit=|150 pts|200 pts/);
+  assert.match(render("BoardLineOverlay", { lines: create(true, 0) }), /data-line-region-score="a">0<tspan[^>]*>pts<\/tspan>/);
+  for (const score of [null, undefined, -1, NaN, Infinity]) {
+    const missing = render("BoardLineOverlay", { lines: create(true, score) });
+    assert.match(missing, /독점 완료/);
+    assert.doesNotMatch(missing, /data-line-region=|data-line-region-score=|200 pts|확인 중/);
+  }
+});
+
+test("흩어진 완료 라인에는 임의 점수 표식을 만들지 않고 긴 라인 이름은 보존한다", () => {
+  const scattered = prepareBoardLines([{ lineId: "s", label: "흩어진 라인", cellIndexes: [1,10,19,28], solvedCellIndexes: [1,10,19,28], isCompleted: true, bonusScore: 100 }]);
+  assert.doesNotMatch(render("BoardLineOverlay", { lines: scattered }), /data-line-region=/);
+  const fullName = "매우긴라인이름이원판이나다른라인영역을침범하지않아야함";
+  const lines = prepareBoardLines([{ lineId: "a", label: fullName, cellIndexes: [2,3,4,5,6], solvedCellIndexes: [] }]);
+  const html = render("BoardLineOverlay", { lines });
+  assert.match(html, new RegExp(`${fullName}, 0/5 해결`));
+  assert.doesNotMatch(html, /data-line-region=|data-line-region-score=|data-line-outline=|data-line-badge=|미정/);
+});
+
+test("획득 점수는 프레임 없이 보드 좌표로 확대하고 숫자만 금색으로 새긴다", () => {
+  const root = css("features/board/components/BoardScreen.module.css");
+  assert.deepEqual(declarations(root, ".lineRegion"), [["pointer-events", "none"]]);
+  assert.deepEqual(declarations(root, ".lineRegion.lineClaimCrest"), [["pointer-events", "all"]]);
+  assert.deepEqual(declarations(root, ".lineRegionHitArea"), [["pointer-events", "all"]]);
+  assert.equal(declarations(root, ".lineTilePlate").length, 0);
+  assert.equal(declarations(root, ".lineTileEtching").length, 0);
+  assert.ok(declarations(root, ".lineRegionScore").some(([property, value]) => property === "fill" && value === "#ffe2a0"));
+  assert.ok(declarations(root, ".lineRegionScore").some(([property, value]) => property === "paint-order" && value === "stroke fill"));
+  assert.ok(declarations(root, ".lineRegionScore").some(([property, value]) => property === "font" && value.includes("var(--line-score-font-size)")));
+  assert.deepEqual(declarations(root, ".lineScoreUnit"), [["font-size", "0.55em"], ["font-weight", "400"]]);
+  assert.ok(declarations(root, ".lineOverlay").some(([property, value]) => property === "z-index" && value === "12"));
+  assert.deepEqual(declarations(root, ".lineScoreShade"), [["stroke", "none"], ["pointer-events", "none"]]);
+});
+
+test("기차 목적지 선택과 이동 중에는 완료 점수가 칸 클릭이나 키보드 입력을 가로채지 않는다", () => {
+  const lines = prepareBoardLines([{ lineId: "a", label: "1번 라인", cellIndexes: [2,3,4,5,6], solvedCellIndexes: [2,3,4,5,6], isCompleted: true, rewardScore: 200, bonusScore: 150 }]);
+  const html = render("BoardLineOverlay", { lines, isInteractive: false });
+  assert.match(html, /data-line-region-score="a">150<tspan[^>]*>pts<\/tspan>/);
+  assert.doesNotMatch(html, /role="button"|tabindex=|data-line-region-hit=|aria-controls=|상세 보기/);
+  const source = readFileSync(new URL("./features/board/components/BoardTrack.jsx", import.meta.url), "utf8");
+  assert.match(source, /isInteractive=\{!isRolling && !rolling && !trainTravel\?\.journey && selectableCellIndexes == null\}/);
+});
+
+test("라인 점수 시안과 실제 지급값을 구분하고 0점과 미제공을 별도로 표시한다", () => {
+  const make = (bonusScore) => prepareBoardLines([{ lineId: "a", label: "1번 라인", cellIndexes: [2,3], solvedCellIndexes: [2,3], isCompleted: true, rewardScore: 600, bonusScore }]);
   const props = { selectedLineId: "a", onSelectLine: () => {} };
   const preview = render("BoardLineSummary", { ...props, lines: make(500), isPreview: true });
-  assert.match(preview, /실제 점수에는 반영되지 않습니다/);
-  assert.doesNotMatch(preview, /500점/);
-  assert.match(render("BoardLineSummary", { ...props, lines: make(0) }), /지급된 보너스 0점/);
-  assert.match(render("BoardLineSummary", { ...props, lines: make(null) }), /보너스 지급 정보 확인 중/);
+  assert.match(preview, /시안 배점 · 실제 총점 반영 없음/);
+  assert.match(preview, /시안 배점 600 pts, 시안 획득 500 pts/);
+  assert.match(preview, /data-line-reward-score="a">600 pts/);
+  assert.match(preview, /data-line-earned-score="a" data-score-state="awarded">500 pts/);
+  const actual = render("BoardLineSummary", { ...props, lines: make(0) });
+  assert.match(actual, /독점 배점 600 pts, 획득 점수 0 pts/);
+  assert.match(actual, /data-line-earned-total="true">0 pts/);
+  assert.doesNotMatch(actual, /시안 배점|시안 획득/);
+  const missing = render("BoardLineSummary", { ...props, lines: make(null) });
+  assert.match(missing, /data-line-earned-score="a" data-score-state="pending">확인 중/);
+  assert.match(missing, /data-line-earned-total="true">확인 중/);
   assert.match(preview, /<details[^>]*id="board-line-progress"/);
   assert.doesNotMatch(preview, /<details[^>]*\sopen=""|라인 현황 닫기/);
+});
+
+test("라인 점수표는 해결 진행, 예정 배점, 획득 합계를 한 펼쳐보기에 담는다", () => {
+  const lines = prepareBoardLines([
+    { lineId: "a", label: "긴이름이라도테두리밖으로나가지않아야하는첫번째라인", cellIndexes: [2,3], solvedCellIndexes: [2,3], isCompleted: true, rewardScore: 300, bonusScore: 200 },
+    { lineId: "b", label: "2번 라인", cellIndexes: [4,5], solvedCellIndexes: [4], rewardScore: 150 },
+  ]);
+  const html = render("BoardLineSummary", { lines, selectedLineId: "b", onSelectLine() {}, isOpen: true });
+  assert.match(html, /라인 점수 <span>독점 1\/2/);
+  assert.match(html, /<span>라인<\/span><span>배점<\/span><span>획득<\/span>/);
+  assert.match(html, /data-line-earned-score="b" data-score-state="unearned">0 pts/);
+  assert.match(html, /data-line-reward-total="true">450 pts/);
+  assert.match(html, /data-line-earned-total="true">200 pts/);
+  assert.match(html, /aria-pressed="true" aria-label="2번 라인, 1\/2 해결, 독점 배점 150 pts, 획득 점수 0 pts, 해당 칸 보기"/);
+  assert.match(html, /<details[^>]+open=""/);
+  assert.doesNotMatch(html, /<a |NaN|Infinity/);
+  assert.equal(render("BoardLineSummary", { lines: [] }), "");
+});
+
+test("라인 완료 대기나 배점 미정은 숫자로 확정하지 않고 점수표에 남긴다", () => {
+  const lines = prepareBoardLines([{ lineId: "a", label: "1번 라인", cellIndexes: [2,3], solvedCellIndexes: [2,3], rewardScore: null, bonusScore: 500 }]);
+  const html = render("BoardLineSummary", { lines, onSelectLine() {} });
+  assert.match(html, /완료 확인 중, 독점 배점 미정, 획득 점수 확인 중/);
+  assert.match(html, /data-line-reward-total="true">미정/);
+  assert.match(html, /data-line-earned-total="true">확인 중/);
+  assert.doesNotMatch(html, /500 pts|>0 pts</);
+});
+
+test("라인 점수표는 행과 합계의 열을 맞추고 좁은 데스크톱에서는 종이 폭을 확보한다", () => {
+  const root = css("features/board/components/BoardScreen.module.css");
+  const columns = declarations(root, ".lineScoreColumns, .lineList li button, .lineScoreTotals");
+  assert.ok(columns.some(([property, value]) => property === "grid-template-columns" && value.includes("repeat(2, minmax(0, 1fr))")));
+  assert.ok(declarations(root, ".lineList li button").some(([property, value]) => property === "min-height" && parseInt(value) >= 44));
+  assert.ok(declarations(root, ".lineName").some(([property, value]) => property === "overflow-wrap" && value === "anywhere"));
+  assert.ok(declarations(root, ".lineScore, .lineScoreTotals > :not(:first-child)").some(([property, value]) => property === "font-variant-numeric" && value === "tabular-nums"));
+  assert.ok(root.nodes.some((node) => node.type === "atrule" && node.params === "(min-width: 1101px)" && node.toString().includes(".openPanel:has(.lineSummary[open])") && node.toString().includes("clamp(300px, 23cqw, 410px)")));
+});
+
+test("푼 칸부터 테두리가 생기고 마지막 문제 정답과 완료 확정 후에만 독점 마감으로 바뀐다", () => {
+  const indexes = [2,3,4,5,6];
+  for (let solvedCount = 0; solvedCount <= indexes.length; solvedCount++) {
+    const lines = prepareBoardLines([{ lineId: "a", label: "첫 라인", cellIndexes: indexes,
+      consumedCellIndexes: indexes, solvedCellIndexes: indexes.slice(0, solvedCount), isCompleted: true, rewardScore: 200, bonusScore: 150 }]);
+    const html = render("BoardLineOverlay", { lines });
+    assert.equal((html.match(/data-line-outline=/g) || []).length, solvedCount);
+    assert.equal((html.match(/data-outline-state="solved"/g) || []).length, solvedCount < indexes.length ? solvedCount : 0);
+    assert.equal((html.match(/data-outline-state="claimed"/g) || []).length, solvedCount === indexes.length ? 5 : 0);
+    assert.equal((html.match(/data-line-finish=/g) || []).length, solvedCount === indexes.length ? 5 : 0);
+    assert.equal((html.match(/data-line-badge=/g) || []).length, solvedCount === indexes.length ? 1 : 0);
+    assert.equal((html.match(/data-line-region-score=/g) || []).length, solvedCount === indexes.length ? 1 : 0);
+  }
+});
+
+test("모두 풀었어도 서버 완료 확인 전에는 개별 풀이 테두리를 유지한다", () => {
+  const indexes = [2,3,4,5,6];
+  const lines = prepareBoardLines([{ lineId: "a", label: "첫 라인", cellIndexes: indexes, solvedCellIndexes: indexes, isCompleted: false }]);
+  const html = render("BoardLineOverlay", { lines });
+  assert.equal((html.match(/data-outline-state="solved"/g) || []).length, 5);
+  assert.match(html, /완료 확인 중/);
+  assert.doesNotMatch(html, /data-line-finish=|data-line-badge=|data-outline-state="claimed"/);
+});
+
+test("라인 계약이 없어도 푼 칸 테두리는 렌더링하고 가짜 라인이나 독점 문장은 만들지 않는다", () => {
+  const html = render("BoardLineOverlay", { solvedCellIndexes: [2,2,8,0,37,"3"] });
+  assert.equal((html.match(/data-outline-state="solved"/g) || []).length, 2);
+  assert.equal((html.match(/<clipPath /g) || []).length, 2);
+  assert.match(html, /2번 칸, 풀이 완료/);
+  assert.doesNotMatch(html, /data-line-id=|data-line-badge=|data-line-finish=|독점 완료/);
+  const lines = prepareBoardLines([{ lineId: "a", label: "첫 라인", cellIndexes: [2,3], solvedCellIndexes: [2], isCompleted: false }]);
+  const grouped = render("BoardLineOverlay", { lines, solvedCellIndexes: [2,8] });
+  assert.equal((grouped.match(/data-line-outline="2"/g) || []).length, 1);
+  assert.equal((grouped.match(/data-solved-cell=/g) || []).length, 1);
+  const track = readFileSync(new URL("./features/board/components/BoardTrack.jsx", import.meta.url), "utf8");
+  assert.match(track, /getBoardSolvedCellIndexes\(cells, cellStatesByIndex\)/);
+  assert.match(track, /<BoardLineOverlay[^>]*solvedCellIndexes=\{solvedCellIndexes\}/);
+});
+
+test("소모된 룰렛과 카드 칸은 별도 윤곽만 남기고 풀이 완료나 독점 연출을 만들지 않는다", () => {
+  const html = render("BoardLineOverlay", { spentSpecialCells: [{ cellIndex: 7, type: "CHANCE" }, { cellIndex: 16, type: "ROULETTE" }] });
+  assert.equal((html.match(/data-event-outline=/g) || []).length, 2);
+  assert.equal((html.match(/data-outline-state="spent"/g) || []).length, 2);
+  assert.equal((html.match(/<clipPath /g) || []).length, 2);
+  assert.equal((html.match(/vector-effect="non-scaling-stroke"/g) || []).length, 2);
+  assert.match(html, /7번 칸, 카드 칸 소모됨/);
+  assert.match(html, /16번 칸, 룰렛 칸 소모됨/);
+  assert.doesNotMatch(html, /data-line-outline=|data-line-badge=|data-line-finish=|풀이 완료|보상 완료|독점 완료/);
+  for (const index of [7,16]) assert.ok(html.includes(`d="${getBoardCellMaskPath(index)}"`));
+  const root = css("features/board/components/BoardScreen.module.css");
+  assert.deepEqual(declarations(root, ".spentSpecialCells"), [["--line-accent", "#bd9c68"]]);
+  assert.deepEqual(declarations(root, '.lineCellOutline[data-outline-state="spent"]'), [["opacity", "0.75"]]);
+});
+
+test("특수칸과 문제 풀이 테두리를 중복하지 않고 특수칸을 포함한 완료 라인도 거절한다", () => {
+  const lines = prepareBoardLines([{ lineId: "bad", label: "잘못된 라인", cellIndexes: [2,7], solvedCellIndexes: [2,7], isCompleted: true }]);
+  const html = render("BoardLineOverlay", { lines, solvedCellIndexes: [2,7,16], spentSpecialCells: [
+    { cellIndex: 7, type: "CHANCE" }, { cellIndex: 16, type: "ROULETTE" }, { cellIndex: 7, type: "CHANCE" },
+    { cellIndex: 2, type: "CHALLENGE" }, { cellIndex: 0, type: "CHANCE" }, { cellIndex: "30", type: "CHANCE" },
+  ] });
+  assert.equal((html.match(/data-event-outline=/g) || []).length, 2);
+  assert.equal((html.match(/data-line-outline=/g) || []).length, 1);
+  assert.match(html, /data-line-outline="2"/);
+  assert.doesNotMatch(html, /data-line-outline="(?:7|16)"|data-line-badge=|data-line-finish=|data-line-id="bad"/);
+});
+
+test("특수칸 테두리는 소모 기록에 연결하고 버튼 재열기나 이벤트 처리 조건은 바꾸지 않는다", () => {
+  const track = readFileSync(new URL("./features/board/components/BoardTrack.jsx", import.meta.url), "utf8");
+  const screen = readFileSync(new URL("./features/board/components/BoardScreen.jsx", import.meta.url), "utf8");
+  assert.match(track, /getBoardSpentSpecialCells\(cells, consumedCellIndexes, cellStatesByIndex\)/);
+  assert.match(track, /<BoardLineOverlay[^>]*spentSpecialCells=\{spentSpecialCells\}/);
+  assert.match(track, /getBoardCellVisitState\(cell.cellIndex, consumedCellIndexes, cellStatesByIndex, cell.type\)/);
+  assert.match(track, /disabled=\{isRolling \|\| Boolean\(trainTravel\?\.journey\)\}/);
+  assert.match(screen, /prepareBoardLines\(lineProgress, boardDefinition\?\.cells\)/);
+  assert.match(screen, /cellEvent\?\.type === "ROULETTE" && currentCell\?\.cellIndex === cellIndex/);
+  assert.match(screen, /setDismissedRouletteToken\(null\)/);
 });
 
 test("라인 완성과 열린 문제는 기존 펼쳐보기 한 곳에 두고 중복 이동 버튼을 만들지 않는다", () => {

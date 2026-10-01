@@ -13,7 +13,7 @@ export default function BoardSurface({ cells, visitedCellIndexes }) {
       data-board-layer="surface"
     >
       <BoardArtwork cells={cells} />
-      <BoardVisitedOverlay visitedCellIndexes={visitedCellIndexes} />
+      <BoardVisitedOverlay cells={cells} visitedCellIndexes={visitedCellIndexes} />
     </svg>
   );
 }

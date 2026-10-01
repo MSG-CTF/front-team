@@ -48,22 +48,61 @@
 /* 열린 문제 패널 제목은 데스크톱에선 패널 이미지에 그려져 있어 스크린리더에만 노출 */
 .mobileOpenTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.lineOverlay { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
-.lineCell path { stroke: none; }
-.lineCellSelected { opacity: 0.36; }
-.lineClaimFlash { animation: line-claim-flash 800ms ease-out both; }
+.lineOverlay { position: absolute; inset: 0; z-index: 12; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
+.lineCellSelected { opacity: 0.36; stroke: none; }
+.lineClaimFlash { stroke: none; animation: line-claim-flash 800ms ease-out both; }
+/* 동일한 칸 윤곽 안쪽에만 색을 넣어 곡면 끝이나 이웃 칸으로 번지지 않는다 */
+.solvedCells { --line-accent: #a8c8ae; }
+.spentSpecialCells { --line-accent: #bd9c68; }
+.lineCellOutline { fill: none; stroke: var(--line-accent); stroke-width: 3px; opacity: 0.85; }
+.lineCellOutline[data-outline-state="spent"] { opacity: 0.75; }
+.lineCellOutline[data-outline-state="claimed"] { stroke-width: 6px; opacity: 1; }
+.lineCellFinish { fill: none; stroke: #f0cf8c; stroke-width: 2px; opacity: 0.95; }
 @keyframes line-claim-flash { from { opacity: 0; } 25% { opacity: 0.6; } to { opacity: 0; } }
 .lineClaimCrest { pointer-events: all; cursor: pointer; outline: none; }
-.lineCrestArtwork { filter: drop-shadow(0 6px 4px #21140bab); transform-box: fill-box; transform-origin: center; }
-.lineCrestCaption { opacity: 0; fill: #f7deb0; stroke: #332015; stroke-width: 4px; stroke-linejoin: round; paint-order: stroke; font: 29px "Song Myung", serif; pointer-events: none; transition: opacity 120ms ease; }
-.lineClaimCrest:hover .lineCrestCaption, .lineClaimCrest:focus-visible .lineCrestCaption { opacity: 1; }
-.lineClaimCrest:focus-visible .lineCrestArtwork { filter: drop-shadow(0 0 4px #fff0a5) drop-shadow(0 4px 4px #21140b); }
-.lineClaimCrest[data-celebrating="true"] .lineCrestArtwork { animation: line-crest-reveal 650ms ease-out both; }
-@keyframes line-crest-reveal { from { opacity: 0; transform: scale(0.88); } 60% { opacity: 1; transform: scale(1.04); } to { opacity: 1; transform: scale(1); } }
+.lineRegion { pointer-events: none; }
+.lineRegion.lineClaimCrest { pointer-events: all; }
+.lineRegionHitArea { pointer-events: all; }
+.lineScoreShade { stroke: none; pointer-events: none; }
+.lineRegionScore { fill: #ffe2a0; stroke: #33210e; stroke-width: 1.2px; paint-order: stroke fill; font: 700 var(--line-score-font-size)/1 "Inria Serif", "Song Myung", serif; font-variant-numeric: tabular-nums; text-shadow: 0 1px 1px #120c05; pointer-events: none; }
+.lineScoreUnit { font-size: 0.55em; font-weight: 400; }
+.boardCellButton {
+  position: absolute; z-index: 10; width: 8.5%; height: 11%; transform: translate(-50%, -50%);
+  border: 0; border-radius: 45%; background: transparent; padding: 0; cursor: pointer;
+}
+.boardCellButton:focus-visible { outline: none; }
+.boardCellButton:disabled, .boardCellButton[data-selection-state="unavailable"] { cursor: not-allowed; }
+.cellTargetLayer { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.cellTargetOutline { fill: #f6d493; fill-opacity: 0; stroke: #efd39d; stroke-width: 3px; opacity: 0; transition: opacity 120ms ease, fill-opacity 120ms ease; }
+.boardCellButton[data-selection-state="available"] { z-index: 13; }
+.boardCellButton[data-selection-state="selected"], .boardCellButton:focus-visible { z-index: 14; }
+.boardCellButton[data-selection-state="available"] .cellTargetOutline { opacity: 0.8; fill-opacity: 0.045; }
+.boardCellButton[data-selection-state="selected"] .cellTargetOutline,
+.boardCellButton[data-selection-state="available"]:hover .cellTargetOutline,
+.boardCellButton:focus-visible .cellTargetOutline { opacity: 1; fill-opacity: 0.14; stroke: #fff0bc; stroke-width: 5px; }
+.lineClaimCrest:hover .lineRegionScore, .lineClaimCrest:focus-visible .lineRegionScore { fill: #fff3cc; }
+.lineClaimCrest:focus-visible .lineRegionHitArea { stroke: #fff0c2; stroke-width: 2px; }
+.startReward {
+  position: absolute; left: 50%; top: 73%; z-index: 25;
+  transform: translateX(-50%); width: max-content; max-width: 44%;
+  pointer-events: none; color: #ffdf9d; text-align: center;
+  font-family: "Song Myung", serif;
+}
+.startRewardVisual { animation: start-reward-rise 4.8s ease-out both; text-shadow: 0 2px 2px #1f100b, 0 0 12px #1f100b; }
+.startRewardTitle { display: block; font-size: clamp(12px, 1.15cqw, 22px); line-height: 1.35; white-space: nowrap; }
+.startRewardAmount { display: flex; justify-content: center; align-items: center; gap: 0.3em; margin-top: 0.18em; font: 700 clamp(24px, 2.4cqw, 44px)/1.1 "Inria Serif", serif; }
+.startRewardAmount small { font-size: 0.58em; font-weight: 400; }
+.startRewardCoin { flex-shrink: 0; width: 0.78em; height: 0.78em; filter: drop-shadow(0 2px 2px #241007); }
+.startRewardRoll { display: block; margin-top: 0.25em; font-size: clamp(11px, 0.9cqw, 17px); line-height: 1.3; }
+@keyframes start-reward-rise {
+  from { opacity: 0; transform: translateY(14px) scale(0.92); }
+  8%, 86% { opacity: 1; transform: translateY(0) scale(1); }
+  to { opacity: 0; transform: translateY(-8px); }
+}
 @media (prefers-reduced-motion: reduce) {
   .lineClaimFlash { display: none; animation: none; }
-  .lineCrestArtwork, .lineClaimCrest[data-celebrating="true"] .lineCrestArtwork { animation: none; }
-  .lineCrestCaption { transition: none; }
+  .cellTargetOutline { transition: none; }
+  .startRewardVisual { animation: none; }
 }
 /* 보드 화면에서만 문서와 내부 스크롤을 같은 재질로 맞춘다 */
 :global(html):has(.frame), .boardViewport {
@@ -106,6 +145,10 @@
 :is(.openPanelBody, .boardViewport)::-webkit-scrollbar-corner { background: transparent; }
 :global(html):has(.frame)::-webkit-scrollbar-track { background: #21150d; }
 @media (forced-colors: active) {
+  .cellTargetOutline { forced-color-adjust: none; stroke: Highlight; fill: Highlight; }
+  .boardCellButton[data-selection-state="selected"] .cellTargetOutline,
+  .boardCellButton[data-selection-state="available"]:hover .cellTargetOutline,
+  .boardCellButton:focus-visible .cellTargetOutline { stroke: Highlight; fill: Highlight; }
   :global(html):has(.frame), .openPanelBody, .boardViewport { scrollbar-color: auto; scrollbar-width: auto; }
   :global(html):has(.frame)::-webkit-scrollbar,
   :is(.openPanelBody, .boardViewport)::-webkit-scrollbar { width: auto; height: auto; }
@@ -138,24 +181,40 @@
 .openNotice button { display: block; min-height: 44px; padding: 4px 0; border: 0; background: none; color: #654018; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .openPanelBody :is(input, select, button):focus-visible, .openPanelBody:focus-visible { outline: 2px solid #825725; outline-offset: -2px; }
 .openPanel .openClose { min-width: 44px; min-height: 44px; padding: 12px; transform: translate(-25%, -25%); }
-.lineSummary { margin-bottom: 12px; border-bottom: 1px solid #9c754875; color: #513717; font: clamp(12px, 0.95cqw, 16px)/1.5 "Song Myung", serif; }
+.lineSummary { margin-bottom: 12px; border-bottom: 1px solid #9c754875; color: #513717; font: clamp(16px, 1.05cqw, 18px)/1.5 "Song Myung", serif; }
 .lineSummary > summary { min-height: 44px; padding: 10px 0; cursor: pointer; }
 .lineSummary > summary::marker { color: #805726; }
 .lineSummary > summary > span { float: right; margin-left: 8px; color: #795c39; }
-.lineSummaryLead { margin: 2px 0 12px; color: #795c39; font-size: 0.9em; word-break: keep-all; }
 .lineList { list-style: none; padding: 0; margin: 0; }
 .lineList li + li { border-top: 1px solid #9c75483d; }
-.lineList li button { display: flex; justify-content: space-between; align-items: center; gap: 6px; width: 100%; min-height: 44px; padding: 8px 2px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.lineScoreColumns, .lineList li button, .lineScoreTotals { display: grid; grid-template-columns: minmax(0, 1.1fr) repeat(2, minmax(0, 1fr)); align-items: center; gap: 6px; }
+.lineScoreColumns { padding: 4px 2px 8px; border-bottom: 1px solid #9c754875; color: #795c39; font-size: 0.88em; }
+.lineScoreColumns span:not(:first-child) { text-align: right; }
+.lineList li button { width: 100%; min-height: 52px; padding: 8px 2px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .lineList li button[aria-pressed="true"] { background: #d0ad7240; }
-.lineList li button span:first-child { min-width: 0; overflow-wrap: anywhere; }
-.lineList li button span:last-child { white-space: nowrap; font-size: 0.9em; }
+.lineName { min-width: 0; overflow-wrap: anywhere; }
+.lineName > span { display: block; }
+.lineName small { display: block; margin-top: 2px; font-size: 0.78em; font-weight: 400; color: #795c39; }
+.lineScore, .lineScoreTotals > :not(:first-child) { min-width: 0; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.lineScore[data-score-state="unearned"], .lineScore[data-score-state="pending"] { color: #795c39; font-size: 0.9em; }
+.lineScoreTotals { margin-bottom: 4px; padding: 8px 2px; border-bottom: 1px solid #9c754875; }
+.lineScoreTotals strong { color: #6a3e13; font-weight: 700; }
 .lineSummary .completedLineRow { color: #78501c; font-weight: 700; }
 .lineSummary :is(button, summary):focus-visible { outline: 2px solid #825725; outline-offset: -2px; }
 .lineDetail { margin-top: 16px; padding-top: 14px; border-top: 1px solid #9c754875; }
 .lineDetail h3 { margin: 0 0 4px; font-size: 1.1em; font-weight: 400; overflow-wrap: anywhere; }
 .lineDetail p { margin: 4px 0; }
+.lineScoreDetail { margin: 10px 0 14px; font-variant-numeric: tabular-nums; }
+.lineScoreDetail > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 6px; }
+.lineScoreDetail dt { flex-shrink: 0; color: #795c39; }
+.lineScoreDetail dd { min-width: 0; margin: 0; text-align: right; overflow-wrap: anywhere; }
 .lineCellNumbers { color: #795c39; font-size: 0.9em; overflow-wrap: anywhere; }
 .linePreviewNote { margin: 12px 0; color: #795c39; font-size: 0.9em; line-height: 1.6; word-break: keep-all; }
+
+/* 라인 점수를 펼친 동안만 종이를 넓혀 배점과 획득점수를 같은 행에서 읽는다 */
+@media (min-width: 1101px) {
+  .stage .openPanel:has(.lineSummary[open]) { width: clamp(300px, 23cqw, 410px); }
+}
 
 @media (min-width: 1101px) and (max-width: 1500px) {
   .openFilterRow { grid-template-columns: minmax(0, 1fr); }
@@ -298,8 +357,8 @@
   .openCounts, .openInstance button, .openInstance strong { font-size: 14px; }
   .openFilterRow { gap: 14px; }
 
-  /* 기차여행(Figma 555:342): 안내는 화면 상단 고정, 확인은 하단 시트 */
-  .stage .airportHint { position: fixed; inset: 12px 12px auto; z-index: 45; white-space: normal; text-align: center; font-size: 18px; letter-spacing: 2px; line-height: 1.5; padding: 12px; background: #2b1609e8; border: 1px solid #9a6f3b; }
+  /* 목적지 안내는 메뉴를 덮지 않고 주사위 상태 바로 아래에 둔다 확인창만 하단 시트로 연다 */
+  .stage .airportHint { position: static; inset: auto; order: -1; z-index: auto; margin: 8px 16px 4px; white-space: normal; text-align: left; font-size: 16px; letter-spacing: 1px; line-height: 1.5; padding: 0; background: none; border: 0; }
   .stage .airportConfirm { position: fixed; inset: auto 12px 16px; z-index: 45; width: min(calc(100% - 24px), 520px); margin-inline: auto; padding: 20px; }
   .airportConfirm h2 { font-size: 20px; }
   .airportConfirm :is(p, button) { font-size: 14px; line-height: 1.6; }

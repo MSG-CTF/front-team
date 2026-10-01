@@ -109,6 +109,7 @@ export default function BoardPage() {
       pendingRoll={board.pendingRoll}
       pendingChanceChoice={board.pendingChanceChoice}
       cellEvent={board.cellEvent}
+      startRewardEvent={board.startRewardEvent}
       awaitingDiscard={board.awaitingDiscard}
       ownedChanceCards={board.ownedChanceCards}
       cellStatesByIndex={board.cellStatesByIndex}

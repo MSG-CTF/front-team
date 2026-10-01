@@ -1,8 +1,9 @@
 import { useId } from "react";
 import { getBoardCellMaskPath } from "../utils/boardVisited.js";
 
-export default function BoardVisitedOverlay({ visitedCellIndexes = [] }) {
+export default function BoardVisitedOverlay({ cells = [], visitedCellIndexes = [] }) {
   const clipId = `board-visited-${useId().replace(/:/g, "")}`;
+  const specialIndexes = new Set(cells.filter((cell) => ["CHANCE", "ROULETTE"].includes(cell.type)).map((cell) => cell.cellIndex));
   const visitedCells = [...new Set(visitedCellIndexes)]
     .map((cellIndex) => ({ cellIndex, path: getBoardCellMaskPath(cellIndex) }))
     .filter((cell) => cell.path);
@@ -24,8 +25,8 @@ export default function BoardVisitedOverlay({ visitedCellIndexes = [] }) {
         </linearGradient>
       </defs>
       {visitedCells.map(({ cellIndex, path }) => (
-        <g key={cellIndex} data-visited-surface={cellIndex}>
-          <path d={path} fill="#170e0a" fillOpacity="0.62" data-visited-cell={cellIndex} />
+        <g key={cellIndex} data-visited-surface={cellIndex} data-visited-special={specialIndexes.has(cellIndex) || undefined}>
+          <path d={path} fill="#170e0a" fillOpacity={specialIndexes.has(cellIndex) ? "0.44" : "0.62"} data-visited-cell={cellIndex} />
           <path d={path} fill={`url(#${clipId}-shade)`} />
           <path d={path} fill={`url(#${clipId}-patina)`} />
         </g>
