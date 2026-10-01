@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { adaptMyBoard, BOARD_CELL_COUNT, BOARD_IMAGE_SIZE, getBoardCellPosition } from "./boardData.js";
-import { getBoardCellMaskPath, getBoardCellMaskPoints, getBoardCellVisitState } from "./boardVisited.js";
+import { getBoardCellMaskPath, getBoardCellMaskPoints, getBoardCellVisitState, getBoardSpentSpecialCells } from "./boardVisited.js";
 
 function fromResponse(data) {
   const board = adaptMyBoard(data);
@@ -51,6 +51,47 @@ test("정보가 없거나 미방문 상태면 방문 표시를 만들지 않는�
   for (const status of ["UNVISITED", "UNKNOWN", null]) {
     assert.equal(fromResponse({ cell_states: [{ cell_index: 2, status }] })(2).isVisited, false);
   }
+});
+
+test("룰렛과 카드의 소모 표시는 도착 이력이며 보상 지급이나 카드 사용 완료가 아니다", () => {
+  for (const [cellIndex, type, label] of [[16, "ROULETTE", "방문함, 룰렛 칸 소모됨"], [7, "CHANCE", "방문함, 카드 칸 소모됨"]]) {
+    assert.deepEqual(getBoardCellVisitState(cellIndex, [cellIndex], new Map(), type), { isVisited: true, label });
+    assert.deepEqual(getBoardCellVisitState(cellIndex, [], new Map([[cellIndex, { status: "CONSUMED" }]]), type), { isVisited: true, label });
+    for (const status of ["OPENED", "CLEARED", "UNKNOWN"]) {
+      assert.deepEqual(getBoardCellVisitState(cellIndex, [], new Map([[cellIndex, { status }]]), type), { isVisited: false, label: "미방문" });
+      assert.deepEqual(getBoardCellVisitState(cellIndex, [cellIndex], new Map([[cellIndex, { status }]]), type), { isVisited: true, label });
+    }
+  }
+});
+
+test("특수칸 테두리는 실제 칸 종류와 소모 기록만 사용하고 문제나 기차 칸은 제외한다", () => {
+  const cells = [
+    { cellIndex: 2, type: "CHALLENGE" }, { cellIndex: 7, type: "CHANCE" },
+    { cellIndex: 16, type: "ROULETTE" }, { cellIndex: 21, type: "AIRPORT" },
+    { cellIndex: 25, type: "CHALLENGE" }, { cellIndex: 30, type: "ROULETTE" },
+  ];
+  const states = new Map([[16, { status: "CONSUMED" }], [25, { status: "CLEARED" }]]);
+  assert.deepEqual(getBoardSpentSpecialCells(cells, [2,7,21,25,30], states), [
+    { cellIndex: 7, type: "CHANCE" }, { cellIndex: 16, type: "ROULETTE" }, { cellIndex: 30, type: "ROULETTE" },
+  ]);
+});
+
+test("현재 위치와 이벤트 결과나 보유 카드 정보만으로 특수칸 테두리를 만들지 않는다", () => {
+  const cells = [{ cellIndex: 7, type: "CHANCE" }, { cellIndex: 16, type: "ROULETTE" }];
+  for (const event of [{ status: "ready" }, { status: "loading" }, { status: "error" }, { status: "success", mileageGained: 200 }]) {
+    const states = new Map([[7, { ...event, used: true, discarded: true }], [16, { ...event, position: 16, movementPath: [7,16] }]]);
+    assert.deepEqual(getBoardSpentSpecialCells(cells, [], states), []);
+    assert.equal(getBoardSpentSpecialCells(cells, [7,16], states).length, 2);
+  }
+});
+
+test("특수칸 기록이 초기화되면 테두리도 사라지고 잘못된 번호나 중복은 표시하지 않는다", () => {
+  const cells = [30,7,7,0,37,"16"].map(cellIndex => ({ cellIndex, type: "CHANCE" }));
+  assert.deepEqual(getBoardSpentSpecialCells(cells, [30,7,0,37,"16"], new Map()), [
+    { cellIndex: 7, type: "CHANCE" }, { cellIndex: 30, type: "CHANCE" },
+  ]);
+  assert.deepEqual(getBoardSpentSpecialCells(cells, [], new Map()), []);
+  for (const data of [undefined, null, {}]) assert.deepEqual(getBoardSpentSpecialCells(data, [7], new Map()), []);
 });
 
 const parsePolygon = (points) => points.split(" ").map((point) => point.split(",").map(Number));

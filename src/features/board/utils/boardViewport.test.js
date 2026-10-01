@@ -199,3 +199,22 @@ test("라인 완성 장식 때문에 원판 너비나 배경 기준점을 바꾸
   assert.doesNotMatch(css, /\.boardViewport\[data-has-lines/);
   assert.match(css, /\.lineOverlay\s*\{[^}]*inset: 0;[^}]*width: 100%; height: 100%; overflow: hidden/);
 });
+
+test("모바일 기차 선택은 처음만 확대하고 이동이 끝나면 이전 보기로 복구한다", () => {
+  const screen = readFileSync(new URL("../components/BoardScreen.jsx", import.meta.url), "utf8");
+  assert.match(screen, /zoomBeforeTrainSelection = useRef\(null\)/);
+  assert.match(screen, /if \(zoomBeforeTrainSelection.current === null\)[\s\S]*zoomBeforeTrainSelection.current = isBoardZoomed/);
+  assert.match(screen, /window.matchMedia\("\(max-width: 1100px\)"\).matches\) setIsBoardZoomed\(true\)/);
+  assert.match(screen, /else if \(!trainTravel.journey && zoomBeforeTrainSelection.current !== null\)/);
+  assert.match(screen, /zoomBeforeTrainSelection.current = null/);
+  assert.match(screen, /else if \(zoomBeforeTrainSelection.current !== null\) setIsBoardZoomed\(true\)/);
+});
+
+test("모바일 목적지 안내는 상단 메뉴를 가리지 않고 상태 바로 다음에 놓인다", () => {
+  const hint = mediaRule("../components/BoardScreen.module.css", "(max-width: 1100px)", ".stage .airportHint");
+  assert.equal(hint.position, "static");
+  assert.equal(hint.order, "-1");
+  assert.equal(hint.background, "none");
+  assert.equal(hint.border, "0");
+  assert.equal(hint["white-space"], "normal");
+});

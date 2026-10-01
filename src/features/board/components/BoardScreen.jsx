@@ -38,6 +38,7 @@ export default function BoardScreen({
   pendingRoll,
   pendingChanceChoice,
   cellEvent,
+  startRewardEvent = null,
   awaitingDiscard,
   ownedChanceCards,
   cellStatesByIndex,
@@ -86,6 +87,7 @@ export default function BoardScreen({
   };
   const openListView = useRef(normalizeBoardListView(initialOpenListView));
   const [isBoardZoomed, setIsBoardZoomed] = useState(false);
+  const zoomBeforeTrainSelection = useRef(null);
   const [isLineSummaryOpen, setIsLineSummaryOpen] = useState(false);
   const [selectedLineId, setSelectedLineId] = useState(null);
   const [dismissedSelectionKey, setDismissedSelectionKey] = useState(null);
@@ -93,7 +95,7 @@ export default function BoardScreen({
   const openListTrigger = useRef(null);
   const openListToggle = useRef(null);
   const lineSummary = useRef(null);
-  const lines = useMemo(() => prepareBoardLines(lineProgress), [lineProgress]);
+  const lines = useMemo(() => prepareBoardLines(lineProgress, boardDefinition?.cells), [lineProgress, boardDefinition?.cells]);
   const hasLines = lines.length > 0;
   const activeLineId = lines.find((line) => line.lineId === selectedLineId)?.lineId ?? lines[0]?.lineId ?? null;
   const boardRegionId = useId();
@@ -158,6 +160,7 @@ export default function BoardScreen({
     const desktop = window.matchMedia("(min-width: 1101px)");
     const resetZoom = () => {
       if (desktop.matches) setIsBoardZoomed(false);
+      else if (zoomBeforeTrainSelection.current !== null) setIsBoardZoomed(true);
     };
     desktop.addEventListener("change", resetZoom);
     return () => desktop.removeEventListener("change", resetZoom);
@@ -214,6 +217,18 @@ export default function BoardScreen({
     ? cells.find((cell) => cell.cellIndex === airportDestinationIndex) ?? null
     : null;
   useEffect(() => { if (isAirportSelecting) void preloadBoardTrain(); }, [isAirportSelecting]);
+  useEffect(() => {
+    if (isAirportSelecting) {
+      if (zoomBeforeTrainSelection.current === null) {
+        zoomBeforeTrainSelection.current = isBoardZoomed;
+        // 작은 화면에서는 목적지를 손가락으로 고르기 쉽게 원판을 먼저 확대한다
+        if (window.matchMedia("(max-width: 1100px)").matches) setIsBoardZoomed(true);
+      }
+    } else if (!trainTravel.journey && zoomBeforeTrainSelection.current !== null) {
+      setIsBoardZoomed(window.matchMedia("(max-width: 1100px)").matches && zoomBeforeTrainSelection.current);
+      zoomBeforeTrainSelection.current = null;
+    }
+  }, [isAirportSelecting, trainTravel.journey, isBoardZoomed]);
   const selectionKey = getChallengeSelectionKey({
     myBoard, currentCell, awaitingDiscard, pendingChanceChoice, pendingRoll,
     blockedReason: diceStatus?.blockedReason, cellEvent, showQuarantine, isLoading,
@@ -295,6 +310,7 @@ export default function BoardScreen({
               consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
               piecePosition={displayPosition}
               trainTravel={{ ...trainTravel, onProgress: followTrain, onStart: trainWhistle.play, onStop: trainWhistle.stop }}
+              startRewardEvent={startRewardEvent}
               canRoll={canRoll}
               isRolling={isMutating}
               onRollDice={onRollDice}
