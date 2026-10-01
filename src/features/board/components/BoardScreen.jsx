@@ -1,7 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
-import { getRemainingSeconds } from "../utils/boardData.js";
 import { getBoardZoomScrollLeft } from "../utils/boardViewport.js";
 import useTrainTravel from "../hooks/useTrainTravel.js";
 import useTrainWhistle from "../hooks/useTrainWhistle.js";
@@ -17,10 +16,9 @@ import BoardNav from "./BoardNav.jsx";
 import BoardScene from "./BoardScene.jsx";
 import BoardTrack from "./BoardTrack.jsx";
 import ChanceCardSummary from "./ChanceCardSummary.jsx";
-import DiceStatusPanel from "./DiceStatusPanel.jsx";
+import { BoardDiceStatusPanel, BoardQuarantinePanel } from "./BoardCountdownPanels.jsx";
 import KothEventBanner from "./KothEventBanner.jsx";
 import OpenChallengesSidePanel, { OpenChallengesToggle } from "./OpenChallengesSidePanel.jsx";
-import QuarantinePanel from "./QuarantinePanel.jsx";
 import styles from "./BoardScreen.module.css";
 
 const NO_LINES = Object.freeze([]);
@@ -78,7 +76,6 @@ export default function BoardScreen({
   onOpenChallengeDetail,
   onCancelAirportDestination,
 }) {
-  const [now, setNow] = useState(Date.now());
   const [localOpenListVisible, setLocalOpenListVisible] = useState(false);
   const isOpenListVisible = openListVisible ?? localOpenListVisible;
   const setIsOpenListVisible = (open) => {
@@ -166,30 +163,6 @@ export default function BoardScreen({
     return () => desktop.removeEventListener("change", resetZoom);
   }, []);
 
-  useEffect(() => {
-    const timerId = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timerId);
-  }, []);
-
-  const resetInSeconds = getRemainingSeconds(
-    diceStatus?.nextDiceResetAt,
-    diceStatus,
-    now,
-  );
-  const quarantineReleasedInSeconds = getRemainingSeconds(
-    diceStatus?.quarantineReleasedAt,
-    diceStatus,
-    now,
-  );
-  // active_challenge는 제한시간이 끝나도 서버가 즉시 비우지 않을 수 있어(다음
-  // 액션 전까지 남아있음), diceStatus.timerRunning/blockedReason 쪽을 진행 중
-  // 여부의 기준으로 삼는다 - 그래야 만료 직후 이 패널이 계속 "문제 제한 00:00"에
-  // 멈춰있지 않고 충전 카운트다운(resetInSeconds)으로 자연히 넘어간다.
-  const isChallengeTimerRunning =
-    diceStatus?.timerRunning === true || diceStatus?.blockedReason === "TIMER_RUNNING";
-  const challengeRemainingSeconds = isChallengeTimerRunning
-    ? getRemainingSeconds(myBoard?.activeChallenge?.solveDeadlineAt, diceStatus, now)
-    : null;
   const cells = boardDefinition?.cells ?? [];
   const blockedMessage = awaitingDiscard
     ? "보유한 찬스카드 한 장을 먼저 폐기해주세요."
@@ -247,13 +220,13 @@ export default function BoardScreen({
   useEffect(() => { setDismissedSelectionKey(null); }, [selectionKey]);
 
   return (
-    <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080.png" frameClassName={styles.frame} className={styles.stage}>
-      <DiceStatusPanel
+    <FixedAspectStage backdropSrc="/assets/board/bg-1920x1080.webp" frameClassName={styles.frame} className={styles.stage}>
+      <BoardDiceStatusPanel
         rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
         canRoll={canRoll}
         blockedMessage={blockedMessage}
-        resetInSeconds={resetInSeconds}
-        challengeRemainingSeconds={challengeRemainingSeconds}
+        diceStatus={diceStatus}
+        activeChallenge={myBoard?.activeChallenge}
       />
 
       <BoardNav />
@@ -455,8 +428,8 @@ export default function BoardScreen({
       )}
 
       {showQuarantine && (
-        <QuarantinePanel
-          releasedInSeconds={quarantineReleasedInSeconds}
+        <BoardQuarantinePanel
+          diceStatus={diceStatus}
           isMutating={isMutating}
           freeEscapeCards={ownedChanceCards.filter(
             (card) =>

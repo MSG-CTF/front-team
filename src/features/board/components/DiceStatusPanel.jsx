@@ -14,8 +14,7 @@ export default function DiceStatusPanel({
   resetInSeconds,
   challengeRemainingSeconds,
 }) {
-  const countdown = challengeRemainingSeconds ?? resetInSeconds;
-  const countdownLabel = challengeRemainingSeconds != null ? "문제 제한" : "충전까지";
+  const rechargeVisible = rollsLeft < MAX_DICE_ROLLS && resetInSeconds != null;
   const statusLabel =
     blockedMessage || (canRoll ? "주사위를 굴릴 수 있습니다." : "상태 확인 중");
 
@@ -24,7 +23,7 @@ export default function DiceStatusPanel({
       className={`${styles.diceStatus} absolute left-[1.35%] top-0 w-[19.69%] h-[20.65%]`}
       role="status"
       data-roll-ready={canRoll && !blockedMessage}
-      aria-label={`주사위 보유 ${rollsLeft}/${MAX_DICE_ROLLS}. ${statusLabel}${countdown == null ? "" : `, ${countdownLabel} ${formatRemaining(countdown)}`}`}
+      aria-label={`주사위 보유 ${rollsLeft}/${MAX_DICE_ROLLS}. ${statusLabel}${rechargeVisible ? `, 충전까지 ${formatRemaining(resetInSeconds)}` : ""}${challengeRemainingSeconds == null ? "" : `, 문제 제한 ${formatRemaining(challengeRemainingSeconds)}`}`}
     >
       <img
         src="/assets/board/panel-dice-status.png"
@@ -33,17 +32,15 @@ export default function DiceStatusPanel({
         className="absolute inset-0 w-full h-full object-contain pointer-events-none"
       />
 
-      <div className="absolute left-[12%] top-[47%] z-10 flex h-[12%] w-[78%] items-center justify-between bg-[#21150d] px-[0.35cqw] font-inria-serif text-[0.58cqw] text-[#f8ead0]">
+      <div className={`${styles.diceReadout} absolute left-[12%] top-[44%] z-10 w-[78%] bg-[#21150d] px-[0.35cqw] font-inria-serif text-[#f8ead0]`}>
         {/* 기능 명세(2026-09-28): 보유 횟수/3 표시. 3/3이면 서버가 next_dice_reset_at을 비워 충전 타이머가 멈춘다. */}
-        <span>주사위 {rollsLeft}/{MAX_DICE_ROLLS}</span>
-        {countdown != null && (
-          <span>
-            {countdownLabel} {formatRemaining(countdown)}
-          </span>
-        )}
+        <div className={styles.diceCountRow}>
+          <span>주사위 {rollsLeft}/{MAX_DICE_ROLLS}</span>
+          {rechargeVisible && <span>충전까지 <strong>{formatRemaining(resetInSeconds)}</strong></span>}
+        </div>
+        {challengeRemainingSeconds != null && <div className={styles.diceChallengeRow}>문제 제한 <strong>{formatRemaining(challengeRemainingSeconds)}</strong></div>}
       </div>
-      <div className="absolute left-[12%] top-[59%] z-10 h-[6%] w-[78%] rounded-full border border-[#a66a22] bg-[#291a0f]" />
-      <p className="absolute left-[12%] top-[68%] z-10 m-0 w-[78%] truncate text-center font-inria-serif text-[0.46cqw] text-[#e7d2ad]">
+      <p className={`${styles.diceStatusMessage} absolute left-[12%] top-[76%] z-10 m-0 w-[78%] truncate text-center font-inria-serif text-[#e7d2ad]`}>
         {statusLabel}
       </p>
     </div>

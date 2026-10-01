@@ -11,7 +11,7 @@ export default function BoardArtwork({ cells = [], className }) {
 
   return (
     <g className={className} data-board-artwork="true">
-      <image href="/assets/board/board-grid.png" width={BOARD_IMAGE_SIZE.width} height={BOARD_IMAGE_SIZE.height} />
+      <image href="/assets/board/board-grid.webp" width={BOARD_IMAGE_SIZE.width} height={BOARD_IMAGE_SIZE.height} />
       {replacesIsland && <>
         <defs>
           <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
@@ -19,7 +19,7 @@ export default function BoardArtwork({ cells = [], className }) {
           </clipPath>
         </defs>
         <g clipPath={`url(#${clipId})`} data-cell-artwork="16-roulette">
-          <image href="/assets/board/board-grid.png" width={BOARD_IMAGE_SIZE.width} height={BOARD_IMAGE_SIZE.height}
+          <image href="/assets/board/board-grid.webp" width={BOARD_IMAGE_SIZE.width} height={BOARD_IMAGE_SIZE.height}
             transform="matrix(0.93366834 0.51356784 -0.0158794 1.01688442 -844.71336683 -965.43135678)" />
         </g>
       </>}
@@ -30,7 +30,7 @@ export default function BoardArtwork({ cells = [], className }) {
           </clipPath>
         </defs>
         <g clipPath={`url(#${clipId}-chance)`} data-cell-artwork="7-chance">
-          <image href="/assets/board/board-grid.png" width={BOARD_IMAGE_SIZE.width} height={BOARD_IMAGE_SIZE.height}
+          <image href="/assets/board/board-grid.webp" width={BOARD_IMAGE_SIZE.width} height={BOARD_IMAGE_SIZE.height}
             transform="translate(1802 77) scale(-1 1)" />
         </g>
       </>}

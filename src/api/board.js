@@ -28,14 +28,14 @@ export function getBoard() {
   return apiClient.get("/board");
 }
 
-export function getMyBoard() {
+export function getMyBoard(config) {
   // GET /board/me - 내 팀 진행 상태 전체(cell_states, chance_cards, active_challenge 등).
-  return apiClient.get("/board/me");
+  return apiClient.get("/board/me", config);
 }
 
-export function getDiceStatus() {
+export function getDiceStatus(config) {
   // GET /board/dice/status - can_roll / blocked_reason / server_time / next_dice_reset_at.
-  return apiClient.get("/board/dice/status");
+  return apiClient.get("/board/dice/status", config);
 }
 
 export function getOpenedChallenges(config) {

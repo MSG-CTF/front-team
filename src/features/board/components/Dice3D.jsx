@@ -1,11 +1,13 @@
 import { Suspense, forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
-import { createDiceMotion, DICE_CAMERA, DICE_FLOOR_Y, DICE_LOOK_AT, DICE_STARTS, restingDie, sampleDiceMotion } from "./diceMotion.js";
+import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { DICE_CAMERA, DICE_FLOOR_Y, DICE_LOOK_AT, DICE_STARTS, restingDie, sampleDiceMotion } from "./dicePose.js";
+import { createDiceMotionClient } from "./diceMotionClient.js";
 import { DiceFallback } from "./DiceFallback.jsx";
 
 const DicePair = forwardRef(function DicePair({ onReady, reducedMotion }, ref) {
-  const { scene } = useGLTF("/models/dice.glb");
+  // 현재 모델에는 Draco·Meshopt 압축이 없어 추가 디코더나 전체 도우미 묶음이 필요 없다
+  const { scene } = useLoader(GLTFLoader, "/models/dice.glb");
   const dice = useMemo(() => DICE_STARTS.map((start, index) => {
     const object = scene.clone(true);
     const rest = restingDie(index);
@@ -16,24 +18,38 @@ const DicePair = forwardRef(function DicePair({ onReady, reducedMotion }, ref) {
     return object;
   }), [scene]);
   const animation = useRef(null);
+  const motionClient = useRef(null);
   const { invalidate } = useThree();
 
-  useEffect(() => { onReady?.(); }, [onReady]);
-  useEffect(() => () => {
-    // 화면을 떠나도 호출부에 대기 중인 Promise를 남기지 않는다
-    animation.current?.resolve();
-    animation.current = null;
+  useEffect(() => {
+    const client = createDiceMotionClient();
+    motionClient.current = client;
+    return () => {
+      client.dispose();
+      motionClient.current = null;
+      // 화면을 떠나도 호출부에 대기 중인 Promise를 남기지 않는다
+      animation.current?.resolve();
+      animation.current = null;
+    };
   }, []);
+  useEffect(() => { onReady?.(); }, [onReady]);
 
   useImperativeHandle(ref, () => ({
     startRoll(result) {
       if (animation.current) return animation.current.promise;
-      const motions = createDiceMotion(dice.map((object) => ({ position: object.position, quaternion: object.quaternion })), result, Math.random, reducedMotion);
-      if (!motions) return Promise.resolve();
       let resolve;
       const promise = new Promise((done) => { resolve = done; });
-      animation.current = { motions, started: performance.now(), promise, resolve };
-      invalidate();
+      const roll = { motions: null, started: null, promise, resolve };
+      animation.current = roll;
+      // 물리 계산을 기다리는 동안 프레임을 반복해서 그리지 않는다
+      const current = dice.map(object => ({ position: object.position.clone(), quaternion: object.quaternion.clone() }));
+      Promise.resolve(motionClient.current?.compute(current, result, reducedMotion)).then(motions => {
+        if (animation.current !== roll) return;
+        if (!motions) { animation.current = null; resolve(); return; }
+        roll.motions = motions;
+        roll.started = performance.now();
+        invalidate();
+      }).catch(() => { if (animation.current === roll) animation.current = null; resolve(); });
       return promise;
     },
   }), [dice, invalidate, reducedMotion]);
@@ -41,7 +57,7 @@ const DicePair = forwardRef(function DicePair({ onReady, reducedMotion }, ref) {
   // 그림자 패스를 그리기 전에 위치를 갱신한다
   useFrame(() => {
     const roll = animation.current;
-    if (!roll) return;
+    if (!roll?.motions) return;
     const elapsed = (performance.now() - roll.started) / 1000;
     let finished = true;
     dice.forEach((object, index) => {

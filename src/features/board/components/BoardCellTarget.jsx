@@ -1,10 +1,10 @@
-import { useId } from "react";
+import { memo, useId } from "react";
 import { BOARD_IMAGE_SIZE, getBoardCellPosition } from "../utils/boardData.js";
 import { getBoardCellMaskPath } from "../utils/boardVisited.js";
 import styles from "./BoardScreen.module.css";
 
 // 클릭 버튼 크기는 유지하고 선택선만 원본 칸의 금테 안쪽 면에 붙인다
-export default function BoardCellTarget({ cellIndex }) {
+export default memo(function BoardCellTarget({ cellIndex }) {
   const clipId = `board-target-${useId().replace(/:/g, "")}`;
   const path = getBoardCellMaskPath(cellIndex);
   if (!path) return null;
@@ -22,4 +22,4 @@ export default function BoardCellTarget({ cellIndex }) {
         vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
     </svg>
   );
-}
+});

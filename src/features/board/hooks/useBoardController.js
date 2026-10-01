@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { openChallengeAccess } from "../utils/openChallengeAccess.js";
 import { presentTrainJourney } from "../utils/trainJourney.js";
 import { createStartRewardRecorder } from "../utils/boardStartReward.js";
+import { scheduleBoardDeadlineRefresh } from "../utils/boardDeadlineRefresh.js";
 import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
 import {
   confirmChanceCard,
@@ -34,7 +35,6 @@ import {
   adaptMyBoard,
   adaptRouletteResult,
   getBoardError,
-  getRemainingSeconds,
   mergeOwnedChanceCards,
   unwrapBoardResponse,
 } from "../utils/boardData.js";
@@ -64,9 +64,7 @@ export default function useBoardController() {
   const [openedChallengesError, setOpenedChallengesError] = useState("");
   const openedRequest = useRef(0);
   const openedController = useRef(null);
-  const [now, setNow] = useState(Date.now());
-  const diceResyncedForRef = useRef(null);
-  const challengeResyncedForRef = useRef(null);
+  const completedDeadlines = useRef(new Set());
   const [displayPosition, setDisplayPosition] = useState(null);
   const [pendingRoll, setPendingRoll] = useState(null);
   const [pendingChanceChoice, setPendingChanceChoice] = useState(null);
@@ -77,6 +75,7 @@ export default function useBoardController() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMutating, setIsMutating] = useState(false);
   const [error, setError] = useState(null);
+  const [deadlineError, setDeadlineError] = useState(null);
 
   const requestCurrentCell = useCallback(async () => {
     try {
@@ -112,6 +111,7 @@ export default function useBoardController() {
   const load = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setDeadlineError(null);
     const openedTask = requestOpenedChallenges();
 
     try {
@@ -175,17 +175,18 @@ export default function useBoardController() {
   }, []);
 
   const syncProgress = useCallback(
-    async ({ includeCurrentCell = true, preserveDisplayPosition = false } = {}) => {
+    async ({ includeCurrentCell = true, preserveDisplayPosition = false, requestOptions, isCurrent = () => true } = {}) => {
       const [myBoardResponse, diceResponse] = await Promise.all([
-        getMyBoard(),
-        getDiceStatus(),
+        getMyBoard(requestOptions),
+        getDiceStatus(requestOptions),
       ]);
       const nextMyBoard = adaptMyBoard(unwrapBoardResponse(myBoardResponse));
       const nextDiceStatus = adaptDiceStatus(unwrapBoardResponse(diceResponse));
+      if (!mountedRef.current || !isCurrent()) return;
       await requestOpenedChallenges();
       const nextCurrentCell = includeCurrentCell ? await requestCurrentCell() : null;
 
-      if (!mountedRef.current) return;
+      if (!mountedRef.current || !isCurrent()) return;
       setMyBoard(nextMyBoard);
       setDiceStatus(nextDiceStatus);
       if (includeCurrentCell) setCurrentCell(nextCurrentCell);
@@ -537,47 +538,27 @@ export default function useBoardController() {
     pendingRoll,
   ]);
 
-  // 1초마다 틱 - 주사위 충전/문제 제한시간 카운트다운이 서버 재조회 없이도
-  // 0에 닿는 순간을 감지하기 위함이다.
+  // 충전과 문제 만료를 한 예약으로 처리한다 실패한 조회는 완료로 기록하지 않는다
   useEffect(() => {
-    const tickId = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(tickId);
-  }, []);
-
-  // 충전 카운트다운이 00:00에 닿으면(새로고침 전까지 canRoll이 그대로 false로
-  // 남아있던 문제) 딱 한 번 다시 조회해 서버의 최신 dice 상태를 반영한다.
-  useEffect(() => {
-    const targetIso = diceStatus?.nextDiceResetAt;
-    if (!targetIso) {
-      diceResyncedForRef.current = null;
-      return;
-    }
-    if (diceResyncedForRef.current === targetIso) return;
-
-    const remaining = getRemainingSeconds(targetIso, diceStatus, now);
-    if (remaining === 0) {
-      diceResyncedForRef.current = targetIso;
-      syncProgress({ includeCurrentCell: false, preserveDisplayPosition: true });
-    }
-  }, [diceStatus, now, syncProgress]);
-
-  // 문제 제한시간(solve_deadline_at)이 00:00에 닿았을 때도 동일하게 한 번
-  // 재조회한다 - active_challenge/blockedReason이 서버에서 바로 안 바뀌어
-  // 있을 수 있어도, 이 재조회가 최신 상태(충전 카운트다운으로 전환 등)를 반영한다.
-  useEffect(() => {
-    const targetIso = myBoard?.activeChallenge?.solveDeadlineAt;
-    if (!targetIso) {
-      challengeResyncedForRef.current = null;
-      return;
-    }
-    if (challengeResyncedForRef.current === targetIso) return;
-
-    const remaining = getRemainingSeconds(targetIso, diceStatus, now);
-    if (remaining === 0) {
-      challengeResyncedForRef.current = targetIso;
-      syncProgress({ includeCurrentCell: false, preserveDisplayPosition: true });
-    }
-  }, [myBoard?.activeChallenge?.solveDeadlineAt, diceStatus, now, syncProgress]);
+    const deadlines = [
+      ["dice", diceStatus?.nextDiceResetAt],
+      ["challenge", myBoard?.activeChallenge?.solveDeadlineAt],
+    ].filter(([, targetIso]) => targetIso).map(([kind, targetIso]) => ({ key: `${kind}:${targetIso}`, targetIso }));
+    const controller = new AbortController();
+    const dispose = scheduleBoardDeadlineRefresh(deadlines, diceStatus, () => syncProgress({
+      includeCurrentCell: false,
+      preserveDisplayPosition: true,
+      requestOptions: { signal: controller.signal, timeout: 10000 },
+      isCurrent: () => !controller.signal.aborted,
+    }), {
+      completed: completedDeadlines.current,
+      onError: (_error, { retrying }) => {
+        if (mountedRef.current) setDeadlineError({ code: "STATUS_REFRESH_FAILED", message: retrying ? "주사위 상태를 확인하지 못했습니다 잠시 후 다시 확인합니다" : "주사위 상태를 확인하지 못했습니다 연결을 확인하고 다시 시도해 주세요" });
+      },
+      onRecovered: () => { if (mountedRef.current) setDeadlineError(null); },
+    });
+    return () => { dispose(); controller.abort(); };
+  }, [myBoard?.activeChallenge?.solveDeadlineAt, diceStatus, syncProgress]);
 
   const openedChallengesByCell = useMemo(
     () => new Map(openedChallenges.map((entry) => [entry.cellIndex, entry])),
@@ -629,7 +610,7 @@ export default function useBoardController() {
     selectedCell,
     isLoading,
     isMutating,
-    error,
+    error: error ?? deadlineError,
     reload: load,
     rollDice: handleRollDice,
     confirmDice: handleConfirmDice,
@@ -644,6 +625,6 @@ export default function useBoardController() {
     closeCellEvent: () => setCellEvent(null),
     selectCell: setSelectedCellIndex,
     clearSelectedCell: () => setSelectedCellIndex(null),
-    clearError: () => setError(null),
+    clearError: () => { setError(null); setDeadlineError(null); },
   };
 }

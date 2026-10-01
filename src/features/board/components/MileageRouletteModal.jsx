@@ -157,7 +157,7 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
     <div className={styles.backdrop} role="presentation">
       <section ref={panelRef} role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-status`}
         aria-busy={isBusy} className={styles.panel} onKeyDown={handleKeyDown} tabIndex={-1}>
-        <img src="/assets/board/roulette-panel.png" alt="" aria-hidden="true" className={styles.panelArtwork} />
+        <img src="/assets/board/roulette-panel.webp" alt="" aria-hidden="true" className={styles.panelArtwork} />
         <h2 id={`${id}-title`} className={styles.title}>MILEAGE ROULETTE</h2>
         <button type="button" onClick={onClose} aria-label="룰렛 닫기" title="닫기" className={styles.close}>
           <img src="/assets/board/icon-close-round.png" alt="" aria-hidden="true" />
