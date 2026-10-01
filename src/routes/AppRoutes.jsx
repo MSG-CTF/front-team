@@ -5,6 +5,7 @@ import AdminRoute from "./AdminRoute.jsx";
 import RouteLoadBoundary from "./RouteLoadBoundary.jsx";
 import { ROUTES } from "./routePaths.js";
 import useRouteTitle from "./useRouteTitle.js";
+import usePageResources from "./usePageResources.js";
 
 // 현재 화면에 필요한 코드만 읽는다 관리자 화면과 QR 기능은 참가자 진입에서 제외한다
 const LoginPage = lazy(() => import("../features/auth/pages/LoginPage.jsx"));
@@ -51,8 +52,15 @@ const AdminAccountsPage = lazy(
   () => import("../features/admin/pages/AdminAccountsPage.jsx"),
 );
 
-const IntroLayout = lazy(() => import("../features/intro/IntroLayout.jsx"));
-const IntroPage = lazy(() => import("../features/intro/IntroPage.jsx"));
+const loadIntroPage = () => import("../features/intro/IntroPage.jsx");
+const IntroLayout = lazy(() => {
+  // 첫 페이지 내용은 공통 레이아웃과 함께 받아 직렬 대기를 줄인다
+  if (typeof window !== "undefined" && window.location.pathname === ROUTES.intro) {
+    void loadIntroPage().catch(() => {});
+  }
+  return import("../features/intro/IntroLayout.jsx");
+});
+const IntroPage = lazy(loadIntroPage);
 const IntroGuidePage = lazy(
   () => import("../features/intro/IntroGuidePage.jsx"),
 );
@@ -70,6 +78,7 @@ const SignatureClubPage = lazy(
 // 저장 방식이 정해지면 추가. 관리자 라우트는 AdminRoute로 막아뒀다(아래).
 export default function AppRoutes() {
   useRouteTitle();
+  usePageResources();
   return (
     <RouteLoadBoundary>
     <Suspense

@@ -36,7 +36,7 @@ export default function IntroHeader({ guide = false }) {
           aria-label="MSG CTF 2026 처음으로"
         >
           <img
-            src="/assets/login/logo-cutout.png"
+            src="/assets/intro/event-logo.webp"
             width="1254"
             height="1254"
             alt="MSG CTF"

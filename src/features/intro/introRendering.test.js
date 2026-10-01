@@ -171,3 +171,13 @@ test("모션 버튼은 텍스트 대신 아이콘을 쓰고 두 곳 모두 접�
     assert.match(button, /motion-play/);
   }
 });
+
+test("첫 화면은 경량 로고를 우선 받고 글꼴 원본과 무거운 배경은 읽지 않는다", () => {
+  assert.match(main, /src="\/assets\/intro\/event-logo.webp"[^>]*fetchPriority="high"/i);
+  assert.doesNotMatch(main + guide, /src="\/assets\/login\/logo-cutout.png"/);
+  const css = readFileSync(new URL("./intro.css", import.meta.url), "utf8");
+  assert.doesNotMatch(css, /background-plaza.png|format\("truetype"\)/);
+  assert.match(css, /hero-plaza-mobile.webp/);
+  assert.match(css, /GamtanRoadBatang-Regular.woff2/);
+  assert.match(css, /font-display: swap/);
+});

@@ -1,5 +1,9 @@
 # Intro font sources and licenses
 
+The .woff2 files are losslessly repackaged from the original .ttf files using
+scripts/optimize-intro-fonts.py and fontTools. All glyphs, font names, and font
+outlines are preserved. The original .ttf files remain available in this directory.
+
 ## 감탄로드 바탕체 Thin / Regular / Bold
 
 - Copyright holder: 강원특별자치도 태백시

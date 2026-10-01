@@ -10,8 +10,8 @@ import styles from "./LoginScreen.module.css";
 //
 // ⚠️ 폰트 확인 필요: Figma 텍스트 레이어 실측값은 "IM Fell English"다
 // (get_design_context 응답의 font-['IM_FELL_English:Regular'] 참고 — Cinzel이 아님).
-// index.html에서 IM Fell English를 Google Fonts로 이미 전역 로드하고 있어(문제상세 등
-// 다른 화면도 동일 폰트 사용 중) 별도 @font-face 로컬 번들은 추가하지 않았다.
+// 게임 화면에 진입할 때 pageResources에서 Google Fonts CSS를 붙인다
+// 홍보 페이지에서는 이 요청을 하지 않으며 다른 게임 화면도 같은 CSS를 공유한다
 
 const BASE_URL = import.meta.env.BASE_URL;
 const ASSET_BASE = `${BASE_URL}assets/login/`;
