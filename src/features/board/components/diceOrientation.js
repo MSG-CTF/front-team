@@ -1,4 +1,5 @@
-import { Quaternion, Vector3 } from "three";
+import { Quaternion } from "three/src/math/Quaternion.js";
+import { Vector3 } from "three/src/math/Vector3.js";
 
 // GLB is Y-up. Opposite faces add to seven: 1/6, 2/5, 3/4.
 export const FACE_NORMALS = Object.freeze({

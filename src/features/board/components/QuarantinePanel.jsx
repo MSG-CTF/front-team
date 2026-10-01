@@ -51,7 +51,7 @@ export default function QuarantinePanel({
 
         {/* 패널 본체(프레임 + 일러스트 + 진행바) */}
         <img
-          src="/assets/board/quarantine-panel.png"
+          src="/assets/board/quarantine-panel.webp"
           alt=""
           aria-hidden="true"
           className="absolute left-0 top-[9.8%] w-full h-[90.2%] object-contain pointer-events-none drop-shadow-[0_4px_60px_rgba(0,0,0,0.35)]"

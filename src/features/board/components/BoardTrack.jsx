@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import { BOARD_CELL_COUNT, getBoardCellPosition } from "../utils/boardData.js";
 import { getBoardCellVisitState, getBoardSpentSpecialCells } from "../utils/boardVisited.js";
 import { getBoardSolvedCellIndexes } from "../utils/boardLines.js";
@@ -62,12 +62,12 @@ export default function BoardTrack({
   const rollingRef = useRef(false);
   const [rolling, setRolling] = useState(false);
   const [diceReady, setDiceReady] = useState(false);
-  const visitedCellIndexes = cells
+  const visitedCellIndexes = useMemo(() => cells
     .filter((cell) => getBoardCellVisitState(cell.cellIndex, consumedCellIndexes, cellStatesByIndex, cell.type).isVisited)
-    .map((cell) => cell.cellIndex);
-  const linesByCell = new Map(lines.flatMap((line) => line.cellIndexes.map((index) => [index, line])));
-  const solvedCellIndexes = getBoardSolvedCellIndexes(cells, cellStatesByIndex);
-  const spentSpecialCells = getBoardSpentSpecialCells(cells, consumedCellIndexes, cellStatesByIndex);
+    .map((cell) => cell.cellIndex), [cells, consumedCellIndexes, cellStatesByIndex]);
+  const linesByCell = useMemo(() => new Map(lines.flatMap((line) => line.cellIndexes.map((index) => [index, line]))), [lines]);
+  const solvedCellIndexes = useMemo(() => getBoardSolvedCellIndexes(cells, cellStatesByIndex), [cells, cellStatesByIndex]);
+  const spentSpecialCells = useMemo(() => getBoardSpentSpecialCells(cells, consumedCellIndexes, cellStatesByIndex), [cells, consumedCellIndexes, cellStatesByIndex]);
 
   const handleRollDice = async () => {
     if ((!canRoll && !diceAnimationTest) || !diceReady || rollingRef.current) return;

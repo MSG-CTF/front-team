@@ -1,6 +1,6 @@
 import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { StaticRouter } from "react-router-dom";
@@ -50,8 +50,69 @@ before(async () => {
   }
   components.QuickAction = (await server.ssrLoadModule("/src/features/admin/pages/AdminDashboardPage.jsx")).QuickActionButton;
   components.DiceFallback = (await server.ssrLoadModule("/src/features/board/components/DiceFallback.jsx")).DiceFallback;
+  components.LiveDiceStatus = (await server.ssrLoadModule("/src/features/board/components/BoardCountdownPanels.jsx")).BoardDiceStatusPanel;
+  components.RouteLoadBoundary = (await server.ssrLoadModule("/src/routes/RouteLoadBoundary.jsx")).default;
 });
 after(async () => server?.close());
+
+test("충전과 제한시간 숫자는 서버 기준 시간을 유지하면서 작은 패널에서만 갱신한다", () => {
+  const now = Date.now();
+  const diceStatus = { serverTime: new Date(now).toISOString(), receivedAt: now, nextDiceResetAt: new Date(now + 600000).toISOString() };
+  const renderStatus = (status, activeChallenge) => renderToStaticMarkup(createElement(components.LiveDiceStatus, { diceStatus: status, activeChallenge, rollsLeft: 2, canRoll: true }));
+  assert.match(renderStatus(diceStatus), /충전까지 10:00/);
+  assert.match(renderStatus({ ...diceStatus, timerRunning: true }, { solveDeadlineAt: new Date(now + 300000).toISOString() }), /문제 제한 05:00/);
+  assert.match(renderStatus({ ...diceStatus, timerRunning: true }, { solveDeadlineAt: new Date(now + 300000).toISOString() }), /충전까지 10:00/);
+  assert.match(renderStatus(diceStatus, { solveDeadlineAt: new Date(now + 300000).toISOString() }), /충전까지 10:00/);
+  assert.doesNotMatch(renderStatus({ ...diceStatus, nextDiceResetAt: null }), /충전까지|문제 제한/);
+  assert.doesNotMatch(renderStatus({ ...diceStatus, receivedAt: undefined }), /NaN/);
+  for (const file of ["BoardScreen.jsx", "../hooks/useBoardController.js"]) {
+    const source = readFileSync(new URL(`./features/board/components/${file}`, import.meta.url), "utf8");
+    assert.doesNotMatch(source, /setNow|setInterval/);
+  }
+});
+
+test("주사위가 가득 차면 충전 표시를 숨기되 문제 제한 시간은 유지한다", () => {
+  const html = renderToStaticMarkup(createElement(components.DiceStatusPanel, { rollsLeft: 3, resetInSeconds: 300, challengeRemainingSeconds: 600 }));
+  assert.match(html, /문제 제한.*10:00/);
+  assert.doesNotMatch(html, /충전까지/);
+});
+
+test("화면 코드가 실패하면 내부 오류 대신 재시도 안내를 보여준다", () => {
+  const boundary = new components.RouteLoadBoundary({ children: "정상 화면" });
+  boundary.state = components.RouteLoadBoundary.getDerivedStateFromError(new Error("내부 오류"));
+  const html = renderToStaticMarkup(boundary.render());
+  assert.match(html, /role="alert"/);
+  assert.match(html, /화면을 불러오지 못했습니다/);
+  assert.match(html, /다시 불러오기/);
+  assert.doesNotMatch(html, /내부 오류/);
+  const routes = readFileSync(new URL("./routes/AppRoutes.jsx", import.meta.url), "utf8");
+  assert.match(routes, /<RouteLoadBoundary>\s*<Suspense/);
+});
+
+test("보드의 큰 이미지는 원본 해상도를 유지하는 더 작은 WebP를 읽는다", () => {
+  for (const name of ["bg-1920x1080", "board-grid", "roulette-panel", "open-challenges-panel", "quarantine-panel"]) {
+    const image = new URL(`../public/assets/board/${name}.webp`, import.meta.url);
+    const source = new URL(`../public/assets/board/${name}.png`, import.meta.url);
+    const buffer = readFileSync(image);
+    assert.equal(buffer.toString("ascii", 0, 4), "RIFF");
+    assert.equal(buffer.toString("ascii", 8, 12), "WEBP");
+    assert.ok(statSync(image).size < statSync(source).size);
+  }
+});
+
+test("참가자 초기 코드에 관리자 페이지를 합치지 않고 3D는 모델 로더만 가져온다", () => {
+  const routes = readFileSync(new URL("./routes/AppRoutes.jsx", import.meta.url), "utf8");
+  for (const name of ["BoardPage", "LoginPage", "LeaderboardPage", "MyPage", "KothPage", "ChallengeDetailPage", "AdminDashboardPage", "AdminMileagePage", "AdminAccountsPage"]) {
+    assert.match(routes, new RegExp(`const ${name} = lazy\\(`));
+    assert.doesNotMatch(routes, new RegExp(`import ${name} from`));
+  }
+  assert.match(routes, /<AdminRoute>/);
+  assert.match(routes, /void import\("\.\.\/features\/board\/components\/Dice3D.jsx"\)\.catch/);
+  const dice = readFileSync(new URL("./features/board/components/Dice3D.jsx", import.meta.url), "utf8");
+  assert.doesNotMatch(dice, /@react-three\/drei/);
+  assert.match(dice, /useLoader\(GLTFLoader, "\/models\/dice.glb"\)/);
+  assert.match(dice, /frameloop="demand"/);
+});
 
 test("기차 확인창의 효과음 버튼은 켜짐과 꺼짐을 구분하고 이동 버튼을 유지한다", () => {
   for (const enabled of [true, false]) {
@@ -301,7 +362,7 @@ test("룰렛과 황금열쇠 문양은 서버 칸 종류를 확인하고 방문 
 test("방문 음영과 보드 원판은 한 SVG 좌표계를 공유하고 보드 이미지를 복제하지 않는다", () => {
   const html = render("BoardSurface", { cells: [], visitedCellIndexes: [2, 7, 16, 21, 25, 30] });
   assert.equal((html.match(/<svg/g) || []).length, 1);
-  assert.equal((html.match(/board-grid.png/g) || []).length, 1);
+  assert.equal((html.match(/board-grid.webp/g) || []).length, 1);
   assert.equal((html.match(/data-visited-cell=/g) || []).length, 6);
   assert.match(html, /viewBox="0 0 1772 1330"/);
   assert.match(html, /data-board-visited="true"/);

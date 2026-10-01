@@ -1,6 +1,11 @@
 .desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene { display: contents; }
 .mobileNav, .boardControls, .boardHint, .mobileQuarantineTitle, .sceneBackdrop { display: none; }
 .frame { background: #21150d; }
+.diceReadout { display: grid; gap: 0.2cqw; padding-block: 0.2cqw; font-size: clamp(10px, 0.66cqw, 14px); line-height: 1.5; }
+.diceCountRow { display: flex; align-items: center; justify-content: space-between; gap: 0.3cqw; white-space: nowrap; }
+.diceReadout strong { font-variant-numeric: tabular-nums; }
+.diceChallengeRow { color: #e7c68f; text-align: right; }
+.diceStatusMessage { font-size: clamp(9px, 0.5cqw, 11px); }
 .airportTitleRow { position: relative; display: flex; align-items: center; justify-content: center; min-height: 36px; }
 .airportConfirm .trainSoundButton {
   position: absolute; right: -4px; display: grid; place-items: center;
@@ -253,8 +258,10 @@
   .mobileNav a:hover, .mobileNav button:hover { color: #ffd98a; }
   .mobileNav a:focus-visible, .mobileNav button:focus-visible { outline: 2px solid #f1cb79; outline-offset: -3px; }
   .stage .diceStatus { position: relative; inset: auto; order: -1; width: auto; height: auto; margin: 0 16px; padding: 9px 0 3px; border-top: 1px solid #b58a5640; }
-  .diceStatus > img, .diceStatus > div:nth-of-type(2) { display: none; }
-  .diceStatus > div:first-of-type { position: static; width: auto; height: auto; padding: 0; gap: 6px 12px; flex-wrap: wrap; background: none; font-size: 16px; line-height: 1.5; }
+  .diceStatus > img { display: none; }
+  .diceStatus .diceReadout { position: static; width: auto; height: auto; padding: 0; gap: 4px; background: none; font-size: 16px; line-height: 1.5; }
+  .diceCountRow { flex-wrap: wrap; gap: 6px 12px; }
+  .diceChallengeRow { font-size: 14px; text-align: left; }
   .diceStatus > p { position: static; width: auto; margin-top: 4px; font-size: 13px; white-space: normal; text-align: left; line-height: 1.6; color: #d7bd96; }
   .diceStatus[data-roll-ready="true"] > p { display: none; }
   .boardArea { display: flex; flex-direction: column; min-width: 0; }

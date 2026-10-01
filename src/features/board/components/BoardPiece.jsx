@@ -1,7 +1,8 @@
+import { memo } from "react";
 import { getBoardCellPosition } from "../utils/boardData.js";
 import styles from "./BoardScreen.module.css";
 
-export default function BoardPiece({ position }) {
+export default memo(function BoardPiece({ position }) {
   if (position == null) return null;
   const coordinates = getBoardCellPosition(position);
   return <img
@@ -12,4 +13,4 @@ export default function BoardPiece({ position }) {
     style={{ left: `${coordinates.x}%`, top: `${coordinates.y}%` }}
     className={styles.boardPiece}
   />;
-}
+});

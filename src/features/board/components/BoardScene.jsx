@@ -6,7 +6,7 @@ export default function BoardScene({ children }) {
   return (
     <div className={styles.boardScene} data-board-layer="scene">
       <img
-        src="/assets/board/bg-1920x1080.png"
+        src="/assets/board/bg-1920x1080.webp"
         alt=""
         aria-hidden="true"
         draggable={false}
