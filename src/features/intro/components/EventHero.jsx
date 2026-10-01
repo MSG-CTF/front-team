@@ -18,10 +18,12 @@ export default function EventHero() {
         </h1>
         <div className="logo-window">
           <img
-            src="/assets/login/logo-cutout.png"
+            src="/assets/intro/event-logo.webp"
             width="1254"
             height="1254"
             alt="MSG CTF"
+            fetchpriority="high"
+            decoding="async"
           />
         </div>
         <p className="event-date">

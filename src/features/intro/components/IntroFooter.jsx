@@ -12,7 +12,7 @@ export default function IntroFooter() {
         >
           <span className="footer-logo">
             <img
-              src="/assets/login/logo-cutout.png"
+              src="/assets/intro/event-logo.webp"
               width="1254"
               height="1254"
               alt=""

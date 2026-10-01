@@ -1,32 +1,32 @@
 /* MSG artwork and a compact event-site layout informed by the CCE reference */
 @font-face {
   font-family: "MSG Intro Body";
-  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Thin.ttf")
-    format("truetype");
+  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Thin.woff2")
+    format("woff2");
   font-weight: 100;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "MSG Intro Body";
-  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.ttf")
-    format("truetype");
+  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2")
+    format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "MSG Intro Body";
-  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Bold.ttf")
-    format("truetype");
+  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Bold.woff2")
+    format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "MSG Intro Title";
-  src: url("/assets/intro/fonts/chungju-kimsaeng/ChungjuKimSaeng.ttf")
-    format("truetype");
+  src: url("/assets/intro/fonts/chungju-kimsaeng/ChungjuKimSaeng.woff2")
+    format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -295,8 +295,16 @@
   grid-template-rows: minmax(0, 1fr) auto;
   align-items: center;
   padding: 24px 40px 16px;
-  background: #483320 url("/assets/login/background-plaza.png")
+  background: #483320 url("/assets/intro/hero-plaza.webp")
     calc(50% + clamp(18px, 2vw, 40px)) 44% / cover no-repeat;
+}
+@media (max-width: 680px) {
+  .msg-intro .cover {
+    background-image: image-set(
+      url("/assets/intro/hero-plaza-mobile.webp") 1x,
+      url("/assets/intro/hero-plaza.webp") 2x
+    );
+  }
 }
 .msg-intro .cover::before {
   content: "";
