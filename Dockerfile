@@ -9,6 +9,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
+# 공유 카드의 공개 주소 운영 도메인을 바꿀 때 --build-arg로 함께 지정한다
+ARG VITE_PUBLIC_SITE_URL=https://msg2.mjsec.kr
 RUN npm run build
 
 # 2) 서빙 스테이지 — 정적 파일 + /api/v1 리버스 프록시
