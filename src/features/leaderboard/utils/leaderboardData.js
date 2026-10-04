@@ -14,6 +14,9 @@ function optionalScore(value) {
   return Number.isFinite(number) ? number : null;
 }
 
+const CHALLENGE_SOURCE_TYPES = Object.freeze(["JEOPARDY", "KOTH", "SIGNATURE"]);
+const SCORE_SOURCE_TYPES = Object.freeze([...CHALLENGE_SOURCE_TYPES, "LINE"]);
+
 export function adaptLeaderboardTeams(data) {
   if (!Array.isArray(data?.teams)) return [];
 
@@ -25,7 +28,7 @@ export function adaptLeaderboardTeams(data) {
     isTop3: team.is_top3 === true,
     solvesComplete: Array.isArray(team.solves) && team.solves.every((solve) =>
       asTimestamp(solve.solved_at) !== null && optionalScore(solve.points) !== null &&
-      ["JEOPARDY", "KOTH", "SIGNATURE"].includes(solve.source_type)),
+      SCORE_SOURCE_TYPES.includes(solve.source_type)),
     solves: Array.isArray(team.solves)
       ? team.solves
           .map((solve) => ({
@@ -66,7 +69,9 @@ export function mergeSolveCounts(rankings, teams, hasApiLeaderboard) {
     teams
       .filter((team) => team.teamKey)
       .map((team) => [team.teamKey, {
-        solveCount: team.solves.length,
+        solveCount: team.solvesComplete
+          ? team.solves.filter((solve) => CHALLENGE_SOURCE_TYPES.includes(solve.sourceType)).length
+          : null,
         teamScore: team.teamScore,
         signatureScore: team.solvesComplete ? team.solves.filter((solve) => solve.sourceType === "SIGNATURE").reduce((sum, solve) => sum + solve.points, 0) : null,
         kothScore: team.solvesComplete ? team.solves.filter((solve) => solve.sourceType === "KOTH").reduce((sum, solve) => sum + solve.points, 0) : null,

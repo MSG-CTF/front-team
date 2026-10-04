@@ -3,6 +3,7 @@ import { openChallengeAccess } from "../utils/openChallengeAccess.js";
 import { presentTrainJourney } from "../utils/trainJourney.js";
 import { createStartRewardRecorder } from "../utils/boardStartReward.js";
 import { scheduleBoardDeadlineRefresh } from "../utils/boardDeadlineRefresh.js";
+import { getBoardLineProgress } from "../utils/boardLines.js";
 import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
 import {
   confirmChanceCard,
@@ -572,6 +573,11 @@ export default function useBoardController() {
     [boardDefinition?.cells, selectedCellIndex],
   );
 
+  const lineProgress = useMemo(
+    () => getBoardLineProgress(boardDefinition?.cells, cellStatesByIndex),
+    [boardDefinition?.cells, cellStatesByIndex],
+  );
+
   return {
     boardDefinition,
     myBoard,
@@ -585,6 +591,7 @@ export default function useBoardController() {
     awaitingDiscard,
     ownedChanceCards,
     cellStatesByIndex,
+    lineProgress,
     openedChallenges,
     openedChallengesLoading,
     openedChallengesError,
