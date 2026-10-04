@@ -133,7 +133,7 @@ export function updateBoardCell(teamId, cellIndex, { status, reason }) {
 
 export function moveBoardPosition(teamId, { position, consumeCell = false, reason }) {
   // [백엔드: 완료(머지)] PATCH .../board/position - position 1~36(1번이 START), 도착 칸 효과 미발동.
-  // 응답 type은 START/CHALLENGE/CHANCE/AIRPORT/ROULETTE 5종(QUARANTINE 없음).
+  // 응답 type은 START/CHALLENGE/CHANCE/AIRPORT/ROULETTE 5종.
   return apiClient.patch(`/admin/teams/${teamId}/board/position`, {
     position,
     consume_cell: consumeCell,

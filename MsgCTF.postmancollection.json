@@ -367,44 +367,6 @@
           "response": []
         },
         {
-          "name": "무인도 탈출",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Idempotency-Key",
-                "value": "{{$guid}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/board/quarantine/escape",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "board",
-                "quarantine",
-                "escape"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"{{quarantine_code}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
           "name": "chance 카드 카탈로그",
           "request": {
             "method": "GET",
@@ -1810,7 +1772,7 @@
                 "position"
               ]
             },
-            "description": "이동만 하고 도착 칸 효과(찬스/룰렛/무인도)는 미발동. (백엔드 상태: 논의)",
+            "description": "이동만 하고 도착 칸 효과(찬스/룰렛)는 미발동. (백엔드 상태: 논의)",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"position\": 12,\n  \"consume_cell\": false,\n  \"reason\": \"보드 버그로 인한 위치 보정\"\n}",

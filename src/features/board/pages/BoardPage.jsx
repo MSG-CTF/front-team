@@ -28,7 +28,6 @@ export default function BoardPage() {
     navigate(ROUTES.boardChallenges, { replace: true, state: { ...location.state, boardList } });
     navigate(ROUTES.challengeDetail(challengeId), { state: { boardList } });
   };
-  const [quarantineDismissed, setQuarantineDismissed] = useState(false);
   // 기차여행(Figma 555:342) - 보드 칸을 눌러 고른 목적지. 확인 패널에서 이동을 확정한다.
   const [airportDestinationIndex, setAirportDestinationIndex] = useState(null);
   const isAirportSelecting = isAirportSelectionMode({
@@ -44,10 +43,6 @@ export default function BoardPage() {
   useEffect(() => {
     if (!isAirportSelecting) setAirportDestinationIndex(null);
   }, [isAirportSelecting]);
-
-  useEffect(() => {
-    if (!board.myBoard?.isQuarantined) setQuarantineDismissed(false);
-  }, [board.myBoard?.isQuarantined]);
 
   const handleOpenChallenge = async (challengeId, view, { beforeNavigate } = {}) => {
     try {
@@ -71,11 +66,6 @@ export default function BoardPage() {
       // Board controller가 백엔드의 code/message를 화면 오류 상태로 보존한다.
       return null;
     }
-  };
-
-  const handleEscapeQuarantine = async (code) => {
-    const result = await runBoardAction(() => board.escapeQuarantine(code));
-    if (result) setQuarantineDismissed(true);
   };
 
   // 이미 문제를 오픈해둔 칸을 다시 클릭하면 칸 정보 패널 대신 바로 문제
@@ -126,11 +116,6 @@ export default function BoardPage() {
       isLoading={board.isLoading}
       isMutating={board.isMutating}
       error={board.error}
-      showQuarantine={
-        board.myBoard?.isQuarantined === true &&
-        !board.awaitingDiscard &&
-        !quarantineDismissed
-      }
       onReload={board.reload}
       onDismissError={board.clearError}
       onRollDice={(options) => runBoardAction(() => board.rollDice(options))}
@@ -157,10 +142,8 @@ export default function BoardPage() {
       }
       onRetryChanceDraw={(eventToken) => board.drawChance(eventToken)}
       onCloseCellEvent={board.closeCellEvent}
-      onEscapeQuarantine={handleEscapeQuarantine}
       onSelectCell={handleSelectCell}
       onClearSelectedCell={board.clearSelectedCell}
-      onCloseQuarantine={() => setQuarantineDismissed(true)}
     />
   );
 }

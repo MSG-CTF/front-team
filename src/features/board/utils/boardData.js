@@ -59,7 +59,6 @@ export function adaptMyBoard(data) {
   return {
     position: data?.position ?? null,
     type: data?.type ?? null,
-    isQuarantined: data?.is_quarantined === true,
     diceRollsLeft: data?.dice_rolls_left ?? 0,
     nextDiceResetAt: data?.next_dice_reset_at ?? null,
     airportMoveUsed: data?.airport_move_used === true,
@@ -98,12 +97,10 @@ export function adaptDiceStatus(data) {
   return {
     canRoll: data?.can_roll === true,
     diceRollsLeft: data?.dice_rolls_left ?? 0,
-    isQuarantined: data?.is_quarantined === true,
     timerRunning: data?.timer_running === true,
     blockedReason: data?.blocked_reason ?? null,
     serverTime: data?.server_time ?? null,
     nextDiceResetAt: data?.next_dice_reset_at ?? null,
-    quarantineReleasedAt: data?.quarantine_released_at ?? null,
     receivedAt: Date.now(),
   };
 }
@@ -161,7 +158,6 @@ export function adaptChanceAction(data) {
     movementPath: Array.isArray(data?.movement_path) ? data.movement_path : [],
     skippedCells: Array.isArray(data?.skipped_cells) ? data.skipped_cells : [],
     diceRollsLeft: data?.dice_rolls_left ?? null,
-    isQuarantined: data?.is_quarantined,
     firstNumber: data?.first_number ?? null,
     secondNumber: data?.second_number ?? null,
     awaitingConfirm: data?.awaiting_confirm === true,

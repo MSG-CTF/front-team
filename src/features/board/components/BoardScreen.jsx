@@ -16,14 +16,14 @@ import BoardNav from "./BoardNav.jsx";
 import BoardScene from "./BoardScene.jsx";
 import BoardTrack from "./BoardTrack.jsx";
 import ChanceCardSummary from "./ChanceCardSummary.jsx";
-import { BoardDiceStatusPanel, BoardQuarantinePanel } from "./BoardCountdownPanels.jsx";
+import { BoardDiceStatusPanel } from "./BoardCountdownPanels.jsx";
 import KothEventBanner from "./KothEventBanner.jsx";
 import OpenChallengesSidePanel, { OpenChallengesToggle } from "./OpenChallengesSidePanel.jsx";
 import styles from "./BoardScreen.module.css";
 
 const NO_LINES = Object.freeze([]);
 
-// Figma node 3:2 "BoardPage" (1920x1080) + 146:19 "무인도 클릭"(무인도 모달 상태)
+// Figma node 3:2 "BoardPage" (1920x1080)
 // + 518:300 "열린 문제" + 555:342 "기차여행" + 555:306 "룰렛" + 104:502 "칸 눌럿음~".
 // 데스크톱은 기존 16:9 무대 좌표를 유지한다
 // 모바일은 BoardScene 안에서 배경 바닥과 원판을 함께 확대·스크롤한다
@@ -56,7 +56,6 @@ export default function BoardScreen({
   isLoading,
   isMutating,
   error,
-  showQuarantine,
   onReload,
   onDismissError,
   onRollDice,
@@ -70,9 +69,7 @@ export default function BoardScreen({
   onSpinRoulette,
   onRetryChanceDraw,
   onCloseCellEvent,
-  onEscapeQuarantine,
   onClearSelectedCell,
-  onCloseQuarantine,
   onOpenChallengeDetail,
   onCancelAirportDestination,
 }) {
@@ -173,7 +170,6 @@ export default function BoardScreen({
   const canRoll =
     diceStatus?.canRoll === true && !isMutating && !awaitingDiscard;
   const isAirportSelecting =
-    !showQuarantine &&
     isAirportSelectionMode({
       currentCell,
       myBoard,
@@ -204,7 +200,7 @@ export default function BoardScreen({
   }, [isAirportSelecting, trainTravel.journey, isBoardZoomed]);
   const selectionKey = getChallengeSelectionKey({
     myBoard, currentCell, awaitingDiscard, pendingChanceChoice, pendingRoll,
-    blockedReason: diceStatus?.blockedReason, cellEvent, showQuarantine, isLoading,
+    blockedReason: diceStatus?.blockedReason, cellEvent, isLoading,
   });
   const isChallengeSelectionOpen = selectionKey !== null && dismissedSelectionKey !== selectionKey;
   const isRouletteOpen = cellEvent?.type !== "ROULETTE" || dismissedRouletteToken !== cellEvent.token;
@@ -356,8 +352,7 @@ export default function BoardScreen({
         />
       )}
 
-      {!showQuarantine && (
-        <BoardEventPanel
+      <BoardEventPanel
           myBoard={myBoard}
           currentCell={currentCell}
           pendingRoll={pendingRoll}
@@ -386,8 +381,7 @@ export default function BoardScreen({
           onCloseChallengeSelection={() => setDismissedSelectionKey(selectionKey)}
           onReopenChallengeSelection={() => setDismissedSelectionKey(null)}
           errorMessage={error?.message}
-        />
-      )}
+      />
 
       {isLoading && (
         <div className={`${styles.loading} absolute inset-0 z-50 grid place-items-center bg-[#2b1609]/35 font-inria-serif text-[1.2cqw] text-[#fff0c4]`}>
@@ -427,19 +421,6 @@ export default function BoardScreen({
         </div>
       )}
 
-      {showQuarantine && (
-        <BoardQuarantinePanel
-          diceStatus={diceStatus}
-          isMutating={isMutating}
-          freeEscapeCards={ownedChanceCards.filter(
-            (card) =>
-              card.usableNow && card.effect === "QUARANTINE_ESCAPE_FREE",
-          )}
-          onEscape={onEscapeQuarantine}
-          onUseFreeEscape={(cardId) => onUseChanceCard(cardId)}
-          onClose={onCloseQuarantine}
-        />
-      )}
     </FixedAspectStage>
   );
 }

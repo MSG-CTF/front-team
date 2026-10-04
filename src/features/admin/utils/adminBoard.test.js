@@ -24,7 +24,7 @@ test("칸 번호는 1~36만 허용하고 0번 칸은 거부한다", () => {
 test("칸 상태 변경과 말 이동은 칸 번호, 상태, 사유 1~500자를 검사한다", () => {
   assert.equal(validateBoardCellUpdate({ cellIndex: "36", status: "CLEARED", reason: "오류 복구" }), "");
   assert.notEqual(validateBoardCellUpdate({ cellIndex: "0", status: "CLEARED", reason: "x" }), "");
-  assert.notEqual(validateBoardCellUpdate({ cellIndex: "3", status: "QUARANTINE", reason: "x" }), "");
+  assert.notEqual(validateBoardCellUpdate({ cellIndex: "3", status: "INVALID", reason: "x" }), "");
   assert.notEqual(validateBoardCellUpdate({ cellIndex: "3", status: "OPENED", reason: " " }), "");
   assert.notEqual(validateBoardCellUpdate({ cellIndex: "3", status: "OPENED", reason: "a".repeat(501) }), "");
   assert.equal(validateBoardPositionMove({ position: "1", reason: "START 복귀" }), "");

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import RulesScreen from "../components/RulesScreen.jsx";
 import { ROUTES } from "../../../routes/routePaths.js";
 
-// 기능 명세(2026-09-28) 기준. 무인도 칸과 무인도 카드 2종은 삭제됐다(칸 타입 5종).
+// 기능 명세(2026-09-28) 기준. 칸 타입 5종과 찬스카드 5종을 반영한다.
 const RULES = [
   {
     icon: "🎲",

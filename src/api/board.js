@@ -76,15 +76,6 @@ export function moveAirport({ destinationIndex, idempotencyKey }) {
   );
 }
 
-export function escapeQuarantine({ code, idempotencyKey }) {
-  // POST /board/quarantine/escape - 현장에서 찾은 탈출 코드 제출. 위치는 안 바뀜.
-  return apiClient.post(
-    "/board/quarantine/escape",
-    { code },
-    idKey("quarantine-escape", idempotencyKey),
-  );
-}
-
 export function spinRoulette({ idempotencyKey } = {}) {
   // POST /board/roulette/spin - 결과 50/100/150/200 각 25%. 팀당 1회.
   return apiClient.post(
@@ -104,7 +95,7 @@ export function openCell({ challengeId, idempotencyKey }) {
   );
 }
 
-// ---- 찬스카드 (5종, 팀장만 - 무인도 방어/무인도 이동 2종은 2026-09-28 명세에서 삭제) ----
+// ---- 찬스카드 (5종, 팀장만) ----
 export function getChanceCatalog() {
   // GET /board/chance/catalog (인증 없음) - 카드 정의(5종).
   return apiClient.get("/board/chance/catalog");

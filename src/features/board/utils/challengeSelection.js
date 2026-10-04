@@ -1,6 +1,6 @@
 // 선택창과 원판 숨김이 같은 우선순위를 사용한다
-export function getChallengeSelectionKey({ myBoard, currentCell, awaitingDiscard, pendingChanceChoice, pendingRoll, blockedReason, cellEvent, showQuarantine, isLoading }) {
-  if (!myBoard || isLoading || showQuarantine || awaitingDiscard || pendingChanceChoice || pendingRoll ||
+export function getChallengeSelectionKey({ myBoard, currentCell, awaitingDiscard, pendingChanceChoice, pendingRoll, blockedReason, cellEvent, isLoading }) {
+  if (!myBoard || isLoading || awaitingDiscard || pendingChanceChoice || pendingRoll ||
       blockedReason === "PENDING_CONFIRM" || cellEvent?.type === "CHANCE" || cellEvent?.type === "ROULETTE" ||
       currentCell?.type !== "CHALLENGE" || !currentCell.challengeCandidates?.length) return null;
   return JSON.stringify([currentCell.cellIndex, currentCell.challengeCandidates.map((candidate) => candidate.challengeId)]);
