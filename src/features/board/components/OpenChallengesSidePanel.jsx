@@ -20,10 +20,10 @@ export function OpenChallengesToggle({ isOpen, count, onToggle, buttonRef }) {
       aria-expanded={isOpen}
       aria-controls="board-open-challenges-panel"
       // 닫힌 목록 버튼은 충전과 문제 제한 두 줄 아래에 둔다 열린 패널 제목 위치는 유지한다
-      className={`${styles.openToggle} absolute z-30 whitespace-nowrap border-0 bg-transparent p-0 font-pretendard text-[1.25cqw] leading-normal text-white [text-shadow:0_0.08cqw_0.25cqw_rgba(0,0,0,0.85)] hover:text-[#ffd98a] focus-visible:outline focus-visible:outline-[0.12cqw] focus-visible:outline-[#ffe090] ${isOpen ? "left-[2.92%] top-[14.35%]" : "left-[3.23%] top-[21%]"}`}
+      className={`${styles.openToggle} absolute z-30 whitespace-nowrap font-pretendard ${isOpen ? "left-[2.92%] top-[14.35%]" : "left-[3.23%] top-[21%]"}`}
     >
       {/* 시안은 열린 상태에서도 같은 문구를 쓴다. 열림 여부는 aria-expanded로 전달 */}
-      열린 문제 목록 보기
+      <span>열린 문제 목록 보기</span>
       {count > 0 && <span className="sr-only"> ({count}개)</span>}
     </button>
   );
