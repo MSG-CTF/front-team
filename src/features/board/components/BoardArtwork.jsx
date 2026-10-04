@@ -2,17 +2,17 @@ import { useId } from "react";
 import { BOARD_IMAGE_SIZE } from "../utils/boardData.js";
 import { getBoardCellMaskPath } from "../utils/boardVisited.js";
 
-// 원판과 방문 음영이 같은 그림을 사용해야 사용 후 무인도 문양이 다시 나타나지 않는다
-// 25번 룰렛 면을 16번 면에 투영하며 금테와 보석, 나머지 35칸은 원본을 유지한다
+// 원판과 방문 음영이 같은 그림을 사용한다.
+// 25번 룰렛 면을 16번 면에 투영하며 금테와 보석, 나머지 35칸은 원본을 유지한다.
 export default function BoardArtwork({ cells = [], className }) {
   const clipId = `board-roulette-${useId().replace(/:/g, "")}`;
-  const replacesIsland = cells.some((cell) => cell.cellIndex === 16 && cell.type === "ROULETTE");
+  const replacesCell16 = cells.some((cell) => cell.cellIndex === 16 && cell.type === "ROULETTE");
   const replacesChance = cells.some((cell) => cell.cellIndex === 7 && cell.type === "CHANCE");
 
   return (
     <g className={className} data-board-artwork="true">
       <image href="/assets/board/board-grid.webp" width={BOARD_IMAGE_SIZE.width} height={BOARD_IMAGE_SIZE.height} />
-      {replacesIsland && <>
+      {replacesCell16 && <>
         <defs>
           <clipPath id={clipId} clipPathUnits="userSpaceOnUse">
             <path d={getBoardCellMaskPath(16)} />

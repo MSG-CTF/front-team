@@ -90,7 +90,7 @@ test("화면 코드가 실패하면 내부 오류 대신 재시도 안내를 보
 });
 
 test("보드의 큰 이미지는 원본 해상도를 유지하는 더 작은 WebP를 읽는다", () => {
-  for (const name of ["bg-1920x1080", "board-grid", "roulette-panel", "open-challenges-panel", "quarantine-panel"]) {
+  for (const name of ["bg-1920x1080", "board-grid", "roulette-panel", "open-challenges-panel"]) {
     const image = new URL(`../public/assets/board/${name}.webp`, import.meta.url);
     const source = new URL(`../public/assets/board/${name}.png`, import.meta.url);
     const buffer = readFileSync(image);
@@ -355,7 +355,6 @@ test("룰렛과 황금열쇠 문양은 서버 칸 종류를 확인하고 방문 
     assert.ok(html.includes(getBoardCellMaskPath(16)));
     assert.ok(html.includes(getBoardCellMaskPath(7)));
   }
-  assert.doesNotMatch(render("BoardArtwork", { cells: [{ cellIndex: 16, type: "QUARANTINE" }] }), /data-cell-artwork/);
   assert.doesNotMatch(render("BoardArtwork", { cells: [{ cellIndex: 7, type: "ROULETTE" }] }), /data-cell-artwork/);
 });
 

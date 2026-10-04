@@ -15,7 +15,7 @@ test("문제 선택창은 실제 후보가 있는 CHALLENGE 칸에서만 열린�
 
 test("다른 필수 보드 행동을 처리 중이면 원판을 숨기거나 후보 선택을 시작하지 않는다", () => {
   for (const blockers of [
-    { myBoard: null }, { isLoading: true }, { showQuarantine: true }, { awaitingDiscard: true },
+    { myBoard: null }, { isLoading: true }, { awaitingDiscard: true },
     { pendingRoll: {} }, { pendingChanceChoice: {} }, { blockedReason: "PENDING_CONFIRM" },
     { cellEvent: { type: "CHANCE" } }, { cellEvent: { type: "ROULETTE" } },
   ]) assert.equal(getChallengeSelectionKey({ ...ready, ...blockers }), null);

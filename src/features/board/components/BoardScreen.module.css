@@ -1,5 +1,5 @@
 .desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene { display: contents; }
-.mobileNav, .boardControls, .boardHint, .mobileQuarantineTitle, .sceneBackdrop { display: none; }
+.mobileNav, .boardControls, .boardHint, .sceneBackdrop { display: none; }
 .frame { background: #21150d; }
 .diceReadout { display: grid; gap: 0.2cqw; padding-block: 0.2cqw; font-size: clamp(10px, 0.66cqw, 14px); line-height: 1.5; }
 .diceCountRow { display: flex; align-items: center; justify-content: space-between; gap: 0.3cqw; white-space: nowrap; }
@@ -307,29 +307,7 @@
   .stage .empty { position: relative; inset: auto; width: 100%; padding: 16px; font-size: 16px; }
   .stage .error { position: fixed; inset: 12px 12px auto; width: auto; padding: 12px; gap: 12px; font-size: 14px; flex-wrap: wrap; }
   .error button { min-height: 44px; min-width: 44px; font-size: 14px; padding: 8px; }
-  .stage .quarantineBackdrop { position: fixed; }
-  .stage .quarantinePanel {
-    position: absolute;
-    inset: 10dvh 12px auto;
-    width: min(calc(100% - 24px), 520px);
-    height: auto;
-    max-height: 80dvh;
-    margin-inline: auto;
-    padding: 24px 20px;
-    overflow-y: auto;
-    border: 8px solid transparent;
-    border-image: url("/assets/challenge-detail/panel-board.png") 32 stretch;
-    background: #eddbb6;
-    background-clip: padding-box;
-  }
-  .mobileQuarantineTitle { display: block; margin: 0 40px 20px 0; font: 24px/1.4 "Song Myung", serif; color: #613d15; }
-  .quarantinePanel > img { display: none; }
-  .quarantinePanel > div, .quarantinePanel > p, .quarantinePanel > form { position: static; width: auto; height: auto; margin: 12px 0; padding: 8px; font-size: 16px; line-height: 1.7; }
-  .quarantinePanel > form { display: flex; gap: 8px; padding: 0; }
-  .quarantinePanel input, .quarantinePanel button { min-height: 44px; font-size: 16px; padding: 8px; }
-  .quarantinePanel .quarantineClose { top: 8px; right: 8px; width: 44px; padding: 8px; }
-
-  /* 열린 문제(Figma 518:300): 버튼은 세로 흐름에 두고, 패널은 무인도 패널처럼 하단 시트로 */
+  /* 열린 문제(Figma 518:300): 버튼은 세로 흐름에 두고, 패널은 하단 시트로 표시한다. */
   .stage .openToggle { position: static; width: auto; min-height: 44px; padding: 8px 0; font-size: 14px; text-align: left; white-space: normal; color: #f3dfb9; }
   .stage .openPanel {
     position: fixed;

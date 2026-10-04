@@ -66,7 +66,7 @@ export const MILEAGE_TYPE = {
   ADMIN_DEDUCT: "ADMIN_DEDUCT",
 };
 
-// 칸 타입은 5종이다. QUARANTINE(무인도)은 백엔드에서 삭제됐다(#81~#85).
+// 백엔드 계약의 보드 칸 타입 5종.
 export const CELL_TYPE = {
   START: "START",
   CHALLENGE: "CHALLENGE",

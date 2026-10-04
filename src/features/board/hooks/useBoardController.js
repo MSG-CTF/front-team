@@ -10,7 +10,6 @@ import {
   createBoardIdempotencyKey,
   discardChanceCard,
   drawChanceCard,
-  escapeQuarantine,
   getBoard,
   getChanceCatalog,
   getCurrentCell,
@@ -490,22 +489,6 @@ export default function useBoardController() {
     [runMutation, syncProgress],
   );
 
-  const handleEscapeQuarantine = useCallback(
-    (code) =>
-      runMutation({
-        actionId: `quarantine-escape:${code}`,
-        prefix: "quarantine-escape",
-        request: async (idempotencyKey) => {
-          const result = unwrapBoardResponse(
-            await escapeQuarantine({ code, idempotencyKey }),
-          );
-          await syncProgress();
-          return result;
-        },
-      }),
-    [runMutation, syncProgress],
-  );
-
   useEffect(() => {
     if (
       isLoading ||
@@ -621,7 +604,6 @@ export default function useBoardController() {
     confirmChance: handleConfirmChance,
     discardChance: handleDiscardChance,
     spinRoulette: handleSpinRoulette,
-    escapeQuarantine: handleEscapeQuarantine,
     closeCellEvent: () => setCellEvent(null),
     selectCell: setSelectedCellIndex,
     clearSelectedCell: () => setSelectedCellIndex(null),
