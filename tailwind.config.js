@@ -1,5 +1,3 @@
-import containerQueries from "@tailwindcss/container-queries";
-
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,jsx}"],
@@ -24,6 +22,8 @@ export default {
         "admin-divider": "rgba(211,142,37,0.35)",
       },
       fontFamily: {
+        sans: ["ui-sans-serif", "system-ui", "sans-serif", '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
+        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", '"Liberation Mono"', '"Courier New"', "monospace"],
         "im-fell": ['"IM Fell English"', "ui-serif", "serif"],
         "kode-mono": ['"Kode Mono"', "ui-monospace", "monospace"],
         "inria-serif": ['"Inria Serif"', "ui-serif", "serif"],
@@ -33,8 +33,6 @@ export default {
       },
     },
   },
-  // @container / cqw 단위는 코어 플러그인이 아니라 이 플러그인이 있어야 실제
-  // CSS(container-type 등)로 만들어진다 — 빠져 있으면 `@container` 클래스가
-  // 조용히 아무 효과 없는 죽은 클래스가 되어 cqw 폰트 크기가 전부 깨진다.
-  plugins: [containerQueries],
+  // Tailwind 4에서 @container를 기본으로 지원한다
+  plugins: [],
 };

@@ -63,6 +63,28 @@ export function getBoardSolvedCellIndexes(cells, cellStatesByIndex) {
   ).map((cell) => cell.cellIndex))].sort((a, b) => a - b);
 }
 
+// 서버가 지정한 라인과 현재 팀의 CLEARED 상태만 연결한다
+// 지급 확인 응답이 없으므로 완료와 보너스 점수는 만들지 않는다
+export function getBoardLineProgress(cells, cellStatesByIndex) {
+  if (!Array.isArray(cells) || !(cellStatesByIndex instanceof Map)) return [];
+  const grouped = new Map();
+  for (const cell of cells) {
+    if (!Number.isInteger(cell?.lineNumber) || cell.lineNumber < 1 || cell.lineNumber > 6) continue;
+    const indexes = grouped.get(cell.lineNumber) ?? [];
+    indexes.push(cell.cellIndex);
+    grouped.set(cell.lineNumber, indexes);
+  }
+  return prepareBoardLines([...grouped].sort(([left], [right]) => left - right).map(([number, cellIndexes]) => ({
+    lineId: `line-${number}`,
+    label: `${number}번 라인`,
+    cellIndexes,
+    solvedCellIndexes: cellIndexes.filter((index) => cellStatesByIndex.get(index)?.status === "CLEARED"),
+    isCompleted: false,
+    rewardScore: null,
+    bonusScore: null,
+  })), cells);
+}
+
 // 화면용 모델이며 API 계약이 아니다
 // 실제 연동 전까지 라인 묶음, 완료 여부, 지급 점수를 자동으로 만들지 않는다
 // 칸 소모나 방문 완료는 문제 정답 처리와 별개다

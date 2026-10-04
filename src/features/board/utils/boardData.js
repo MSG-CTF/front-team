@@ -49,6 +49,7 @@ export function adaptBoardDefinition(data) {
           cellIndex: cell.cell_index,
           type: cell.type,
           difficulty: cell.difficulty,
+          lineNumber: cell.line_number ?? null,
           name: cell.name,
         }))
       : [],

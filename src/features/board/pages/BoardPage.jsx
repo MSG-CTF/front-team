@@ -103,6 +103,7 @@ export default function BoardPage() {
       awaitingDiscard={board.awaitingDiscard}
       ownedChanceCards={board.ownedChanceCards}
       cellStatesByIndex={board.cellStatesByIndex}
+      lineProgress={board.lineProgress}
       selectedCell={board.selectedCell}
       openedChallenges={board.openedChallenges}
       openedChallengesLoading={board.isLoading || board.openedChallengesLoading}

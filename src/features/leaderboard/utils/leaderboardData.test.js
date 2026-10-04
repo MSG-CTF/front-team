@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { adaptLeaderboardTeams, adaptRankingRows, mergeSolveCounts } from "./leaderboardData.js";
+import { buildScoreSeries } from "./leaderboardChartData.js";
 
 const raw = { team_id: "a", team_name: "부스 참가팀", team_score: 825, solves: [
   { source_type: "JEOPARDY", points: 200, solved_at: "2026-11-08T01:00:00Z" },
@@ -64,4 +65,61 @@ test("부스 점수의 소수 부분을 버리지 않는다", () => {
   const [row] = mergeSolveCounts(rankings, teams, true);
   assert.equal(row.signatureScore, 425.25);
   assert.equal(row.teamScore, 825.25);
+});
+
+test("라인 보너스는 총점과 그래프에 포함하고 실제 풀이 수에는 넣지 않는다", () => {
+  const team = { ...raw, team_score: 1050, solves: [...raw.solves,
+    { challenge_id: null, source_type: "LINE", points: 225, solved_at: "2026-11-08T03:01:00Z" },
+  ] };
+  const teams = adaptLeaderboardTeams({ teams: [team] });
+  const rankings = adaptRankingRows({ rankings: [{ ...team, rank: 1 }] });
+  const [row] = mergeSolveCounts(rankings, teams, true);
+  assert.equal(teams[0].solvesComplete, true);
+  assert.equal(row.solveCount, 3);
+  assert.equal(row.teamScore, 1050);
+  assert.equal(row.signatureScore, 425);
+  assert.equal(row.kothScore, 200);
+  assert.equal(buildScoreSeries(teams).series[0].finalScore, 1050);
+});
+
+test("문제 5개와 라인 보너스 1개를 받으면 풀이 수는 5개다", () => {
+  const team = { ...raw, team_score: 725, solves: [
+    ...Array.from({ length: 5 }, (_, index) => ({
+      challenge_id: `challenge-${index}`, source_type: "JEOPARDY", points: 100,
+      solved_at: "2026-11-08T01:00:00Z",
+    })),
+    { challenge_id: null, source_type: "LINE", points: 225, solved_at: "2026-11-08T01:00:00Z" },
+  ] };
+  const teams = adaptLeaderboardTeams({ teams: [team] });
+  const [row] = mergeSolveCounts(adaptRankingRows({ rankings: [team] }), teams, true);
+  assert.equal(row.solveCount, 5);
+  assert.equal(buildScoreSeries(teams).series[0].finalScore, 725);
+});
+
+test("0점이나 소수 라인 보너스도 풀이 수와 부스 점수를 바꾸지 않는다", () => {
+  for (const points of [0, 22.5]) {
+    const team = { ...raw, team_score: 825 + points, solves: [...raw.solves,
+      { source_type: "LINE", points, solved_at: "2026-11-08T04:00:00Z" },
+    ] };
+    const teams = adaptLeaderboardTeams({ teams: [team] });
+    const [row] = mergeSolveCounts(adaptRankingRows({ rankings: [team] }), teams, true);
+    assert.equal(row.solveCount, 3);
+    assert.equal(row.signatureScore, 425);
+    assert.equal(buildScoreSeries(teams).series[0].finalScore, team.team_score);
+  }
+});
+
+test("알 수 없는 점수 유형이나 깨진 LINE 기록은 풀이 수를 추정하지 않는다", () => {
+  for (const event of [
+    { source_type: "CATEGORY", points: 225, solved_at: "2026-11-08T04:00:00Z" },
+    { source_type: "LINE", points: null, solved_at: "2026-11-08T04:00:00Z" },
+    { source_type: "LINE", points: 225, solved_at: "invalid" },
+  ]) {
+    const team = { ...raw, solves: [...raw.solves, event] };
+    const teams = adaptLeaderboardTeams({ teams: [team] });
+    const [row] = mergeSolveCounts(adaptRankingRows({ rankings: [team] }), teams, true);
+    assert.equal(teams[0].solvesComplete, false);
+    assert.equal(row.solveCount, null);
+    assert.equal(row.signatureScore, null);
+  }
 });
