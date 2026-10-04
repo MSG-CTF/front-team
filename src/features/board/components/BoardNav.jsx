@@ -14,7 +14,8 @@ const BUTTONS = [
     src: "/assets/board/nav-rules.png",
     mobileImageWidth: "192.31%",
     mobileImageAnchor: "translate(-49.5%, -46%)",
-    className: "left-[75.42%] top-[2.96%] w-[10.47%] h-[12.41%]",
+    // 원본 PNG가 두 원형 버튼보다 장식을 크게 채워 실제 보이는 크기를 따로 줄인다.
+    className: "left-[77.83%] top-[3.97%] w-[7.46%] h-[8.81%]",
     hitArea: "left-[49.5%] top-[46%] w-[52%]",
   },
   {
@@ -25,7 +26,7 @@ const BUTTONS = [
     src: "/assets/board/nav-mypage.png",
     mobileImageWidth: "256.41%",
     mobileImageAnchor: "translate(-50%, -48%)",
-    className: "left-[80.68%] top-[1.2%] w-[13.39%] h-[15.83%]",
+    className: "left-[82.09%] top-[2.54%] w-[9.88%] h-[11.68%]",
     hitArea: "left-1/2 top-[48%] w-[39%]",
   },
   {
@@ -36,7 +37,7 @@ const BUTTONS = [
     src: "/assets/board/nav-scoreboard.png",
     mobileImageWidth: "238.1%",
     mobileImageAnchor: "translate(-50%, -48%)",
-    className: "left-[87.76%] top-[1.2%] w-[12.24%] h-[14.54%]",
+    className: "left-[87.98%] top-[2.69%] w-[9.04%] h-[10.69%]",
     hitArea: "left-1/2 top-[48%] w-[42%]",
   },
 ];
@@ -91,13 +92,11 @@ export default function BoardNav() {
       >
         동아리 부스 둘러보기 →
       </button>
-      {/* 로그아웃 - 이 3개 아이콘과 달리 Figma에 그려진 그림이 없어서(시안 없음)
-          반투명 텍스트 버튼으로 얹었다. 우상단 이동 아이콘 바로 아래, KoTH 배너(top 26.48%) 위 여백.
-          오른쪽 끝(right 3.65%)은 스코어보드 아이콘·KoTH 배너·동아리 부스 버튼과 한 선. */}
+      {/* 로그아웃 - 우측 하단 동아리 부스 버튼과 같은 가장자리 여백으로 좌측 하단에 둔다. */}
       <button
         type="button"
         onClick={performLogout}
-        className="absolute right-[3.65%] top-[17.5%] rounded-[0.4cqw] border border-[#c9a86a]/60 bg-[#2b1609]/70 px-[0.9cqw] py-[0.45cqw] font-inria-serif text-[0.8cqw] text-[#f1e4c8] transition-colors hover:bg-[#2b1609]/90"
+        className="absolute bottom-[2%] left-[3.65%] border-0 bg-[#2b1609]/80 px-[1.1cqw] py-[0.55cqw] font-inria-serif text-[1cqw] text-[#f1e4c8] transition-colors hover:bg-[#2b1609] focus-visible:outline focus-visible:outline-[#f1e4c8]"
       >
         로그아웃
       </button>
