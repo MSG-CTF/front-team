@@ -48,35 +48,43 @@
     height: var(--board-scene-height);
     transform: translate(-50%, -50%);
   }
-  .frame > img { object-fit: contain; }
+  .frame > img {
+    object-fit: contain;
+    /* 16:9 밖으로 남는 좌우(또는 위아래)는 아래 cover 배경이 채운다. 경계가 보이지 않게 가장자리만 흐리게 잇는다 */
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent), linear-gradient(to bottom, transparent, #000 3%, #000 97%, transparent);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(to right, transparent, #000 3%, #000 97%, transparent), linear-gradient(to bottom, transparent, #000 3%, #000 97%, transparent);
+    mask-composite: intersect;
+  }
+  /* 여백 없이 화면 전체를 같은 배경 그림으로 채운다. 바닥 문양 정렬은 위의 16:9 배경이 맡는다 */
+  .frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("/assets/board/bg-1920x1080.webp") center / cover no-repeat;
+    pointer-events: none;
+  }
 }
 /* 열린 문제 패널 제목은 데스크톱에선 패널 이미지에 그려져 있어 스크린리더에만 노출 */
 .mobileOpenTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.openToggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 1.55cqw;
-  padding: 0.12cqw 0.4cqw;
-  border: 0.05cqw solid #c9a86a;
-  border-radius: 0.2cqw;
-  background: linear-gradient(180deg, rgba(75, 40, 25, 0.94), rgba(42, 24, 13, 0.96));
-  box-shadow:
-    inset 0 0 0 0.04cqw #28160d,
-    inset 0 0 0 0.07cqw rgba(174, 134, 74, 0.34),
-    0 0.1cqw 0.28cqw rgba(33, 20, 11, 0.42);
-  color: #f1e4c8;
-  font-size: clamp(12px, 0.78cqw, 16px);
-  line-height: 1.25;
-  text-shadow: 0 1px 2px #120c05;
-  cursor: pointer;
-  transition: filter 150ms ease, color 150ms ease;
+/* 열린 문제 목록·동아리 부스 버튼 - 주사위판(panel-dice-status.png) 재질에 맞춘 명판
+   바깥 금선 #ae7c42, 안쪽 검은 선 #100802, 안쪽 바탕 #3d2515→#2a180a, 글씨는 주사위 안내 문구와 같은 #e7d2ad */
+.plaqueButton {
+  display: inline-flex; align-items: center; gap: 0.45cqw; white-space: nowrap; cursor: pointer;
+  padding: 0.5cqw 0.95cqw; border: 1px solid #ae7c42; border-radius: 0.55cqw;
+  background: linear-gradient(#3d2515, #2a180a); color: #e7d2ad;
+  box-shadow: inset 0 0 0 0.12cqw #100802, 0 0.25cqw 0.7cqw #120a0499;
+  font: 1cqw/1.4 "Song Myung", serif; transition: filter 120ms ease, color 120ms ease;
 }
-
-.openToggle:hover { color: #fff2cf; filter: brightness(1.1); }
-.openToggle:focus-visible { outline: 2px solid #ffe090; outline-offset: 2px; }
-
+.plaqueButton svg { flex: none; width: 1.15cqw; height: 1.15cqw; color: #b88d55; }
+.plaqueButton:hover { filter: brightness(1.18); color: #f8ead0; }
+.plaqueButton:focus-visible { outline: 0.12cqw solid #c7a976; outline-offset: 0.25cqw; }
+.openToggleCount {
+  margin-left: auto;
+  display: inline-grid; place-items: center; min-width: 1.35cqw; height: 1.35cqw; padding-inline: 0.3cqw; border-radius: 999px;
+  background: #8a6236; color: #f8ead0; font: 700 0.75cqw/1 "Inria Serif", serif; font-variant-numeric: tabular-nums;
+}
 .lineOverlay { position: absolute; inset: 0; z-index: 12; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 /* 풀이 상태는 유지하고 독점은 칸 바깥의 연속선으로만 구분한다 */
 .solvedCells { --line-accent: #a8c8ae; }
@@ -321,7 +329,10 @@
   .stage .error { position: fixed; inset: 12px 12px auto; width: auto; padding: 12px; gap: 12px; font-size: 14px; flex-wrap: wrap; }
   .error button { min-height: 44px; min-width: 44px; font-size: 14px; padding: 8px; }
   /* 열린 문제(Figma 518:300): 버튼은 세로 흐름에 두고, 패널은 하단 시트로 표시한다. */
-  .stage .openToggle { position: static; flex: 0 1 auto; width: auto; min-height: 44px; padding: 8px 12px; font-size: 14px; text-align: left; white-space: normal; }
+  .stage .openToggle { position: static; flex: 0 1 auto; width: auto; min-height: 44px; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 14px; text-align: left; white-space: normal; box-shadow: inset 0 0 0 2px #100802; }
+  .stage .openToggle svg { width: 18px; height: 18px; }
+  .stage .openToggle:focus-visible { outline-width: 2px; outline-offset: 3px; }
+  .openToggleCount { min-width: 20px; height: 20px; padding-inline: 5px; font-size: 12px; }
   .stage .openPanel {
     position: fixed;
     inset: auto 12px 16px;

@@ -4,7 +4,11 @@ import { ROUTES } from "../../../routes/routePaths.js";
 import styles from "./BoardScreen.module.css";
 
 // Figma node 192:163 "설명서"(두루마리) / 97:439 "마이페이지로고" / 10:10 "스코어로".
-// 보드 화면 우상단의 3개 이동 버튼. 그림에 아이콘이 이미 그려져 있어 클릭 영역만 얹는다.
+// 보드 화면 우상단의 원형 이동 버튼. 그림에 아이콘이 이미 그려져 있어 클릭 영역만 얹는다.
+// 로그아웃(nav-logout.png)은 시안이 없어 스코어보드 동전 틀에 금색 로그아웃 문양을 넣어 만들었다.
+// 로그아웃을 맨 오른쪽(기존 스코어보드 자리)에 두고 나머지 3개를 동전 간격(무대 5.47%)만큼
+// 왼쪽으로 옮겼다. 맨 오른쪽 동전의 보이는 오른쪽 끝(무대 94.29%)은 이전 스코어보드 자리와 같다.
+const NAV_SHIFT = 5.47;
 const BUTTONS = [
   {
     key: "rules",
@@ -15,7 +19,7 @@ const BUTTONS = [
     mobileImageWidth: "192.31%",
     mobileImageAnchor: "translate(-49.5%, -46%)",
     // 원본 PNG가 두 원형 버튼보다 장식을 크게 채워 실제 보이는 크기를 따로 줄인다.
-    className: "left-[77.83%] top-[3.97%] w-[7.46%] h-[8.81%]",
+    box: { left: 77.83 - NAV_SHIFT, top: 3.97, width: 7.46, height: 8.81 },
     hitArea: "left-[49.5%] top-[46%] w-[52%]",
   },
   {
@@ -26,7 +30,7 @@ const BUTTONS = [
     src: "/assets/board/nav-mypage.png",
     mobileImageWidth: "256.41%",
     mobileImageAnchor: "translate(-50%, -48%)",
-    className: "left-[82.09%] top-[2.54%] w-[9.88%] h-[11.68%]",
+    box: { left: 82.09 - NAV_SHIFT, top: 2.54, width: 9.88, height: 11.68 },
     hitArea: "left-1/2 top-[48%] w-[39%]",
   },
   {
@@ -37,7 +41,18 @@ const BUTTONS = [
     src: "/assets/board/nav-scoreboard.png",
     mobileImageWidth: "238.1%",
     mobileImageAnchor: "translate(-50%, -48%)",
-    className: "left-[87.98%] top-[2.69%] w-[9.04%] h-[10.69%]",
+    box: { left: 87.98 - NAV_SHIFT, top: 2.69, width: 9.04, height: 10.69 },
+    hitArea: "left-1/2 top-[48%] w-[42%]",
+  },
+  {
+    key: "logout",
+    onClick: performLogout,
+    label: "로그아웃",
+    mobileLabel: "로그아웃",
+    src: "/assets/board/nav-logout.png",
+    mobileImageWidth: "238.1%",
+    mobileImageAnchor: "translate(-50%, -48%)",
+    box: { left: 87.98, top: 2.69, width: 9.04, height: 10.69 },
     hitArea: "left-1/2 top-[48%] w-[42%]",
   },
 ];
@@ -48,8 +63,8 @@ export default function BoardNav() {
   return (
     <>
       <nav className={styles.mobileNav} aria-label="대회 메뉴">
-        {BUTTONS.map((button) => (
-          <Link key={button.key} to={button.to} className={styles.mobileNavPrimary}>
+        {BUTTONS.map((button) => {
+          const content = <>
             <span className={styles.mobileNavIcon} aria-hidden="true">
               <img
                 src={button.src}
@@ -59,17 +74,20 @@ export default function BoardNav() {
               />
             </span>
             <span>{button.mobileLabel}</span>
-          </Link>
-        ))}
+          </>;
+          return button.to
+            ? <Link key={button.key} to={button.to} className={styles.mobileNavPrimary}>{content}</Link>
+            : <button key={button.key} type="button" onClick={button.onClick} className={styles.mobileNavPrimary}>{content}</button>;
+        })}
         <Link to={ROUTES.koth}>KoTH</Link>
         <Link to={ROUTES.signatures}>동아리 부스</Link>
-        <button type="button" onClick={performLogout}>로그아웃</button>
       </nav>
       <div className={styles.desktopOnly}>
       {BUTTONS.map((button) => (
         <div
           key={button.key}
-          className={`group absolute pointer-events-none ${button.className}`}
+          className="group absolute pointer-events-none"
+          style={{ left: `${button.box.left}%`, top: `${button.box.top}%`, width: `${button.box.width}%`, height: `${button.box.height}%` }}
         >
           <img
             src={button.src}
@@ -79,26 +97,21 @@ export default function BoardNav() {
           />
           <button
             type="button"
-            onClick={() => navigate(button.to)}
+            onClick={button.onClick ?? (() => navigate(button.to))}
             aria-label={button.label}
+            title={button.label}
             className={`absolute aspect-square -translate-x-1/2 -translate-y-1/2 rounded-full border-0 bg-transparent p-0 cursor-pointer pointer-events-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#f1e4c8] ${button.hitArea}`}
           />
         </div>
       ))}
+      {/* 열린 문제 목록 버튼과 같은 금테 명판. 오른쪽 끝은 KoTH 배너·로그아웃 동전과 한 선(right 3.65%) */}
       <button
         type="button"
         onClick={() => navigate(ROUTES.signatures)}
-        className="absolute bottom-[2%] right-[3.65%] border-0 bg-[#2b1609]/80 px-[1.1cqw] py-[0.55cqw] font-inria-serif text-[1cqw] text-[#f1e4c8] hover:bg-[#2b1609] focus-visible:outline focus-visible:outline-[#f1e4c8]"
+        className={`${styles.plaqueButton} absolute bottom-[2%] right-[3.65%]`}
       >
-        동아리 부스 둘러보기 →
-      </button>
-      {/* 로그아웃 - 우측 하단 동아리 부스 버튼과 같은 가장자리 여백으로 좌측 하단에 둔다. */}
-      <button
-        type="button"
-        onClick={performLogout}
-        className="absolute bottom-[2%] left-[3.65%] border-0 bg-[#2b1609]/80 px-[1.1cqw] py-[0.55cqw] font-inria-serif text-[1cqw] text-[#f1e4c8] transition-colors hover:bg-[#2b1609] focus-visible:outline focus-visible:outline-[#f1e4c8]"
-      >
-        로그아웃
+        <span>동아리 부스 둘러보기</span>
+        <span aria-hidden="true">→</span>
       </button>
       </div>
     </>
