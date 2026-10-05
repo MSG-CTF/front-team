@@ -202,7 +202,7 @@ test("라인 완성 장식 때문에 원판 너비나 배경 기준점을 바꾸
   const css = readFileSync(new URL("../components/BoardScreen.module.css", import.meta.url), "utf8");
   assert.doesNotMatch(css, /\.boardScene\[data-has-lines/);
   assert.doesNotMatch(css, /\.boardViewport\[data-has-lines/);
-  assert.match(css, /\.lineOverlay\s*\{[^}]*inset: 0;[^}]*width: 100%; height: 100%; overflow: hidden/);
+  assert.match(css, /\.lineOverlay\s*\{[^}]*inset: 0;[^}]*width: 100%; height: 100%; overflow: visible/);
 });
 
 test("모바일 기차 선택은 처음만 확대하고 이동이 끝나면 이전 보기로 복구한다", () => {

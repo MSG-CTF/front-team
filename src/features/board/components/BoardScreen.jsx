@@ -49,7 +49,7 @@ export default function BoardScreen({
   onOpenListVisibleChange,
   initialOpenListView,
   instanceInfo,
-  // 명세 확정 후 연결할 화면용 데이터 실제 API 응답에서 추측해 생성하지 않는다
+  // 서버 라인 번호와 팀별 풀이 상태를 쓰고 지급 여부는 추정하지 않는다
   lineProgress = NO_LINES,
   lineProgressPreview = false,
   airportDestinationIndex = null,

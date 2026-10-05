@@ -1,6 +1,6 @@
 name: CI
 
-# job이 현재 2개임
+# 프론트 단위 테스트와 보안 검사가 모두 통과해야 이미지를 발행한다
 # 1) frontend-code-scan: jm_devsecops(중앙 DevSecOps 저장소)의 frontend-ci.yml을 호출.
 #    gitleaks/semgrep/trivy(fs) 보안 스캔 + npm audit + docker build 검증(root 사용자 확인,
 #    Trivy 이미지 스캔, smoke test) + npm build까지 여기서 전부 끝난다.
@@ -27,6 +27,27 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  frontend-tests:
+    name: frontend-tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: set-up-node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "20.19.5"
+          cache: npm
+
+      - name: lockfile로 의존성 설치
+        run: npm ci
+
+      - name: 프론트 단위 테스트
+        run: npm test
+
   frontend-code-scan:
     # 중앙 CD PR #7에서 병합된 JavaScript·React 전용 Semgrep 구성을
     # 공식 merge commit SHA로 고정한다. PR #5가 병합되고 v3.4.0 태그가
@@ -41,7 +62,7 @@ jobs:
       container-port: 80
 
   supply-chain-build-scan-push:
-    needs: frontend-code-scan
+    needs: [frontend-code-scan, frontend-tests]
     runs-on: ubuntu-latest
     outputs:
       digest: ${{ steps.publish.outputs.digest }}

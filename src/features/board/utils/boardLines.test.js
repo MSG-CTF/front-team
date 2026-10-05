@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { prepareBoardLines, getBoardSolvedCellIndexes, getBoardLineAccent, getBoardLineBadgePosition, getBoardLineTileLabelPosition, getBoardLineStatus, formatBoardLineScore, formatBoardLineScoreValue, getBoardLineEarnedScore, getBoardLineScoreTotals } from "./boardLines.js";
+import { prepareBoardLines, getBoardSolvedCellIndexes, getBoardLineAccent, getBoardLineAccentMap, getBoardLineAccentSegments, getBoardLineBadgePosition, getBoardLineTileLabelPosition, getBoardLineStatus, formatBoardLineScore, formatBoardLineScoreValue, getBoardLineEarnedScore, getBoardLineScoreTotals } from "./boardLines.js";
 import { BOARD_CELL_FACE_OUTLINES } from "./boardCellFaces.js";
 
 const sample = (patch = {}) => ({ lineId: "line-a", label: "1번 라인", cellIndexes: [2,3,4,5,6], solvedCellIndexes: [2,3], isCompleted: false, bonusScore: null, ...patch });
@@ -170,17 +170,18 @@ test("숫자와 pts 단위를 분리해도 소수와 천 단위 표기는 동일
   for (const value of [null, undefined, NaN, Infinity, -1, "150"]) assert.equal(formatBoardLineScoreValue(value), null);
 });
 
-test("색 테두리는 곡면 윤곽 안쪽에만 넣고 칸 위에 막대나 체크를 덮지 않는다", () => {
+test("풀이 윤곽은 유지하며 독점은 면 채색이나 명패 없이 연속 외곽선으로만 표시한다", () => {
   const css = readFileSync(new URL("../components/BoardScreen.module.css", import.meta.url), "utf8");
   const component = readFileSync(new URL("../components/BoardLineOverlay.jsx", import.meta.url), "utf8");
   assert.doesNotMatch(css + component, /lineCellBand|lineSolveMark|lineCellBevel|lineCellClaimed|lineCellSolved/);
   assert.match(css, /\.lineCellOutline \{ fill: none; stroke: var\(--line-accent\); stroke-width: 3px/);
-  assert.match(css, /\.lineCellOutline\[data-outline-state="claimed"\] \{ stroke-width: 12px; opacity: 1/);
-  assert.match(css, /\.lineCellFinish \{ fill: none; stroke: #f0cf8c; stroke-width: 4px/);
-  assert.match(component, /facePath: getBoardCellMaskPath\(cellIndex\)/);
-  assert.match(component, /clipPath=\{`url\(#\$\{clipPrefix\}-\$\{cellIndex\}\)`\}/);
-  assert.match(component, /solved.has\(cellIndex\) && <path d=\{facePath\}/);
-  assert.match(component, /line.isCompleted && <path d=\{facePath\} className=\{styles.lineCellFinish\}/);
+  assert.doesNotMatch(css + component, /lineCellSelected|lineClaimFlash|lineCellFinish|lineRegionScore|lineScoreShade|data-line-badge|<text|<image/);
+  assert.match(css, /\.lineAccent \{ pointer-events: none;/);
+  assert.match(component, /<BoardGemRail cellIndexes=\{segment.cellIndexes\}/);
+  assert.doesNotMatch(component, /lineAccentMetal|lineAccentColor|lineAccentSheen/);
+  assert.doesNotMatch(component.slice(component.indexOf("function LineCells"), component.indexOf("export default")), /getBoardCellMaskPath|clipPath|lineCellOutline/);
+  assert.match(component, /line.isCompleted \? getBoardLineAccentSegments\(line.cellIndexes, boardCells\) : \[\]/);
+  assert.match(component, /data-line-segment=\{segment.cellIndexes.join\(","\)\}/);
   assert.match(component, /vectorEffect="non-scaling-stroke" strokeLinejoin="round"/);
 });
 
@@ -192,15 +193,81 @@ test("라인 목록 순서나 선택 여부가 바뀌어도 완료 테두리의 
   assert.ok(colors.every((color) => /^#[0-9a-f]{6}$/i.test(color)));
 });
 
-test("완료 연출은 반복하지 않고 모션 줄이기 설정을 존중한다", () => {
+test("독점 외곽선에는 강한 glow나 반복 연출 없이 미세한 금속 광택만 사용한다", () => {
   const css = readFileSync(new URL("../components/BoardScreen.module.css", import.meta.url), "utf8");
   const component = readFileSync(new URL("../components/BoardLineOverlay.jsx", import.meta.url), "utf8");
-  assert.match(css, /@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.lineClaimFlash\s*\{\s*display: none; animation: none/);
-  assert.doesNotMatch(css.match(/\.lineClaimFlash\s*\{([^}]+)/)[1], /infinite/);
-  assert.match(component, /!previousComplete\.current && line\.isCompleted/);
-  assert.match(component, /window\.setTimeout\(\(\) => setShowFlash\(false\), 850\)/);
-  assert.match(component, /window\.clearTimeout\(clearFlash\)/);
+  const accentStyles = css.slice(css.indexOf(".lineAccent {"), css.indexOf(".boardCellButton {"));
+  assert.doesNotMatch(accentStyles + component, /animation:|filter:|drop-shadow|<filter|setTimeout|radialGradient/);
+  assert.doesNotMatch(css, /lineAccentSheen/);
   assert.doesNotMatch(css, /line-crest-reveal|lineCrestArtwork/);
+});
+
+test("6개 구역의 보석색은 루비, 사파이어, 에메랄드, 자수정, 청록, 앰버 순이며 완료 상태와 무관하다", () => {
+  const lines = Array.from({ length: 6 }, (_, index) => sample({ lineId: `preview-line-${index + 1}`, cellIndexes: [index * 5 + 2] }));
+  const colors = getBoardLineAccentMap(lines);
+  assert.deepEqual([...colors.values()], ["#8e3e48", "#355677", "#3a6955", "#67477c", "#376f77", "#98502f"]);
+  assert.deepEqual(getBoardLineAccentMap([...lines].reverse()), colors);
+  assert.deepEqual(getBoardLineAccentMap(lines.map(line => ({ ...line, isCompleted: true }))), colors);
+});
+
+test("붙어 있는 두 라인도 각각 열린 path이며 끝점을 줄여 최소 4도의 gap을 둔다", () => {
+  const [left] = getBoardLineAccentSegments([2,3,4]);
+  const [right] = getBoardLineAccentSegments([5,6]);
+  const gap = (right.startAngle - left.endAngle + Math.PI * 2) % (Math.PI * 2);
+  assert.ok(gap >= Math.PI / 45 - 1e-8);
+  assert.ok(Math.hypot(left.points.at(-1)[0] - right.points[0][0], left.points.at(-1)[1] - right.points[0][1]) > 35);
+  assert.doesNotMatch(left.path + right.path, /Z/);
+});
+
+test("연속된 독점 칸은 하나의 열린 경로로 이어지고 배열 순서로 구역이 변하지 않는다", () => {
+  const indexes = [2,3,4,5,6];
+  const [segment] = getBoardLineAccentSegments(indexes);
+  assert.deepEqual(segment.cellIndexes, indexes);
+  assert.deepEqual(getBoardLineAccentSegments([...indexes].reverse()), [segment]);
+  assert.equal(segment.path.match(/M/g).length, 1);
+  assert.doesNotMatch(segment.path, /Z|NaN|Infinity/);
+  assert.ok(segment.points.length > indexes.length * 2);
+});
+
+test("특수칸이나 미소속 칸을 건너뛰는 연결은 만들지 않고 36번과 1번만 실제 인접으로 잇는다", () => {
+  const segments = getBoardLineAccentSegments([13,14,15,17,18]);
+  assert.deepEqual(segments.map(segment => segment.cellIndexes), [[13,14,15], [17,18]]);
+  assert.deepEqual(getBoardLineAccentSegments([1,2,35,36]).map(segment => segment.cellIndexes), [[35,36,1,2]]);
+  assert.equal(getBoardLineAccentSegments([1,10,19,28]).length, 4);
+  for (const indexes of [null, [], [0], [37], [2,2], ["2"]]) assert.deepEqual(getBoardLineAccentSegments(indexes), []);
+});
+
+test("시각 구간 내부의 특수칸은 rail만 이어 지나가며 독점 대상이나 판정은 바꾸지 않는다", () => {
+  const indexes = [13,14,15,17,18];
+  for (const type of ["ROULETTE", "CHANCE", "AIRPORT"]) {
+    const cells = indexes.map(cellIndex => ({ cellIndex, type: "CHALLENGE" })).concat({ cellIndex: 16, type });
+    const [segment] = getBoardLineAccentSegments(indexes, cells);
+    assert.deepEqual(segment.cellIndexes, indexes);
+    assert.equal(getBoardLineAccentSegments(indexes, cells).length, 1);
+    assert.deepEqual(prepareBoardLines([sample({ cellIndexes: indexes, solvedCellIndexes: indexes, isCompleted: true })], cells)[0].cellIndexes, indexes);
+  }
+  assert.equal(getBoardLineAccentSegments(indexes, [{ cellIndex: 16, type: "CHALLENGE" }]).length, 2);
+});
+
+test("rail은 모든 칸의 면과 내부 경계에서 떨어진 별도 외곽 경로다", () => {
+  const inside = (face, x, y) => {
+    let result = false;
+    for (let i = 0, j = face.length - 1; i < face.length; j = i++) {
+      const [ax, ay] = face[i];
+      const [bx, by] = face[j];
+      if ((ay > y) !== (by > y) && x < (bx - ax) * (y - ay) / (by - ay) + ax) result = !result;
+    }
+    return result;
+  };
+  for (let index = 1; index <= 36; index++) {
+    const [segment] = getBoardLineAccentSegments([index]);
+    for (const [x, y] of segment.points) {
+      assert.ok(x >= -36 && x <= 1808 && y >= -36 && y <= 1366);
+      for (const face of BOARD_CELL_FACE_OUTLINES) assert.equal(inside(face, x, y), false, `${index}번 구간 외곽`);
+    }
+  }
+  const css = readFileSync(new URL("../components/BoardScreen.module.css", import.meta.url), "utf8");
+  assert.match(css, /\.lineOverlay \{[^}]+overflow: visible;/);
 });
 
 test("완료 문장은 해당 구역 안쪽에 두고 흩어진 묶음은 하나의 영토처럼 만들지 않는다", () => {

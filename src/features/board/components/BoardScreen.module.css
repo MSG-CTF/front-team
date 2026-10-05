@@ -68,7 +68,6 @@
 /* 열린 문제 패널 제목은 데스크톱에선 패널 이미지에 그려져 있어 스크린리더에만 노출 */
 .mobileOpenTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
-.lineOverlay { position: absolute; inset: 0; z-index: 12; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
 /* 열린 문제 목록·동아리 부스 버튼 - 주사위판(panel-dice-status.png) 재질에 맞춘 명판
    바깥 금선 #ae7c42, 안쪽 검은 선 #100802, 안쪽 바탕 #3d2515→#2a180a, 글씨는 주사위 안내 문구와 같은 #e7d2ad */
 .plaqueButton {
@@ -86,24 +85,16 @@
   display: inline-grid; place-items: center; min-width: 1.35cqw; height: 1.35cqw; padding-inline: 0.3cqw; border-radius: 999px;
   background: #8a6236; color: #f8ead0; font: 700 0.75cqw/1 "Inria Serif", serif; font-variant-numeric: tabular-nums;
 }
-.lineCellSelected { opacity: 0.36; stroke: none; }
-.lineClaimFlash { stroke: none; animation: line-claim-flash 800ms ease-out both; }
-/* 동일한 칸 윤곽 안쪽에만 색을 넣어 곡면 끝이나 이웃 칸으로 번지지 않는다 */
+.lineOverlay { position: absolute; inset: 0; z-index: 12; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+/* 풀이 상태는 유지하고 독점은 칸 바깥의 연속선으로만 구분한다 */
 .solvedCells { --line-accent: #a8c8ae; }
 .spentSpecialCells { --line-accent: #bd9c68; }
 .lineCellOutline { fill: none; stroke: var(--line-accent); stroke-width: 3px; opacity: 0.85; }
 .lineCellOutline[data-outline-state="spent"] { opacity: 0.75; }
-/* 칸 면으로 잘려 안쪽 절반만 보이므로 독점 칸은 일반 풀이(3px)보다 확실히 굵게 둔다 */
-.lineCellOutline[data-outline-state="claimed"] { stroke-width: 12px; opacity: 1; }
-.lineCellFinish { fill: none; stroke: #f0cf8c; stroke-width: 4px; opacity: 0.95; }
-@keyframes line-claim-flash { from { opacity: 0; } 25% { opacity: 0.6; } to { opacity: 0; } }
-.lineClaimCrest { pointer-events: all; cursor: pointer; outline: none; }
-.lineRegion { pointer-events: none; }
-.lineRegion.lineClaimCrest { pointer-events: all; }
-.lineRegionHitArea { pointer-events: all; }
-.lineScoreShade { stroke: none; pointer-events: none; }
-.lineRegionScore { fill: #ffe2a0; stroke: #33210e; stroke-width: 1.2px; paint-order: stroke fill; font: 700 var(--line-score-font-size)/1 "Inria Serif", "Song Myung", serif; font-variant-numeric: tabular-nums; text-shadow: 0 1px 1px #120c05; pointer-events: none; }
-.lineScoreUnit { font-size: 0.55em; font-weight: 400; }
+.lineAccent { pointer-events: none; }
+.lineAccentControl { cursor: pointer; outline: none; }
+.lineAccentHitArea { fill: transparent; pointer-events: fill; }
+.lineAccentControl:focus-visible > g { outline: 1px solid #bca277; outline-offset: 2px; }
 .boardCellButton {
   position: absolute; z-index: 10; width: 8.5%; height: 11%; transform: translate(-50%, -50%);
   border: 0; border-radius: 45%; background: transparent; padding: 0; cursor: pointer;
@@ -118,8 +109,6 @@
 .boardCellButton[data-selection-state="selected"] .cellTargetOutline,
 .boardCellButton[data-selection-state="available"]:hover .cellTargetOutline,
 .boardCellButton:focus-visible .cellTargetOutline { opacity: 1; fill-opacity: 0.14; stroke: #fff0bc; stroke-width: 5px; }
-.lineClaimCrest:hover .lineRegionScore, .lineClaimCrest:focus-visible .lineRegionScore { fill: #fff3cc; }
-.lineClaimCrest:focus-visible .lineRegionHitArea { stroke: #fff0c2; stroke-width: 2px; }
 .startReward {
   position: absolute; left: 50%; top: 73%; z-index: 25;
   transform: translateX(-50%); width: max-content; max-width: 44%;
@@ -138,7 +127,6 @@
   to { opacity: 0; transform: translateY(-8px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .lineClaimFlash { display: none; animation: none; }
   .cellTargetOutline { transition: none; }
   .startRewardVisual { animation: none; }
 }
@@ -341,7 +329,7 @@
   .stage .error { position: fixed; inset: 12px 12px auto; width: auto; padding: 12px; gap: 12px; font-size: 14px; flex-wrap: wrap; }
   .error button { min-height: 44px; min-width: 44px; font-size: 14px; padding: 8px; }
   /* 열린 문제(Figma 518:300): 버튼은 세로 흐름에 두고, 패널은 하단 시트로 표시한다. */
-  .stage .openToggle { position: static; width: auto; min-height: 44px; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 14px; text-align: left; white-space: normal; box-shadow: inset 0 0 0 2px #100802; }
+  .stage .openToggle { position: static; flex: 0 1 auto; width: auto; min-height: 44px; gap: 6px; padding: 8px 14px; border-radius: 8px; font-size: 14px; text-align: left; white-space: normal; box-shadow: inset 0 0 0 2px #100802; }
   .stage .openToggle svg { width: 18px; height: 18px; }
   .stage .openToggle:focus-visible { outline-width: 2px; outline-offset: 3px; }
   .openToggleCount { min-width: 20px; height: 20px; padding-inline: 5px; font-size: 12px; }

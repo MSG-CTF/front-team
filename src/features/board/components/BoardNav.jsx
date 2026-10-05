@@ -6,9 +6,9 @@ import styles from "./BoardScreen.module.css";
 // Figma node 192:163 "설명서"(두루마리) / 97:439 "마이페이지로고" / 10:10 "스코어로".
 // 보드 화면 우상단의 원형 이동 버튼. 그림에 아이콘이 이미 그려져 있어 클릭 영역만 얹는다.
 // 로그아웃(nav-logout.png)은 시안이 없어 스코어보드 동전 틀에 금색 로그아웃 문양을 넣어 만들었다.
-// 로그아웃을 맨 오른쪽(기존 스코어보드 자리)에 두고 나머지 3개를 동전 간격(무대 6.6%)만큼
-// 왼쪽으로 옮겼다. 그래서 오른쪽 정렬선(무대 96.35%)은 KoTH 배너·동아리 부스 버튼과 그대로 맞는다.
-const NAV_SHIFT = 6.6;
+// 로그아웃을 맨 오른쪽(기존 스코어보드 자리)에 두고 나머지 3개를 동전 간격(무대 5.47%)만큼
+// 왼쪽으로 옮겼다. 맨 오른쪽 동전의 보이는 오른쪽 끝(무대 94.29%)은 이전 스코어보드 자리와 같다.
+const NAV_SHIFT = 5.47;
 const BUTTONS = [
   {
     key: "rules",
@@ -18,7 +18,8 @@ const BUTTONS = [
     src: "/assets/board/nav-rules.png",
     mobileImageWidth: "192.31%",
     mobileImageAnchor: "translate(-49.5%, -46%)",
-    box: { left: 75.42 - NAV_SHIFT, top: 2.96, width: 10.47, height: 12.41 },
+    // 원본 PNG가 두 원형 버튼보다 장식을 크게 채워 실제 보이는 크기를 따로 줄인다.
+    box: { left: 77.83 - NAV_SHIFT, top: 3.97, width: 7.46, height: 8.81 },
     hitArea: "left-[49.5%] top-[46%] w-[52%]",
   },
   {
@@ -29,7 +30,7 @@ const BUTTONS = [
     src: "/assets/board/nav-mypage.png",
     mobileImageWidth: "256.41%",
     mobileImageAnchor: "translate(-50%, -48%)",
-    box: { left: 80.68 - NAV_SHIFT, top: 1.2, width: 13.39, height: 15.83 },
+    box: { left: 82.09 - NAV_SHIFT, top: 2.54, width: 9.88, height: 11.68 },
     hitArea: "left-1/2 top-[48%] w-[39%]",
   },
   {
@@ -40,7 +41,7 @@ const BUTTONS = [
     src: "/assets/board/nav-scoreboard.png",
     mobileImageWidth: "238.1%",
     mobileImageAnchor: "translate(-50%, -48%)",
-    box: { left: 87.76 - NAV_SHIFT, top: 1.2, width: 12.24, height: 14.54 },
+    box: { left: 87.98 - NAV_SHIFT, top: 2.69, width: 9.04, height: 10.69 },
     hitArea: "left-1/2 top-[48%] w-[42%]",
   },
   {
@@ -51,7 +52,7 @@ const BUTTONS = [
     src: "/assets/board/nav-logout.png",
     mobileImageWidth: "238.1%",
     mobileImageAnchor: "translate(-50%, -48%)",
-    box: { left: 87.76, top: 1.2, width: 12.24, height: 14.54 },
+    box: { left: 87.98, top: 2.69, width: 9.04, height: 10.69 },
     hitArea: "left-1/2 top-[48%] w-[42%]",
   },
 ];
