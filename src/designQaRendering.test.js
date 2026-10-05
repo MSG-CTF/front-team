@@ -319,13 +319,16 @@ test("모바일 보드 메뉴는 기존 금색 아이콘과 여섯 이동 기능
   const html = render("BoardNav");
   const mobileNav = html.match(/<nav[^>]*aria-label="대회 메뉴"[\s\S]*?<\/nav>/)?.[0];
   assert.ok(mobileNav);
-  for (const image of ["nav-rules.png", "nav-mypage.png", "nav-scoreboard.png"]) {
+  for (const image of ["nav-rules.png", "nav-mypage.png", "nav-scoreboard.png", "nav-logout.png"]) {
     assert.ok(mobileNav.includes(`/assets/board/${image}`));
   }
   for (const path of ["/rules", "/mypage", "/leaderboard", "/koth", "/signatures"]) {
     assert.ok(mobileNav.includes(`href="${path}"`));
   }
-  assert.match(mobileNav, /<button[^>]*>로그아웃<\/button>/);
+  assert.match(mobileNav, /<button[^>]*>[\s\S]*?nav-logout\.png[\s\S]*?<span>로그아웃<\/span><\/button>/);
+  // 데스크톱 로그아웃은 우상단 원형 아이콘 줄의 맨 오른쪽 동전으로만 둔다
+  assert.match(html, /aria-label="로그아웃"/);
+  assert.doesNotMatch(html, /top-\[17\.5%\]/);
   const root = css("features/board/components/BoardScreen.module.css");
   assert.ok(declarations(root, ".mobileNav a, .mobileNav button").some(([property, value]) => property === "min-height" && value === "44px"));
 });
@@ -345,14 +348,14 @@ test("방문한 칸은 중복 없이 각자의 곡선 윤곽으로 표시하고 
   assert.equal(render("BoardVisitedOverlay", { visitedCellIndexes: [] }), "<svg></svg>");
 });
 
-test("룰렛과 황금열쇠 문양은 서버 칸 종류를 확인하고 방문 음영에도 동일하게 쓴다", () => {
+test("황금열쇠 문양은 서버 칸 종류를 확인하고 방문 음영에도 동일하게 쓴다", () => {
   const cells = [{ cellIndex: 7, type: "CHANCE" }, { cellIndex: 16, type: "ROULETTE" }];
   const artwork = render("BoardArtwork", { cells });
   const visited = render("BoardSurface", { cells, visitedCellIndexes: [7, 16] });
   for (const html of [artwork, visited]) {
-    assert.match(html, /data-cell-artwork="16-roulette"/);
+    // 16번 룰렛 면은 board-grid 원본에 합성되어 있어 별도 오버레이가 없다
+    assert.doesNotMatch(html, /data-cell-artwork="16-/);
     assert.match(html, /data-cell-artwork="7-chance"/);
-    assert.ok(html.includes(getBoardCellMaskPath(16)));
     assert.ok(html.includes(getBoardCellMaskPath(7)));
   }
   assert.doesNotMatch(render("BoardArtwork", { cells: [{ cellIndex: 7, type: "ROULETTE" }] }), /data-cell-artwork/);
@@ -376,7 +379,7 @@ test("방문한 카드와 룰렛은 문양을 남기고 일반 문제의 방문 
     assert.match(html, new RegExp(`data-visited-surface="${index}" data-visited-special="true"><path[^>]*fill-opacity="0.44"`));
   }
   assert.equal((html.match(/data-visited-special="true"/g) || []).length, 4);
-  assert.match(html, /data-cell-artwork="16-roulette"/);
+  assert.doesNotMatch(html, /data-cell-artwork="16-/);
   assert.match(html, /data-cell-artwork="7-chance"/);
 });
 

@@ -281,27 +281,29 @@
   top: 50%;
   left: 50%;
   box-sizing: border-box;
-  width: 36%;
+  width: 44%;
   min-height: 24%;
-  padding: 1.4em 1.6em;
+  padding: 1.8em 2em;
   transform: translate(-50%, -50%);
   text-align: center;
 }
 
+/* 팀 토큰 모달은 화면 폭 1% 기준이라 노트북 화면에서 9px대로 작아져, 단계별로 키우고 최소 크기를 둔다 */
 .tokenPanel h2 {
   margin: 0 0 0.8em;
-  font-size: 1.25em;
+  font-size: max(1.5em, 22px);
 }
 
 .tokenPanel p {
   margin: 0.5em 0;
-  font-size: 0.72em;
+  font-size: max(0.95em, 15px);
+  line-height: 1.5;
 }
 
 .tokenContent label {
   display: block;
-  margin: 0.7em 0 0.35em;
-  font-size: 0.66em;
+  margin: 0.8em 0 0.4em;
+  font-size: max(0.9em, 14px);
 }
 
 .tokenContent input {
@@ -311,12 +313,12 @@
   border: 1px solid #8c653d;
   color: #362010;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.68em;
+  font-size: max(0.95em, 15px);
   background: rgba(255, 247, 225, 0.8);
 }
 
 .tokenTeamName {
-  font-size: 0.86em !important;
+  font-size: max(1.2em, 18px) !important;
   font-weight: 700;
 }
 
@@ -326,6 +328,10 @@
 
 .tokenState {
   padding-top: 0.3em;
+}
+
+.tokenPanel button {
+  font-size: max(0.9em, 14px);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -447,7 +453,7 @@
   .tokenBackdrop { position: fixed; }
   .tokenPanel { width: min(calc(100% - 24px), 520px); min-height: 0; max-height: 84dvh; overflow-y: auto; padding: 28px 20px; background: #f0dcb7; }
   .tokenPanel h2 { font-size: 22px; padding-right: 20px; }
-  .tokenPanel p, .tokenPanel label, .tokenPanel button { font-size: 14px; line-height: 1.6; }
+  .tokenPanel p, .tokenPanel label, .tokenPanel button { font-size: 15px; line-height: 1.6; }
   .tokenPanel input { font-size: 16px; min-height: 48px; }
   .tokenPanel button { min-height: 44px; }
 }

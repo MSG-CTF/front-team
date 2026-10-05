@@ -154,8 +154,9 @@ test("윤곽 경로는 모서리 곡선을 포함하고 원본 그림 밖으로 
 });
 
 test("원본 보드 이미지가 바뀌면 칸 윤곽도 다시 검수해야 한다", () => {
+  // 2026-10-05: 16번 무인도 면을 25번 룰렛 면으로 교체(칸 윤곽 안쪽만 변경, 금테·좌표는 그대로)
   const source = readFileSync(new URL("../../../../public/assets/board/board-grid.png", import.meta.url));
-  assert.equal(createHash("sha256").update(source).digest("hex"), "dab3a43941260c8241031cf199ef6946f20879dfd94947eb9301f21d5a1c0272");
+  assert.equal(createHash("sha256").update(source).digest("hex"), "d73206c69f2f6024fb0ffb92d3e5e7fb349671c754274bd341fbd88a8cc75f23");
 });
 
 test("잘못된 칸 번호가 START 마스크로 대체되지 않는다", () => {

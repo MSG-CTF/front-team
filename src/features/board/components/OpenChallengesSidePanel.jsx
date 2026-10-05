@@ -19,11 +19,16 @@ export function OpenChallengesToggle({ isOpen, count, onToggle, buttonRef }) {
       onClick={onToggle}
       aria-expanded={isOpen}
       aria-controls="board-open-challenges-panel"
-      // 닫힌 목록 버튼은 충전과 문제 제한 두 줄 아래에 둔다 열린 패널 제목 위치는 유지한다
-      className={`${styles.openToggle} absolute z-30 whitespace-nowrap border-0 bg-transparent p-0 font-pretendard text-[1.25cqw] leading-normal text-white [text-shadow:0_0.08cqw_0.25cqw_rgba(0,0,0,0.85)] hover:text-[#ffd98a] focus-visible:outline focus-visible:outline-[0.12cqw] focus-visible:outline-[#ffe090] ${isOpen ? "left-[2.92%] top-[14.35%]" : "left-[3.23%] top-[21%]"}`}
+      // 금테 명판 버튼. 주사위판 바로 아래에 붙이고 양끝을 주사위판 테두리(무대 2.45%~19.74%)에 맞춘다.
+      // 세로 순서: 주사위판 → 이 버튼 → 주사위 안내 문구 → 보유 찬스카드(ChanceCardSummary).
+      // 열린 동안에도 자리를 옮기지 않아 닫을 때 초점이 이 버튼으로 바로 돌아온다.
+      className={`${styles.plaqueButton} ${styles.openToggle} absolute left-[2.45%] top-[14.6%] z-30 w-[17.29%]`}
     >
-      {/* 시안은 열린 상태에서도 같은 문구를 쓴다. 열림 여부는 aria-expanded로 전달 */}
-      열린 문제 목록 보기
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M6 4h9l3 3v13H6z" /><path d="M9 10h6M9 13.5h6M9 17h4" />
+      </svg>
+      <span>열린 문제 목록 보기</span>
+      {count > 0 && <span className={styles.openToggleCount} aria-hidden="true">{count}</span>}
       {count > 0 && <span className="sr-only"> ({count}개)</span>}
     </button>
   );

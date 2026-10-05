@@ -40,7 +40,7 @@ export default function DiceStatusPanel({
         </div>
         {challengeRemainingSeconds != null && <div className={styles.diceChallengeRow}>문제 제한 <strong>{formatRemaining(challengeRemainingSeconds)}</strong></div>}
       </div>
-      <p className={`${styles.diceStatusMessage} absolute left-[12%] top-[76%] z-10 m-0 w-[78%] truncate text-center font-inria-serif text-[#e7d2ad]`}>
+      <p className={`${styles.diceStatusMessage} absolute left-[5.6%] top-[97%] z-10 m-0 w-[87.8%] truncate text-left font-inria-serif text-[#e7d2ad]`}>
         {statusLabel}
       </p>
     </div>

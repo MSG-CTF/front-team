@@ -175,8 +175,8 @@ test("색 테두리는 곡면 윤곽 안쪽에만 넣고 칸 위에 막대나 �
   const component = readFileSync(new URL("../components/BoardLineOverlay.jsx", import.meta.url), "utf8");
   assert.doesNotMatch(css + component, /lineCellBand|lineSolveMark|lineCellBevel|lineCellClaimed|lineCellSolved/);
   assert.match(css, /\.lineCellOutline \{ fill: none; stroke: var\(--line-accent\); stroke-width: 3px/);
-  assert.match(css, /\.lineCellOutline\[data-outline-state="claimed"\] \{ stroke-width: 6px; opacity: 1/);
-  assert.match(css, /\.lineCellFinish \{ fill: none; stroke: #f0cf8c; stroke-width: 2px/);
+  assert.match(css, /\.lineCellOutline\[data-outline-state="claimed"\] \{ stroke-width: 12px; opacity: 1/);
+  assert.match(css, /\.lineCellFinish \{ fill: none; stroke: #f0cf8c; stroke-width: 4px/);
   assert.match(component, /facePath: getBoardCellMaskPath\(cellIndex\)/);
   assert.match(component, /clipPath=\{`url\(#\$\{clipPrefix\}-\$\{cellIndex\}\)`\}/);
   assert.match(component, /solved.has\(cellIndex\) && <path d=\{facePath\}/);
