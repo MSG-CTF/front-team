@@ -77,24 +77,16 @@
 .openToggle:hover { color: #fff2cf; filter: brightness(1.1); }
 .openToggle:focus-visible { outline: 2px solid #ffe090; outline-offset: 2px; }
 
-.lineOverlay { position: absolute; inset: 0; z-index: 12; width: 100%; height: 100%; overflow: hidden; pointer-events: none; }
-.lineCellSelected { opacity: 0.36; stroke: none; }
-.lineClaimFlash { stroke: none; animation: line-claim-flash 800ms ease-out both; }
-/* 동일한 칸 윤곽 안쪽에만 색을 넣어 곡면 끝이나 이웃 칸으로 번지지 않는다 */
+.lineOverlay { position: absolute; inset: 0; z-index: 12; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+/* 풀이 상태는 유지하고 독점은 칸 바깥의 연속선으로만 구분한다 */
 .solvedCells { --line-accent: #a8c8ae; }
 .spentSpecialCells { --line-accent: #bd9c68; }
 .lineCellOutline { fill: none; stroke: var(--line-accent); stroke-width: 3px; opacity: 0.85; }
 .lineCellOutline[data-outline-state="spent"] { opacity: 0.75; }
-.lineCellOutline[data-outline-state="claimed"] { stroke-width: 6px; opacity: 1; }
-.lineCellFinish { fill: none; stroke: #f0cf8c; stroke-width: 2px; opacity: 0.95; }
-@keyframes line-claim-flash { from { opacity: 0; } 25% { opacity: 0.6; } to { opacity: 0; } }
-.lineClaimCrest { pointer-events: all; cursor: pointer; outline: none; }
-.lineRegion { pointer-events: none; }
-.lineRegion.lineClaimCrest { pointer-events: all; }
-.lineRegionHitArea { pointer-events: all; }
-.lineScoreShade { stroke: none; pointer-events: none; }
-.lineRegionScore { fill: #ffe2a0; stroke: #33210e; stroke-width: 1.2px; paint-order: stroke fill; font: 700 var(--line-score-font-size)/1 "Inria Serif", "Song Myung", serif; font-variant-numeric: tabular-nums; text-shadow: 0 1px 1px #120c05; pointer-events: none; }
-.lineScoreUnit { font-size: 0.55em; font-weight: 400; }
+.lineAccent { pointer-events: none; }
+.lineAccentControl { cursor: pointer; outline: none; }
+.lineAccentHitArea { fill: transparent; pointer-events: fill; }
+.lineAccentControl:focus-visible > g { outline: 1px solid #bca277; outline-offset: 2px; }
 .boardCellButton {
   position: absolute; z-index: 10; width: 8.5%; height: 11%; transform: translate(-50%, -50%);
   border: 0; border-radius: 45%; background: transparent; padding: 0; cursor: pointer;
@@ -109,8 +101,6 @@
 .boardCellButton[data-selection-state="selected"] .cellTargetOutline,
 .boardCellButton[data-selection-state="available"]:hover .cellTargetOutline,
 .boardCellButton:focus-visible .cellTargetOutline { opacity: 1; fill-opacity: 0.14; stroke: #fff0bc; stroke-width: 5px; }
-.lineClaimCrest:hover .lineRegionScore, .lineClaimCrest:focus-visible .lineRegionScore { fill: #fff3cc; }
-.lineClaimCrest:focus-visible .lineRegionHitArea { stroke: #fff0c2; stroke-width: 2px; }
 .startReward {
   position: absolute; left: 50%; top: 73%; z-index: 25;
   transform: translateX(-50%); width: max-content; max-width: 44%;
@@ -129,7 +119,6 @@
   to { opacity: 0; transform: translateY(-8px); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .lineClaimFlash { display: none; animation: none; }
   .cellTargetOutline { transition: none; }
   .startRewardVisual { animation: none; }
 }

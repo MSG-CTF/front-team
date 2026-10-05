@@ -90,7 +90,7 @@ export default function BoardTrack({
   return (
     <div data-board-layer="track" style={{ visibility: isHidden ? "hidden" : undefined }} className={`${styles.track} absolute left-[23.33%] top-[26.76%] w-[49.53%] h-[66.11%]`}>
       <BoardSurface cells={cells} visitedCellIndexes={visitedCellIndexes} />
-      <BoardLineOverlay lines={lines} solvedCellIndexes={solvedCellIndexes} spentSpecialCells={spentSpecialCells} selectedLineId={selectedLineId} onSelectLine={onSelectLine}
+      <BoardLineOverlay lines={lines} boardCells={cells} solvedCellIndexes={solvedCellIndexes} spentSpecialCells={spentSpecialCells} selectedLineId={selectedLineId} onSelectLine={onSelectLine}
         isInteractive={!isRolling && !rolling && !trainTravel?.journey && selectableCellIndexes == null} />
       <BoardStartReward reward={startRewardEvent} />
 
