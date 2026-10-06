@@ -988,12 +988,17 @@
     display: none;
   }
 
+  /* 보드판 안쪽 정렬: 보드 안쪽 테두리선은 무대 x 115~1801, y 147~983.
+     패널 원본 크기(설명 1000×630, 인스턴스 640×300, 플래그 640×228)를 유지하고
+     좌우 여백 15, 상하 여백 20, 헤더-본문 간격 16, 설명-오른쪽 열 간격 16, 오른쪽 열 세로 간격 20으로 맞춘다.
+     x: 130 ─ 설명 ─ 1130 | 1146 ─ 인스턴스·버튼·플래그 ─ 1786
+     y: 167 ─ 헤더 ─ 317 | 333 ─ 설명/인스턴스 … 플래그·설명 하단 963 */
   /* 헤더 */
   .header {
     position: absolute;
-    left: calc(var(--u) * 128);
-    top: calc(var(--u) * 156);
-    width: calc(var(--u) * 1660);
+    left: calc(var(--u) * 130);
+    top: calc(var(--u) * 167);
+    width: calc(var(--u) * 1656);
     height: calc(var(--u) * 150);
     padding: 0;
     border: 0;
@@ -1075,8 +1080,8 @@
   /* 문제 설명 */
   .descriptionPanel {
     position: absolute;
-    left: calc(var(--u) * 117);
-    top: calc(var(--u) * 327);
+    left: calc(var(--u) * 130);
+    top: calc(var(--u) * 333);
     width: calc(var(--u) * 1000);
     height: calc(var(--u) * 630);
     padding: 0;
@@ -1190,8 +1195,8 @@
   /* 인스턴스 */
   .instancePanel {
     position: absolute;
-    left: calc(var(--u) * 1137);
-    top: calc(var(--u) * 329);
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 333);
     width: calc(var(--u) * 640);
     height: calc(var(--u) * 300);
     display: block;
@@ -1345,9 +1350,9 @@
 
   .controls {
     position: absolute;
-    left: calc(var(--u) * 1138);
-    top: calc(var(--u) * 650);
-    width: calc(var(--u) * 638);
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 653);
+    width: calc(var(--u) * 640);
     height: calc(var(--u) * 62);
     grid-template-columns: repeat(4, calc(var(--u) * 154));
     justify-content: space-between;
@@ -1361,9 +1366,9 @@
   }
   .controlHints {
     position: absolute;
-    left: calc(var(--u) * 1138);
-    top: calc(var(--u) * 713);
-    width: calc(var(--u) * 638);
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 716);
+    width: calc(var(--u) * 640);
     gap: 0 calc(var(--u) * 12);
     font-size: max(9px, calc(var(--u) * 12));
     line-height: calc(var(--u) * 15);
@@ -1372,8 +1377,8 @@
   /* 플래그 제출 */
   .flagPanel {
     position: absolute;
-    left: calc(var(--u) * 1136);
-    top: calc(var(--u) * 729);
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 735);
     width: calc(var(--u) * 640);
     height: calc(var(--u) * 228);
     display: block;
