@@ -1,5 +1,4 @@
-import RequestFeedback from "./RequestFeedback.jsx";
-import styles from "./ChallengeDetailScreen.module.css";
+import styles from "./ChallengeDetailScene.module.css";
 
 export default function FlagSubmitPanel({
   value,
@@ -12,7 +11,6 @@ export default function FlagSubmitPanel({
   solved,
   feedback,
   maxLength,
-  children,
 }) {
   const invalid =
     feedback?.code === "INCORRECT_FLAG" || feedback?.code === "INVALID_REQUEST";
@@ -28,19 +26,9 @@ export default function FlagSubmitPanel({
       aria-busy={busy}
       tabIndex={-1}
     >
-      <div className={styles.sectionIntro}>
-        <span className={styles.sectionNumber} aria-hidden="true">
-          02
-        </span>
-        <h2 id="flag-heading" className={styles.sectionHeading}>
-          플래그 제출
-        </h2>
-      </div>
-      <p id="flag-hint" className={styles.formHint}>
-        {solved
-          ? "이미 해결한 문제입니다. 제출한 정답이 팀 기록에 반영됐습니다"
-          : "문제에서 찾은 플래그를 입력해주세요"}
-      </p>
+      <h2 id="flag-heading" className={styles.bakedLabel}>
+        플래그 제출
+      </h2>
       <label htmlFor="flag" className={styles.fieldLabel}>
         플래그
       </label>
@@ -64,6 +52,11 @@ export default function FlagSubmitPanel({
           (retrySeconds > 0 ? " flag-retry" : "")
         }
       />
+      <p id="flag-hint" className={styles.flagHint}>
+        {solved
+          ? "이미 해결한 문제입니다. 제출한 정답이 팀 기록에 반영됐습니다"
+          : "문제에서 찾은 플래그를 입력해주세요"}
+      </p>
       <button
         type="submit"
         disabled={disabled}
@@ -71,21 +64,13 @@ export default function FlagSubmitPanel({
         className={styles.submitButton}
       >
         {busy
-          ? "정답 확인 중…"
+          ? "…"
           : solved
-            ? "풀이 완료"
+            ? "SOLVED"
             : retrySeconds > 0
-              ? "재제출 대기"
-              : "플래그 제출"}
-        <span aria-hidden="true">{solved ? "✓" : "→"}</span>
+              ? `WAIT ${retrySeconds}`
+              : "SUBMIT"}
       </button>
-      {retrySeconds > 0 && (
-        <p id="flag-retry" className={styles.retryNotice}>
-          <strong>{retrySeconds}초</strong> 후 다시 제출할 수 있습니다
-        </p>
-      )}
-      <RequestFeedback id="flag-feedback" feedback={feedback} rewards />
-      {children}
     </form>
   );
 }

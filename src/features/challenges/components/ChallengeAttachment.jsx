@@ -6,7 +6,7 @@ import {
   safeDownloadName,
   validateFileBlob,
 } from "../utils/challengeFileDownload.js";
-import styles from "./ChallengeDetailScreen.module.css";
+import styles from "./ChallengeDetailScene.module.css";
 
 export default function ChallengeAttachment({ attachment }) {
   const target = getAttachmentDownload(attachment);
@@ -72,15 +72,12 @@ export default function ChallengeAttachment({ attachment }) {
 
   return (
     <li className={styles.attachmentRow}>
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
+      <img
+        className={styles.attachmentIcon}
+        src="/assets/challenge-detail/icon-checkbox.png"
+        alt=""
         aria-hidden="true"
-      >
-        <path d="M7 3h7l4 4v14H7zM14 3v5h4M10 12h5M10 16h5" />
-      </svg>
+      />
       <div className={styles.attachmentInfo}>
         {target?.kind === "authenticated" ? (
           <button
@@ -104,10 +101,9 @@ export default function ChallengeAttachment({ attachment }) {
         ) : (
           <span className={styles.attachmentName}>{attachment.name}</span>
         )}
-        <span className={styles.fileSize}>
-          {attachment.sizeLabel}
-          {!target && " · 다운로드 준비 중"}
-        </span>
+        {!target && (
+          <span className={styles.fileSize}>다운로드 준비 중</span>
+        )}
         {state.message && (
           <span
             role={state.status === "error" ? "alert" : "status"}
@@ -119,6 +115,7 @@ export default function ChallengeAttachment({ attachment }) {
           </span>
         )}
       </div>
+      <span className={styles.fileSize}>{attachment.sizeLabel}</span>
       {state.status === "loading" ? (
         <button
           type="button"

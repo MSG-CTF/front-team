@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef } from "react";
-import styles from "./ChallengeDetailScreen.module.css";
+import styles from "./ChallengeDetailScene.module.css";
 
 export default function InstanceActionDialog({
   action,

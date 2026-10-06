@@ -1,4 +1,4 @@
-import styles from "./ChallengeDetailScreen.module.css";
+import styles from "./ChallengeDetailScene.module.css";
 
 export default function RequestFeedback({ feedback, id, rewards = false }) {
   if (!feedback) return null;
