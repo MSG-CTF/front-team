@@ -38,7 +38,7 @@
   font-family: var(--sans);
   background:
     linear-gradient(#20170e55, #20170e88),
-    url("/assets/challenge-detail/bg-1920x1080.png") center / cover fixed;
+    url("/assets/challenge-detail/bg-forest.webp") center / cover fixed;
 }
 .page *,
 .page *::before,
@@ -917,7 +917,7 @@
     min-height: 0;
     padding: 0;
     overflow: hidden;
-    background: #1c130c url("/assets/challenge-detail/bg-1920x1080.png") center / cover no-repeat;
+    background: #1c130c url("/assets/challenge-detail/bg-forest.webp") center / cover no-repeat;
   }
   .stage {
     --u: calc(100cqw / 1920);
@@ -1096,6 +1096,13 @@
     color: var(--brown);
     font-size: calc(var(--u) * 22);
     line-height: calc(var(--u) * 30);
+    /* Figma 원본의 가로줄(30px 간격, 줄 하단 3px)을 그림에서 지우고 글줄에 맞춰 다시 그린다.
+       background-attachment: local로 본문을 스크롤해도 줄이 글자와 함께 움직인다 */
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0 calc(var(--u) * 27),
+      #c6ac86 calc(var(--u) * 27) calc(var(--u) * 30)
+    ) local;
     scrollbar-width: thin;
     scrollbar-color: #a98550 transparent;
   }
