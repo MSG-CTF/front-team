@@ -1,4 +1,4 @@
-import styles from "./ChallengeDetailScreen.module.css";
+import styles from "./ChallengeDetailScene.module.css";
 
 const formatMetric = (value) =>
   typeof value === "number" && Number.isFinite(value)
@@ -16,40 +16,45 @@ export default function ChallengeHeaderPanel({ challenge }) {
     solves,
     accessStatus,
   } = challenge;
+  const cleared = solved || accessStatus === "CLEARED";
   return (
     <header className={styles.header}>
-      <div className={styles.titleGroup}>
-        <p className={styles.eyebrow}>
-          CHALLENGE{clubName && <span> / {clubName}</span>}
-        </p>
-        <h1 className={styles.title}>{title}</h1>
-        <div className={styles.badges}>
-          {category && <span className={styles.categoryBadge}>{category}</span>}
-          {difficulty && (
-            <span className={styles.difficultyBadge}>{difficulty}</span>
-          )}
-          {(solved || accessStatus === "CLEARED") && (
-            <span className={styles.solvedBadge}>풀이 완료</span>
-          )}
-          {!solved && accessStatus === "OPENED" && (
-            <span className={styles.accessBadge}>풀이 가능</span>
-          )}
-        </div>
+      {clubName && <p className={styles.eyebrow}>{clubName}</p>}
+      <h1 className={styles.title} title={title}>
+        {title}
+      </h1>
+      <div className={styles.badges}>
+        {category && (
+          <span className={`${styles.pill} ${styles.pillCategory}`}>
+            {category}
+          </span>
+        )}
+        {difficulty && (
+          <span className={`${styles.pill} ${styles.pillDifficulty}`}>
+            {difficulty}
+          </span>
+        )}
+        {cleared && (
+          <span className={`${styles.pill} ${styles.pillSolved}`}>
+            <span aria-hidden="true">SOLVED</span>
+            <span className={styles.srOnly}>풀이 완료</span>
+          </span>
+        )}
+        {!solved && accessStatus === "OPENED" && (
+          <span className={`${styles.pill} ${styles.pillOpen}`}>
+            <span aria-hidden="true">OPEN</span>
+            <span className={styles.srOnly}>풀이 가능</span>
+          </span>
+        )}
       </div>
       <dl className={styles.metrics}>
-        <div>
-          <dt>현재 배점</dt>
-          <dd className={styles.points}>
-            {formatMetric(points)}
-            <small> pts</small>
-          </dd>
+        <div className={styles.metric}>
+          <dt className={styles.bakedLabel}>현재 배점</dt>
+          <dd className={styles.points}>{formatMetric(points)}</dd>
         </div>
-        <div>
-          <dt>해결한 팀</dt>
-          <dd>
-            {formatMetric(solves)}
-            <small> 팀</small>
-          </dd>
+        <div className={styles.metric}>
+          <dt className={styles.bakedLabel}>해결한 팀</dt>
+          <dd>{formatMetric(solves)}</dd>
         </div>
       </dl>
     </header>

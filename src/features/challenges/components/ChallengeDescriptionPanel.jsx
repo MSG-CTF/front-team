@@ -1,4 +1,4 @@
-import styles from "./ChallengeDetailScreen.module.css";
+import styles from "./ChallengeDetailScene.module.css";
 import ChallengeAttachment from "./ChallengeAttachment.jsx";
 
 export default function ChallengeDescriptionPanel({
@@ -12,18 +12,14 @@ export default function ChallengeDescriptionPanel({
       aria-labelledby="challenge-description-heading"
       tabIndex={-1}
     >
-      <div className={styles.sectionIntro}>
-        <span className={styles.sectionNumber} aria-hidden="true">
-          01
-        </span>
-        <h2
-          id="challenge-description-heading"
-          className={styles.sectionHeading}
-        >
-          문제 설명
-        </h2>
-      </div>
-      <div className={styles.descriptionBody} aria-label="문제 설명 본문">
+      <h2 id="challenge-description-heading" className={styles.bakedLabel}>
+        문제 설명
+      </h2>
+      <div
+        className={styles.descriptionBody}
+        aria-label="문제 설명 본문"
+        tabIndex={0}
+      >
         {description ? (
           description
             .split(/\n\s*\n/)
@@ -34,12 +30,16 @@ export default function ChallengeDescriptionPanel({
       </div>
       <div className={styles.attachments}>
         <h3 className={styles.attachmentHeading}>
-          첨부파일 <span>{attachments.length}</span>
+          <span className={styles.bakedLabel}>첨부파일</span>
+          <span className={styles.attachCount}>{attachments.length}</span>
         </h3>
         {attachments.length > 0 ? (
           <ul className={styles.attachmentList} aria-label="첨부파일">
             {attachments.map((attachment, index) => (
-              <ChallengeAttachment key={`${attachment.fileId ?? index}:${attachment.url}`} attachment={attachment} />
+              <ChallengeAttachment
+                key={`${attachment.fileId ?? index}:${attachment.url}`}
+                attachment={attachment}
+              />
             ))}
           </ul>
         ) : (

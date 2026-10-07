@@ -1,0 +1,1482 @@
+@font-face {
+  font-family: "Detail Fell";
+  src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Detail Caslon";
+  src: url("/assets/leaderboard/fonts/libre-caslon-text-400.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Detail Pretendard";
+  src: url("/assets/fonts/pretendard/PretendardVariable.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+/* 1u = Figma 1920×1080 캔버스의 1px. 좁은 화면에서는 1px로 돌아가 일반 흐름 레이아웃이 된다 */
+.page {
+  --u: 1px;
+  --brown: #613d15;
+  --brown-soft: #8a5e2e;
+  --gold: #d38e25;
+  --line: #8d6b3b;
+  --serif: "Detail Fell", "Detail Pretendard", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", serif;
+  --label: "Detail Caslon", "Detail Fell", "Detail Pretendard", "Pretendard", serif;
+  --sans: "Detail Pretendard", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --mono: "Kode Mono", "Detail Pretendard", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --asset: "/assets/challenge-detail";
+  min-height: 100dvh;
+  padding: 12px 10px 24px;
+  color: var(--brown);
+  font-family: var(--sans);
+  background:
+    linear-gradient(#20170e55, #20170e88),
+    url("/assets/challenge-detail/bg-forest.webp") center / cover fixed;
+}
+.page *,
+.page *::before,
+.page *::after {
+  box-sizing: border-box;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ───────── 좁은 화면(기본): 한 칸씩 쌓이는 스크롤 레이아웃 ───────── */
+.stage {
+  max-width: 760px;
+  margin-inline: auto;
+}
+.boardFrame {
+  display: none;
+}
+.stage,
+.board,
+.page main {
+  min-width: 0;
+}
+.board {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+.backButton {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 10px;
+  padding: 0;
+  border: 1px solid #e1cba278;
+  border-radius: 4px;
+  background: #2c1c11e6;
+  cursor: pointer;
+}
+.backButton img {
+  width: 17px;
+  height: 26px;
+  transform: rotate(-90deg);
+}
+.backButton:hover {
+  background: #48321e;
+}
+.contentGrid,
+.actionColumn {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+}
+.header,
+.descriptionPanel,
+.flagPanel {
+  position: relative;
+  min-width: 0;
+  padding: 18px 16px;
+  border: 3px double var(--line);
+  border-radius: 6px;
+  background: #e8cd9f;
+}
+.instancePanel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 16px;
+  border: 3px double #a9803f;
+  border-radius: 6px;
+  color: #e4dbd1;
+  background: linear-gradient(135deg, #35291b, #1f170f);
+}
+.bakedLabel {
+  margin: 0 0 6px;
+  font-family: var(--label);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--brown);
+}
+.instancePanel .bakedLabel {
+  color: #d9b77a;
+}
+.eyebrow {
+  margin: 0 0 6px;
+  color: var(--brown-soft);
+  font-family: var(--label);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  overflow-wrap: anywhere;
+}
+.title {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 69px;
+  height: 32px;
+  padding: 0 20px;
+  border-style: solid;
+  border-width: 0 8px;
+  border-color: transparent;
+  color: #d6cccc;
+  font-family: var(--label);
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.pillCategory {
+  border-image: url("/assets/challenge-detail/pill-category.png") 0 8 fill / 0 8px / 0 stretch;
+}
+.pillDifficulty {
+  border-image: url("/assets/challenge-detail/pill-difficulty.png") 0 8 fill / 0 8px / 0 stretch;
+}
+.pillSolved {
+  color: #6c8e4a;
+  border-image: url("/assets/challenge-detail/pill-solved.png") 0 8 fill / 0 8px / 0 stretch;
+}
+.pillOpen {
+  color: var(--brown-soft);
+  border-image: url("/assets/challenge-detail/pill-solved.png") 0 8 fill / 0 8px / 0 stretch;
+}
+.metrics {
+  display: flex;
+  gap: 32px;
+  margin: 14px 0 0;
+}
+.metric {
+  min-width: 0;
+}
+.metric dd {
+  margin: 4px 0 0;
+  font-family: var(--mono);
+  font-size: 32px;
+  line-height: 1.2;
+}
+.points {
+  color: var(--gold);
+}
+
+.descriptionBody {
+  max-height: 46dvh;
+  margin: 8px 0 0;
+  overflow-y: auto;
+  font-family: var(--serif);
+  font-size: 17px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.descriptionBody p {
+  margin: 0 0 1em;
+}
+.descriptionBody p:last-child {
+  margin-bottom: 0;
+}
+.emptyText {
+  color: var(--brown-soft);
+}
+.attachments {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #b99a66;
+}
+.attachmentHeading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px;
+}
+.attachCount {
+  min-width: 24px;
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--brown-soft);
+  font-family: var(--mono);
+  font-size: 12px;
+  text-align: center;
+}
+.attachmentList {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.attachmentRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 61px;
+  padding: 8px 14px 8px 11px;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+}
+.attachmentIcon {
+  flex: none;
+  width: 36px;
+  height: 32px;
+}
+.attachmentInfo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.attachmentInfo a,
+.attachmentButton,
+.attachmentName {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--brown);
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: left;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.attachmentInfo a,
+.attachmentButton {
+  cursor: pointer;
+}
+.attachmentInfo a:hover,
+.attachmentButton:hover:not(:disabled) {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.attachmentButton:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.fileSize {
+  flex: none;
+  color: var(--brown-soft);
+  font-family: var(--mono);
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.attachmentInfo .fileSize {
+  flex: 0 1 auto;
+  font-family: var(--sans);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.downloadError {
+  color: #8a2b20;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.downloadCancel {
+  flex: none;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: none;
+  color: var(--brown);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.downloadIcon {
+  flex: none;
+  color: var(--brown-soft);
+  font-size: 18px;
+}
+.emptyAttachments {
+  margin: 0;
+  color: var(--brown-soft);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.statusSlot {
+  display: flex;
+}
+.statusRunning {
+  display: block;
+  width: 168px;
+  height: 40px;
+  background: url("/assets/challenge-detail/pill-running.png") center / 100% 100% no-repeat;
+}
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 120px;
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid #8a6a3e;
+  border-radius: 20px;
+  background: #2e2114;
+  color: #d8b57a;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1;
+}
+.statusBadge i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.connect {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.endpointRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 7px;
+  min-width: 0;
+}
+.endpointBox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  min-height: 47px;
+  padding: 4px 13px;
+  border: 1px solid #4b3520;
+  border-radius: 6px;
+  background: linear-gradient(#150e08, #1d130b);
+}
+.endpointBoxEmpty {
+  border-color: transparent;
+  background: none;
+}
+.endpointName {
+  color: #b7a07a;
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.endpointName small {
+  margin-left: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+}
+.endpointCompact .endpointBox {
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  min-height: 31px;
+  padding-block: 2px;
+}
+.endpointCompact .endpointName {
+  flex: none;
+  max-width: 40%;
+}
+.endpointCompact .copyButton {
+  min-height: 31px;
+}
+.endpoint a,
+.connectionText {
+  display: block;
+  overflow: hidden;
+  color: #e4dbd1;
+  font-family: var(--mono);
+  font-size: 17px;
+  line-height: 1.4;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  user-select: all;
+  white-space: nowrap;
+}
+.endpoint a:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.connectEmpty {
+  color: #9a8663;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.copyButton {
+  min-width: 53px;
+  min-height: 47px;
+  padding: 0 8px;
+  border: 1px solid #8b6a3e;
+  border-radius: 6px;
+  background: linear-gradient(#3a2716, #2a1b0f);
+  color: #e8cf9f;
+  font-family: var(--sans);
+  font-size: 13px;
+  cursor: pointer;
+}
+.copyButton:hover:not(:disabled) {
+  background: linear-gradient(#4c331c, #38250f);
+}
+.copyError {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: #efd1a1;
+  font-size: 12px;
+}
+.instanceHint {
+  margin: 0;
+  color: #a58e68;
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.instanceHint strong {
+  color: #e8d3a8;
+  font-weight: 600;
+}
+.ttlValue {
+  margin: 0;
+  color: #e59f29;
+  font-family: var(--mono);
+  font-size: 22px;
+  line-height: 1.2;
+  text-align: right;
+}
+.expired {
+  color: #f4b19b;
+}
+.ttlTrack {
+  height: 20px;
+  border: 2px solid var(--brown);
+  border-radius: 5px;
+  background: #000;
+  overflow: hidden;
+}
+.ttlFill {
+  height: 100%;
+  background: #e59f29;
+  border-radius: 3px;
+}
+.extendsValue {
+  margin: 0;
+  color: #9a7343;
+  font-family: var(--label);
+  font-size: 15px;
+  letter-spacing: 0.2em;
+}
+.expiryTimes {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  color: #a58e68;
+  font-size: 11px;
+  line-height: 1.4;
+}
+.expiryTimes p {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0;
+}
+.expiryTimes time {
+  color: #d8c7a6;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.actionButton {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 54px;
+  padding: 0 0 4px;
+  border: 0;
+  background: transparent center / 100% 100% no-repeat;
+  color: #f3e6cf;
+  font-family: var(--label);
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  text-shadow: 0 1px 2px #000a;
+  cursor: pointer;
+}
+.actionButton:hover:not(:disabled),
+.submitButton:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+.actionButton:disabled,
+.submitButton:disabled {
+  color: #b9ab94;
+  filter: grayscale(0.85) brightness(0.72);
+  cursor: not-allowed;
+}
+.btnCreate {
+  background-image: url("/assets/challenge-detail/button-instance-create-blank.png");
+}
+.btnCreate:disabled {
+  background-image: url("/assets/challenge-detail/button-instance-create-disabled-blank.png");
+  filter: none;
+}
+.btnExtend {
+  background-image: url("/assets/challenge-detail/button-instance-extend-blank.png");
+}
+.btnRestart {
+  background-image: url("/assets/challenge-detail/button-instance-restart-blank.png");
+}
+.btnStop {
+  background-image: url("/assets/challenge-detail/button-instance-stop-blank.png");
+}
+.controlHints {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  margin: 0;
+  color: #f1e3c8;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.controlHints span {
+  padding: 1px 8px;
+  border-radius: 4px;
+  background: #2a1d12cc;
+}
+
+.flagPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+.flagHint {
+  margin: 0;
+  color: var(--brown-soft);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.flagInput {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 0 13px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #f3dfb8;
+  color: var(--brown);
+  font-family: var(--mono);
+  font-size: 18px;
+}
+.flagInput::placeholder {
+  color: #9a7a4e;
+}
+.flagInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.flagInput[aria-invalid="true"] {
+  border-color: #b04c39;
+}
+.submitButton {
+  display: grid;
+  place-items: center;
+  justify-self: end;
+  width: min(100%, 244px);
+  height: 53px;
+  padding: 0 0 3px;
+  border: 0;
+  background: url("/assets/challenge-detail/button-submit-blank.png") center / 100% 100% no-repeat;
+  color: #f3e6cf;
+  font-family: var(--label);
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  text-shadow: 0 1px 2px #000a;
+  cursor: pointer;
+}
+
+.dock {
+  position: sticky;
+  bottom: 8px;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.dock > * {
+  max-width: 100%;
+}
+.notice,
+.errorMessage,
+.retryNotice,
+.bonusNotice,
+.refreshNotice {
+  margin: 0;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #2a1d12ee;
+  color: #f1e3c8;
+  font-size: 13px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  box-shadow: 0 4px 14px #0008;
+}
+.notice p,
+.errorMessage p,
+.bonusNotice p {
+  margin: 0;
+}
+.errorMessage {
+  border-color: #b6573f;
+  background: #3a1710ee;
+  color: #ffd9cc;
+}
+.retryNotice strong,
+.bonusNotice strong {
+  color: #f0b04a;
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+.bonusNotice {
+  background: #e8cd9ff2;
+  color: var(--brown);
+}
+.bonusNotice strong {
+  color: #8a4e12;
+}
+.bonusNotice p {
+  color: var(--brown-soft);
+  font-size: 12px;
+}
+.rewards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 4px 0 0;
+}
+.rewards dt {
+  font-size: 11px;
+  color: #d8c7a6;
+}
+.rewards dd {
+  margin: 0;
+  color: #f0b04a;
+  font-family: var(--mono);
+  font-size: 18px;
+}
+.refreshNotice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+}
+.refreshNotice p {
+  margin: 0;
+}
+.refreshNotice span {
+  color: #cdb88f;
+  font-size: 12px;
+}
+.noticeButton {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid #8b6a3e;
+  border-radius: 6px;
+  background: linear-gradient(#3a2716, #2a1b0f);
+  color: #e8cf9f;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.noticeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sectionNav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 8px;
+  padding: 6px 4px;
+  border-radius: 6px;
+  background: #2c1c11cc;
+}
+.sectionNav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 6px;
+  color: #f1dfbd;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.sectionNav a:hover {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+}
+
+.stateBox {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+  align-content: center;
+  min-height: 320px;
+  padding: 32px 20px;
+  border: 3px double var(--line);
+  border-radius: 6px;
+  background: #e8cd9f;
+  text-align: center;
+}
+.stateBox h1 {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.stateBox p {
+  margin: 0;
+  color: var(--brown-soft);
+  font-size: 14px;
+  line-height: 1.7;
+}
+.stateBox .eyebrow {
+  margin: 0;
+}
+.skeletonTitle,
+.skeletonBody {
+  border-radius: 4px;
+  background: #d3b57e;
+}
+.skeletonTitle {
+  width: 50%;
+  height: 40px;
+}
+.skeletonBody {
+  width: 80%;
+  height: 120px;
+}
+.primaryButton,
+.secondaryButton {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 1px solid #5c432a;
+  border-radius: 6px;
+  background: linear-gradient(#6b4a2a, #4d321b);
+  color: #fff3d7;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.primaryButton:hover:not(:disabled) {
+  background: linear-gradient(#7c5732, #5a3b21);
+}
+.secondaryButton {
+  border-color: var(--line);
+  background: #f3dfb8;
+  color: var(--brown);
+}
+.secondaryButton:hover:not(:disabled) {
+  background: #ead0a0;
+}
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.confirmDialog {
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 28px;
+  border: 3px double var(--line);
+  border-radius: 8px;
+  background: #e8cd9f;
+  color: var(--brown);
+  font-family: var(--sans);
+  box-shadow: 0 20px 60px #160d0c80;
+  overflow: auto;
+}
+.confirmDialog::backdrop {
+  background: #17120dcc;
+  backdrop-filter: blur(3px);
+}
+.confirmDialog .eyebrow {
+  margin: 0 0 8px;
+}
+.confirmDialog h2 {
+  margin: 0 0 14px;
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.confirmDialog h2 + p {
+  margin: 0;
+  color: #6b4a22;
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.page :is(button, input, a, [tabindex]):focus-visible {
+  outline: 3px solid #ad6821;
+  outline-offset: 3px;
+}
+.instancePanel :is(button, a, [tabindex]):focus-visible,
+.controls :is(button):focus-visible,
+.dock :is(button):focus-visible {
+  outline-color: #f2c975;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page button {
+    transition: none;
+  }
+}
+
+/* ───────── 데스크톱: 1920×1080 Figma 캔버스를 화면 높이/너비에 맞춰 한 화면에 고정 ───────── */
+@media (min-width: 1101px) and (min-height: 620px) {
+  .page {
+    display: grid;
+    place-items: center;
+    height: 100dvh;
+    min-height: 0;
+    padding: 0;
+    overflow: hidden;
+    background: #1c130c url("/assets/challenge-detail/bg-forest.webp") center / cover no-repeat;
+  }
+  .stage {
+    --u: calc(100cqw / 1920);
+    position: relative;
+    container-type: size;
+    width: min(100vw, calc(100dvh * 16 / 9));
+    height: min(100dvh, calc(100vw * 9 / 16));
+    max-width: none;
+    margin: 0;
+  }
+  .boardFrame {
+    position: absolute;
+    display: block;
+    left: calc(var(--u) * 98);
+    top: calc(var(--u) * 130);
+    width: calc(var(--u) * 1720);
+    height: calc(var(--u) * 870);
+    background: url("/assets/challenge-detail/panel-board.png") center / 100% 100% no-repeat;
+    pointer-events: none;
+  }
+  .backButton {
+    position: absolute;
+    z-index: 2;
+    left: calc(var(--u) * 55);
+    top: calc(var(--u) * 56);
+    width: calc(var(--u) * 43);
+    height: calc(var(--u) * 28);
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: none;
+  }
+  .backButton:hover {
+    background: none;
+    filter: brightness(1.3);
+  }
+  .backButton img {
+    width: calc(var(--u) * 28.37);
+    height: calc(var(--u) * 43);
+    max-width: none;
+  }
+  .board {
+    position: absolute;
+    inset: 0;
+    display: block;
+    pointer-events: none;
+  }
+  .contentGrid,
+  .actionColumn {
+    display: contents;
+  }
+  .board > *,
+  .contentGrid > *,
+  .actionColumn > * {
+    pointer-events: auto;
+  }
+  .bakedLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .sectionNav {
+    display: none;
+  }
+
+  /* 보드판 안쪽 정렬: 보드 안쪽 테두리선은 무대 x 115~1801, y 147~983.
+     패널 원본 크기(설명 1000×630, 인스턴스 640×300, 플래그 640×228)를 유지하고
+     좌우 여백 15, 상하 여백 20, 헤더-본문 간격 16, 설명-오른쪽 열 간격 16, 오른쪽 열 세로 간격 20으로 맞춘다.
+     x: 130 ─ 설명 ─ 1130 | 1146 ─ 인스턴스·버튼·플래그 ─ 1786
+     y: 167 ─ 헤더 ─ 317 | 333 ─ 설명/인스턴스 … 플래그·설명 하단 963 */
+  /* 헤더 */
+  .header {
+    position: absolute;
+    left: calc(var(--u) * 130);
+    top: calc(var(--u) * 167);
+    width: calc(var(--u) * 1656);
+    height: calc(var(--u) * 150);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: url("/assets/challenge-detail/panel-header.png") center / 100% 100% no-repeat;
+  }
+  .header .eyebrow {
+    position: absolute;
+    left: calc(var(--u) * 29);
+    top: calc(var(--u) * 17);
+    margin: 0;
+    font-size: max(9px, calc(var(--u) * 13));
+  }
+  .title {
+    position: absolute;
+    left: calc(var(--u) * 29);
+    top: calc(var(--u) * 39);
+    width: calc(var(--u) * 1180);
+    font-size: calc(var(--u) * 40);
+    line-height: calc(var(--u) * 51);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--brown);
+  }
+  .badges {
+    position: absolute;
+    left: calc(var(--u) * 29);
+    top: calc(var(--u) * 90);
+    gap: calc(var(--u) * 8);
+    height: calc(var(--u) * 32);
+    margin: 0;
+  }
+  .pill {
+    min-width: calc(var(--u) * 69);
+    height: calc(var(--u) * 32);
+    padding: 0 calc(var(--u) * 20);
+    border-width: 0 calc(var(--u) * 8);
+    font-size: max(9px, calc(var(--u) * 16));
+  }
+  .pillCategory {
+    border-image-width: 0 calc(var(--u) * 8);
+  }
+  .pillDifficulty,
+  .pillSolved,
+  .pillOpen {
+    border-image-width: 0 calc(var(--u) * 8);
+  }
+  .metrics {
+    position: absolute;
+    inset: 0;
+    display: block;
+    margin: 0;
+    pointer-events: none;
+  }
+  .metric {
+    position: absolute;
+    top: calc(var(--u) * 60);
+    width: calc(var(--u) * 150);
+    text-align: center;
+  }
+  .metric:nth-child(1) {
+    left: calc(var(--u) * 1336);
+  }
+  .metric:nth-child(2) {
+    left: calc(var(--u) * 1495);
+  }
+  .metric dd {
+    margin: 0;
+    font-size: calc(var(--u) * 48);
+    line-height: calc(var(--u) * 60);
+    color: var(--brown);
+    white-space: nowrap;
+  }
+  .metric .points {
+    color: var(--gold);
+  }
+
+  /* 문제 설명 */
+  .descriptionPanel {
+    position: absolute;
+    left: calc(var(--u) * 130);
+    top: calc(var(--u) * 333);
+    width: calc(var(--u) * 1000);
+    height: calc(var(--u) * 630);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: url("/assets/challenge-detail/panel-description-base.png") center / 100% 100% no-repeat;
+  }
+  .descriptionBody {
+    position: absolute;
+    left: calc(var(--u) * 46);
+    top: calc(var(--u) * 72);
+    width: calc(var(--u) * 908);
+    height: calc(var(--u) * 270);
+    max-height: none;
+    margin: 0;
+    padding-right: calc(var(--u) * 6);
+    color: var(--brown);
+    font-size: calc(var(--u) * 22);
+    line-height: calc(var(--u) * 30);
+    /* Figma 원본의 가로줄(30px 간격, 줄 하단 3px)을 그림에서 지우고 글줄에 맞춰 다시 그린다.
+       background-attachment: local로 본문을 스크롤해도 줄이 글자와 함께 움직인다 */
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0 calc(var(--u) * 27),
+      #c6ac86 calc(var(--u) * 27) calc(var(--u) * 30)
+    ) local;
+    scrollbar-width: thin;
+    scrollbar-color: #a98550 transparent;
+  }
+  .descriptionBody p {
+    margin: 0 0 calc(var(--u) * 30);
+  }
+  .descriptionBody p:last-child {
+    margin: 0;
+  }
+  .attachments {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .attachmentHeading {
+    position: absolute;
+    left: calc(var(--u) * 232);
+    top: calc(var(--u) * 419);
+    margin: 0;
+  }
+  .attachCount {
+    min-width: calc(var(--u) * 28);
+    padding: 0 calc(var(--u) * 8);
+    border-radius: calc(var(--u) * 12);
+    font-size: max(9px, calc(var(--u) * 16));
+    line-height: calc(var(--u) * 22);
+  }
+  .attachmentList {
+    position: absolute;
+    left: calc(var(--u) * 46);
+    top: calc(var(--u) * 457);
+    width: calc(var(--u) * 908);
+    height: calc(var(--u) * 138);
+    align-content: start;
+    gap: calc(var(--u) * 15);
+    padding-right: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .attachmentRow {
+    flex: none;
+    gap: calc(var(--u) * 14);
+    height: calc(var(--u) * 61);
+    min-height: 0;
+    padding: 0 calc(var(--u) * 29) 0 calc(var(--u) * 11);
+    border-width: calc(var(--u) * 2);
+    border-radius: calc(var(--u) * 10);
+  }
+  .attachmentIcon {
+    width: calc(var(--u) * 49);
+    height: calc(var(--u) * 43);
+  }
+  .attachmentInfo a,
+  .attachmentButton,
+  .attachmentName {
+    font-size: calc(var(--u) * 24);
+    line-height: calc(var(--u) * 30);
+    color: var(--brown);
+  }
+  .fileSize {
+    font-size: calc(var(--u) * 24);
+    color: var(--brown-soft);
+  }
+  .attachmentInfo .fileSize,
+  .downloadError {
+    font-size: max(9px, calc(var(--u) * 12));
+    line-height: calc(var(--u) * 14);
+  }
+  .downloadCancel {
+    font-size: max(10px, calc(var(--u) * 14));
+  }
+  .downloadIcon {
+    font-size: calc(var(--u) * 22);
+  }
+  .emptyAttachments {
+    position: absolute;
+    left: calc(var(--u) * 46);
+    top: calc(var(--u) * 470);
+    font-family: var(--serif);
+    font-size: calc(var(--u) * 20);
+    line-height: calc(var(--u) * 30);
+  }
+
+  /* 인스턴스 */
+  .instancePanel {
+    position: absolute;
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 333);
+    width: calc(var(--u) * 640);
+    height: calc(var(--u) * 300);
+    display: block;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: url("/assets/challenge-detail/panel-instance-base.png") center / 100% 100% no-repeat;
+  }
+  .statusSlot {
+    position: absolute;
+    left: calc(var(--u) * 437);
+    top: calc(var(--u) * 18);
+    width: calc(var(--u) * 168);
+    height: calc(var(--u) * 40);
+  }
+  .statusRunning {
+    width: 100%;
+    height: 100%;
+  }
+  .statusBadge {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    gap: calc(var(--u) * 8);
+    border-radius: calc(var(--u) * 20);
+    font-size: max(10px, calc(var(--u) * 15));
+  }
+  .statusBadge i {
+    width: calc(var(--u) * 8);
+    height: calc(var(--u) * 8);
+  }
+  .connect {
+    position: absolute;
+    left: calc(var(--u) * 35);
+    top: calc(var(--u) * 113);
+    width: calc(var(--u) * 570);
+    max-height: calc(var(--u) * 72);
+    gap: calc(var(--u) * 6);
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .endpointRow {
+    grid-template-columns: calc(var(--u) * 510) minmax(0, 1fr);
+    gap: calc(var(--u) * 7);
+  }
+  .endpointBox {
+    min-height: calc(var(--u) * 47);
+    height: calc(var(--u) * 47);
+    padding: 0 calc(var(--u) * 13);
+    border-radius: calc(var(--u) * 6);
+  }
+  .connectMulti {
+    max-height: calc(var(--u) * 68);
+    scrollbar-width: thin;
+    scrollbar-color: #8b6a3e transparent;
+  }
+  .endpointCompact .endpointBox {
+    min-height: calc(var(--u) * 31);
+    height: calc(var(--u) * 31);
+    gap: calc(var(--u) * 8);
+    padding-block: 0;
+  }
+  .endpointCompact .copyButton {
+    min-height: 0;
+    height: calc(var(--u) * 31);
+  }
+  .endpointCompact a,
+  .endpointCompact .connectionText {
+    font-size: calc(var(--u) * 18);
+    line-height: calc(var(--u) * 24);
+  }
+  .endpointName {
+    font-size: max(9px, calc(var(--u) * 11));
+  }
+  .endpointName small {
+    font-size: max(8px, calc(var(--u) * 10));
+  }
+  .endpoint a,
+  .connectionText {
+    font-size: calc(var(--u) * 22);
+    line-height: calc(var(--u) * 28);
+  }
+  .connectEmpty {
+    font-size: max(11px, calc(var(--u) * 17));
+  }
+  .copyButton {
+    min-width: 0;
+    min-height: 0;
+    height: calc(var(--u) * 47);
+    padding: 0;
+    border-radius: calc(var(--u) * 6);
+    font-size: max(10px, calc(var(--u) * 15));
+  }
+  .copyError {
+    font-size: max(9px, calc(var(--u) * 12));
+  }
+  .instanceHint {
+    position: absolute;
+    left: calc(var(--u) * 35);
+    top: calc(var(--u) * 164);
+    width: calc(var(--u) * 570);
+    max-height: calc(var(--u) * 28);
+    overflow: hidden;
+    font-size: max(9px, calc(var(--u) * 11.5));
+    line-height: calc(var(--u) * 14);
+  }
+  .ttlValue {
+    position: absolute;
+    left: calc(var(--u) * 405);
+    top: calc(var(--u) * 191);
+    width: calc(var(--u) * 200);
+    font-size: calc(var(--u) * 24);
+    line-height: calc(var(--u) * 28);
+  }
+  .ttlTrack {
+    position: absolute;
+    left: calc(var(--u) * 35);
+    top: calc(var(--u) * 224);
+    width: calc(var(--u) * 570);
+    height: calc(var(--u) * 20);
+    border-width: calc(var(--u) * 2);
+    border-radius: calc(var(--u) * 5);
+  }
+  .ttlFill {
+    border-radius: calc(var(--u) * 3);
+  }
+  .extendsValue {
+    position: absolute;
+    left: calc(var(--u) * 127);
+    top: calc(var(--u) * 264);
+    font-size: max(9px, calc(var(--u) * 15));
+    line-height: calc(var(--u) * 16);
+  }
+  .expiryTimes {
+    position: absolute;
+    left: calc(var(--u) * 215);
+    top: calc(var(--u) * 258);
+    width: calc(var(--u) * 390);
+    gap: 0;
+    font-size: max(8px, calc(var(--u) * 11));
+    line-height: calc(var(--u) * 14);
+    text-align: right;
+  }
+  .expiryTimes p {
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    gap: calc(var(--u) * 10);
+    white-space: nowrap;
+  }
+
+  .controls {
+    position: absolute;
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 653);
+    width: calc(var(--u) * 640);
+    height: calc(var(--u) * 62);
+    grid-template-columns: repeat(4, calc(var(--u) * 154));
+    justify-content: space-between;
+    gap: 0;
+  }
+  .actionButton {
+    width: calc(var(--u) * 154);
+    height: calc(var(--u) * 62);
+    padding: 0 0 calc(var(--u) * 4);
+    font-size: max(10px, calc(var(--u) * 20));
+  }
+  .controlHints {
+    position: absolute;
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 716);
+    width: calc(var(--u) * 640);
+    gap: 0 calc(var(--u) * 12);
+    font-size: max(9px, calc(var(--u) * 12));
+    line-height: calc(var(--u) * 15);
+  }
+
+  /* 플래그 제출 */
+  .flagPanel {
+    position: absolute;
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 735);
+    width: calc(var(--u) * 640);
+    height: calc(var(--u) * 228);
+    display: block;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: url("/assets/challenge-detail/panel-flag.png") center / 100% 100% no-repeat;
+  }
+  .fieldLabel {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+  .flagInput {
+    position: absolute;
+    left: calc(var(--u) * 36);
+    top: calc(var(--u) * 84);
+    width: calc(var(--u) * 569);
+    height: calc(var(--u) * 56);
+    min-height: 0;
+    padding: 0 calc(var(--u) * 13);
+    border: 0;
+    border-radius: calc(var(--u) * 6);
+    background: transparent;
+    font-size: calc(var(--u) * 24);
+  }
+  .flagInput:focus-visible {
+    outline-offset: calc(var(--u) * -4);
+  }
+  .flagHint {
+    position: absolute;
+    left: calc(var(--u) * 36);
+    top: calc(var(--u) * 153);
+    width: calc(var(--u) * 320);
+    font-size: max(10px, calc(var(--u) * 14));
+    line-height: calc(var(--u) * 18);
+  }
+  .submitButton {
+    position: absolute;
+    left: calc(var(--u) * 376);
+    top: calc(var(--u) * 153);
+    width: calc(var(--u) * 244);
+    height: calc(var(--u) * 53);
+    padding: 0 0 calc(var(--u) * 3);
+    font-size: max(11px, calc(var(--u) * 22));
+  }
+
+  /* 메시지 독: 보드 아래 여백 */
+  .dock {
+    position: absolute;
+    left: calc(var(--u) * 320);
+    bottom: calc(var(--u) * 6);
+    width: calc(var(--u) * 1280);
+    margin: 0;
+    gap: calc(var(--u) * 8);
+    pointer-events: none;
+  }
+  .dock > * {
+    pointer-events: auto;
+  }
+  .notice,
+  .errorMessage,
+  .retryNotice,
+  .bonusNotice,
+  .refreshNotice {
+    padding: calc(var(--u) * 6) calc(var(--u) * 14);
+    border-radius: calc(var(--u) * 6);
+    font-size: max(11px, calc(var(--u) * 15));
+    line-height: 1.5;
+  }
+  .bonusNotice p,
+  .refreshNotice span {
+    font-size: max(10px, calc(var(--u) * 13));
+  }
+  .rewards dd {
+    font-size: max(12px, calc(var(--u) * 20));
+  }
+  .noticeButton {
+    min-height: calc(var(--u) * 32);
+    font-size: max(10px, calc(var(--u) * 14));
+  }
+
+  /* 로딩 · 오류 */
+  .stateBox {
+    position: absolute;
+    left: calc(var(--u) * 360);
+    top: calc(var(--u) * 330);
+    width: calc(var(--u) * 1200);
+    min-height: calc(var(--u) * 480);
+    pointer-events: auto;
+  }
+  .stateBox h1 {
+    font-size: max(18px, calc(var(--u) * 36));
+  }
+  .stateBox p {
+    font-size: max(12px, calc(var(--u) * 20));
+  }
+}
