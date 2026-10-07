@@ -145,9 +145,9 @@ jobs:
       component: frontend
       commit_sha: ${{ github.sha }}
       pipeline_ref: 148cb43ebe4f7cdfb5811e9faff6a6c0ca47941c
-      gcp_project_id: project-325bdf5b-3d83-4f27-9f6
-      workload_identity_provider: projects/269174025178/locations/global/workloadIdentityPools/github-vm-cd-dev/providers/github-vm-cd-provider
-      deployer_service_account: github-vm-deployer-dev@project-325bdf5b-3d83-4f27-9f6.iam.gserviceaccount.com
+      gcp_project_id: msg-broker
+      workload_identity_provider: projects/309055091666/locations/global/workloadIdentityPools/github-vm-cd-dev/providers/github-vm-cd-provider
+      deployer_service_account: github-vm-deployer-dev@msg-broker.iam.gserviceaccount.com
       vm_zone: asia-northeast3-a
-      vm_name: backend-dev-vm
-      public_domain: msg2.mjsec.kr
+      vm_name: msg-dev-vm
+      public_domain: msgctf.kr
