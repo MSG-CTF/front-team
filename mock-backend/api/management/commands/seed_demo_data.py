@@ -8,6 +8,8 @@ from api.models import (
     Challenge,
     ContestTimer,
     KothClub,
+    MileageHistory,
+    Solve,
     Team,
     User,
 )
@@ -45,6 +47,7 @@ class Command(BaseCommand):
         self._seed_chance_catalog()
         challenges = self._seed_challenges()
         teams = self._seed_teams_and_users()
+        self._seed_solves(teams, challenges)
         self._seed_koth(teams)
         self._seed_timer()
 
@@ -117,6 +120,38 @@ class Command(BaseCommand):
         upsert_user("leader2", "password2", "브라보대장", "PARTICIPANT", True, bravo)
 
         return {"alpha": alpha, "bravo": bravo}
+
+    def _seed_solves(self, teams, challenges):
+        # 마이페이지 풀이 기록·마일리지 내역·개인 순위(GET /ranking/member)가 빈 화면이 아니도록 예시 기록을 둔다.
+        # 개인 점수는 문제 현재 배점 합이라 Alpha 제오파디 300점(200 + 100)과 맞춘다. 이미 있으면 다시 만들지 않는다.
+        alpha = teams["alpha"]
+        if alpha.solves.exists():
+            return
+        leader = User.objects.get(login_id="leader1")
+        member = User.objects.get(login_id="member1")
+        now = timezone.now()
+        for minutes_ago, user, challenge, mileage in [
+            (95, member, challenges[2], 100),
+            (40, leader, challenges[0], 200),
+        ]:
+            solve = Solve.objects.create(
+                team=alpha,
+                user=user,
+                challenge=challenge,
+                source_type="JEOPARDY",
+                challenge_title=challenge.title,
+                earned_score=challenge.score,
+                earned_mileage=mileage,
+            )
+            Solve.objects.filter(pk=solve.pk).update(solved_at=now - timezone.timedelta(minutes=minutes_ago))
+            history = MileageHistory.objects.create(
+                team=alpha, type="CHALLENGE_SOLVE", amount=mileage, reason=f"{challenge.title} 해결"
+            )
+            MileageHistory.objects.filter(pk=history.pk).update(created_at=now - timezone.timedelta(minutes=minutes_ago))
+        purchase = MileageHistory.objects.create(team=alpha, type="PURCHASE", amount=-150, item_name="부스 간식 교환")
+        MileageHistory.objects.filter(pk=purchase.pk).update(created_at=now - timezone.timedelta(minutes=10))
+        bonus = MileageHistory.objects.create(team=alpha, type="START_BONUS", amount=350, reason="출발칸 통과 보너스")
+        MileageHistory.objects.filter(pk=bonus.pk).update(created_at=now - timezone.timedelta(minutes=130))
 
     def _seed_koth(self, teams):
         # open_group을 안 주면 모델 default=1이라 6개 클럽이 전부 1번으로
