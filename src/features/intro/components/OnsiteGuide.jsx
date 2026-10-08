@@ -53,7 +53,19 @@ export default function OnsiteGuide() {
       <dl className="onsite-contact">
         <div>
           <dt>장소</dt>
-          <dd>{eventConfig.venue}</dd>
+          <dd>
+            {eventConfig.venue}
+            <br />
+            {eventConfig.venueAddress}
+            <br />
+            <a
+              href={eventConfig.venueMapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              지도에서 위치 보기
+            </a>
+          </dd>
         </div>
         <div>
           <dt>참가비</dt>

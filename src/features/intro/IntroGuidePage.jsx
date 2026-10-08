@@ -125,11 +125,21 @@ export default function IntroGuidePage() {
         aria-labelledby="venue-title"
       >
         <h2 id="venue-title">장소와 준비물</h2>
-        <p>대회 장소는 아직 미정입니다</p>
         <p>
-          장소가 확정되면 주소와 교통편, 주차, 체크인, 현장 네트워크와 식사
-          안내를 공개합니다
+          <strong>{eventConfig.venue}</strong>
+          <br />
+          {eventConfig.venueAddress}
+          <br />
+          <a
+            className="text-link"
+            href={eventConfig.venueMapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            지도에서 위치 보기
+          </a>
         </p>
+        <p>교통편, 주차, 체크인과 현장 운영 안내는 별도로 공지합니다</p>
         <p className="preparation-key">
           개인 노트북과 충전기, 본인 확인용 신분증을 챙겨 주세요
         </p>
@@ -139,7 +149,7 @@ export default function IntroGuidePage() {
           <br />
           재학 또는 휴학 증명서는 참가 신청 폼에서 미리 제출합니다
         </p>
-        <p>추가 장비와 네트워크 연결 방식은 장소 확정 후 안내합니다</p>
+        <p>추가 장비와 네트워크 연결 방식은 추후 안내합니다</p>
         <p>대회는 오프라인으로 진행하며 참가자는 대회 현장에 참석합니다</p>
       </section>
       <section
