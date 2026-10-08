@@ -4,7 +4,7 @@ export default function RulesPanel({ rules }) {
   return (
     <section className={styles.rulesPanel} aria-labelledby="rules-heading">
       <img
-        src="/assets/rules/rules-panel.png"
+        src="/assets/rules/rules-panel-clean.png"
         alt=""
         aria-hidden="true"
         className={styles.rulesPanelImage}

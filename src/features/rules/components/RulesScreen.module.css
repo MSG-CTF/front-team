@@ -1,5 +1,7 @@
 /* Figma: "MSG-CTF 프론트 개발", node 192:137 (Rules Page, 1920x1080). */
 
+/* 배경은 메인(보드) 페이지와 같은 Figma 467:345 원본 한 장. 예전에는 무대 안에 풍경+보드가 함께 그려진
+   rules-background.png를 한 번 더 깔아 16:9가 아닌 창에서 풍경이 두 겹으로 보였다 */
 .page {
   position: fixed;
   inset: 0;
@@ -27,9 +29,14 @@
   pointer-events: none;
 }
 
+/* 누끼 딴 베이지 보드(1720×870). 문제 상세와 같은 자리: 무대 x 98, y 130 */
 .background {
   position: absolute;
-  inset: 0;
+  top: 12.037%;
+  left: 5.1042%;
+  width: 89.5833%;
+  height: 80.5556%;
+  filter: drop-shadow(0 0.6cqw 1.6cqw #160d0c66);
 }
 
 .logo {
@@ -50,29 +57,33 @@
   left: 9.0625%;
   width: 80.8854%;
   height: 48.1481%;
-  overflow: hidden;
 }
 
+/* 가로줄을 지운 설명 패널(2000×670). 테두리까지 상자 안에 다 보인다 */
 .rulesPanelImage {
   position: absolute;
-  top: -4.34%;
-  left: -2.37%;
+  inset: 0;
   display: block;
-  width: 104.06%;
-  height: 157.66%;
+  width: 100%;
+  height: 100%;
   user-select: none;
   pointer-events: none;
 }
 
+/* 패널 그림의 DESCRIPTION 제목줄(y 132/670) 아래, 안쪽 테두리 안 */
 .rulesList {
   position: absolute;
-  inset: 13% 9% 4% 2.6401%;
+  inset: 23% 3.2% 5.5% 4.6%;
   display: grid;
   align-content: start;
   gap: 16px;
   overflow-y: auto;
   scrollbar-color: #9b713d transparent;
   padding-right: 12px;
+  padding-bottom: 1.5cqw;
+  /* 스크롤 중 아래 끝에서 글줄이 칼같이 잘리지 않게 흐리게 사라지게 한다 */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5cqw), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5cqw), transparent);
 }
 
 .ruleItem {
@@ -138,7 +149,7 @@
   .logo { position: static; width: 160px; height: 130px; margin: -16px auto 12px; object-fit: contain; }
   .rulesPanel { position: static; width: 100%; height: auto; overflow: visible; }
   .rulesPanel h1 { position: static; width: auto; height: auto; margin: 0 0 24px; clip: auto; overflow: visible; text-align: center; font: 24px/1.5 "Song Myung", serif; color: #613d15; }
-  .rulesList { position: static; overflow: visible; gap: 24px; padding: 0; }
+  .rulesList { position: static; overflow: visible; gap: 24px; padding: 0; -webkit-mask-image: none; mask-image: none; }
   .ruleTitle { font-size: 18px; }
   .ruleDescription { margin-top: 8px; font-size: 16px; }
   .mainNavigationButton { top: 10px; right: 10px; left: auto; width: 44px; height: 44px; padding: 10px; }
