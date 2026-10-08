@@ -53,8 +53,35 @@ test("대회 개요와 현장 안내, 상세 안내가 확정 장소를 함께 �
     assert.ok(html.includes(eventConfig.venue));
     assert.doesNotMatch(html, /대회 장소는 아직 미정|장소가 확정되면|장소 확정 후/);
   }
+  assert.ok(overview.includes(eventConfig.venueAddress));
   assert.ok(onsite.includes(eventConfig.venueAddress));
   assert.ok(guide.includes(eventConfig.venueAddress));
+});
+
+test("상단 장소 안내에 도로명 주소와 카카오맵, 네이버지도 링크를 표시한다", () => {
+  assert.match(overview, /class="venue-address">서울시 종로구 우정국로 6<\/p>/);
+  assert.match(overview, /<nav class="venue-map-links" aria-label="대회장 지도">/);
+  assert.equal(eventConfig.venueMapLinks.length, 2);
+  const expected = [
+    { label: "카카오맵", host: "map.kakao.com", prefix: "/link/search/" },
+    { label: "네이버지도", host: "map.naver.com", prefix: "/p/search/" },
+  ];
+  for (const [index, { label, host, prefix }] of expected.entries()) {
+    const link = eventConfig.venueMapLinks[index];
+    const url = new URL(link.url);
+    assert.equal(link.label, label);
+    assert.equal(url.protocol, "https:");
+    assert.equal(url.hostname, host);
+    assert.ok(url.pathname.startsWith(prefix));
+    assert.equal(
+      decodeURIComponent(url.pathname.slice(prefix.length)),
+      eventConfig.venueAddress,
+    );
+    assert.ok(
+      overview.includes(`href="${link.url}" target="_blank" rel="noopener noreferrer"`),
+    );
+    assert.ok(overview.includes(`${label}에서 보기 (새 탭)`));
+  }
 });
 
 test("현장 안내와 상세 안내의 지도 링크가 같은 장소를 새 탭으로 연다", () => {

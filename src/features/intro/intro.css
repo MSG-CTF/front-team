@@ -734,6 +734,37 @@
   white-space: nowrap;
   color: var(--muted);
 }
+.msg-intro .overview-copy .venue-address {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: clamp(14px, 1.4vw, 16px);
+  font-weight: 400;
+  line-height: 1.65;
+  word-break: keep-all;
+}
+.msg-intro .venue-map-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 24px;
+  margin-top: 4px;
+}
+.msg-intro .venue-map-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: underline;
+  text-decoration-color: #e0bc8680;
+  text-underline-offset: 5px;
+  white-space: nowrap;
+}
+.msg-intro .venue-map-links a:hover {
+  color: var(--fg);
+  text-decoration-color: currentColor;
+}
 .msg-intro .overview-visual {
   min-width: 0;
 }
