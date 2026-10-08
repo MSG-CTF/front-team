@@ -27,7 +27,8 @@ const BUTTONS = [
     to: ROUTES.mypage,
     label: "마이 페이지",
     mobileLabel: "마이페이지",
-    src: "/assets/board/nav-mypage.png",
+    // 흰 테두리를 지운 뒤에도 브라우저가 예전 이미지를 캐시로 보여줘 주소에 버전을 붙였다
+    src: "/assets/board/nav-mypage.png?v=2",
     mobileImageWidth: "256.41%",
     mobileImageAnchor: "translate(-50%, -48%)",
     box: { left: 82.09 - NAV_SHIFT, top: 2.54, width: 9.88, height: 11.68 },
