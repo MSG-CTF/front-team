@@ -193,6 +193,24 @@ test("모션 버튼은 텍스트 대신 아이콘을 쓰고 두 곳 모두 접�
   }
 });
 
+test("SWING 부스와 상세 안내는 변경된 해킹스타 선수권대회 세 종목을 보여 준다", () => {
+  const boothSection = main.match(/<section id="booths"[\s\S]*?<\/section>/)?.[0];
+  assert.ok(boothSection);
+  const boothCards = boothSection.match(/<article>[\s\S]*?<\/article>/g);
+  assert.equal(boothCards.length, 6);
+  const swingCard = boothCards.find((card) => /booth-club">SWING<\/p>/.test(card));
+  assert.ok(swingCard);
+  assert.match(swingCard, /src="\/assets\/intro\/club-swing.svg"/);
+  assert.match(swingCard, /<h3>해킹스타 선수권대회<\/h3>/);
+  assert.match(swingCard, /<p>달리기 게임, 자석 양궁, 미니 컬링<\/p>/);
+  for (const html of [main, guide]) {
+    for (const text of ["해킹스타 선수권대회", "달리기 게임", "자석 양궁", "미니 컬링"])
+      assert.ok(html.includes(text), text);
+    assert.doesNotMatch(html, /대저택 살인사건|범인을 찾는 추리 체험|카페, 추리 체험/);
+  }
+  assert.match(guide, /카페, 미니 체육대회, 단어 게임과 보안 퀴즈/);
+});
+
 test("첫 화면은 경량 로고를 우선 받고 글꼴 원본과 무거운 배경은 읽지 않는다", () => {
   assert.match(main, /src="\/assets\/intro\/event-logo.webp"[^>]*fetchPriority="high"/i);
   assert.doesNotMatch(main + guide, /src="\/assets\/login\/logo-cutout.png"/);
