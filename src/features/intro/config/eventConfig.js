@@ -1,5 +1,6 @@
 const venueName = "교원챌린지홀";
 const venueAddress = "서울시 종로구 우정국로 6";
+const venueMapQuery = encodeURIComponent(venueAddress);
 
 export const eventConfig = Object.freeze({
   event: { date: "2026-11-08", startsAt: "2026-11-08T10:00:00+09:00" },
@@ -8,6 +9,16 @@ export const eventConfig = Object.freeze({
   contactEmail: "msgctf@gmail.com",
   venue: `${venueName} 2층`,
   venueAddress,
+  venueMapLinks: [
+    {
+      label: "카카오맵",
+      url: `https://map.kakao.com/link/search/${venueMapQuery}`,
+    },
+    {
+      label: "네이버지도",
+      url: `https://map.naver.com/p/search/${venueMapQuery}`,
+    },
+  ],
   venueMapUrl:
     "https://www.google.com/maps/search/?api=1&query=" +
     encodeURIComponent(`${venueName} ${venueAddress}`),
