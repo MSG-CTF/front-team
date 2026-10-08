@@ -201,18 +201,23 @@ export function setChallengeVisibility(challengeId, { isPublished, reason }) {
 }
 
 export function registerChallengeRelease(challengeId, { artifact, note }) {
-  // [백엔드: 시작 전] 공급망 artifact-v2.json의 artifact 블록을 그대로 전달
-  return apiClient.post(`/admin/challenges/${challengeId}/releases`, { artifact, note });
+  return apiClient.post(`/admin/challenges/${challengeId}/releases`, { artifact, note }, MUTATION_CONFIG);
 }
 
-export function getChallengeReleases(challengeId) {
-  // [백엔드: 시작 전] 버전 내림차순 이력 + current_release_id
-  return apiClient.get(`/admin/challenges/${challengeId}/releases`);
+export function getChallengeReleases(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${challengeId}/releases`, config);
 }
 
 export function activateChallengeRelease(challengeId, releaseId) {
-  // [백엔드: 시작 전] 옛 릴리스 지정 시 롤백. Body 없음. 멱등.
-  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/activate`);
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/activate`, {}, MUTATION_CONFIG);
+}
+
+export function getChallengeRuntimeSecrets(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${challengeId}/runtime-secrets`, config);
+}
+
+export function registerChallengeRuntimeSecret(challengeId, { name, value }) {
+  return apiClient.post(`/admin/challenges/${challengeId}/runtime-secrets`, { name, value }, MUTATION_CONFIG);
 }
 
 // 시그니처 문제는 JEOPARDY 등록 및 릴리스와 별도 계약이다

@@ -481,9 +481,11 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 | DELETE | `/admin/instances/{instance_id}` | 인스턴스 강제 종료 | **완료** |
 | GET | `/admin/challenges` | 문제 목록(문제별 인스턴스 현황) | **완료** |
 | PATCH | `/admin/challenges/{challenge_id}/visibility` | 문제 공개/비공개 전환 | PR 대기 |
-| POST | `/admin/challenges/{challenge_id}/releases` | 문제 릴리스 등록(publish bundle) | 시작 전 |
-| GET | `/admin/challenges/{challenge_id}/releases` | 릴리스 이력 조회 | 시작 전 |
-| POST | `/admin/challenges/{challenge_id}/releases/{release_id}/activate` | 현재 릴리스 전환(=롤백) | 시작 전 |
+| POST | /admin/challenges/{challenge_id}/releases | 문제 릴리스 등록 | 백엔드 #101 연동 |
+| GET | /admin/challenges/{challenge_id}/releases | 릴리스와 비밀값 연결 조회 | 백엔드 #101 연동 |
+| POST | /admin/challenges/{challenge_id}/releases/{release_id}/activate | 현재 릴리스 전환 | 백엔드 #101 연동 |
+| GET | /admin/challenges/{challenge_id}/runtime-secrets | 비밀값 이름과 버전 조회 | 백엔드 #101 연동 |
+| POST | /admin/challenges/{challenge_id}/runtime-secrets | 비밀값 새 버전 저장 | 백엔드 #101 연동 |
 | GET | `/admin/resources` | 계정/노드별 리소스 상태 | PR #85 리뷰 중 |
 | GET | `/admin/events` | 최근 이벤트 로그 | **완료(main 머지)** |
 | GET | `/admin/payment/history` | 전체 결제 히스토리 | **완료** |
@@ -526,6 +528,10 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 - `DELETE /admin/instances/{instance_id}` (Body 없음) -> 202 `{ instance_id, team_id, team_name, status: "STOPPING", forced_by, forced_at }`. 추가 에러: `404 INSTANCE_NOT_FOUND` / `409 INSTANCE_ALREADY_TERMINATED`(data `{instance_id, status}`).
 
 **문제 / 릴리스**
+
+문제별 실행 설정 화면은 [관리자 실행 설정 안내](docs/admin-runtime-settings.md)를 따릅니다
+아래 API 스냅샷 이후 백엔드 #101에서 schema 2.1과 여러 컨테이너의 실행 설정 전달을 추가했습니다
+최신 화면은 해당 계약의 환경변수와 비밀값 연결 버전을 표시합니다
 
 - `GET /admin/challenges` - Query `category`(0-14절 8종), `is_published`, `sort`(`running`|`title`|`score`, 기본 `running`), `page`, `size`(기본 50, 상한 100) -> `{ challenges: [{ challenge_id, title, category, difficulty, score, is_published, solved_team_count, running_instance_count, failed_instance_count }], total_count, page, size }`. `failed_instance_count > 0`이면 화면 강조. 개별 인스턴스 조작은 `/admin/instances` 계열. 추가 에러: `400 INVALID_REQUEST`.
 - `PATCH /admin/challenges/{challenge_id}/visibility` - Req `{ is_published: bool, reason }`(1~500자) -> `{ challenge_id, title, previous_is_published, is_published, affected_team_count, changed_at, changed_by }`. 비공개로 바꿔도 **이미 연 팀의 진행은 유지**(Notion 초안 가정). 보드 팀별 open(`opened_challenges`)과는 다른 층위. 추가 에러: `400 INVALID_REQUEST` / `404 CHALLENGE_NOT_FOUND`.

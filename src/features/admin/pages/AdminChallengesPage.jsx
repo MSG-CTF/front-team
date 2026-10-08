@@ -7,6 +7,7 @@ import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/Admin
 import AdminPagination from "../components/AdminPagination.jsx";
 import AdminDialog from "../components/AdminDialog.jsx";
 import AdminChallengeCreateDialog from "../components/AdminChallengeCreateDialog.jsx";
+import AdminChallengeRuntimeDialog from "../components/AdminChallengeRuntimeDialog.jsx";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 
@@ -83,6 +84,7 @@ function InstancesSection() {
 
 export default function AdminChallengesPage() {
   const [creating, setCreating] = useState(false);
+  const [runtimeChallenge, setRuntimeChallenge] = useState(null);
   const [page, setPage] = useState(1);
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("running");
@@ -120,11 +122,12 @@ export default function AdminChallengesPage() {
     <AdminStatusMessage status={challenges.status} error={challenges.error} onRetry={challenges.retry}/>
     {notice && <p role="status" className="my-3 text-sm">{notice}</p>}
     {challenges.status === "success" && <div className="overflow-x-auto rounded-lg border border-admin-divider">
-      <table className="w-full border-collapse text-left font-song-myung text-sm"><thead><tr>{["제목", "분야", "난이도", "점수", "해결 팀", "인스턴스", "공개 상태"].map((text) => <th key={text} className="p-3 font-normal">{text}</th>)}</tr></thead>
+      <table className="w-full border-collapse text-left font-song-myung text-sm"><thead><tr>{["제목", "분야", "난이도", "점수", "해결 팀", "인스턴스", "공개 상태", "실행 설정"].map((text) => <th key={text} className="p-3 font-normal">{text}</th>)}</tr></thead>
         <tbody>{(challenges.data?.challenges ?? []).map((challenge) => <tr key={challenge.challenge_id} className="border-t border-admin-divider/40">
           <td className="p-3">{challenge.title}</td><td className="p-3">{challenge.category}</td><td className="p-3">{challenge.difficulty}</td><td className="p-3">{challenge.score}</td><td className="p-3">{challenge.solved_team_count}</td>
           <td className="p-3">{challenge.running_instance_count} {challenge.failed_instance_count > 0 && <span className="text-admin-failed">(실패 {challenge.failed_instance_count})</span>}</td>
           <td className="p-3"><button type="button" disabled={busy} onClick={() => { setSelected(challenge); setReason(""); setNotice(""); }}><AdminBadge tone={challenge.is_published ? "good" : "bad"}>{challenge.is_published ? "공개 중 / 변경" : "비공개 / 변경"}</AdminBadge></button></td>
+          <td className="p-3"><button type="button" className={BUTTON} disabled={busy} aria-label={challenge.title + " 실행 설정"} onClick={() => setRuntimeChallenge(challenge)}>실행 설정</button></td>
         </tr>)}</tbody>
       </table>
       {challenges.data?.challenges?.length === 0 && <p className="p-4 text-center">표시할 문제가 없습니다</p>}
@@ -147,5 +150,6 @@ export default function AdminChallengesPage() {
       }}
     />}
     <InstancesSection/>
+    {runtimeChallenge && <AdminChallengeRuntimeDialog key={runtimeChallenge.challenge_id} challenge={runtimeChallenge} onClose={() => setRuntimeChallenge(null)}/>}
   </AdminLayout>;
 }

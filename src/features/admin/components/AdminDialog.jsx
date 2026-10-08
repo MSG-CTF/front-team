@@ -7,6 +7,7 @@ export default function AdminDialog({
   onClose,
   busy = false,
   variant,
+  wide = false,
   children,
 }) {
   const panel = useRef(null);
@@ -74,7 +75,7 @@ export default function AdminDialog({
         className={
           variant === "payment"
             ? styles.dialog
-            : "max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-admin-divider bg-[#f3e6cf] p-5 text-admin-ink shadow-xl"
+            : `max-h-[90vh] w-full ${wide ? "max-w-4xl" : "max-w-lg"} overflow-y-auto rounded-xl border border-admin-divider bg-[#f3e6cf] p-5 text-admin-ink shadow-xl`
         }
       >
         <header
