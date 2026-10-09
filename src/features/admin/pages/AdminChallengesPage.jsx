@@ -143,8 +143,9 @@ export default function AdminChallengesPage() {
     </AdminDialog>}
     {creating && <AdminChallengeCreateDialog
       onClose={() => setCreating(false)}
-      onCreated={async () => {
-        setNotice("문제를 비공개로 등록했습니다");
+      onCreated={async (created) => {
+        setNotice("문제를 비공개로 등록했습니다 실행 설정을 이어서 확인해주세요");
+        setRuntimeChallenge(created);
         const refreshed = await challenges.reload();
         if (!refreshed) setNotice("등록은 처리됐지만 최신 목록을 조회하지 못했습니다");
       }}

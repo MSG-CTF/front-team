@@ -3,7 +3,7 @@ import { activateChallengeRelease, getChallengeReleases, getChallengeRuntimeSecr
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { parseReleaseFile, validateRuntimeSecret } from "../utils/adminRuntime.js";
+import { parseReleaseFile, releaseRequirements, validateRuntimeSecret } from "../utils/adminRuntime.js";
 import AdminDialog from "./AdminDialog.jsx";
 import { AdminBadge, AdminStatusMessage } from "./AdminLayout.jsx";
 
@@ -30,12 +30,15 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
   const pending = useRef(false);
   const fileSequence = useRef(0);
   const fileInput = useRef(null);
+  const secretNameInput = useRef(null);
   const runtime = useAdminResource((config) => loadRuntime(challenge.challenge_id, config), [challenge.challenge_id], "실행 설정을 불러오지 못했습니다");
   useEffect(() => () => { fileSequence.current += 1; }, []);
   const releases = runtime.data?.releases ?? [];
   const selected = releases.find((release) => release.release_id === releaseId) ?? releases.find((release) => release.is_current) ?? releases[0];
   const validationError = validateRuntimeSecret(name.trim(), value);
   const loading = runtime.status === "loading";
+  const requirements = upload ? releaseRequirements(upload.artifact, runtime.data?.secrets ?? []) : null;
+  const slugMismatch = Boolean(upload && challenge.challenge_slug && upload.artifact.challenge_slug !== challenge.challenge_slug);
 
   async function mutate(action, success) {
     if (pending.current) return;
@@ -81,7 +84,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
 
   async function saveRelease(event) {
     event.preventDefault();
-    if (!upload) return;
+    if (!upload || slugMismatch || requirements.missingSecrets.length > 0) return;
     const saved = await mutate(() => registerChallengeRelease(challenge.challenge_id, { artifact: upload.artifact, note: "관리자 릴리스 파일 등록" }), "릴리스를 등록했습니다 내용을 확인한 뒤 사용할 버전을 선택해주세요");
     if (saved) { setUpload(null); setReleaseId(saved.release_id ?? ""); if (fileInput.current) fileInput.current.value = ""; }
   }
@@ -131,7 +134,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
           <p className="mb-3 text-admin-muted">값은 다시 조회하지 않습니다 새 값을 저장해도 기존 릴리스의 연결 버전은 바뀌지 않습니다</p>
           {(runtime.data.secrets ?? []).length === 0 ? <p className="mb-3">저장된 비밀값이 없습니다</p> : <table className="mb-4 w-full text-left"><thead><tr>{["이름", "버전", "저장 시각", "상태"].map((label) => <th key={label} className="py-2 font-normal">{label}</th>)}</tr></thead><tbody>{runtime.data.secrets.map((secret) => <tr key={secret.secret_id} className="border-t border-admin-divider/40"><td className="py-2 font-kode-mono">{secret.name}</td><td className="py-2">{secret.version}</td><td className="py-2">{toKst(secret.created_at)}</td><td className="py-2">{secret.is_latest ? "최신 저장값" : "이전 저장값"}</td></tr>)}</tbody></table>}
           <form onSubmit={saveSecret} className="grid gap-3 sm:grid-cols-[1fr_2fr_auto]">
-            <label>비밀값 이름<input value={name} maxLength={64} disabled={busy} onChange={(event) => setName(event.target.value)} className={INPUT + " mt-1"} autoComplete="off"/></label>
+            <label>비밀값 이름<input ref={secretNameInput} value={name} maxLength={64} disabled={busy} onChange={(event) => setName(event.target.value)} className={INPUT + " mt-1"} autoComplete="off"/></label>
             <label>새 비밀값<input type="password" value={value} disabled={busy} onChange={(event) => setValue(event.target.value)} className={INPUT + " mt-1"} autoComplete="new-password"/></label>
             <button type="submit" disabled={busy || Boolean(validationError)} className={BUTTON + " self-end"}>비밀값 저장</button>
             {value && validationError && <p className="text-admin-muted sm:col-span-3">{validationError}</p>}
@@ -139,10 +142,22 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
         </section>
         <section className="rounded-lg border border-admin-divider p-4">
           <h3 className="mb-2 text-base">릴리스 등록</h3>
-          <p className="mb-3 text-admin-muted">CI에서 받은 실행 릴리스 JSON을 선택해주세요 필요한 비밀값을 먼저 저장한 뒤 등록합니다</p>
+          <p className="mb-3 text-admin-muted">CI에서 받은 실행 릴리스 JSON을 선택해주세요 문제별 환경변수와 필요한 비밀값을 확인한 뒤 등록합니다</p>
           <form onSubmit={saveRelease} className="space-y-3"><label className="block">릴리스 파일<input ref={fileInput} type="file" accept=".json,application/json" disabled={busy} onChange={readFile} className="mt-1 block w-full"/></label>
-            {upload && <p>{upload.artifact.challenge_slug} · 발행 {upload.artifact.registry_revision}</p>}
-            <button type="submit" disabled={busy || !upload} className={BUTTON}>릴리스 등록</button>
+            {upload && <div className="space-y-2 rounded border border-admin-divider/50 p-3">
+              <p>{upload.artifact.challenge_slug} · 발행 {upload.artifact.registry_revision}</p>
+              {slugMismatch && <p className="text-admin-failed">이 파일은 {challenge.challenge_slug} 문제의 릴리스가 아닙니다</p>}
+              {requirements.containers.map((container) => <div key={container.name}>
+                <p className="font-kode-mono">{container.name}</p>
+                <p className="text-admin-muted">일반 환경변수 {container.envNames.join(", ") || "없음"}</p>
+                <p className="text-admin-muted">비밀값 연결 {container.secretBindings.map(([envName, secretName]) => `${envName} ← ${secretName}`).join(", ") || "없음"}</p>
+              </div>)}
+              {requirements.missingSecrets.length > 0 && <div>
+                <p className="text-admin-failed">먼저 저장할 비밀값: {requirements.missingSecrets.join(", ")}</p>
+                <div className="mt-2 flex flex-wrap gap-2">{requirements.missingSecrets.map((secretName) => <button key={secretName} type="button" className={BUTTON} onClick={() => { setName(secretName); secretNameInput.current?.focus(); }}>{secretName} 입력</button>)}</div>
+              </div>}
+            </div>}
+            <button type="submit" disabled={busy || !upload || slugMismatch || requirements.missingSecrets.length > 0} className={BUTTON}>릴리스 등록</button>
           </form>
         </section>
       </>}

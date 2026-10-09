@@ -6,10 +6,26 @@ export function parseReleaseFile(text) {
   if (!artifact || typeof artifact !== "object" || Array.isArray(artifact)
       || !["2.0", "2.1"].includes(artifact.schema_version)
       || !Array.isArray(artifact.workload?.containers)
-      || artifact.workload.containers.length === 0) {
+      || artifact.workload.containers.length === 0
+      || artifact.workload.containers.some((container) => !container || typeof container !== "object" || Array.isArray(container)
+        || typeof container.name !== "string"
+        || [container.env, container.secret_env].some((entries) => entries !== undefined
+          && (!entries || typeof entries !== "object" || Array.isArray(entries)
+            || Object.values(entries).some((value) => typeof value !== "string"))))) {
     throw new Error("CI에서 받은 실행 릴리스 파일을 선택해주세요");
   }
   return artifact;
+}
+
+export function releaseRequirements(artifact, secrets = []) {
+  const containers = artifact.workload.containers.map((container) => ({
+    name: container.name,
+    envNames: Object.keys(container.env ?? {}).sort(),
+    secretBindings: Object.entries(container.secret_env ?? {}).sort(([a], [b]) => a.localeCompare(b)),
+  }));
+  const requiredSecrets = [...new Set(containers.flatMap((container) => container.secretBindings.map(([, name]) => name)))].sort();
+  const storedNames = new Set(secrets.map((secret) => secret.name));
+  return { containers, requiredSecrets, missingSecrets: requiredSecrets.filter((name) => !storedNames.has(name)) };
 }
 
 export function validateRuntimeSecret(name, value) {

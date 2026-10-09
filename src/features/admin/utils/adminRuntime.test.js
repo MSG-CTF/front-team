@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { parseReleaseFile, validateRuntimeSecret } from "./adminRuntime.js";
+import { parseReleaseFile, releaseRequirements, validateRuntimeSecret } from "./adminRuntime.js";
 
 test("release uploads preserve per-container environment and secret aliases", () => {
   const artifact = { schema_version: "2.1", challenge_slug: "web-basic", registry_revision: 2,
@@ -10,9 +10,24 @@ test("release uploads preserve per-container environment and secret aliases", ()
 });
 
 test("invalid and non-runtime release files cannot be submitted", () => {
-  for (const text of ["invalid", "null", "[]", "{}", '{"schema_version":2.1}', '{"schema_version":"2.1","workload":{"containers":[]}}', '{"schema_version":"2.2","workload":{"containers":[{}]}}']) {
+  for (const text of ["invalid", "null", "[]", "{}", '{"schema_version":2.1}', '{"schema_version":"2.1","workload":{"containers":[]}}', '{"schema_version":"2.2","workload":{"containers":[{}]}}', '{"schema_version":"2.1","workload":{"containers":[null]}}', '{"schema_version":"2.1","workload":{"containers":[{"name":"web","secret_env":{"FLAG":123}}]}}']) {
     assert.throws(() => parseReleaseFile(text));
   }
+});
+
+test("release preview lists each container and missing secret names without values", () => {
+  const artifact = parseReleaseFile(JSON.stringify({ schema_version: "2.1", workload: { containers: [
+    { name: "web", env: { APP_MODE: "ctf" }, secret_env: { FLAG: "flag", INTERNAL_TOKEN: "token" } },
+    { name: "helper", secret_env: { INTERNAL_TOKEN: "token" } },
+  ] } }));
+  assert.deepEqual(releaseRequirements(artifact, [{ name: "flag" }]), {
+    containers: [
+      { name: "web", envNames: ["APP_MODE"], secretBindings: [["FLAG", "flag"], ["INTERNAL_TOKEN", "token"]] },
+      { name: "helper", envNames: [], secretBindings: [["INTERNAL_TOKEN", "token"]] },
+    ],
+    requiredSecrets: ["flag", "token"],
+    missingSecrets: ["token"],
+  });
 });
 
 test("runtime secret validation measures UTF-8 bytes and rejects invalid aliases", () => {
