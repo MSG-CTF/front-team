@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import postcss from "postcss";
 import { getFestivalBrand, getBoothProgress } from "./festivalBrand.js";
 
 test("가로형 로고와 심벌형 로고를 구분하고 알려진 SVG만 사용한다", () => {
@@ -46,6 +48,47 @@ test("여백 보정 SVG는 원본 도형, 글자, 색상을 변경하지 않는�
       /viewBox="0 0 50 50"/,
     );
   }
+});
+
+test("Aegis 홍보와 게임 로고는 전달받은 공식 흑백 SVG의 도형과 색상을 그대로 쓴다", () => {
+  const root = new URL("../../../../", import.meta.url);
+  for (const path of [
+    "public/assets/intro/club-aegis.svg",
+    "public/assets/signatures/club-aegis-fitted.svg",
+  ]) {
+    const svg = readFileSync(new URL(path, root), "utf8").trim();
+    assert.equal(
+      createHash("sha256").update(svg).digest("hex"),
+      "bca7b7bcb9dac931f9eeecc075efd92b7840b93c066194f89c805cc355bffad3",
+      path,
+    );
+    assert.match(svg, /viewBox="0 0 212\.6 212\.6"/);
+  }
+  assert.equal(
+    getFestivalBrand("Aegis").src,
+    "/assets/signatures/club-aegis-fitted.svg?v=bca7b7bc",
+  );
+  assert.equal(
+    getFestivalBrand("MJSEC").src,
+    "/assets/signatures/club-mjsec-fitted.svg",
+  );
+});
+
+test("Aegis 흑백 도장만 밝기 마스크를 사용하고 다른 동아리는 알파 마스크를 유지한다", () => {
+  const css = postcss.parse(
+    readFileSync(
+      new URL("../components/SignatureFestival.module.css", import.meta.url),
+      "utf8",
+    ),
+  );
+  const modes = [];
+  css.walkDecls("mask-mode", (declaration) => {
+    modes.push([declaration.parent.selector, declaration.value]);
+  });
+  assert.deepEqual(modes, [
+    [".stampLogo", "alpha"],
+    ['.clubStamp[data-stamp-brand="aegis"] .stampLogo', "luminance"],
+  ]);
 });
 
 test("서버의 문제별 풀이 여부를 집계하고 전부 해결한 경우만 스탬프를 허용한다", () => {

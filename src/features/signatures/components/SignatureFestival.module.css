@@ -249,6 +249,10 @@
 .clubStamp[data-stamp-brand="codecure"] .stampLogo {
   inset: 18%;
 }
+.clubStamp[data-stamp-brand="aegis"] .stampLogo {
+  /* 흑백 원본의 검은 영역을 비워 중앙 문양이 흰 원으로 뭉개지지 않게 한다 */
+  mask-mode: luminance;
+}
 .boothPosition[data-progress="complete"] .boothSign {
   color: #ffe4a8;
   text-shadow:

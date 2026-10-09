@@ -87,7 +87,7 @@ export default function OrganizerLogos() {
           </figure>
           <figure className="club">
             <img
-              src="/assets/intro/club-aegis.svg"
+              src="/assets/intro/club-aegis.svg?v=bca7b7bc"
               width="100"
               height="100"
               alt="Aegis 로고"

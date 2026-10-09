@@ -83,7 +83,7 @@ export default function BoothLineup() {
         <article>
           <div className="booth-host">
             <img
-              src="/assets/intro/club-aegis.svg"
+              src="/assets/intro/club-aegis.svg?v=bca7b7bc"
               width="64"
               height="48"
               alt=""
