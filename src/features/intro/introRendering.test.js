@@ -193,6 +193,14 @@ test("모션 버튼은 텍스트 대신 아이콘을 쓰고 두 곳 모두 접�
   }
 });
 
+test("Aegis 주최 동아리와 부스 안내는 캐시 버전을 붙인 공식 로고를 함께 쓴다", () => {
+  assert.equal(
+    (main.match(/src="\/assets\/intro\/club-aegis\.svg\?v=bca7b7bc"/g) || []).length,
+    2,
+  );
+  assert.doesNotMatch(main, /src="\/assets\/intro\/club-aegis\.svg"/);
+});
+
 test("SWING 부스와 상세 안내는 변경된 해킹스타 선수권대회 세 종목을 보여 준다", () => {
   const boothSection = main.match(/<section id="booths"[\s\S]*?<\/section>/)?.[0];
   assert.ok(boothSection);

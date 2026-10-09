@@ -14,7 +14,13 @@ const BRANDS = {
     kind: "emblem",
     shape: "round",
   },
-  aegis: { key: "aegis", name: "Aegis", kind: "emblem", shape: "round" },
+  aegis: {
+    key: "aegis",
+    name: "Aegis",
+    kind: "emblem",
+    shape: "round",
+    assetVersion: "bca7b7bc",
+  },
 };
 
 export function getFestivalBrand(name) {
@@ -22,7 +28,11 @@ export function getFestivalBrand(name) {
     typeof name === "string" ? name.toLowerCase().replace(/[\s-]/g, "") : "";
   if (!Object.hasOwn(BRANDS, key)) return null;
   const brand = BRANDS[key];
-  return { ...brand, src: `/assets/signatures/club-${brand.key}-fitted.svg` };
+  const version = brand.assetVersion ? `?v=${brand.assetVersion}` : "";
+  return {
+    ...brand,
+    src: `/assets/signatures/club-${brand.key}-fitted.svg${version}`,
+  };
 }
 
 export function getBoothProgress(club, status = "success") {

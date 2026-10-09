@@ -1,7 +1,7 @@
 import { getFestivalBrand } from "../utils/festivalBrand.js";
 import styles from "./SignatureFestival.module.css";
 
-// 원본 SVG를 알파 마스크로 사용해 도형은 유지하고 잉크색만 입힌다
+// 투명 원본은 알파, 흑백 원본은 밝기 마스크로 문양을 유지하며 잉크색만 입힌다
 export default function BoothAchievement({ name }) {
   const brand = getFestivalBrand(name);
   if (!brand) return null;

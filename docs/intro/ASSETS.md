@@ -10,7 +10,9 @@
 | mascot-dice-*-v2.png | 기존 다람쥐를 참조한 승인 시안 3장, 얼굴과 받침 통일 |
 | preparation-*.png | 준비물과 본인 확인 안내용 시안, 실제 개인정보 없음 |
 | msg-ctf-2025-poster.png | 운영진이 전달한 2025년 원본 포스터, 원본 비율 유지 |
-| club-*.svg | HSPACE 클럽 목록의 원본 로고 |
+| club-*.svg (Aegis 제외) | HSPACE 클럽 목록의 원본 로고 |
+| club-aegis.svg | 운영진이 전달한 aegis-black-white.svg 원본, 도형·색상·비율 유지 |
+| signatures/club-aegis-fitted.svg | 같은 Aegis 원본을 사용, 완료 도장은 밝기 마스크로 문양 유지 |
 | hspace-logo.svg | HSPACE 공식 CI |
 | monster-energy-logo.png | 전달받은 브랜드 가이드 내장 로고 |
 | siya-insight-logo.svg | 전달받은 시야인사이트 가로형 AI의 원본 벡터 변환 |
