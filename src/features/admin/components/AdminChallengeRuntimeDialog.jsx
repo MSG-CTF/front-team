@@ -48,7 +48,7 @@ function RuntimeSettingsEditor({ release, secrets, busy, onSave }) {
   }
 
   return <form onSubmit={submit} className="mt-4 space-y-4 rounded border border-admin-divider/50 bg-white/30 p-3">
-    <div><h4 className="text-base">이 이미지의 주입 설정 바꾸기</h4><p className="text-admin-muted">문제 파일과 이미지는 건드리지 않습니다 저장하면 새 릴리스 버전이 생기고, 선택해서 사용해야 새 인스턴스에 적용됩니다</p></div>
+    <div><h4 className="text-base">이 이미지의 주입 설정 바꾸기</h4><p className="text-admin-muted">문제 파일과 이미지는 건드리지 않습니다 저장하면 새 릴리스 버전이 생기고, 선택해서 사용해야 새 인스턴스에 적용됩니다</p><p className="mt-1 text-admin-muted">이미지 안에 들어 있는 플래그나 파일은 이 설정으로 지워지지 않습니다</p></div>
     <datalist id="stored-runtime-secret-names">{names.map((name) => <option key={name} value={name}/>)}</datalist>
     {draft.map((container, containerIndex) => <section key={container.name} className="space-y-3 border-t border-admin-divider/50 pt-3">
       <h5 className="font-kode-mono">{container.name}</h5>
