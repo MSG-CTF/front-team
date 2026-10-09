@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { activateChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, registerChallengeRelease, registerChallengeRuntimeSecret } from "../../../api/admin.js";
+import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, registerChallengeRelease, registerChallengeRuntimeSecret } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { parseReleaseFile, releaseRequirements, validateRuntimeSecret } from "../utils/adminRuntime.js";
+import { buildDerivedSettings, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret } from "../utils/adminRuntime.js";
 import AdminDialog from "./AdminDialog.jsx";
 import { AdminBadge, AdminStatusMessage } from "./AdminLayout.jsx";
 
@@ -16,6 +16,56 @@ async function loadRuntime(challengeId, config) {
     if (!isSuccess(response.data)) throw new Error(response.data?.message || "실행 설정을 불러오지 못했습니다");
   }
   return { data: { code: "SUCCESS", data: { ...releases.data.data, secrets: secrets.data.data.secrets } } };
+}
+
+function RuntimeSettingsEditor({ release, secrets, busy, onSave }) {
+  const [draft, setDraft] = useState(() => releaseSettingsDraft(release));
+  const [error, setError] = useState("");
+  const names = [...new Set(secrets.map((secret) => secret.name))].sort();
+
+  function changeRow(containerIndex, field, rowIndex, key, value) {
+    setDraft((current) => current.map((container, index) => index !== containerIndex ? container : {
+      ...container, [field]: container[field].map((row, position) => position === rowIndex ? { ...row, [key]: value } : row),
+    }));
+  }
+
+  function addRow(containerIndex, field) {
+    setDraft((current) => current.map((container, index) => index !== containerIndex ? container : {
+      ...container, [field]: [...container[field], { name: field === "secret_env" ? "FLAG" : "", value: field === "secret_env" ? "flag" : "" }],
+    }));
+  }
+
+  function removeRow(containerIndex, field, rowIndex) {
+    setDraft((current) => current.map((container, index) => index !== containerIndex ? container : {
+      ...container, [field]: container[field].filter((_, position) => position !== rowIndex),
+    }));
+  }
+
+  function submit(event) {
+    event.preventDefault();
+    try { setError(""); onSave(buildDerivedSettings(draft, secrets)); }
+    catch (validationError) { setError(validationError.message); }
+  }
+
+  return <form onSubmit={submit} className="mt-4 space-y-4 rounded border border-admin-divider/50 bg-white/30 p-3">
+    <div><h4 className="text-base">이 이미지의 주입 설정 바꾸기</h4><p className="text-admin-muted">문제 파일과 이미지는 건드리지 않습니다 저장하면 새 릴리스 버전이 생기고, 선택해서 사용해야 새 인스턴스에 적용됩니다</p></div>
+    <datalist id="stored-runtime-secret-names">{names.map((name) => <option key={name} value={name}/>)}</datalist>
+    {draft.map((container, containerIndex) => <section key={container.name} className="space-y-3 border-t border-admin-divider/50 pt-3">
+      <h5 className="font-kode-mono">{container.name}</h5>
+      <div><p className="mb-1">일반 환경변수</p>{container.env.map((row, rowIndex) => <div key={rowIndex} className="mb-2 grid gap-2 sm:grid-cols-[1fr_2fr_auto]">
+        <input aria-label={`${container.name} 환경변수 이름 ${rowIndex + 1}`} placeholder="이름" value={row.name} disabled={busy} onChange={(event) => changeRow(containerIndex, "env", rowIndex, "name", event.target.value)} className={INPUT + " font-kode-mono"}/>
+        <input aria-label={`${container.name} 환경변수 값 ${rowIndex + 1}`} placeholder="값" value={row.value} disabled={busy} onChange={(event) => changeRow(containerIndex, "env", rowIndex, "value", event.target.value)} className={INPUT + " font-kode-mono"}/>
+        <button type="button" className={BUTTON} disabled={busy} onClick={() => removeRow(containerIndex, "env", rowIndex)}>삭제</button>
+      </div>)}<button type="button" className={BUTTON} disabled={busy} onClick={() => addRow(containerIndex, "env")}>환경변수 추가</button></div>
+      <div><p className="mb-1">비밀값 연결</p>{container.secret_env.map((row, rowIndex) => <div key={rowIndex} className="mb-2 grid gap-2 sm:grid-cols-[1fr_2fr_auto]">
+        <input aria-label={`${container.name} 비밀값 주입 이름 ${rowIndex + 1}`} placeholder="주입 이름 (예: FLAG)" value={row.name} disabled={busy} onChange={(event) => changeRow(containerIndex, "secret_env", rowIndex, "name", event.target.value)} className={INPUT + " font-kode-mono"}/>
+        <input aria-label={`${container.name} 저장된 비밀값 이름 ${rowIndex + 1}`} list="stored-runtime-secret-names" placeholder="저장된 이름 (예: flag)" value={row.value} disabled={busy} onChange={(event) => changeRow(containerIndex, "secret_env", rowIndex, "value", event.target.value)} className={INPUT + " font-kode-mono"}/>
+        <button type="button" className={BUTTON} disabled={busy} onClick={() => removeRow(containerIndex, "secret_env", rowIndex)}>삭제</button>
+      </div>)}<button type="button" className={BUTTON} disabled={busy} onClick={() => addRow(containerIndex, "secret_env")}>비밀값 연결 추가</button></div>
+    </section>)}
+    {error && <p role="alert" className="text-admin-failed">{error}</p>}
+    <button type="submit" className={BUTTON} disabled={busy}>새 설정 버전 저장</button>
+  </form>;
 }
 
 export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
@@ -64,7 +114,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
     if (validationError) return;
     const secretValue = value;
     setValue("");
-    await mutate(() => registerChallengeRuntimeSecret(challenge.challenge_id, { name: name.trim(), value: secretValue }), "비밀값을 저장했습니다 새 릴리스를 등록하면 이 버전이 연결됩니다");
+    await mutate(() => registerChallengeRuntimeSecret(challenge.challenge_id, { name: name.trim(), value: secretValue }), "비밀값을 저장했습니다 새 설정 버전을 만들면 이 값이 연결됩니다");
   }
 
   async function readFile(event) {
@@ -89,10 +139,15 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
     if (saved) { setUpload(null); setReleaseId(saved.release_id ?? ""); if (fileInput.current) fileInput.current.value = ""; }
   }
 
+  async function saveDerived(sourceId, settings) {
+    const saved = await mutate(() => deriveChallengeRelease(challenge.challenge_id, sourceId, settings), "새 설정 버전을 저장했습니다 내용을 확인한 뒤 사용할 버전을 선택해주세요");
+    if (saved) setReleaseId(saved.release_id ?? "");
+  }
+
   return <AdminDialog title={challenge.title + " · 실행 설정"} onClose={onClose} busy={busy} wide>
     <div className="space-y-5 font-song-myung text-sm">
       <div className="flex items-center justify-between gap-3">
-        <p>문제별 이미지, 환경변수, 비밀값 연결을 확인합니다</p>
+        <p>기존 이미지를 유지하면서 문제별 환경변수와 비밀값 연결을 관리합니다</p>
         <button type="button" className={BUTTON} onClick={runtime.retry} disabled={busy || loading}>설정 새로고침</button>
       </div>
       <AdminStatusMessage status={runtime.status} error={runtime.error} onRetry={runtime.retry}/>
@@ -114,6 +169,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
             {selected.healthcheck && <p className="mt-2">상태 확인 {selected.healthcheck.container}:{selected.healthcheck.port}{selected.healthcheck.path}</p>}
             {selected.source_ref && <p className="mt-2 break-all text-admin-muted">출처 {selected.source_ref}</p>}
             {selected.note && <p className="mt-2 break-all">{selected.note}</p>}
+            {selected.derived_from_release_id && <p className="mt-2 text-admin-muted">기존 릴리스의 이미지를 유지하고 주입 설정만 바꾼 버전입니다</p>}
             <div className="mt-4 space-y-4">{selected.containers.map((container) => <section key={container.name} className="rounded border border-admin-divider/50 bg-white/30 p-3">
               <h4 className="mb-2 font-kode-mono">{container.name}</h4>
               <p className="break-all font-kode-mono text-xs">{container.image_ref}</p>
@@ -127,6 +183,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
               {!selected.is_deployable && <p className="mb-2 text-admin-failed">현재 계약으로 실행할 수 없는 릴리스입니다</p>}
               {confirming ? <div className="space-y-2"><p>새로 생성하는 인스턴스부터 버전 {selected.version}을 사용합니다 기존 인스턴스는 생성 당시 버전을 유지합니다</p><button type="button" className={BUTTON} disabled={busy || loading} onClick={() => mutate(() => activateChallengeRelease(challenge.challenge_id, selected.release_id), "사용할 릴리스를 변경했습니다")}>이 버전 사용 확인</button><button type="button" className={BUTTON + " ml-2"} disabled={busy} onClick={() => setConfirming(false)}>취소</button></div> : <button type="button" className={BUTTON} disabled={busy || !selected.is_deployable || loading || selected.containers.some((container) => container.secret_bindings?.some((binding) => binding.status === "missing"))} onClick={() => setConfirming(true)}>이 버전 사용</button>}
             </div>}
+            {selected.is_deployable && <RuntimeSettingsEditor key={selected.release_id} release={selected} secrets={runtime.data.secrets ?? []} busy={busy} onSave={(settings) => saveDerived(selected.release_id, settings)}/>}
           </>}
         </section>
         <section className="rounded-lg border border-admin-divider p-4">
@@ -142,7 +199,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose }) {
         </section>
         <section className="rounded-lg border border-admin-divider p-4">
           <h3 className="mb-2 text-base">릴리스 등록</h3>
-          <p className="mb-3 text-admin-muted">CI에서 받은 실행 릴리스 JSON을 선택해주세요 문제별 환경변수와 필요한 비밀값을 확인한 뒤 등록합니다</p>
+          <p className="mb-3 text-admin-muted">아직 이미지 릴리스가 없다면 CI에서 받은 JSON을 등록해주세요 이미 등록된 이미지는 위에서 설정 버전을 만들 수 있습니다</p>
           <form onSubmit={saveRelease} className="space-y-3"><label className="block">릴리스 파일<input ref={fileInput} type="file" accept=".json,application/json" disabled={busy} onChange={readFile} className="mt-1 block w-full"/></label>
             {upload && <div className="space-y-2 rounded border border-admin-divider/50 p-3">
               <p>{upload.artifact.challenge_slug} · 발행 {upload.artifact.registry_revision}</p>

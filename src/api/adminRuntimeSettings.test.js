@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import apiClient from "./client.js";
-import { getChallengeReleases, getChallengeRuntimeSecrets, registerChallengeRuntimeSecret, registerChallengeRelease, activateChallengeRelease } from "./admin.js";
+import { getChallengeReleases, getChallengeRuntimeSecrets, registerChallengeRuntimeSecret, registerChallengeRelease, activateChallengeRelease, deriveChallengeRelease } from "./admin.js";
 
 test("admin runtime settings use the selected challenge and preserve cancellation and request fields", async () => {
   const originalAdapter = apiClient.defaults.adapter;
@@ -20,6 +20,8 @@ test("admin runtime settings use the selected challenge and preserve cancellatio
     const artifact = { schema_version: "2.1", workload: { containers: [{ secret_env: { FLAG: "flag" } }] } };
     await registerChallengeRelease("challenge-a", { artifact, note: "확인" });
     await activateChallengeRelease("challenge-a", "release-a");
+    const settings = { containers: [{ name: "web", env: { APP_MODE: "ctf" }, secret_env: { FLAG: "flag" } }] };
+    await deriveChallengeRelease("challenge-a", "release-a", settings);
     assert.equal(requests[0].url, "/admin/challenges/challenge-a/releases");
     assert.equal(requests[1].url, "/admin/challenges/challenge-b/runtime-secrets");
     assert.equal(requests[0].signal, signal);
@@ -27,6 +29,8 @@ test("admin runtime settings use the selected challenge and preserve cancellatio
     assert.deepEqual(JSON.parse(requests[2].data), { name: "flag", value: "test-only" });
     assert.deepEqual(JSON.parse(requests[3].data), { artifact, note: "확인" });
     assert.deepEqual(JSON.parse(requests[4].data), {});
+    assert.equal(requests[5].url, "/admin/challenges/challenge-a/releases/release-a/derive");
+    assert.deepEqual(JSON.parse(requests[5].data), settings);
     for (const request of requests.slice(2)) assert.equal(request.timeout, 15000);
   } finally {
     apiClient.defaults.adapter = originalAdapter;

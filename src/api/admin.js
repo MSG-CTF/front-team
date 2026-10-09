@@ -212,6 +212,10 @@ export function activateChallengeRelease(challengeId, releaseId) {
   return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/activate`, {}, MUTATION_CONFIG);
 }
 
+export function deriveChallengeRelease(challengeId, releaseId, settings) {
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/derive`, settings, MUTATION_CONFIG);
+}
+
 export function getChallengeRuntimeSecrets(challengeId, config) {
   return apiClient.get(`/admin/challenges/${challengeId}/runtime-secrets`, config);
 }
