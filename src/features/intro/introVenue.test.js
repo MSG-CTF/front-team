@@ -84,6 +84,21 @@ test("상단 장소 안내에 도로명 주소와 카카오맵, 네이버지도 
   }
 });
 
+test("장소 안내는 다람쥐 대신 한 번만 표시하고 출구 번호나 주차 정보를 임의로 넣지 않는다", () => {
+  const copy = overview.match(/<div class="overview-copy"[\s\S]*?<\/dl>/)?.[0];
+  const summary = overview.match(/<aside class="venue-summary"[\s\S]*?<\/aside>/)?.[0];
+  assert.ok(copy);
+  assert.ok(summary);
+  assert.match(copy, /일정/);
+  assert.match(copy, /참가 규모/);
+  assert.ok(!copy.includes(eventConfig.venue));
+  assert.equal(overview.split(eventConfig.venueAddress).length - 1, 1);
+  assert.match(summary, /1호선 종각역/);
+  assert.match(summary, /도보 2분/);
+  assert.doesNotMatch(overview, /mascot-dice-|mascot-sequence|\d+번 출구|무료 주차/);
+  assert.equal(eventConfig.venueAccess.sourceUrl, "https://www.kyowonspace.co.kr/Info/InfoRental?gbn=1");
+});
+
 test("현장 안내와 상세 안내의 지도 링크가 같은 장소를 새 탭으로 연다", () => {
   const mapUrl = new URL(eventConfig.venueMapUrl);
   assert.equal(mapUrl.protocol, "https:");
@@ -99,6 +114,22 @@ test("현장 안내와 상세 안내의 지도 링크가 같은 장소를 새 �
       /href="https:\/\/www\.google\.com\/maps\/search\/[^\"]+" target="_blank" rel="noopener noreferrer">지도에서 위치 보기<\/a>/,
     );
   }
+});
+
+test("상단 지도는 확정 주소의 공유 지도를 사용하고 지도 밖에도 주소와 길찾기 링크를 남긴다", () => {
+  const mapUrl = new URL(eventConfig.venueMapEmbedUrl);
+  assert.equal(mapUrl.protocol, "https:");
+  assert.equal(mapUrl.hostname, "www.google.com");
+  assert.equal(mapUrl.pathname, "/maps/embed");
+  assert.equal(mapUrl.searchParams.size, 1);
+  const mapSpec = mapUrl.searchParams.get("pb");
+  assert.ok(mapSpec.includes("0x357ca2e92c46b501:0x43cb14ac16d93154"));
+  const addressToken = mapSpec.match(/!2z([^!]+)/)?.[1];
+  assert.equal(Buffer.from(addressToken, "base64").toString("utf8"), "서울특별시 종로구 우정국로 6");
+  assert.ok(overview.includes(`src="${eventConfig.venueMapEmbedUrl}"`));
+  assert.match(overview, /<\/iframe><\/div><p class="venue-name">교원챌린지홀 2층<\/p>/);
+  assert.match(overview, /<p class="venue-transit">1호선 종각역에서 도보 2분<\/p>/);
+  assert.equal((overview.match(/<iframe\b/g) || []).length, 1);
 });
 
 test("장소 확정과 별개인 현장 운영 정보는 확정된 것처럼 안내하지 않는다", () => {

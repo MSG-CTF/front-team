@@ -119,8 +119,9 @@ test("로그인은 기존 경로를 사용하고 참가 신청은 지정한 폼�
       if (tag.includes('aria-label="참가 신청 새 창"'))
         assert.match(tag, /href="https:\/\/forms.gle\/mZQoNZkUM5mSj7XE6"/);
     }
-    assert.doesNotMatch(html, /<form|<dialog|<iframe|javascript:/);
+    assert.doesNotMatch(html, /<form|<dialog|javascript:/);
   }
+  assert.doesNotMatch(guide, /<iframe/);
 });
 test("화면에서 쓰는 모든 원본 이미지가 저장소 안에 있고 링크된 섹션이 존재한다", () => {
   const root = new URL("../../../", import.meta.url);
@@ -138,14 +139,19 @@ test("화면에서 쓰는 모든 원본 이미지가 저장소 안에 있고 링
       );
     }
 });
-test("다람쥐 세 자세는 눈과 팔다리 털색을 맞춘 이미지를 원래 순서로 표시한다", () => {
-  const images = [...main.matchAll(/src="(\/assets\/intro\/mascot-dice-[^"]+)"/g)]
-    .map((match) => match[1]);
-  assert.deepEqual(images, [
-    "/assets/intro/mascot-dice-ready-v3.png",
-    "/assets/intro/mascot-dice-throw-v3.png",
-    "/assets/intro/mascot-dice-land-v4.png",
-  ]);
+test("홍보페이지의 다람쥐 대신 실제 도로 지도를 하나만 지연 로딩한다", () => {
+  assert.match(main, /<aside class="venue-summary" aria-labelledby="venue-summary-title">/);
+  assert.match(main, /<h3 id="venue-summary-title">오시는 길<\/h3>/);
+  assert.match(main, /1호선 종각역/);
+  assert.match(main, /도보 2분/);
+  assert.doesNotMatch(main, /mascot-dice-|mascot-sequence|venue-route/);
+  const frames = main.match(/<iframe\b[^>]*>/g);
+  assert.equal(frames.length, 1);
+  assert.match(frames[0], /src="https:\/\/www\.google\.com\/maps\/embed\?pb=/);
+  assert.match(frames[0], /title="교원챌린지홀 주변 도로와 행사장 위치 지도"/);
+  assert.match(frames[0], /loading="lazy"/);
+  assert.match(frames[0], /referrerPolicy="strict-origin-when-cross-origin"/i);
+  assert.doesNotMatch(main, /maps\/api\/js|maps\/embed\/v1|YOUR_API_KEY/);
 });
 test("수정한 주사위 이미지는 투명 정사각형 크기와 기존 파일 용량 이내를 유지한다", () => {
   const root = new URL("../../../", import.meta.url);
@@ -181,11 +187,11 @@ test("인트로 CSS는 게임 페이지에 적용되는 전역 선택자를 추�
       match[1],
     );
 });
-test("모션 버튼은 텍스트 대신 아이콘을 쓰고 두 곳 모두 접근성 이름이 있다", () => {
+test("장소 안내에는 불필요한 모션 버튼을 두지 않고 전체 화면 모션 제어만 유지한다", () => {
   const buttons = main.match(
     /<button\b[^>]*class="[^"]*motion-control"[\s\S]*?<\/button>/g,
   );
-  assert.equal(buttons.length, 2);
+  assert.equal(buttons.length, 1);
   for (const button of buttons) {
     assert.match(button, /aria-label="화면 모션 일시정지"/);
     assert.match(button, /motion-pause/);
