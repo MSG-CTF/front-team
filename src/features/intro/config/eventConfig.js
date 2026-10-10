@@ -9,6 +9,11 @@ export const eventConfig = Object.freeze({
   contactEmail: "msgctf@gmail.com",
   venue: `${venueName} 2층`,
   venueAddress,
+  venueAccess: {
+    station: "1호선 종각역",
+    walkLabel: "도보 2분",
+    sourceUrl: "https://www.kyowonspace.co.kr/Info/InfoRental?gbn=1",
+  },
   venueMapLinks: [
     {
       label: "카카오맵",
@@ -22,6 +27,9 @@ export const eventConfig = Object.freeze({
   venueMapUrl:
     "https://www.google.com/maps/search/?api=1&query=" +
     encodeURIComponent(`${venueName} ${venueAddress}`),
+  // 확정 도로명 주소를 검색한 Google 지도 '지도 퍼가기'에서 받은 URL
+  venueMapEmbedUrl:
+    "https://www.google.com/maps/embed?pb=!1m5!3m3!1m2!1s0x357ca2e92c46b501%3A0x43cb14ac16d93154!2z7ISc7Jq47Yq567OE7IucIOyiheuhnOq1rCDsmrDsoJXqta3roZwgNg!5e0!3m2!1sko!2skr!4v1791647822961!5m2!1sko!2skr",
   participationFee: "무료",
   prizes: {
     confirmed: true,
