@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import styles from "./BoardScreen.module.css";
 
 const OFFSET_OPTIONS = [-3, -2, -1, 1, 2, 3];
@@ -26,6 +26,27 @@ export default function ChanceCardSummary({
     setDestinationIndex(availableDestinations[0]?.cellIndex ?? "");
   }, [availableDestinations]);
 
+  // 열린 문제 버튼이 찬스카드 바로 아래에 붙도록 카드 아래 끝(무대 높이 %)을 CSS 변수로 알린다
+  const panelRef = useRef(null);
+  const hasCards = cards.length > 0;
+  useLayoutEffect(() => {
+    const stage = panelRef.current?.parentElement;
+    if (!stage) return undefined;
+    const panel = panelRef.current;
+    const update = () => {
+      const bottom = ((panel.offsetTop + panel.offsetHeight) / stage.clientHeight) * 100;
+      stage.style.setProperty("--open-toggle-top", `${(bottom + 0.65).toFixed(2)}%`);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(panel);
+    observer.observe(stage);
+    return () => {
+      observer.disconnect();
+      stage.style.removeProperty("--open-toggle-top");
+    };
+  }, [hasCards]);
+
   if (cards.length === 0) return null;
 
   const useCard = (card) => {
@@ -43,10 +64,10 @@ export default function ChanceCardSummary({
   };
 
   return (
-    <aside className={`${styles.chancePanel} absolute left-[2.45%] top-[22.4%] z-20 w-[17.29%] max-h-[45%] overflow-auto rounded-[0.55cqw] border border-[#946231] bg-[#2a180d]/90 px-[0.7cqw] py-[0.5cqw] font-inria-serif text-[#f5dca9] shadow-lg`}>
-      <h2 className="m-0 text-[0.72cqw] font-bold">보유 찬스카드</h2>
+    <aside ref={panelRef} className={`${styles.plateFrame} ${styles.chancePanel} absolute left-[2.45%] top-[17.9%] z-20 w-[18.4%] max-h-[25%] overflow-auto px-[0.2cqw] py-[0.1cqw] font-inria-serif text-[#e7d2ad]`}>
+      <h2 className="m-0 mb-[0.2cqw] text-[0.8cqw] font-bold font-song-myung">보유 찬스카드</h2>
       {awaitingDiscard && (
-        <p className="my-[0.25cqw] text-[0.52cqw] text-[#ffd36b]">
+        <p className="my-[0.25cqw] text-[0.58cqw] text-[#ffd36b]">
           카드 한 장을 먼저 폐기해주세요.
         </p>
       )}
@@ -63,7 +84,7 @@ export default function ChanceCardSummary({
           return (
             <li
               key={card.cardId}
-              className="rounded-[0.25cqw] border border-[#6f4929] bg-[#1f120a]/65 p-[0.28cqw] text-[0.56cqw]"
+              className="rounded-[0.25cqw] border border-[#6f4929] bg-[#1f120a]/65 p-[0.28cqw] text-[0.62cqw]"
             >
               <div className="flex items-center justify-between gap-[0.35cqw]">
                 <span className="truncate font-bold">

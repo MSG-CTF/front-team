@@ -119,7 +119,7 @@ export default function BoardNav() {
       <button
         type="button"
         onClick={() => navigate(ROUTES.signatures)}
-        className={`${styles.plaqueButton} absolute bottom-[2%] right-[3.65%]`}
+        className={`${styles.plateFrame} ${styles.plaqueButton} absolute bottom-[2%] right-[3.65%]`}
       >
         <span>동아리 부스 둘러보기</span>
         <span aria-hidden="true">→</span>
