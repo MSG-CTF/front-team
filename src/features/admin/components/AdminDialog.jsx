@@ -1,12 +1,16 @@
 import { useEffect, useRef } from "react";
 import PaymentIcon from "./PaymentIcon.jsx";
 import styles from "./AdminPayments.module.css";
+import workspace from "./AdminWorkspace.module.css";
 
 export default function AdminDialog({
   title,
+  subtitle,
+  headerMeta,
   onClose,
   busy = false,
   variant,
+  wide = false,
   children,
 }) {
   const panel = useRef(null);
@@ -28,7 +32,7 @@ export default function AdminDialog({
       if (event.key !== "Tab") return;
       const controls = Array.from(
         panel.current.querySelectorAll(
-          "button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex='0']",
+          "button:not(:disabled):not([tabindex='-1']), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], summary, [tabindex='0']",
         ),
       ).filter((element) => element.getClientRects().length > 0);
       const first = controls[0];
@@ -62,6 +66,7 @@ export default function AdminDialog({
       className={
         variant === "payment"
           ? styles.overlay
+          : variant === "workspace" ? workspace.overlay
           : "fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
       }
     >
@@ -74,23 +79,29 @@ export default function AdminDialog({
         className={
           variant === "payment"
             ? styles.dialog
-            : "max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-admin-divider bg-[#f3e6cf] p-5 text-admin-ink shadow-xl"
+            : variant === "workspace" ? workspace.dialog
+            : `max-h-[90vh] w-full ${wide ? "max-w-4xl" : "max-w-lg"} overflow-y-auto rounded-xl border border-admin-divider bg-[#f3e6cf] p-5 text-admin-ink shadow-xl`
         }
       >
         <header
           className={
             variant === "payment"
               ? styles.dialogHeader
+              : variant === "workspace" ? workspace.dialogHeader
               : "mb-3 flex items-center justify-between gap-3"
           }
         >
-          <h2
+          {variant === "workspace" ? <div className={workspace.dialogHeading}>
+            <h2>{title}</h2>
+            {subtitle && <p className={workspace.dialogSubtitle}>{subtitle}</p>}
+          </div> : <h2
             className={
-              variant === "payment" ? undefined : "font-im-fell text-xl"
+              variant === "payment" || variant === "workspace" ? undefined : "font-im-fell text-xl"
             }
           >
             {title}
-          </h2>
+          </h2>}
+          {variant === "workspace" && headerMeta}
           <button
             type="button"
             disabled={busy}
@@ -99,13 +110,16 @@ export default function AdminDialog({
             className={
               variant === "payment"
                 ? styles.iconButton
+                : variant === "workspace" ? workspace.closeButton
                 : "rounded border border-admin-divider px-3 py-1 text-sm disabled:opacity-50"
             }
           >
-            {variant === "payment" ? <PaymentIcon name="close" /> : "닫기"}
+            {variant === "payment" ? <PaymentIcon name="close" /> : variant === "workspace"
+              ? <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
+              : "닫기"}
           </button>
         </header>
-        {children}
+        {variant === "workspace" ? <div className={workspace.dialogBody}>{children}</div> : children}
       </section>
     </div>
   );

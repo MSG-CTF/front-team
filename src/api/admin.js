@@ -1,10 +1,79 @@
 import apiClient from "./client.js";
 
 const MUTATION_CONFIG = { timeout: 15000, timeoutErrorMessage: "요청 결과를 확인하지 못했습니다. 최신 상태를 조회한 뒤 확인하세요" };
+const PUBLICATION_CONFIG = { timeout: 120000, timeoutErrorMessage: "발행본 처리 결과를 확인하지 못했습니다 같은 요청으로 다시 시도해주세요" };
 
-// board.js createBoardIdempotencyKey와 동일한 패턴. 관리자 API 중에는 마일리지
-// 지급/회수만 Idempotency-Key 헤더가 필수(README 8절) - 재시도 시 호출부에서
-// 같은 키를 그대로 넘겨야 중복 지급이 막힌다.
+export function getPublishedChallenges(page = 1, config) {
+  return apiClient.get("/admin/published_challenges", { ...PUBLICATION_CONFIG, ...config, params: { page } });
+}
+
+export function previewPublishedChallenge(artifactId, config) {
+  return apiClient.post("/admin/published_challenges/preview", { artifact_id: artifactId }, { ...PUBLICATION_CONFIG, ...config });
+}
+
+export function importPublishedChallenge(body, idempotencyKey) {
+  return apiClient.post("/admin/published_challenges/import", body, { ...idKey("publication", idempotencyKey), ...PUBLICATION_CONFIG });
+}
+
+export function getAdminDeploymentTests(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/deployment_tests`, config);
+}
+
+export function startAdminDeploymentTest(challengeId, releaseId, requestId) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/releases/${encodeURIComponent(releaseId)}/deployment_tests`,
+    { request_id: requestId }, MUTATION_CONFIG);
+}
+
+export function stopAdminDeploymentTest(challengeId, testId) {
+  return apiClient.delete(`/admin/challenges/${encodeURIComponent(challengeId)}/deployment_tests/${encodeURIComponent(testId)}`, MUTATION_CONFIG);
+}
+
+export function getAdminChallenge(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}`, config);
+}
+
+export function getAdminChallengeSolves(challengeId, { startAt, endAt, hour, sort = "latest", page = 1, size = 20 } = {}, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/solves`, {
+    ...config, params: { start_at: startAt, end_at: endAt, hour, sort, page, size },
+  });
+}
+
+export function updateAdminChallenge(challengeId, changes) {
+  return apiClient.patch(`/admin/challenges/${encodeURIComponent(challengeId)}`, changes, MUTATION_CONFIG);
+}
+
+export function getAdminChallengeFlag(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/flag`, config);
+}
+
+export function revealAdminChallengeFlag(challengeId, config) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/flag/reveal`, {}, { ...MUTATION_CONFIG, ...config });
+}
+
+export function getAdminChallengeFiles(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/files`, config);
+}
+
+export function getAdminReleaseFiles(challengeId, releaseId, config) {
+  return getAdminChallengeFiles(challengeId, { ...config, params: { ...config?.params, release_id: releaseId } });
+}
+
+export function configureChallengeReleaseFiles(challengeId, releaseId, body, idempotencyKey) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/releases/${encodeURIComponent(releaseId)}/files`, body,
+    idKey("release-files", idempotencyKey));
+}
+
+export function getAdminChallengeRepositoryFiles(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/repository-files`, config);
+}
+
+export function downloadAdminChallengeFile(challengeId, fileId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/files/${encodeURIComponent(fileId)}/download`, {
+    ...config, responseType: "blob", timeout: 60000,
+  });
+}
+
+// 마일리지 지급·회수와 배포 파일 저장은 재시도할 때 같은 키를 넘긴다.
 export function createAdminIdempotencyKey(prefix) {
   const uuid =
     globalThis.crypto?.randomUUID?.() ??
@@ -201,18 +270,47 @@ export function setChallengeVisibility(challengeId, { isPublished, reason }) {
 }
 
 export function registerChallengeRelease(challengeId, { artifact, note }) {
-  // [백엔드: 시작 전] 공급망 artifact-v2.json의 artifact 블록을 그대로 전달
-  return apiClient.post(`/admin/challenges/${challengeId}/releases`, { artifact, note });
+  return apiClient.post(`/admin/challenges/${challengeId}/releases`, { artifact, note }, MUTATION_CONFIG);
 }
 
-export function getChallengeReleases(challengeId) {
-  // [백엔드: 시작 전] 버전 내림차순 이력 + current_release_id
-  return apiClient.get(`/admin/challenges/${challengeId}/releases`);
+export function getChallengeReleases(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${challengeId}/releases`, config);
 }
 
 export function activateChallengeRelease(challengeId, releaseId) {
-  // [백엔드: 시작 전] 옛 릴리스 지정 시 롤백. Body 없음. 멱등.
-  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/activate`);
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/activate`, {}, MUTATION_CONFIG);
+}
+
+export function deriveChallengeRelease(challengeId, releaseId, settings) {
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/derive`, settings, MUTATION_CONFIG);
+}
+
+export function previewChallengeEnvironmentFile(challengeId, releaseId, body) {
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/environment_files/preview`, body, MUTATION_CONFIG);
+}
+
+export function importChallengeEnvironmentFile(challengeId, releaseId, body) {
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/environment_files/import`, body, MUTATION_CONFIG);
+}
+
+export function getChallengeRepositoryEnvironment(challengeId, releaseId, container) {
+  return apiClient.get(`/admin/challenges/${challengeId}/releases/${releaseId}/repository_environment`, { params: { container } });
+}
+
+export function previewChallengeRepositoryEnvironment(challengeId, releaseId, body) {
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/repository_environment/preview`, body, MUTATION_CONFIG);
+}
+
+export function importChallengeRepositoryEnvironment(challengeId, releaseId, body) {
+  return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/repository_environment/import`, body, MUTATION_CONFIG);
+}
+
+export function getChallengeRuntimeSecrets(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${challengeId}/runtime-secrets`, config);
+}
+
+export function registerChallengeRuntimeSecret(challengeId, { name, value }) {
+  return apiClient.post(`/admin/challenges/${challengeId}/runtime-secrets`, { name, value }, MUTATION_CONFIG);
 }
 
 // 시그니처 문제는 JEOPARDY 등록 및 릴리스와 별도 계약이다

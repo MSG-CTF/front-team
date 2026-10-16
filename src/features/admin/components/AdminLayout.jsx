@@ -75,14 +75,14 @@ function formatKst(date) {
   return `${get("year")}-${get("month")}-${get("day")} ${get("hour")}:${get("minute")} (KST)`;
 }
 
-export default function AdminLayout({ title, actions, children }) {
+export default function AdminLayout({ title, actions, children, className = "" }) {
   const nickname = useAdminNickname();
   const now = useKstClock();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div
-      className={`min-h-screen bg-cover bg-center bg-fixed text-admin-ink ${layout.layout}`}
+      className={`min-h-screen bg-cover bg-center bg-fixed text-admin-ink ${layout.layout} ${className}`}
       style={{ backgroundImage: `url(${BACKGROUND_SRC})` }}
     >
       <div className="mx-auto flex min-h-screen max-w-[1720px] flex-col gap-6 px-4 py-8 md:flex-row">
