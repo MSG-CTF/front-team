@@ -139,15 +139,12 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: read
-      id-token: write
-    uses: MSG-CTF/jm_devsecops/.github/workflows/reusable-vm-deploy-dev.yml@148cb43ebe4f7cdfb5811e9faff6a6c0ca47941c
+    uses: MSG-CTF/jm_devsecops/.github/workflows/reusable-vm-ssh-deploy-dev.yml@40d6a567b35955471d2ce2b556340451a6b8e647
     with:
-      component: frontend
       commit_sha: ${{ github.sha }}
-      pipeline_ref: 148cb43ebe4f7cdfb5811e9faff6a6c0ca47941c
-      gcp_project_id: msg-broker
-      workload_identity_provider: projects/309055091666/locations/global/workloadIdentityPools/github-vm-cd-dev/providers/github-vm-cd-provider
-      deployer_service_account: github-vm-deployer-dev@msg-broker.iam.gserviceaccount.com
-      vm_zone: asia-northeast3-a
-      vm_name: msg-dev-vm
-      public_domain: msgctf.kr
+      pipeline_ref: 40d6a567b35955471d2ce2b556340451a6b8e647
+      ssh_host: msgctf.kr
+      ssh_user: msgfrontenddeploy
+    secrets:
+      vm_ssh_private_key: ${{ secrets.DEV_VM_SSH_PRIVATE_KEY }}
+      vm_ssh_known_hosts: ${{ secrets.DEV_VM_SSH_KNOWN_HOSTS }}
