@@ -58,6 +58,7 @@ test("리소스 요약은 실제 노드 값만 평균내고 미제공 사용률�
 const challenge = { challengeSlug: "qa-challenge", title: "QA", category: "WEB", difficulty: "EASY", flag: " qa-placeholder ", initialScore: "1000", minimumScore: "600", decay: "70" };
 test("문제 등록의 식별자, 필수 필드와 점수 관계를 검증한다", () => {
   assert.equal(validateAdminChallenge(challenge), "");
+  assert.equal(validateAdminChallenge({ ...challenge, difficulty: "UNASSIGNED", minimumScore: "100" }), "");
   for (const patch of [
     { challengeSlug: "QA-challenge" }, { challengeSlug: "a".repeat(101) }, { challengeSlug: "qa--challenge" }, { title: " " },
     { category: "UNKNOWN" }, { difficulty: "UNKNOWN" }, { flag: "" },

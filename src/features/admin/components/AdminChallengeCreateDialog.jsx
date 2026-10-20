@@ -8,11 +8,11 @@ const INITIAL = {
   challengeSlug: "",
   title: "",
   category: "WEB",
-  difficulty: "EASY",
+  difficulty: "UNASSIGNED",
   description: "",
   flag: "",
   initialScore: "1000",
-  minimumScore: "600",
+  minimumScore: "100",
   decay: "70",
 };
 const INPUT = "rounded border border-admin-divider bg-white/60 px-3 py-2";
@@ -84,6 +84,7 @@ export default function AdminChallengeCreateDialog({ onClose, onCreated }) {
             <label className="flex flex-col gap-1">
               난이도
               <select value={form.difficulty} onChange={(event) => update("difficulty", event.target.value)} className={INPUT}>
+                <option value="UNASSIGNED">미정</option>
                 {["EASY", "MEDIUM", "HARD"].map((difficulty) => <option key={difficulty}>{difficulty}</option>)}
               </select>
             </label>

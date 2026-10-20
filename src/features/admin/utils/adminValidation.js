@@ -75,7 +75,7 @@ export const ADMIN_CHALLENGE_CATEGORIES = ["WEB", "PWN", "REV", "CRYPTO", "FOREN
 export function validateAdminChallenge(form) {
   if (form.challengeSlug.trim().length > 100 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(form.challengeSlug.trim())) return "식별자는 소문자, 숫자, 하이픈으로 100자 이내로 입력하세요";
   if (!form.title.trim() || Array.from(form.title.trim()).length > 200) return "제목은 1~200자로 입력하세요";
-  if (!ADMIN_CHALLENGE_CATEGORIES.includes(form.category) || !["EASY", "MEDIUM", "HARD"].includes(form.difficulty)) return "분야와 난이도를 선택하세요";
+  if (!ADMIN_CHALLENGE_CATEGORIES.includes(form.category) || !["UNASSIGNED", "EASY", "MEDIUM", "HARD"].includes(form.difficulty)) return "분야와 난이도를 선택하세요";
   if (!form.flag) return "정답 플래그를 입력하세요";
   const initial = Number(form.initialScore);
   const minimum = Number(form.minimumScore);

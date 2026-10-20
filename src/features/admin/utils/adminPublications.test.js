@@ -20,6 +20,8 @@ test("a failed import keeps its request key; a new preview or difficulty uses an
   assert.equal(publicationAttempt(first, { ...body }, key), first);
   assert.equal(publicationAttempt(first, { ...body, difficulty: "HARD" }, key).key, "key-2");
   assert.equal(publicationAttempt(first, { ...body, preview_token: "new-version" }, key).key, "key-3");
+  assert.equal(publicationAttempt(first, { ...body, update_metadata: false }, key), first);
+  assert.equal(publicationAttempt(first, { ...body, update_metadata: true }, key).key, "key-4");
 });
 
 test("missing artifact is distinguished from a published empty attachment", () => {

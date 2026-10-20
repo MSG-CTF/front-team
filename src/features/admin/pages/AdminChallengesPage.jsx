@@ -142,7 +142,7 @@ export default function AdminChallengesPage() {
     {challenges.status === "success" && <div className={styles.tableWrap}>
       <table className={styles.table} aria-label="문제 목록"><thead><tr>{["문제", "배점 · 풀이", "인스턴스", "공개 상태", "배포 상태", "관리"].map((text) => <th key={text}>{text}</th>)}</tr></thead>
         <tbody>{(challenges.data?.challenges ?? []).map((challenge) => <tr key={challenge.challenge_id} className="border-t border-admin-divider/40">
-          <td><span className={styles.title}>{challenge.title}</span><span className={styles.secondary}>{challenge.category} · {challenge.difficulty}</span></td>
+          <td><span className={styles.title}>{challenge.title}</span><span className={styles.secondary}>{challenge.category} · {challenge.difficulty === "UNASSIGNED" ? "난이도 미정" : challenge.difficulty}</span></td>
           <td>{challenge.score}점<button type="button" className={styles.solveCountLink} disabled={busy}
             aria-label={`${challenge.title} 풀이 기록 ${challenge.solved_team_count}팀`}
             onClick={() => setEditing({ challenge, section: "solves" })}>{challenge.solved_team_count}팀 해결</button></td>

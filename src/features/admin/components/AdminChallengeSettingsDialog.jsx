@@ -147,7 +147,7 @@ export default function AdminChallengeSettingsDialog({ challenge, onClose, onSav
           <label>분야<select value={draft.category} className={styles.select} disabled={busy} onChange={(event) => change("category", event.target.value)}>
             {ADMIN_CHALLENGE_CATEGORIES.map((value) => <option key={value}>{value}</option>)}</select></label>
           <label>난이도<select value={draft.difficulty} className={styles.select} disabled={busy} onChange={(event) => change("difficulty", event.target.value)}>
-            <option value="EASY">쉬움</option><option value="MEDIUM">보통</option><option value="HARD">어려움</option></select></label>
+            <option value="UNASSIGNED">미정</option><option value="EASY">쉬움</option><option value="MEDIUM">보통</option><option value="HARD">어려움</option></select></label>
         </div>
         <div className={styles.basicStatement}>
           <label htmlFor="challenge-statement">문제 지문<textarea id="challenge-statement" aria-describedby="challenge-statement-help" value={draft.description} rows={8} onChange={(event) => change("description", event.target.value)} className={styles.statementInput} disabled={busy}/></label>
@@ -156,6 +156,7 @@ export default function AdminChallengeSettingsDialog({ challenge, onClose, onSav
         <aside className={styles.basicGrading}>
           {active && <FlagPanel challengeId={challenge.challenge_id} disabled={busy} onBusyChange={setRevealing}/>}
           <dl className={styles.scoreSummary}><dt>현재 배점</dt><dd>{Number(saved.current_score).toLocaleString("ko-KR")}<span>점</span></dd></dl>
+          <p className={styles.helpText}>최대 {saved.initial_score}점 · 최저 {saved.minimum_score}점<br/>풀이 팀 수에 따라 점수가 줄어듭니다</p>
         </aside>
       </div>
       <div className={styles.basicFooter}>

@@ -12,7 +12,8 @@ export function mergePublications(current, incoming) {
 }
 
 export function publicationAttempt(previous, body, newKey) {
-  if (previous?.body.preview_token === body.preview_token && previous.body.difficulty === body.difficulty) return previous;
+  if (previous?.body.preview_token === body.preview_token && previous.body.difficulty === body.difficulty
+    && Boolean(previous.body.update_metadata) === Boolean(body.update_metadata)) return previous;
   return { body, key: newKey() };
 }
 
