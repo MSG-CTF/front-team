@@ -300,13 +300,15 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
         {selected?.is_deployable ? <>
           <div className={styles.fileNotice} role="status">
             <strong>버전 {selected.version} 환경변수 · {selected.is_current ? "새 인스턴스에 적용 중" : "저장됨 · 아직 적용 전"}</strong>
+            <p>일반 {selected.containers.reduce((sum, item) => sum + Object.keys(item.env ?? {}).length, 0)}개 · 비밀값 연결 {selected.containers.reduce((sum, item) => sum + (item.secret_bindings ?? []).length, 0)}개 · 컨테이너 {selected.containers.length}개</p>
             <p className={styles.helpText}>{selected.is_current
-              ? "아래 값과 비밀값 연결이 새 인스턴스에 들어갑니다 실행 중인 인스턴스는 생성 당시 설정을 유지합니다"
+              ? "컨테이너를 누르면 주입할 값을 볼 수 있습니다 실행 중인 인스턴스는 생성 당시 설정을 유지합니다"
               : "이 버전을 적용하려면 위의 ‘이 버전 사용’을 눌러주세요"}</p>
           </div>
-          {selected.containers.map((container) => <section key={container.name} className={styles.containerCard}>
-            <div className={styles.containerHeader}><h3>{container.name}</h3>
-              <span>일반 {Object.keys(container.env ?? {}).length}개 · 비밀값 {(container.secret_bindings ?? []).length}개</span></div>
+          {selected.containers.map((container) => <section key={container.name} className={`${styles.containerCard} ${styles.environmentCard}`}>
+            <details className={styles.containerValues}>
+              <summary className={styles.environmentDisclosure}><strong>{container.name}</strong>
+                <span>일반 {Object.keys(container.env ?? {}).length}개 · 비밀값 {(container.secret_bindings ?? []).length}개</span></summary>
             {Object.keys(container.env ?? {}).length + (container.secret_bindings ?? []).length === 0
               ? <p className={styles.empty}>이 버전에 추가로 주입하는 값이 없습니다</p>
               : <div className={styles.tableWrap}><table className={styles.settingsTable} aria-label={container.name + " 적용 환경변수"}>
@@ -320,6 +322,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
                     <td>비밀값</td></tr>)}
                 </tbody>
               </table></div>}
+            </details>
           </section>)}
           <div className="mt-5">
             <button type="button" className={BUTTON} disabled={busy} onClick={() => setEnvironmentMethod(environmentMethod ? null : "manual")}>{environmentMethod ? "수정 닫기" : "새 설정 버전 만들기"}</button>

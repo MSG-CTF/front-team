@@ -228,6 +228,12 @@
 .releaseFilesForm .panelIntro, .releaseFilesForm .fileNotice { margin: 0; }
 .releaseFilesSummary { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 18px; margin-bottom: 24px; border: 1px solid var(--admin-line); border-radius: 9px; }
 .containerValues summary { padding: 12px 16px; cursor: pointer; font-size: 13px; color: var(--admin-subtle); }
+.environmentCard { margin-bottom: 8px; }
+.containerValues .environmentDisclosure { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; background: var(--admin-tint); color: var(--admin-text); }
+.environmentDisclosure::before { content: "▸"; color: var(--admin-subtle); }
+.containerValues[open] .environmentDisclosure::before { content: "▾"; }
+.environmentDisclosure strong { font-size: 14px; }
+.environmentDisclosure span { margin-left: auto; color: var(--admin-subtle); }
 .fileChoices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; min-width: 0; }
 .fileChoices legend { margin-bottom: 12px; font-weight: 600; }
 .fileChoices .fileChoice, .fileChoices .fileChoiceSelected { display: flex; align-items: start; gap: 10px; min-width: 0; padding: 16px 14px; border: 1px solid var(--admin-line); border-radius: 3px; background: var(--admin-paper); cursor: pointer; }
