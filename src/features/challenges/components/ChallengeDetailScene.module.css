@@ -219,6 +219,15 @@
 .descriptionBody p:last-child {
   margin-bottom: 0;
 }
+.descriptionBody a {
+  color: #6e4827;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.descriptionBody a:hover,
+.descriptionBody a:focus-visible {
+  color: #3e2514;
+}
 .emptyText {
   color: var(--brown-soft);
 }

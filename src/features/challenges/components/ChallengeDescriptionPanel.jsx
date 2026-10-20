@@ -1,6 +1,16 @@
 import styles from "./ChallengeDetailScene.module.css";
 import ChallengeAttachment from "./ChallengeAttachment.jsx";
 
+function renderDescription(paragraph) {
+  return paragraph.split(/(https:\/\/[^\s<>"']+)/g).map((part, index) =>
+    part.startsWith("https://") ? (
+      <a key={index} href={part} target="_blank" rel="noopener noreferrer">
+        {part}
+      </a>
+    ) : part,
+  );
+}
+
 export default function ChallengeDescriptionPanel({
   description,
   attachments = [],
@@ -23,7 +33,7 @@ export default function ChallengeDescriptionPanel({
         {description ? (
           description
             .split(/\n\s*\n/)
-            .map((paragraph, index) => <p key={index}>{paragraph}</p>)
+            .map((paragraph, index) => <p key={index}>{renderDescription(paragraph)}</p>)
         ) : (
           <p className={styles.emptyText}>등록된 설명이 없습니다</p>
         )}
