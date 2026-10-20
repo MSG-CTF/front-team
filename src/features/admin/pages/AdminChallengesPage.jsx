@@ -123,7 +123,7 @@ export default function AdminChallengesPage() {
     <AdminTabs idPrefix="challenge-management" label="문제 관리 메뉴" value={tab} onChange={setTab} disabled={busy}
       items={[{ id: "challenges", label: "문제 목록" }, { id: "instances", label: "인스턴스" }]}/>
     <section role="tabpanel" id="challenge-management-panel-challenges" aria-labelledby="challenge-management-tab-challenges" hidden={tab !== "challenges"} className={styles.panel}>
-    <p className={styles.panelIntro}>문제를 선택해 기본 정보와 배포 버전을 관리합니다</p>
+    <p className={styles.panelIntro}>출제자가 GitHub에 반영하면 CI 발행본을 백엔드가 수집합니다 문제의 배포 설정에서 새 버전을 확인하고 적용할 수 있습니다</p>
     <div className={styles.toolbar}>
       <label>분야 <select value={category} className={SELECT} onChange={(event) => { setCategory(event.target.value); setPage(1); }}>
         <option value="">전체</option>{ADMIN_CHALLENGE_CATEGORIES.map((value) => <option key={value}>{value}</option>)}
@@ -134,7 +134,7 @@ export default function AdminChallengesPage() {
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={challenges.retry} disabled={busy || challenges.status === "loading"} className={BUTTON}>새로고침</button>
         <button type="button" onClick={() => setCreating(true)} disabled={busy} className={BUTTON}>직접 등록</button>
-        <button type="button" onClick={() => setImporting(true)} disabled={busy} className={styles.primary}>GitHub에서 가져오기</button>
+        <button type="button" onClick={() => setImporting(true)} disabled={busy} className={styles.primary}>새 문제 첫 등록</button>
       </div>
     </div>
     <AdminStatusMessage status={challenges.status} error={challenges.error} onRetry={challenges.retry}/>

@@ -1,12 +1,22 @@
 export function challengeDetailsDraft(challenge) {
   return { title: challenge.title ?? "", description: challenge.description ?? "",
-    category: challenge.category, difficulty: challenge.difficulty };
+    category: challenge.category, difficulty: challenge.difficulty,
+    initial_score: String(challenge.initial_score ?? 1000),
+    minimum_score: String(challenge.minimum_score ?? 100) };
+}
+
+export function challengeScoresValid(draft) {
+  const values = [draft?.initial_score, draft?.minimum_score];
+  if (!values.every((value) => /^\d+$/.test(value ?? ""))) return false;
+  const [maximum, minimum] = values.map(Number);
+  return maximum <= 9_999_999_999 && minimum <= maximum;
 }
 
 export function challengeDetailsChanges(challenge, draft) {
   const original = challengeDetailsDraft(challenge);
   const next = { ...draft, title: draft.title.trim() };
-  return Object.fromEntries(Object.keys(original).filter((key) => original[key] !== next[key]).map((key) => [key, next[key]]));
+  return Object.fromEntries(Object.keys(original).filter((key) => original[key] !== next[key]).map((key) =>
+    [key, ["initial_score", "minimum_score"].includes(key) ? Number(next[key]) : next[key]]));
 }
 
 export function formatFileSize(bytes) {

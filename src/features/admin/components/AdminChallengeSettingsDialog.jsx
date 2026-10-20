@@ -3,7 +3,7 @@ import { getAdminChallenge, updateAdminChallenge, getAdminChallengeFlag, revealA
 import { isSuccess } from "../../../utils/response.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
-import { challengeDetailsDraft, challengeDetailsChanges } from "../utils/adminChallengeSettings.js";
+import { challengeDetailsDraft, challengeDetailsChanges, challengeScoresValid } from "../utils/adminChallengeSettings.js";
 import AdminDialog from "./AdminDialog.jsx";
 import { AdminBadge, AdminStatusMessage } from "./AdminLayout.jsx";
 import styles from "./AdminWorkspace.module.css";
@@ -119,11 +119,12 @@ export default function AdminChallengeSettingsDialog({ challenge, onClose, onSav
   const changes = saved && draft ? challengeDetailsChanges(saved, draft) : {};
   const dirty = Object.keys(changes).length > 0;
   const titleValid = Boolean(draft?.title.trim()) && [...(draft?.title.trim() ?? "")].length <= 200;
+  const scoresValid = challengeScoresValid(draft);
   function change(field, value) { setDraft((current) => ({ ...current, [field]: value })); setNotice(""); }
 
   async function save(event) {
     event.preventDefault();
-    if (pending.current || busy || !dirty || !titleValid) return;
+    if (pending.current || busy || !dirty || !titleValid || !scoresValid) return;
     pending.current = true; setMutating(true); setNotice(""); setError("");
     try {
       const response = await updateAdminChallenge(challenge.challenge_id, changes);
@@ -156,12 +157,19 @@ export default function AdminChallengeSettingsDialog({ challenge, onClose, onSav
         <aside className={styles.basicGrading}>
           {active && <FlagPanel challengeId={challenge.challenge_id} disabled={busy} onBusyChange={setRevealing}/>}
           <dl className={styles.scoreSummary}><dt>현재 배점</dt><dd>{Number(saved.current_score).toLocaleString("ko-KR")}<span>점</span></dd></dl>
-          <p className={styles.helpText}>최대 {saved.initial_score}점 · 최저 {saved.minimum_score}점<br/>풀이 팀 수에 따라 점수가 줄어듭니다</p>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <label>최대 점수<input type="number" min="0" max="9999999999" step="1" inputMode="numeric" className={styles.input}
+              value={draft.initial_score} disabled={busy} onChange={(event) => change("initial_score", event.target.value)}/></label>
+            <label>최저 점수<input type="number" min="0" max="9999999999" step="1" inputMode="numeric" className={styles.input}
+              value={draft.minimum_score} disabled={busy} onChange={(event) => change("minimum_score", event.target.value)}/></label>
+          </div>
+          {!scoresValid && <p role="alert" className={styles.errorNotice}>최대·최저 점수를 정수로 입력하고 최저 점수가 최대 점수를 넘지 않게 해주세요</p>}
+          <p className={styles.helpText}>풀이 팀 수에 따라 현재 배점이 바뀝니다 점수를 저장하면 기존 풀이와 팀 점수도 다시 계산됩니다</p>
         </aside>
       </div>
       <div className={styles.basicFooter}>
         <p className={dirty ? styles.unsaved : styles.helpText}>{dirty ? "저장하지 않은 변경 사항이 있습니다" : "모든 배포 버전에 공통으로 적용되는 정보입니다"}</p>
-        <button type="submit" className={styles.primary} disabled={busy || !dirty || !titleValid}>{mutating ? "저장 중…" : "변경 사항 저장"}</button>
+        <button type="submit" className={styles.primary} disabled={busy || !dirty || !titleValid || !scoresValid}>{mutating ? "저장 중…" : "변경 사항 저장"}</button>
       </div>
     </form>}
   </>;

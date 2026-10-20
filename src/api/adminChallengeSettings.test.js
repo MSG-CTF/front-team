@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import apiClient from "./client.js";
 import { getAdminChallenge, updateAdminChallenge, getAdminChallengeFlag, revealAdminChallengeFlag, getAdminChallengeFiles, downloadAdminChallengeFile, getAdminChallengeRepositoryFiles, getAdminReleaseFiles, configureChallengeReleaseFiles } from "./admin.js";
-import { challengeDetailsDraft, challengeDetailsChanges } from "../features/admin/utils/adminChallengeSettings.js";
+import { challengeDetailsDraft, challengeDetailsChanges, challengeScoresValid } from "../features/admin/utils/adminChallengeSettings.js";
 
 test("editing a statement sends only changed basic fields and keeps grading and runtime settings out", () => {
   const challenge = { title: "Example", description: null, category: "WEB", difficulty: "EASY", flag_hash: "hidden", current_score: 500 };
@@ -10,6 +10,17 @@ test("editing a statement sends only changed basic fields and keeps grading and 
   assert.deepEqual(challengeDetailsChanges(challenge, draft), {});
   assert.deepEqual(challengeDetailsChanges(challenge, { ...draft, title: " Example ", description: "첫 문단\n\n둘째 문단" }), { description: "첫 문단\n\n둘째 문단" });
   assert.deepEqual(challengeDetailsChanges({ ...challenge, description: "이전 지문" }, draft), { description: "" });
+});
+
+test("editing score limits sends integers and rejects an inverted or incomplete range", () => {
+  const challenge = { title: "Example", description: "", category: "WEB", difficulty: "UNASSIGNED", initial_score: 1000, minimum_score: 100 };
+  const draft = challengeDetailsDraft(challenge);
+  assert.equal(challengeScoresValid(draft), true);
+  assert.deepEqual(challengeDetailsChanges(challenge, { ...draft, initial_score: "800", minimum_score: "200" }),
+    { initial_score: 800, minimum_score: 200 });
+  assert.equal(challengeScoresValid({ ...draft, minimum_score: "1001" }), false);
+  assert.equal(challengeScoresValid({ ...draft, minimum_score: "" }), false);
+  assert.equal(challengeScoresValid({ ...draft, initial_score: "10.5" }), false);
 });
 
 test("challenge settings use admin routes, explicit flag reveal, and cancellation", async () => {

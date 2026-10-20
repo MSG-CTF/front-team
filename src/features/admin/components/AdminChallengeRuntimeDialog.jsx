@@ -79,7 +79,7 @@ function RuntimeSettingsEditor({ release, secrets, busy, onSave }) {
 export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedded = false, active = true, initialReleaseId = "", onBusyChange, onChanged }) {
   const [releaseId, setReleaseId] = useState(initialReleaseId);
   const [panel, setPanel] = useState("overview");
-  const [environmentMethod, setEnvironmentMethod] = useState("repository");
+  const [environmentMethod, setEnvironmentMethod] = useState(null);
   const [showSecretHistory, setShowSecretHistory] = useState(false);
   const [showFlagBindings, setShowFlagBindings] = useState(false);
   const focusSecret = useRef(false);
@@ -166,18 +166,18 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
 
   async function saveDerived(sourceId, settings) {
     const saved = await mutate(() => deriveChallengeRelease(challenge.challenge_id, sourceId, settings), "새 설정 버전을 저장했습니다 내용을 확인한 뒤 사용할 버전을 선택해주세요");
-    if (saved) { setReleaseId(saved.release_id ?? ""); setPanel("overview"); }
+    if (saved) { setReleaseId(saved.release_id ?? ""); setEnvironmentMethod(null); setPanel("overview"); }
   }
 
   async function saveEnvironmentFile(sourceId, body) {
     const saved = await mutate(() => importChallengeEnvironmentFile(challenge.challenge_id, sourceId, body), ".env 설정 버전을 저장했습니다 내용을 확인한 뒤 이 버전 사용을 선택해주세요");
-    if (saved) { setReleaseId(saved.release_id ?? ""); setPanel("overview"); }
+    if (saved) { setReleaseId(saved.release_id ?? ""); setEnvironmentMethod(null); setPanel("overview"); }
     return saved;
   }
 
   async function saveRepositoryEnvironment(sourceId, body) {
     const saved = await mutate(() => importChallengeRepositoryEnvironment(challenge.challenge_id, sourceId, body), "저장소 설정으로 새 버전을 저장했습니다 내용을 확인한 뒤 이 버전 사용을 선택해주세요");
-    if (saved) { setReleaseId(saved.release_id ?? ""); setPanel("overview"); }
+    if (saved) { setReleaseId(saved.release_id ?? ""); setEnvironmentMethod(null); setPanel("overview"); }
     return saved;
   }
 
@@ -201,8 +201,8 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
         {selected ? <>
           <label>배포 버전
             <select aria-label="배포 버전" className={styles.select} value={selected.release_id} disabled={busy}
-              onChange={(event) => { setReleaseId(event.target.value); setConfirming(false); setShowFlagBindings(false); }}>
-              {releases.map((release) => <option key={release.release_id} value={release.release_id}>버전 {release.version}{release.is_current ? " · 사용 중" : ""}</option>)}
+              onChange={(event) => { setReleaseId(event.target.value); setConfirming(false); setShowFlagBindings(false); setEnvironmentMethod(null); }}>
+              {releases.map((release) => <option key={release.release_id} value={release.release_id}>버전 {release.version} · 발행 #{release.registry_revision}{release.is_current ? " · 사용 중" : ""}</option>)}
             </select>
           </label>
           <AdminBadge tone={selected.is_current ? "good" : "neutral"}>{selected.is_current ? "새 인스턴스에 적용 중" : "아직 적용하지 않음"}</AdminBadge>
@@ -221,7 +221,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       </div>}
       <AdminTabs idPrefix="runtime-settings" label="배포 설정 메뉴" value={panel} onChange={setPanel} disabled={busy}
         items={[{ id: "overview", label: "버전 정보" }, { id: "test", label: "배포 테스트" }, { id: "files", label: "참가자 파일" }, { id: "environment", label: "환경변수" },
-          { id: "secrets", label: "비밀값" }, { id: "image", label: "이미지 등록" }]}/>
+          { id: "secrets", label: "비밀값" }, { id: "image", label: "수동 등록" }]}/>
 
       <section role="tabpanel" id="runtime-settings-panel-overview" aria-labelledby="runtime-settings-tab-overview" hidden={panel !== "overview"} className={styles.panel}>
         {selected ? <>
@@ -298,22 +298,49 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
 
       <section role="tabpanel" id="runtime-settings-panel-environment" aria-labelledby="runtime-settings-tab-environment" hidden={panel !== "environment"} className={styles.panel}>
         {selected?.is_deployable ? <>
-          <div className="mb-5 flex flex-wrap gap-2" role="group" aria-label="환경변수 입력 방법">
-            {[{ id: "repository", label: "저장소에서 가져오기" }, { id: "file", label: ".env 파일" }, { id: "manual", label: "직접 입력" }].map((method) =>
+          <div className={styles.fileNotice} role="status">
+            <strong>버전 {selected.version} 환경변수 · {selected.is_current ? "새 인스턴스에 적용 중" : "저장됨 · 아직 적용 전"}</strong>
+            <p className={styles.helpText}>{selected.is_current
+              ? "아래 값과 비밀값 연결이 새 인스턴스에 들어갑니다 실행 중인 인스턴스는 생성 당시 설정을 유지합니다"
+              : "이 버전을 적용하려면 위의 ‘이 버전 사용’을 눌러주세요"}</p>
+          </div>
+          {selected.containers.map((container) => <section key={container.name} className={styles.containerCard}>
+            <div className={styles.containerHeader}><h3>{container.name}</h3>
+              <span>일반 {Object.keys(container.env ?? {}).length}개 · 비밀값 {(container.secret_bindings ?? []).length}개</span></div>
+            {Object.keys(container.env ?? {}).length + (container.secret_bindings ?? []).length === 0
+              ? <p className={styles.empty}>이 버전에 추가로 주입하는 값이 없습니다</p>
+              : <div className={styles.tableWrap}><table className={styles.settingsTable} aria-label={container.name + " 적용 환경변수"}>
+                <thead><tr><th>이름</th><th>값 또는 연결</th><th>구분</th></tr></thead>
+                <tbody>
+                  {Object.entries(container.env ?? {}).map(([key, envValue]) => <tr key={key}>
+                    <td className={styles.mono}>{key}</td><td className={styles.mono}>{envValue || "(빈 문자열)"}</td><td>일반</td></tr>)}
+                  {(container.secret_bindings ?? []).map((binding) => <tr key={binding.env_name}>
+                    <td className={styles.mono}>{binding.env_name}</td>
+                    <td>{binding.status === "missing" ? <AdminBadge tone="bad">저장값 없음</AdminBadge> : <span className={styles.mono}>{binding.name} · 버전 {binding.version}</span>}</td>
+                    <td>비밀값</td></tr>)}
+                </tbody>
+              </table></div>}
+          </section>)}
+          <div className="mt-5">
+            <button type="button" className={BUTTON} disabled={busy} onClick={() => setEnvironmentMethod(environmentMethod ? null : "manual")}>{environmentMethod ? "수정 닫기" : "새 설정 버전 만들기"}</button>
+            {environmentMethod && <p className={styles.helpText}>수정하면 새 버전이 저장됩니다 위에서 ‘이 버전 사용’을 눌러야 새 인스턴스에 적용됩니다</p>}
+          </div>
+          {environmentMethod && <div className="my-4 flex flex-wrap gap-2" role="group" aria-label="환경변수 수정 방법">
+            {[{ id: "manual", label: "직접 수정" }, { id: "repository", label: "저장소 값으로 새 버전 만들기" }, { id: "file", label: ".env 파일로 새 버전 만들기" }].map((method) =>
               <button key={method.id} type="button" aria-pressed={environmentMethod === method.id} className={environmentMethod === method.id ? styles.primary : BUTTON}
                 disabled={busy} onClick={() => setEnvironmentMethod(method.id)}>{method.label}</button>)}
-          </div>
-          <div hidden={environmentMethod !== "repository"}>
+          </div>}
+          {environmentMethod === "repository" && <div>
             <AdminRepositoryEnvironmentImporter key={selected.release_id} challengeId={challenge.challenge_id} release={selected}
               secrets={storedSecrets} busy={busy} onSave={(body) => saveRepositoryEnvironment(selected.release_id, body)}/>
-          </div>
-          <div hidden={environmentMethod !== "file"}>
+          </div>}
+          {environmentMethod === "file" && <div>
           <AdminEnvironmentFileImporter key={selected.release_id} challengeId={challenge.challenge_id} release={selected}
             secrets={storedSecrets} busy={busy} onSave={(body) => saveEnvironmentFile(selected.release_id, body)}/>
-          </div>
-          <div hidden={environmentMethod !== "manual"}>
+          </div>}
+          {environmentMethod === "manual" && <div>
             <RuntimeSettingsEditor key={selected.release_id} release={selected} secrets={storedSecrets} busy={busy} onSave={(settings) => saveDerived(selected.release_id, settings)}/>
-          </div>
+          </div>}
         </> : <p className={styles.empty}>사용할 수 있는 이미지 릴리스를 먼저 등록해주세요</p>}
       </section>
 
@@ -337,7 +364,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       </section>
 
       <section role="tabpanel" id="runtime-settings-panel-image" aria-labelledby="runtime-settings-tab-image" hidden={panel !== "image"} className={styles.panel}>
-        <p className={styles.panelIntro}>CI에서 발행한 JSON 파일을 등록합니다 환경변수만 바꿀 때는 ‘환경변수 수정’을 사용해주세요</p>
+        <p className={styles.panelIntro}>GitHub CI 발행본은 백엔드가 자동으로 수집해 위 배포 버전 목록에 추가합니다 이 화면은 수집되지 않은 JSON 파일을 직접 등록할 때만 사용해주세요</p>
         <form onSubmit={saveRelease} className="space-y-4">
           <label className={styles.fileBox}>릴리스 파일
             <input ref={fileInput} type="file" accept=".json,application/json" disabled={busy} onChange={readFile}/>
