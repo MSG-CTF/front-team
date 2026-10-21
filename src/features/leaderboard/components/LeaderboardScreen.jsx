@@ -49,7 +49,9 @@ export default function LeaderboardScreen({
                 <RankingTable rankings={rankings} status={rankingStatus} />
               </section>
               {refreshError && <p className={styles.refreshNote} role="alert">
-                일부 정보를 갱신하지 못했습니다 새로고침으로 다시 시도해주세요
+                {leaderboardStatus === "success" || leaderboardStatus === "empty"
+                  ? "점수와 순위를 갱신하지 못했습니다 마지막으로 확인한 값을 표시합니다"
+                  : "점수와 순위를 불러오지 못했습니다 새로고침으로 다시 시도해주세요"}
               </p>}
             </div>
             <LeaderboardFooter />

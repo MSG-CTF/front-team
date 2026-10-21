@@ -29,7 +29,7 @@ export default function SolveHistoryTable({ state }) {
     <section className={`${styles.historyPanel} ${styles.solveHistory}`} aria-label="문제 풀이 내역">
       <h2 className={styles.bakedLabel}>SOLVE HISTORY</h2>
       <div className={styles.historyScroll} tabIndex={0} aria-label="풀이 기록 표">
-        <table className={styles.historyTable}>
+        <table className={styles.historyTable} aria-describedby="solve-score-note">
           <colgroup>
             <col style={{ width: "31.33%" }} />
             <col style={{ width: "23.38%" }} />
@@ -41,7 +41,7 @@ export default function SolveHistoryTable({ state }) {
             <tr>
               <th scope="col" className={styles.bakedLabel}>CHALLENGE</th>
               <th scope="col" className={styles.bakedLabel}>CATEGORY</th>
-              <th scope="col" className={`${styles.bakedLabel} ${styles.numeric}`}>POINTS</th>
+              <th scope="col" className={`${styles.bakedLabel} ${styles.numeric}`} title="풀이 당시 획득 점수">POINTS</th>
               <th scope="col" className={`${styles.bakedLabel} ${styles.numeric}`}>SOLVED AT</th>
               <th scope="col" className={`${styles.bakedLabel} ${styles.numeric}`}>ELAPSED</th>
             </tr>
@@ -65,6 +65,7 @@ export default function SolveHistoryTable({ state }) {
           </tbody>
         </table>
       </div>
+      <p id="solve-score-note" className={styles.historyNote}>POINTS는 풀이 당시 획득 점수입니다 · 현재 점수는 총점에 반영됩니다</p>
       <HistoryPagination page={page} pageCount={pageCount} onChange={setPage} label="풀이 기록 페이지" />
     </section>
   );

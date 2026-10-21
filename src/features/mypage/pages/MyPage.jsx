@@ -9,7 +9,8 @@ import { isSuccess } from "../../../utils/response.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import MyPageScreen from "../components/MyPageScreen.jsx";
 import { PREVIEW_MY_PAGE_DATA } from "../data/previewMyPageData.js";
-import { mapMileageHistory, mapSolveHistory, mapTeamProfile, mapMemberRanking, getQrRemainingSeconds } from "../utils/myPageData.js";
+import { getQrRemainingSeconds } from "../utils/myPageData.js";
+import { updateMyPageSnapshot } from "../utils/myPageSnapshot.js";
 
 const LOADING = { status: "loading", data: null };
 const QR_IDLE = { status: "idle", paymentToken: "", expiresAt: "", remainingSeconds: null, error: "" };
@@ -45,23 +46,7 @@ export default function MyPage() {
         getMyProfile(config), getMyMileageHistory(config), getMySolves(config), getMyRanking(config), getMyMemberRanking(config),
       ]);
       if (!active) return;
-      const specs = [
-        ["profile", mapTeamProfile], ["mileageHistory", mapMileageHistory],
-        ["solveHistory", mapSolveHistory], ["ranking", (data) => data],
-        ["memberRanking", mapMemberRanking],
-      ];
-      setApiState((current) => Object.fromEntries(specs.map(([key, mapper], index) => {
-        const result = results[index];
-        const envelope = result.status === "fulfilled" ? result.value.data : null;
-        try {
-          if (!isSuccess(envelope)) throw new Error("조회 실패");
-          const data = envelope.data == null ? null : mapper(envelope.data);
-          return [key, { status: data == null || (Array.isArray(data) && data.length === 0) ? "empty" : "success", data, error: false }];
-        } catch {
-          if (key === "memberRanking") return [key, { status: "error", data: null, error: true }];
-          return [key, { ...current[key], status: current[key].data ? "success" : "error", error: true }];
-        }
-      })));
+      setApiState((current) => updateMyPageSnapshot(current, results));
       setRefreshing(false);
     }
     const stopPolling = startVisiblePolling(load);
@@ -137,5 +122,6 @@ export default function MyPage() {
     qrState={qrState} onIssueQr={requestQr} qrDisabled={isPreview || apiState.profile.data?.isBanned || apiState.profile.status !== "success"}
     onRefresh={() => setRevision((value) => value + 1)} refreshing={refreshing}
     refreshError={!isPreview && Object.values(apiState).some((state) => state.error)}
+    scoreRefreshError={!isPreview && [apiState.profile, apiState.ranking, apiState.memberRanking].some((state) => state.error)}
   />;
 }

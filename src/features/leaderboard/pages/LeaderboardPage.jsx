@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLeaderboard, getRankings } from "../../../api/leaderboard.js";
 import { ROUTES } from "../../../routes/routePaths.js";
-import { isSuccess } from "../../../utils/response.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import LeaderboardScreen from "../components/LeaderboardScreen.jsx";
 import { LEADERBOARD_PREVIEW_TEAMS, RANKING_PREVIEW_ROWS } from "../data/leaderboardPreview.js";
-import { adaptLeaderboardTeams, adaptRankingRows, mergeSolveCounts } from "../utils/leaderboardData.js";
+import { mergeSolveCounts } from "../utils/leaderboardData.js";
+import { updateLeaderboardSnapshot } from "../utils/leaderboardSnapshot.js";
 
 const USE_PREVIEW_DATA = import.meta.env.DEV && import.meta.env.VITE_LEADERBOARD_PREVIEW === "true";
 const initialResource = (data) => USE_PREVIEW_DATA
@@ -15,20 +15,20 @@ const initialResource = (data) => USE_PREVIEW_DATA
 
 export default function LeaderboardPage() {
   const navigate = useNavigate();
-  const [leaderboard, setLeaderboard] = useState(() => initialResource(LEADERBOARD_PREVIEW_TEAMS));
-  const [ranking, setRanking] = useState(() => initialResource(RANKING_PREVIEW_ROWS));
+  const [snapshot, setSnapshot] = useState(() => ({
+    leaderboard: initialResource(LEADERBOARD_PREVIEW_TEAMS), ranking: initialResource(RANKING_PREVIEW_ROWS),
+    page: 1, pageCount: USE_PREVIEW_DATA ? Math.ceil(RANKING_PREVIEW_ROWS.length / 6) : 1, updatedAt: null,
+  }));
+  const { leaderboard, ranking, pageCount, updatedAt } = snapshot;
   const [page, setPage] = useState(1);
-  const [pageCount, setPageCount] = useState(() => USE_PREVIEW_DATA ? Math.ceil(RANKING_PREVIEW_ROWS.length / 6) : 1);
   const [revision, setRevision] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [updatedAt, setUpdatedAt] = useState(null);
 
   useEffect(() => {
     if (USE_PREVIEW_DATA) return;
     let cancelled = false;
     const controller = new AbortController();
     const config = { signal: controller.signal, timeout: 10000 };
-    setRanking({ status: "loading", data: [], error: false });
     async function load() {
       setRefreshing(true);
       const results = await Promise.allSettled([
@@ -36,27 +36,7 @@ export default function LeaderboardPage() {
         getRankings({ page, size: 6 }, config),
       ]);
       if (cancelled) return;
-      let allSucceeded = true;
-      results.forEach((result, index) => {
-        const setter = index === 0 ? setLeaderboard : setRanking;
-        const envelope = result.status === "fulfilled" ? result.value.data : null;
-        const arrayKey = index === 0 ? "teams" : "rankings";
-        if (isSuccess(envelope) && Array.isArray(envelope.data?.[arrayKey])) {
-          const data = index === 0 ? adaptLeaderboardTeams(envelope.data) : adaptRankingRows(envelope.data);
-          setter({ status: data.length ? "success" : "empty", data, error: false });
-          if (index === 1) {
-            const count = Math.max(1, Math.ceil((envelope.data.total_count || 0) / 6));
-            setPageCount(count);
-            if (page > count) setPage(count);
-          }
-        } else {
-          allSucceeded = false;
-          setter((current) => ({
-            ...current, status: current.data.length ? "success" : "error", error: true,
-          }));
-        }
-      });
-      if (allSucceeded) setUpdatedAt(new Date().toISOString());
+      setSnapshot((current) => updateLeaderboardSnapshot(current, results, page, new Date().toISOString()));
       setRefreshing(false);
     }
     const stopPolling = startVisiblePolling(load);
@@ -67,6 +47,10 @@ export default function LeaderboardPage() {
     };
   }, [page, revision]);
 
+  useEffect(() => {
+    if (!ranking.error && snapshot.page > pageCount) setPage(pageCount);
+  }, [snapshot.page, pageCount, ranking.error]);
+
   const rankingRows = useMemo(() => USE_PREVIEW_DATA
     ? ranking.data.slice((page - 1) * 6, page * 6)
     : mergeSolveCounts(ranking.data, leaderboard.data, leaderboard.status === "success"),
@@ -75,7 +59,8 @@ export default function LeaderboardPage() {
   return <LeaderboardScreen
     teams={leaderboard.data} rankings={rankingRows}
     leaderboardStatus={leaderboard.status} rankingStatus={ranking.status}
-    page={page} pageCount={pageCount} onPageChange={setPage}
+    page={USE_PREVIEW_DATA ? page : snapshot.page} pageCount={pageCount}
+    onPageChange={(value) => { setPage(value); setRevision((current) => current + 1); }}
     refreshing={refreshing} updatedAt={updatedAt}
     refreshError={leaderboard.error || ranking.error}
     onRefresh={() => setRevision((value) => value + 1)}

@@ -13,9 +13,12 @@ function profileText(state, field) {
   return state.status === "success" ? formatNumber(state.data[field]) : "—";
 }
 
-function statusMessage({ profileData, refreshError, logoutError }) {
+function statusMessage({ profileData, hasScore, scoreRefreshError, refreshError, logoutError }) {
   if (logoutError) return { text: logoutError, alert: true };
   if (profileData.isBanned) return { text: "활동 정지: " + (profileData.banReason || "운영자에게 문의하세요"), alert: true };
+  if (scoreRefreshError) return { text: hasScore
+    ? "점수와 순위를 갱신하지 못했습니다 마지막으로 확인한 값을 표시합니다"
+    : "점수와 순위를 불러오지 못했습니다 새로고침으로 다시 시도해주세요", alert: true };
   if (refreshError) return { text: "일부 정보를 갱신하지 못했습니다. 다시 시도하세요", alert: true };
   return { text: "30초마다 갱신 · 표시 시간 KST", alert: false };
 }
@@ -35,10 +38,11 @@ export default function MyPageScreen({
   onRefresh,
   refreshing,
   refreshError,
+  scoreRefreshError,
 }) {
   const navigate = useNavigate();
   const profileData = profile.status === "success" ? profile.data : {};
-  const status = statusMessage({ profileData, refreshError, logoutError });
+  const status = statusMessage({ profileData, hasScore: profile.status === "success", scoreRefreshError, refreshError, logoutError });
   return (
     <div className={styles.page}>
       <div className={styles.stage}>
@@ -76,7 +80,10 @@ export default function MyPageScreen({
             <h2 className={styles.bakedLabel}>CURRENT SCORE</h2>
             <p className={styles.metricValue}>{profileText(profile, "score")}</p>
             <p className={styles.breakdown}>
-              JEOPARDY {formatNumber(profileData.jeopardyScore)} · KoTH {formatNumber(profileData.kothScore)} · SIGNATURE {formatNumber(profileData.signatureScore)}
+              <span>JEOPARDY {formatNumber(profileData.jeopardyScore)}</span>
+              <span>KoTH {formatNumber(profileData.kothScore)}</span>
+              <span>SIGNATURE {formatNumber(profileData.signatureScore)}</span>
+              <span>LINE {formatNumber(profileData.lineScore)}</span>
             </p>
             <p className={styles.rank}>
               RANK<strong>{profile.status === "success" ? formatNumber(profileData.rank) : "—"}</strong>

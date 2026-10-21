@@ -49,6 +49,7 @@ export function mapTeamProfile(data) {
     : [];
 
   return {
+    teamId: data.team_id ?? null,
     teamName: typeof data.team_name === "string" ? data.team_name : null,
     score: Number.isFinite(data.team_score) ? data.team_score : null,
     mileage: Number.isFinite(data.mileage) ? data.mileage : null,
@@ -56,6 +57,7 @@ export function mapTeamProfile(data) {
     jeopardyScore: data.jeopardy_score ?? null,
     kothScore: data.koth_score ?? null,
     signatureScore: data.signature_score ?? null,
+    lineScore: data.line_score ?? null,
     isBanned: data.is_banned === true,
     banReason: data.ban_reason ?? null,
     members,

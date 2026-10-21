@@ -389,11 +389,17 @@
   font-size: 17px;
 }
 .breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
   margin: 4px 0 0;
   color: #b89d6e;
   font-size: 11px;
   line-height: 1.5;
 }
+.breakdown > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.breakdown > span:not(:last-child)::after { content: " ·"; }
+.historyNote { margin: 0; color: var(--brown-soft); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 
 /* 기록 표 */
 .historyPanel {
@@ -779,7 +785,7 @@
   .rank {
     left: calc(var(--u) * 419);
     right: auto;
-    top: calc(var(--u) * 135);
+    top: calc(var(--u) * 125);
     bottom: auto;
     font-size: calc(var(--u) * 24);
     line-height: calc(var(--u) * 30);
@@ -794,12 +800,23 @@
   .breakdown {
     position: absolute;
     right: calc(var(--u) * 39);
-    top: calc(var(--u) * 86);
+    left: calc(var(--u) * 36);
+    top: calc(var(--u) * 162);
     margin: 0;
-    font-size: max(9px, calc(var(--u) * 12));
+    font-size: max(9px, calc(var(--u) * 11));
     line-height: calc(var(--u) * 16);
-    text-align: right;
+    gap: 0 calc(var(--u) * 8);
+    text-align: left;
     white-space: nowrap;
+  }
+  .scorePanel .metricValue { top: calc(var(--u) * 78); font-size: calc(var(--u) * 68); line-height: calc(var(--u) * 80); }
+  .historyNote {
+    position: absolute;
+    left: calc(var(--u) * 370);
+    right: calc(var(--u) * 190);
+    top: calc(var(--u) * 38);
+    font-size: max(10px, calc(var(--u) * 12));
+    line-height: 1.25;
   }
 
   /* 기록 표 (Figma 309:314 / 309:342) — 1150×270 */
@@ -888,6 +905,7 @@
 
 /* 모바일도 원본의 종이·목재·금테를 사용하고 내용은 읽기 크기로 재배치한다. */
 @media (max-width: 1100px), (max-height: 619px) {
+  .stage { container: my-page-stage / inline-size; }
   .page { isolation: isolate; background: none; }
   .page::before { content: ""; position: fixed; inset: 0; z-index: -1; background: linear-gradient(#20170e55, #20170e88), url("/assets/challenge-detail/bg-forest.webp") center / cover; pointer-events: none; }
   .teamCard, .historyPanel { border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 / 8px stretch; border-radius: 0; background: none; }
@@ -897,9 +915,26 @@
   .metricValue { font-size: clamp(24px, 24cqw, 44px); }
   .refreshButton, .historyPagination button { min-width: 44px; min-height: 44px; }
   .rank, .unit { position: static; margin-top: 8px; text-align: right; }
-  .historyTable { min-width: 680px; font-size: 15px; }
+  .historyTable { min-width: 680px; font-size: 15px; table-layout: auto; }
+  .historyTable th { white-space: nowrap; }
+  .historyTable td.cellText { max-width: 18em; }
+  .historyTable td.cellNumber { overflow: visible; }
+  .historyTable thead .bakedLabel, .historyTable td { padding-right: 14px; }
+  .historyTable thead .bakedLabel:last-child, .historyTable td:last-child { padding-right: 0; }
   .historyPanel { container-type: inline-size; }
   .historyEmpty > span { display: block; width: 100cqw; max-width: 100%; padding-block: 10px; white-space: normal; overflow-wrap: anywhere; }
+  .qrSlot { position: relative; min-height: 0; container-type: inline-size; }
+  .qrIssueButton, .qrCode, .qrLoading {
+    position: absolute;
+    inset: 6px;
+    width: calc(100% - 12px);
+    height: calc(100% - 12px);
+    min-width: 0;
+    min-height: 0;
+  }
+  .qrIssueButton { gap: 4px; padding: 4px; font-size: clamp(11px, 10cqw, 14px); }
+  .qrIssueButton svg { width: clamp(24px, 28cqw, 40px); height: auto; aspect-ratio: 1; }
+  .qrLoading { display: grid; place-content: center; }
 }
 @media (min-width: 640px) and (max-width: 1100px), (min-width: 640px) and (max-height: 619px) {
   .board { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -925,5 +960,11 @@
   .statusBar, .qrStatus, .personalRank h2, .personalMessage, .historyPagination { font-size: 14px; }
   .qrStatus, .logoutButton { color: var(--brown); }
   .breakdown, .personalStats small { font-size: 13px; }
-  .historyTable thead .bakedLabel { color: var(--brown-soft); font-size: 14px; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+  .historyTable thead .bakedLabel { color: var(--brown-soft); font-size: 14px; white-space: nowrap; overflow: visible; }
+}
+
+@container my-page-stage (max-width: 240px) {
+  .board { padding: 4px; border-width: 6px; border-image-width: 6px; }
+  .teamCard, .historyPanel, .metricPanel { padding: 14px 10px; border-width: 6px; border-image-width: 6px; }
+  .teamCard .bakedLabel:first-child { padding-inline: 8px; }
 }
