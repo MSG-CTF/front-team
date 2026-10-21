@@ -109,6 +109,7 @@
 }
 .festivalHeader h1 {
   margin: 0;
+  overflow-wrap: anywhere;
   font-family: "Festival Display", serif;
   font-size: clamp(30px, 2.8cqw, 54px);
   font-weight: 400;
