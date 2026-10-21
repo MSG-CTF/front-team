@@ -893,10 +893,10 @@
   .teamCard, .historyPanel { border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 / 8px stretch; border-radius: 0; background: none; }
   .teamCard .bakedLabel:first-child { min-width: 70%; padding: 8px 24px; clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); background: #842b28; }
   .metricPanel { isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; border-radius: 0; background: #2c1c11; background-clip: padding-box; }
-  .metricPanel .bakedLabel { font-size: 15px; }
+  .metricPanel .bakedLabel { font-size: 15px; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
   .refreshButton, .historyPagination button { min-width: 44px; min-height: 44px; }
   .rank, .unit { position: static; margin-top: 8px; text-align: right; }
-  .historyTable { font-size: 15px; }
+  .historyTable { min-width: 680px; font-size: 15px; }
   .historyPanel { container-type: inline-size; }
   .historyEmpty > span { display: block; width: 100cqw; max-width: 100%; padding-block: 10px; white-space: normal; overflow-wrap: anywhere; }
 }
@@ -924,5 +924,5 @@
   .statusBar, .qrStatus, .personalRank h2, .personalMessage, .historyPagination { font-size: 14px; }
   .qrStatus, .logoutButton { color: var(--brown); }
   .breakdown, .personalStats small { font-size: 13px; }
-  .historyTable thead .bakedLabel { color: var(--brown-soft); font-size: 14px; }
+  .historyTable thead .bakedLabel { color: var(--brown-soft); font-size: 14px; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
 }

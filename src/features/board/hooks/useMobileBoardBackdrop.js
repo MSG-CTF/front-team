@@ -12,15 +12,18 @@ export default function useMobileBoardBackdrop(frameRef, viewportRef) {
       if (!window.matchMedia("(max-width: 1100px)").matches) return;
       const bounds = frame.getBoundingClientRect(), board = scene.getBoundingClientRect();
       if (!board.width || !board.height) return;
+      // Rects include ancestor zoom; CSS pixel offsets must use the unscaled frame.
+      const scale = bounds.width / parseFloat(getComputedStyle(frame).width);
+      if (!Number.isFinite(scale) || scale <= 0) return;
       const viewportBounds = viewport.getBoundingClientRect();
       const fitSceneWidth = getMobileBoardFitWidth(viewport.clientWidth, window.innerHeight);
       const fitSceneHeight = fitSceneWidth * 960 / 951;
-      const fitSceneLeft = viewportBounds.left - bounds.left + (viewport.clientWidth - fitSceneWidth) / 2;
-      const fitFrameHeight = Math.max(window.innerHeight, bounds.height - viewportBounds.height + fitSceneHeight);
+      const fitSceneLeft = (viewportBounds.left - bounds.left) / scale + (viewport.clientWidth - fitSceneWidth) / 2;
+      const fitFrameHeight = Math.max(window.innerHeight, (bounds.height - viewportBounds.height) / scale + fitSceneHeight);
       const image = getMobileBoardBackdrop({
-        width: bounds.width, height: bounds.height,
-        sceneLeft: board.left - bounds.left, sceneTop: board.top - bounds.top,
-        sceneWidth: board.width, sceneHeight: board.height,
+        width: bounds.width / scale, height: bounds.height / scale,
+        sceneLeft: (board.left - bounds.left) / scale, sceneTop: (board.top - bounds.top) / scale,
+        sceneWidth: board.width / scale, sceneHeight: board.height / scale,
         fitSceneWidth, fitSceneLeft, fitFrameHeight,
       });
       for (const key of ["left", "top", "width", "height"]) frame.style.setProperty(`--mobile-background-${key}`, `${image[key]}px`);
