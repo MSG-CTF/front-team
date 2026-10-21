@@ -175,6 +175,7 @@ export default function BoardScreen({
     diceStatus?.canRoll === true && !isMutating && !awaitingDiscard;
   const isAirportSelecting =
     isAirportSelectionMode({
+      rollResultUnconfirmed: error?.code === "ROLL_RESULT_UNCONFIRMED",
       currentCell,
       myBoard,
       pendingRoll,
@@ -362,6 +363,7 @@ export default function BoardScreen({
       )}
 
       <BoardEventPanel
+          rollResultUnconfirmed={error?.code === "ROLL_RESULT_UNCONFIRMED"}
           myBoard={myBoard}
           currentCell={currentCell}
           pendingRoll={pendingRoll}

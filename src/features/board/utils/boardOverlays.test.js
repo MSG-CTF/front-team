@@ -54,6 +54,7 @@ test("기차여행 선택 모드는 먼저 끝낼 단계가 없고 아직 쓰지
   assert.equal(isAirportSelectionMode(base), true);
   assert.equal(isAirportSelectionMode({ ...base, myBoard: { airportMoveUsed: true } }), false);
   assert.equal(isAirportSelectionMode({ ...base, pendingRoll: {} }), false);
+  assert.equal(isAirportSelectionMode({ ...base, rollResultUnconfirmed: true }), false);
   assert.equal(isAirportSelectionMode({ ...base, awaitingDiscard: true }), false);
   assert.equal(isAirportSelectionMode({ ...base, blockedReason: "PENDING_CONFIRM" }), false);
   assert.equal(isAirportSelectionMode({ ...base, currentCell: { type: "CHANCE" } }), false);

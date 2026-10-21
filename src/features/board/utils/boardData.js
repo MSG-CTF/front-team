@@ -106,6 +106,7 @@ export function adaptDiceStatus(data) {
     maxDiceRolls: data?.max_dice_rolls ?? 3,
     timerRunning: data?.timer_running === true,
     blockedReason: data?.blocked_reason ?? null,
+    unconfirmedRollRequestKey: data?.unconfirmed_roll_request_key,
     serverTime: data?.server_time ?? null,
     nextDiceResetAt: data?.next_dice_reset_at ?? null,
     receivedAt: Date.now(),

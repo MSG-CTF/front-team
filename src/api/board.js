@@ -49,6 +49,14 @@ export function getCurrentCell() {
 }
 
 // ---- 굴림 / 이동 (팀장만) ----
+export function prepareDiceRoll() {
+  return apiClient.post("/board/dice/request");
+}
+
+export function acknowledgeDiceRoll({ requestKey }) {
+  return apiClient.post("/board/dice/request/ack", { request_key: requestKey });
+}
+
 export function rollDice({ idempotencyKey } = {}) {
   // POST /board/dice/roll - POST_ROLL 카드 보유 시 pending_confirm: true(미확정).
   return apiClient.post(

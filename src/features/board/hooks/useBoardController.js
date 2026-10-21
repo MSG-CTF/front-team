@@ -6,8 +6,9 @@ import { scheduleBoardDeadlineRefresh } from "../utils/boardDeadlineRefresh.js";
 import { getBoardLineProgress } from "../utils/boardLines.js";
 import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
 import { useAuthenticatedUser } from "../../../routes/AuthenticatedRoute.jsx";
-import { createPendingDiceRoll } from "../utils/pendingDiceRoll.js";
+import { createPendingDiceRoll, restorePendingDiceRoll } from "../utils/pendingDiceRoll.js";
 import {
+  acknowledgeDiceRoll,
   confirmChanceCard,
   confirmDice,
   createBoardIdempotencyKey,
@@ -21,6 +22,7 @@ import {
   getOpenedChallenges,
   moveAirport,
   openCell,
+  prepareDiceRoll,
   rollDice,
   spinRoulette,
   useChanceCard,
@@ -53,7 +55,7 @@ export default function useBoardController() {
   const user = useAuthenticatedUser();
   const pendingDiceRoll = useMemo(() => createPendingDiceRoll({
     userId: user?.user_id, teamId: user?.team_id,
-    createKey: () => createBoardIdempotencyKey("dice-roll"),
+    createKey: async () => unwrapBoardResponse(await prepareDiceRoll()).request_key,
   }), [user?.user_id, user?.team_id]);
   const [pieceTransitionMs, setPieceTransitionMs] = useState(BOARD_PIECE_TRANSITION_MS);
   const mountedRef = useRef(false);
@@ -137,6 +139,8 @@ export default function useBoardController() {
       const nextCatalog = adaptChanceCatalog(unwrapBoardResponse(catalogResponse));
       await openedTask;
       const nextCurrentCell = await requestCurrentCell();
+
+      await restorePendingDiceRoll(pendingDiceRoll, nextDiceStatus.unconfirmedRollRequestKey);
 
       if (!mountedRef.current) return;
       setBoardDefinition(nextBoardDefinition);
@@ -239,6 +243,14 @@ export default function useBoardController() {
           : mutationKeysRef.current.get(actionId) ?? createBoardIdempotencyKey(prefix);
         mutationKeysRef.current.set(actionId, idempotencyKey);
         const result = await request(idempotencyKey);
+        if (actionId === "dice-roll") {
+          try {
+            unwrapBoardResponse(await acknowledgeDiceRoll({ requestKey: idempotencyKey }));
+          } catch {
+            // The roll result is already known. An uncommitted acknowledgement
+            // leaves its receipt on the server for the next recovery.
+          }
+        }
         mutationKeysRef.current.delete(actionId);
         return result;
       } catch (requestError) {

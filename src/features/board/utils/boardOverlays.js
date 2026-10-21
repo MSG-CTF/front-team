@@ -56,7 +56,7 @@ export function buildRouletteGradient(colors = ["#7a2420", "#f1e2c2"]) {
 
 // 기차여행(Airport): 팀당 1회, 아직 소모하지 않은 칸으로만 이동할 수 있다.
 // 주사위 결과 확정, 카드 선택, 카드 폐기처럼 먼저 끝내야 하는 단계가 있으면 선택 모드를 띄우지 않는다.
-export function isAirportSelectionMode({ currentCell, myBoard, pendingRoll, pendingChanceChoice, awaitingDiscard, blockedReason, cellEvent }) {
+export function isAirportSelectionMode({ currentCell, myBoard, pendingRoll, pendingChanceChoice, awaitingDiscard, blockedReason, cellEvent, rollResultUnconfirmed }) {
   return Boolean(
     currentCell?.type === "AIRPORT" &&
       myBoard &&
@@ -64,6 +64,7 @@ export function isAirportSelectionMode({ currentCell, myBoard, pendingRoll, pend
       !pendingRoll &&
       !pendingChanceChoice &&
       !awaitingDiscard &&
+      !rollResultUnconfirmed &&
       blockedReason !== "PENDING_CONFIRM" &&
       !cellEvent,
   );

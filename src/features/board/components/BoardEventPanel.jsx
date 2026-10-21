@@ -233,7 +233,9 @@ export default function BoardEventPanel({
   onCloseChallengeSelection,
   onReopenChallengeSelection,
   errorMessage,
+  rollResultUnconfirmed = false,
 }) {
+  if (rollResultUnconfirmed) return null;
   if (!myBoard) return null;
 
   if (awaitingDiscard) {
