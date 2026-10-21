@@ -60,11 +60,15 @@ export default function LeaderboardScoreGraph({ teams, status }) {
     if (!compact || !hasSeries || !graph.current || typeof ResizeObserver === "undefined") return undefined;
     const elements = [...graph.current.querySelectorAll("[data-axis-label], [data-zoom-controls]")];
     const measure = () => {
-      const max = (kind, key) => Math.max(0, ...elements.filter(el => el.dataset.axisLabel === kind).map(el => el[key]));
+      const scale = graph.current.getBoundingClientRect().width / parseFloat(getComputedStyle(graph.current).width);
+      if (!Number.isFinite(scale) || scale <= 0) return;
+      const dimension = (el, key) => Math.ceil(el.getBoundingClientRect()[key] / scale);
+      const max = (kind, key) => Math.max(0, ...elements.filter(el => el.dataset.axisLabel === kind).map(el => dimension(el, key)));
+      const controls = elements.find(el => el.hasAttribute("data-zoom-controls"));
       const next = {
-        scoreWidth: max("score", "offsetWidth"), scoreHeight: max("score", "offsetHeight"),
-        timeWidth: max("time", "offsetWidth"), timeHeight: max("time", "offsetHeight"),
-        controlsHeight: elements.find(el => el.hasAttribute("data-zoom-controls"))?.offsetHeight || 0,
+        scoreWidth: max("score", "width"), scoreHeight: max("score", "height"),
+        timeWidth: max("time", "width"), timeHeight: max("time", "height"),
+        controlsHeight: controls ? dimension(controls, "height") : 0,
       };
       setLabels(current => Object.keys(next).every(key => current[key] === next[key]) ? current : next);
     };
