@@ -24,7 +24,7 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
   const content = <div className={styles.overlay} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section ref={panel} className={styles.menu} role="dialog" aria-modal="true" aria-labelledby={titleId}>
       <button type="button" className={styles.close} onClick={onClose} aria-label="부스 안내 닫기">×</button>
-      <div className={styles.content}>
+      <div className={styles.content} role="region" aria-label="부스 안내 내용" tabIndex={0}>
         <header className={styles.header}>
           <p className={styles.brand}>MSG CTF</p>
           <p className={styles.festival}>CLUB FESTIVAL</p>
@@ -39,7 +39,7 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
           <div className={styles.score} aria-label={`포인트 ${challenge.score}`}><span aria-hidden="true">❧</span><strong>{challenge.score.toLocaleString("ko-KR")}</strong><span>포인트</span></div>
           <section className={styles.description} aria-label="문제 소개">
             <h4>DESCRIPTION</h4>
-            <div className={styles.body} tabIndex={0}>{challenge.description || "등록된 설명이 없습니다."}</div>
+            <div className={styles.body}>{challenge.description || "등록된 설명이 없습니다."}</div>
           </section>
         </>}
       </div>

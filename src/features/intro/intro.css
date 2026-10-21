@@ -87,7 +87,9 @@
   display: none !important;
 }
 .msg-intro .no-break {
-  white-space: nowrap;
+  display: inline-block;
+  max-width: 100%;
+  white-space: normal;
 }
 .msg-intro img {
   max-width: 100%;
@@ -323,6 +325,7 @@
 /* Hide only transparent source padding; the event artwork remains intact */
 .msg-intro .logo-window {
   width: min(690px, 80vw);
+  max-width: 100%;
   aspect-ratio: 2.08;
   overflow: hidden;
   position: relative;
@@ -383,8 +386,10 @@
   font-size: 22px;
 }
 .msg-intro .countdown-clock {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 100%;
   gap: 28px;
 }
 .msg-intro .countdown-clock > span {
@@ -1303,6 +1308,7 @@
   opacity: 0.6;
 }
 .msg-intro .history-entry {
+  container: intro-history / inline-size;
   max-width: 980px;
   margin: var(--space-6) auto 0;
 }
@@ -1778,6 +1784,10 @@
   }
   .msg-intro .header-actions {
     margin-left: auto;
+    max-width: 100%;
+    flex-shrink: 1;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
   .msg-intro .menu-toggle {
     display: block;
@@ -2026,7 +2036,9 @@
     font-size: 21px;
   }
   .msg-intro .apply-button {
-    min-width: 230px;
+    min-width: min(230px, 100%);
+    max-width: 100%;
+    gap: min(44px, 8%);
     min-height: 56px;
     padding: 12px 28px;
     font-size: 20px;
@@ -2537,6 +2549,20 @@
   }
   .msg-intro .cover-next {
     padding-block: 4px;
+  }
+}
+@container intro-history (max-width: 680px) {
+  .msg-intro .history-record {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+  .msg-intro .history-poster {
+    width: min(280px, 100%);
+    justify-self: center;
+  }
+  .msg-intro .history-facts > div {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: var(--space-2);
   }
 }
 @media (prefers-reduced-motion: reduce) {

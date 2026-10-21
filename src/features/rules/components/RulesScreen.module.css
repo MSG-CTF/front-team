@@ -158,6 +158,10 @@
   .mainNavigationButton { top: 10px; right: 10px; left: auto; width: 44px; height: 44px; padding: 4px; }
 }
 
+.mainNavigationButton .layerImage {
+  object-fit: contain;
+}
+
 .mainNavigationButton:hover .layerImage {
   filter: brightness(1.08);
 }

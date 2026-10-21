@@ -616,7 +616,7 @@
   .mobileBooth + .mobileBooth { border-top: 1px solid #c5a66c45; }
   .mobileBoothLink {
     display: grid;
-    grid-template-columns: minmax(90px, 0.8fr) minmax(0, 1.2fr);
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     align-items: center;
     gap: 10px;
     width: 100%;
@@ -633,6 +633,8 @@
     position: static;
     width: auto;
     height: auto;
+    min-width: 0;
+    overflow-wrap: anywhere;
     padding: 0;
     background: none;
   }

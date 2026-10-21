@@ -1,8 +1,9 @@
 @font-face { font-family: "Booth Menu Body"; src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2") format("woff2"); font-display: swap; }
 @font-face { font-family: "Booth Menu Title"; src: url("/assets/intro/fonts/chungju-kimsaeng/ChungjuKimSaeng.woff2") format("woff2"); font-display: swap; }
-.overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); background: rgb(30 16 6 / 42%); backdrop-filter: blur(2px); }
-.menu { position: relative; width: min(300px, calc(100vw - 40px), calc((100dvh - 56px) * .75)); aspect-ratio: 3 / 4; container-type: inline-size; color: #61361e; border: 1px solid #9d7441; border-radius: 2px; background: #f2dfbb url("/assets/signatures/booth-menu-paper-v1.webp") center / 100% 100% no-repeat; box-shadow: 0 16px 45px #170b0770; font-family: "Booth Menu Body", serif; }
-.content { height: 100%; min-height: 0; display: flex; flex-direction: column; padding: 5% 10% 35%; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #ad8049 transparent; }
+.overlay { position: fixed; inset: 0; z-index: 100; display: flex; overflow-y: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); background: rgb(30 16 6 / 42%); backdrop-filter: blur(2px); }
+.menu { position: relative; flex: none; margin: auto; width: min(300px, 100%); aspect-ratio: 3 / 4; container-type: inline-size; color: #61361e; border: 1px solid #9d7441; border-radius: 2px; background: #f2dfbb url("/assets/signatures/booth-menu-paper-v1.webp") center / 100% 100% no-repeat; box-shadow: 0 16px 45px #170b0770; font-family: "Booth Menu Body", serif; }
+/* 긴 제목과 설명은 원본 풍경 장식 위의 영역 안에서 함께 스크롤한다 */
+.content { position: absolute; inset: 5% 10% 27%; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #ad8049 transparent; }
 .header { text-align: center; flex-shrink: 0; }
 .brand { margin: 0; font-size: clamp(10px, 2.5cqw, 13px); letter-spacing: .2em; }
 .festival { margin: 2px 0 clamp(6px, 2.3cqw, 12px); font-size: clamp(12px, 4cqw, 21px); letter-spacing: .08em; line-height: 1.15; }
@@ -16,14 +17,14 @@
 .score { display: flex; justify-content: center; align-items: baseline; gap: 9px; width: fit-content; max-width: 100%; margin: clamp(6px, 2cqw, 14px) auto clamp(7px, 2.3cqw, 16px); padding: clamp(3px, 1.15cqw, 6px) clamp(12px, 4.6cqw, 24px); border: 3px double #b1824f; background: rgb(241 216 174 / 40%); border-radius: 12px 3px; box-shadow: 0 2px 3px #80502517; color: #883d20; flex-shrink: 0; }
 .score strong { font-size: clamp(25px, 7cqw, 36px); font-weight: 400; line-height: 1.1; overflow-wrap: anywhere; }
 .score span { font-size: clamp(12px, 2.7cqw, 14px); }
-.description { display: flex; flex-direction: column; flex: 1; min-height: 42px; }
+.description { display: flex; flex-direction: column; flex: 0 0 auto; }
 .description h4 { display: flex; align-items: center; gap: 9px; margin: 0 0 clamp(5px, 1.9cqw, 10px); font-size: clamp(10px, 2.5cqw, 13px); font-weight: 400; letter-spacing: .13em; flex-shrink: 0; }
 .description h4::before, .description h4::after { content: ""; height: 1px; background: #b48953; flex: 1; }
-.body { overflow-y: auto; min-height: 0; font-size: clamp(12px, 3.1cqw, 16px); line-height: 1.7; text-align: center; white-space: pre-wrap; overflow-wrap: anywhere; scrollbar-width: thin; overscroll-behavior: contain; }
+.body { min-height: 0; font-size: clamp(13px, 3.7cqw, 16px); line-height: 1.7; text-align: center; white-space: pre-wrap; overflow-wrap: anywhere; }
 .close { position: absolute; right: -9px; top: -9px; z-index: 2; width: 32px; height: 32px; border: 2px solid #c49a58; border-radius: 50%; background: #4e2c15; color: #ffe2af; font: 23px/1 serif; box-shadow: 0 2px 5px #26120870; }
 .close::after { content: ""; position: absolute; inset: -6px; }
-.close:focus-visible, .body:focus-visible { outline: 2px solid #9b572b; outline-offset: 3px; }
+.close:focus-visible, .content:focus-visible { outline: 2px solid #9b572b; outline-offset: 3px; }
 .notice { margin: auto 0; text-align: center; line-height: 1.8; }
 .notice button { min-height: 44px; padding: 5px 15px; border: 1px solid #a16c39; background: #ead09d; color: inherit; font: inherit; }
-@media (max-width: 600px) { .menu { width: min(390px, calc(100vw - 40px)); aspect-ratio: auto; height: min(620px, calc(100dvh - 56px)); } .content { padding: 9% 11% 48%; } .festival { margin-bottom: 14px; } .header::after { margin-block: 14px; } .score { margin-block: 15px; } .body { font-size: 13px; } }
-@media (max-height: 650px) { .menu { max-height: calc(100dvh - 56px); } }
+@media (max-width: 600px) { .menu { width: min(390px, 100%); } }
+@media (max-height: 650px) { .menu { width: min(350px, 100%); } }

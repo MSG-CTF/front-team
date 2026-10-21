@@ -82,6 +82,7 @@
 .backButton img {
   width: 17px;
   height: 26px;
+  object-fit: contain;
   transform: rotate(-90deg);
 }
 .backButton:hover {
@@ -139,6 +140,7 @@
 }
 .teamCard {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
   gap: 12px;
   text-align: center;
@@ -170,15 +172,19 @@
 }
 .qrBlock {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   justify-items: center;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   gap: 8px;
 }
 /* 원형 틀 대신 사각형 QR 틀. 원형 틀과 같은 이중선(바깥 굵은 선 + 안쪽 가는 선) */
 .qrSlot {
   display: grid;
   place-items: center;
-  width: 176px;
-  height: 176px;
+  width: min(176px, 100%);
+  aspect-ratio: 1;
   padding: 6px;
   border: 3px solid #8a6a3e;
   background: #f6ead2;
@@ -208,6 +214,7 @@
 .qrIssueButton svg {
   width: 40px;
   height: 40px;
+  flex-shrink: 0;
 }
 .qrIssueButton:hover:not(:disabled) {
   background: #efdcb8;
@@ -390,6 +397,7 @@
 /* 기록 표 */
 .historyPanel {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
 .historyPanel .bakedLabel:first-child {
@@ -402,6 +410,8 @@
   font-size: 17px;
   font-weight: 400;
   letter-spacing: 0.14em;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .historyScroll {
   overflow-x: auto;
@@ -464,6 +474,7 @@
 }
 .historyPagination {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
