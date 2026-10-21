@@ -919,7 +919,7 @@
 }
 
 @media (max-width: 1100px), (max-height: 619px) {
-  .teamCard > h2 { position: static; width: 100%; height: auto; margin: 4px 0; padding-top: 16px; overflow: visible; clip: auto; border-top: 1px solid #ac8c5c66; font: 15px/1.4 var(--label); font-weight: 400; letter-spacing: .16em; color: var(--brown-soft); }
+  .teamCard > h2 { position: static; width: 100%; height: auto; margin: 4px 0; padding-top: 16px; overflow: visible; clip: auto; border-top: 1px solid #ac8c5c66; font: 15px/1.4 var(--label); font-weight: 400; letter-spacing: .16em; color: var(--brown-soft); white-space: normal; overflow-wrap: anywhere; }
   .page { --brown-soft: #684316; --ink-soft: #684316; --gold: #6f3e0c; --minus: #7b302b; }
   .statusBar, .qrStatus, .personalRank h2, .personalMessage, .historyPagination { font-size: 14px; }
   .qrStatus, .logoutButton { color: var(--brown); }
