@@ -5,6 +5,8 @@ import { createStartRewardRecorder } from "../utils/boardStartReward.js";
 import { scheduleBoardDeadlineRefresh } from "../utils/boardDeadlineRefresh.js";
 import { getBoardLineProgress } from "../utils/boardLines.js";
 import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
+import { useAuthenticatedUser } from "../../../routes/AuthenticatedRoute.jsx";
+import { createPendingDiceRoll } from "../utils/pendingDiceRoll.js";
 import {
   confirmChanceCard,
   confirmDice,
@@ -48,6 +50,11 @@ function wait(milliseconds) {
 }
 
 export default function useBoardController() {
+  const user = useAuthenticatedUser();
+  const pendingDiceRoll = useMemo(() => createPendingDiceRoll({
+    userId: user?.user_id, teamId: user?.team_id,
+    createKey: () => createBoardIdempotencyKey("dice-roll"),
+  }), [user?.user_id, user?.team_id]);
   const [pieceTransitionMs, setPieceTransitionMs] = useState(BOARD_PIECE_TRANSITION_MS);
   const mountedRef = useRef(false);
   const mutationLockRef = useRef(false);
@@ -141,12 +148,16 @@ export default function useBoardController() {
       setAwaitingDiscard(false);
       setPendingRoll(null);
       setPendingChanceChoice(null);
+      if (pendingDiceRoll.peek()) setError({
+        code: "ROLL_RESULT_UNCONFIRMED",
+        message: "이전 주사위 결과를 확인하지 못했어요 다시 시도를 눌러주세요",
+      });
     } catch (requestError) {
       if (mountedRef.current) setError(getBoardError(requestError));
     } finally {
       if (mountedRef.current) setIsLoading(false);
     }
-  }, [requestCurrentCell, requestOpenedChallenges]);
+  }, [pendingDiceRoll, requestCurrentCell, requestOpenedChallenges]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -196,6 +207,7 @@ export default function useBoardController() {
       setDiceStatus(nextDiceStatus);
       if (includeCurrentCell) setCurrentCell(nextCurrentCell);
       if (!preserveDisplayPosition) setDisplayPosition(nextMyBoard.position);
+      return { myBoard: nextMyBoard, diceStatus: nextDiceStatus };
     },
     [requestCurrentCell, requestOpenedChallenges],
   );
@@ -218,13 +230,14 @@ export default function useBoardController() {
       mutationLockRef.current = true;
       setIsMutating(true);
       setError(null);
-      const idempotencyKey =
-        mutationKeysRef.current.get(actionId) ??
-        createBoardIdempotencyKey(prefix);
-      mutationKeysRef.current.set(actionId, idempotencyKey);
+      let idempotencyKey;
       let retainKeyForRetry = false;
 
       try {
+        idempotencyKey = actionId === "dice-roll"
+          ? await pendingDiceRoll.acquire(mutationKeysRef.current.get(actionId))
+          : mutationKeysRef.current.get(actionId) ?? createBoardIdempotencyKey(prefix);
+        mutationKeysRef.current.set(actionId, idempotencyKey);
         const result = await request(idempotencyKey);
         mutationKeysRef.current.delete(actionId);
         return result;
@@ -234,6 +247,7 @@ export default function useBoardController() {
           requestError?.response?.config ?? requestError?.requestConfig;
         const failedStatus = requestError?.response?.status;
         retainKeyForRetry =
+          nextError.code === "IDEMPOTENCY_IN_PROGRESS" ||
           failedRequest?.method === "get" ||
           failedStatus >= 500 ||
           (!requestError?.response && requestError?.isResponseFailure !== true);
@@ -244,15 +258,18 @@ export default function useBoardController() {
         throw requestError;
       } finally {
         if (!retainKeyForRetry) mutationKeysRef.current.delete(actionId);
+        if (!retainKeyForRetry && actionId === "dice-roll" && idempotencyKey) {
+          await pendingDiceRoll.clear(idempotencyKey).catch(() => {});
+        }
         mutationLockRef.current = false;
         if (mountedRef.current) setIsMutating(false);
       }
     },
-    [awaitingDiscard],
+    [awaitingDiscard, pendingDiceRoll],
   );
 
   const handleRollDice = useCallback(
-    ({ onDiceResult } = {}) =>
+    ({ onDiceResult, recover = false } = {}) =>
       runMutation({
         actionId: "dice-roll",
         prefix: "dice-roll",
@@ -261,15 +278,26 @@ export default function useBoardController() {
           const rollResult = adaptMovementResult(
             unwrapBoardResponse(await rollDice({ idempotencyKey })),
           );
-          await onDiceResult?.(rollResult);
-          await animateMovement(rollResult.movementPath, { previousPosition: rollResult.previousPosition, accelerateStart: true });
+          if (!recover) {
+            await onDiceResult?.(rollResult);
+            await animateMovement(rollResult.movementPath, { previousPosition: rollResult.previousPosition, accelerateStart: true });
+          }
 
           if (rollResult.pendingConfirm) {
-            if (mountedRef.current) setPendingRoll(rollResult);
-            await syncProgress({
+            const progress = await syncProgress({
               includeCurrentCell: false,
               preserveDisplayPosition: true,
             });
+            if (progress?.diceStatus.blockedReason === "PENDING_CONFIRM") {
+              if (mountedRef.current) {
+                setPendingRoll(rollResult);
+                setDisplayPosition(rollResult.currentPosition);
+              }
+            } else {
+              // Another tab may already have confirmed the cached result.
+              if (mountedRef.current) setPendingRoll(null);
+              await syncProgress();
+            }
           } else {
             if (mountedRef.current) setPendingRoll(null);
             showStartReward(rollResult, idempotencyKey);
@@ -575,6 +603,13 @@ export default function useBoardController() {
     [boardDefinition?.cells, cellStatesByIndex],
   );
 
+  const reload = useCallback(() => {
+    if (mutationKeysRef.current.has("dice-roll") || pendingDiceRoll.peek()) {
+      return handleRollDice({ recover: true }).catch(() => null);
+    }
+    return load();
+  }, [handleRollDice, load, pendingDiceRoll]);
+
   return {
     boardDefinition,
     myBoard,
@@ -598,7 +633,7 @@ export default function useBoardController() {
     isLoading,
     isMutating,
     error: error ?? deadlineError,
-    reload: load,
+    reload,
     rollDice: handleRollDice,
     confirmDice: handleConfirmDice,
     openChallenge: handleOpenChallenge,

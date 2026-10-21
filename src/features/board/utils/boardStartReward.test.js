@@ -60,7 +60,7 @@ test("깨진 응답과 잘못된 요청 식별자는 보상으로 받아들이�
 
 test("상태 재조회 전에 실제 보상을 보존하고 확정 대기 분기에서는 지급을 표시하지 않는다", () => {
   const source = readFileSync(new URL("../hooks/useBoardController.js", import.meta.url), "utf8");
-  assert.match(source, /if \(rollResult.pendingConfirm\) \{[^}]+setPendingRoll\(rollResult\)/);
+  assert.match(source, /if \(rollResult.pendingConfirm\) \{[\s\S]+if \(progress\?\.diceStatus.blockedReason === "PENDING_CONFIRM"\) \{[\s\S]+setPendingRoll\(rollResult\)/);
   for (const result of ["rollResult", "confirmResult", "moveResult"]) {
     assert.match(source, new RegExp(`showStartReward\\(${result}, idempotencyKey(?:, "airport")?\\);\\s+await syncProgress\\(\\);`));
   }
