@@ -518,3 +518,22 @@
   .stage .openToggle { width: 100%; justify-content: center; padding-inline: 8px; word-break: keep-all; }
   .boardControls { justify-content: center; }
 }
+
+@media (max-width: 1100px) {
+  .frame[data-board-text-layout] .mobileNav { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 6px; padding-inline: 4px; }
+  .frame[data-board-text-layout="stacked"] .mobileNav { grid-template-columns: minmax(0, 1fr); }
+  .frame[data-board-text-layout] .mobileMenuItems { right: 4px; width: calc(100% - 8px); grid-template-columns: minmax(0, 1fr); }
+  .frame[data-board-text-layout] .mobileMenuItems .mobileNavPrimary { flex-wrap: wrap; white-space: normal; word-break: keep-all; }
+  .frame[data-board-text-layout] .diceStatus { grid-template-columns: minmax(0, 1fr); }
+  .frame[data-board-text-layout] .mobileDiceIcon { grid-row: 1; justify-self: center; }
+  .frame[data-board-text-layout] .diceReadout { grid-column: 1; grid-row: 2; }
+  .frame[data-board-text-layout] .diceChallengeRow { grid-column: 1; grid-row: 3; white-space: normal; text-align: center; }
+  .frame[data-board-text-layout] .diceStatus > p { grid-row: 4; overflow-wrap: anywhere; }
+  .frame[data-board-text-layout] .diceCountRow { justify-content: center; white-space: normal; }
+  .frame[data-board-text-layout] .diceCountRow > span { max-width: 100%; text-align: center; word-break: keep-all; }
+  .frame[data-board-text-layout] .diceReadout strong,
+  .frame[data-board-text-layout] .diceChallengeRow strong { white-space: normal; }
+  .frame[data-board-text-layout] .boardTools { flex-direction: column; align-items: stretch; }
+  .frame[data-board-text-layout] .openToggle { width: 100%; justify-content: center; padding-inline: 8px; word-break: keep-all; }
+  .frame[data-board-text-layout] .boardControls { justify-content: center; }
+}

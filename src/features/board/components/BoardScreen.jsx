@@ -5,6 +5,7 @@ import { getBoardZoomScrollLeft } from "../utils/boardViewport.js";
 import useTrainTravel from "../hooks/useTrainTravel.js";
 import useTrainWhistle from "../hooks/useTrainWhistle.js";
 import useMobileBoardBackdrop from "../hooks/useMobileBoardBackdrop.js";
+import useBoardTextLayout from "../hooks/useBoardTextLayout.js";
 import { preloadBoardTrain } from "./BoardTrain.jsx";
 import { prepareBoardLines } from "../utils/boardLines.js";
 import { normalizeBoardListView } from "../utils/boardChallengeList.js";
@@ -98,6 +99,7 @@ export default function BoardScreen({
   const boardViewport = useRef(null);
   const frameRef = useRef(null);
   useMobileBoardBackdrop(frameRef, boardViewport);
+  useBoardTextLayout(frameRef);
   const trainTravel = useTrainTravel();
   const trainWhistle = useTrainWhistle();
   const followTrain = (pose) => {
