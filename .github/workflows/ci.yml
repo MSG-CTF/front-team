@@ -90,6 +90,11 @@ jobs:
           load: true
           tags: ${{ steps.image.outputs.target }}:${{ steps.image.outputs.run_tag }}
 
+      - name: 백엔드-주소-변경-후-프록시-복구-검증
+        run: >-
+          python3 scripts/test_nginx_dns_recovery.py
+          --image "${{ steps.image.outputs.target }}:${{ steps.image.outputs.run_tag }}"
+
       - name: sbom-디렉터리-준비
         # results/ 자체가 이 저장소에 없고 trivy-action이 상위 디렉터리를
         # 자동 생성하지 않아 미리 만들어둬야 한다.

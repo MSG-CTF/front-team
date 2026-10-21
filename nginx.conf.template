@@ -1,5 +1,5 @@
-# BACKEND_URL/PORT는 컨테이너 시작 시점에 envsubst로 치환된다.
-# (Dockerfile의 NGINX_ENVSUBST_FILTER가 이 두 변수만 치환 대상으로 제한한다.
+# BACKEND_URL/PORT와 컨테이너의 DNS 주소는 시작 시점에 envsubst로 치환된다.
+# (Dockerfile의 NGINX_ENVSUBST_FILTER가 이 세 변수만 치환 대상으로 제한한다.
 #  $host, $remote_addr 같은 nginx 자체 변수는 필터 밖이라 그대로 유지된다.)
 #
 # 로컬 docker-compose: BACKEND_URL=http://backend:8000, PORT=80
@@ -18,6 +18,11 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # 백엔드가 재시작해 IP가 바뀌어도 컨테이너의 DNS에서 다시 조회한다
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=5s ipv6=off;
+    resolver_timeout 2s;
+    set $backend_url "${BACKEND_URL}";
+
     add_header X-Frame-Options "DENY" always;
     add_header Content-Security-Policy "frame-ancestors 'none'" always;
     add_header X-Content-Type-Options "nosniff" always;
@@ -30,7 +35,7 @@ server {
     # Runtime이 사용하는 비밀값 조회 경로만 백엔드로 전달한다
     location = /internal/v1/runtime-secrets/resolve {
         client_max_body_size 16k;
-        proxy_pass ${BACKEND_URL}/internal/v1/runtime-secrets/resolve;
+        proxy_pass $backend_url$request_uri;
         proxy_ssl_server_name on;
         proxy_set_header Host $host;
         proxy_set_header Authorization $http_authorization;
@@ -43,7 +48,7 @@ server {
 
     # SLA가 Django의 DB·Redis 점검 결과를 그대로 받을 수 있게 연결한다
     location = /healthz {
-        proxy_pass ${BACKEND_URL}/healthz;
+        proxy_pass $backend_url$request_uri;
         proxy_ssl_server_name on;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
@@ -55,7 +60,7 @@ server {
 
     # 백엔드 API 프록시
     location /api/v1/ {
-        proxy_pass ${BACKEND_URL}/api/v1/;
+        proxy_pass $backend_url$request_uri;
         # BACKEND_URL이 https일 때 SNI를 보내야 하는 백엔드(Cloud Run 등)에 대응
         proxy_ssl_server_name on;
         proxy_set_header Host $host;

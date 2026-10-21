@@ -20,10 +20,12 @@ USER root
 RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
 USER 101
 
-# NGINX_ENVSUBST_FILTER: envsubst 치환 대상을 PORT/BACKEND_URL 두 개로만 제한한다.
+# 이미지의 entrypoint가 /etc/resolv.conf에서 현재 컨테이너의 DNS 주소를 읽는다.
+ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
+# NGINX_ENVSUBST_FILTER: 배포 설정과 DNS 주소만 치환한다.
 # 지정하지 않으면 컨테이너의 모든 환경변수가 치환 대상이 되고, 값이 없는 변수는
 # 빈 문자열로 치환돼 $host 같은 nginx 자체 변수가 깨질 수 있다.
-ENV NGINX_ENVSUBST_FILTER='^(PORT|BACKEND_URL)$'
+ENV NGINX_ENVSUBST_FILTER='^(PORT|BACKEND_URL|NGINX_LOCAL_RESOLVERS)$'
 # 로컬 docker-compose 기본값. 실제 배포 시 런타임이 오버라이드한다.
 ENV PORT=80
 ENV BACKEND_URL=http://backend:8000
