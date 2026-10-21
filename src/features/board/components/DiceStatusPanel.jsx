@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { formatRemaining } from "../../../utils/time.js";
 import styles from "./BoardScreen.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
@@ -11,6 +12,12 @@ const COMPACT_MESSAGES = {
   [BLOCKED_REASON_MESSAGES.BOARD_COMPLETED]: "모든 보드 칸 완료",
   "보유한 찬스카드 한 장을 먼저 폐기해주세요.": "찬스카드 한 장 폐기 필요",
 };
+
+function Countdown({ seconds }) {
+  return formatRemaining(seconds).split(":").map((part, index, parts) => (
+    <Fragment key={index}>{part}{index < parts.length - 1 && <>:<wbr /></>}</Fragment>
+  ));
+}
 
 // Keep the original frame and dice. A blank crop from the same wood replaces
 // the baked sample values and gauge together, so no black cover or gauge tip
@@ -49,10 +56,10 @@ export default function DiceStatusPanel({
       <div className={`${styles.diceReadout} absolute left-[12.5%] top-[45%] z-10 w-[77%] font-inria-serif text-[#f8ead0]`}>
         <div className={styles.diceCountRow}>
           <span>주사위 <strong>{rollsLeft}/{maxRolls}</strong></span>
-          {rechargeVisible && <span>충전까지 <strong>{formatRemaining(resetInSeconds)}</strong></span>}
+          {rechargeVisible && <span>충전까지 <strong><Countdown seconds={resetInSeconds} /></strong></span>}
         </div>
       </div>
-      {challengeRemainingSeconds != null && <div className={`${styles.diceChallengeRow} absolute right-[10%] top-[25%] z-10 font-inria-serif`}>문제 제한 <strong>{formatRemaining(challengeRemainingSeconds)}</strong></div>}
+      {challengeRemainingSeconds != null && <div className={`${styles.diceChallengeRow} absolute right-[10%] top-[25%] z-10 font-inria-serif`}>문제 제한 <strong><Countdown seconds={challengeRemainingSeconds} /></strong></div>}
       <p className={`${styles.diceStatusMessage} absolute left-[5.6%] top-[70%] z-10 m-0 w-[87.8%] text-left font-inria-serif text-[#e7d2ad]`} title={statusLabel}>
         <span className={styles.diceStatusFull}>{statusLabel}</span>
         <span className={styles.diceStatusCompact} aria-hidden="true">{compactStatus}</span>

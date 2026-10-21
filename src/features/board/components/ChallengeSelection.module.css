@@ -300,6 +300,7 @@
     padding: 56px 24px;
   }
   .reopen { position: fixed; left: 50%; top: auto; bottom: 36px; z-index: 40; }
+  [data-board-text-layout] .reopen { position: relative; inset: auto; align-self: center; width: calc(100% - 24px); margin: 12px 0; padding: 10px 8px; transform: none; font-size: 16px; word-break: keep-all; }
 }
 
 @container board-stage (max-width: 280px) {
