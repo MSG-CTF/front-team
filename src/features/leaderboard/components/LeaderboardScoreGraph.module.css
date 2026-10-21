@@ -32,7 +32,7 @@
   pointer-events: none;
 }
 
-.hoverPoint {
+.scorePoint {
   stroke: #f8ecec;
   stroke-width: 1px;
   pointer-events: none;

@@ -397,6 +397,8 @@ Bearer 인증 필요.
 - `team_score` = 제오파디 현재 점수 + KOTH 현재 점수(팀별 KOTH SOLVE `earned_score` 합, KOTH 공통 value 미사용). **밴 팀 제외 + 제오파디/KOTH solve가 하나도 없는 팀 제외**(그래프 특성상 - 0솔브 팀도 포함하는 `/ranking`과 대상 팀이 다를 수 있음).
 - 정렬: `team_score DESC -> last_solved_at ASC -> team_id ASC`. `last_solved_at` = `MAX(solves.solved_at)`, 제오파디 solve 없으면 `MIN(koth_solves.solved_at)`. `is_top3`는 이 정렬 상위 3팀만 true(동점이어도 순서가 정해지므로 3팀 이하).
 - 그래프: 프론트는 `points`를 재계산하지 않고 백엔드가 준 `solves`를 `solved_at` 순으로 누적. **KOTH는 새 SOLVE를 만들지 않음** - 처음 양수 점수 시점에만 점이 생기고 이후 15분 점수는 기존 점(그 팀의 현재 `earned_score`)의 값만 키운다.
+- 첫 기록은 점 하나로 표시하고 두 번째부터 실제 기록의 점끼리 직선으로 연결하며, 시작·끝에 가상 점을 추가하지 않음
+- 화면이 보이는 동안 30초마다 API를 다시 조회하고, 다이나믹 스코어링으로 기존 문제의 `points`가 내려가면 풀이 시각을 유지한 채 전체 누적 점수와 툴팁을 갱신
 - 백엔드 상태: **완료**(2026-09-03 Notion 갱신). 에러: 공통 외 없음.
 
 **제품 요구사항(기능명세 원문)**: 랭킹(team/개인) 페이지, 스코어보드 그래프, TOP3 팀명 표시(team/개인).

@@ -28,11 +28,44 @@ test("동일 시각 풀이를 모두 합산하며 KOTH 주기별 가상 점은 �
     ...teams[0].solves, { solvedAt: "2026-09-01T02:00:00Z", points: 50 },
   ] }]);
   assert.equal(scoreAtTime(data.series[0].points, Date.parse("2026-09-01T02:00:00Z")), 350);
-  assert.equal(data.series[0].points.filter((point) => !point.isBoundary).length, 3);
+  assert.equal(data.series[0].points.length, 3);
 });
-test("점수선은 풀이 전까지 수평으로 유지된다", () => {
-  assert.equal(toPolylinePoints([{ timestamp: 0, score: 0 }, { timestamp: 10, score: 100 }], (x) => x, (y) => y),
-    "0.00,0.00 10.00,0.00 10.00,100.00");
+test("점수선은 실제 풀이 점끼리 직선으로 연결한다", () => {
+  assert.equal(toPolylinePoints([{ timestamp: 10, score: 100 }, { timestamp: 20, score: 300 }, { timestamp: 35, score: 350 }], (x) => x, (y) => y),
+    "10.00,100.00 20.00,300.00 35.00,350.00");
+});
+test("첫 풀이는 실제 점 하나이며 시간축 여백에 시작점과 끝점을 만들지 않는다", () => {
+  const data = buildScoreSeries([teams[1]]);
+  const timestamp = Date.parse("2026-09-01T01:30:00Z");
+  assert.deepEqual(data.series[0].points, [{ timestamp, score: 100 }]);
+  assert.ok(data.minTime < timestamp && data.maxTime > timestamp);
+  assert.equal(scoreAtTime(data.series[0].points, timestamp - 1), 0);
+});
+test("두 번째 풀이까지 정확히 두 점만 만들며 풀이가 없는 팀은 제외한다", () => {
+  const data = buildScoreSeries([{ ...teams[1], solves: [] }, teams[0]]);
+  assert.equal(data.series.length, 1);
+  assert.deepEqual(data.series[0].points, [
+    { timestamp: Date.parse("2026-09-01T01:00:00Z"), score: 100 },
+    { timestamp: Date.parse("2026-09-01T02:00:00Z"), score: 300 },
+  ]);
+});
+test("다이나믹 점수 하락 시 기존 풀이 시각은 유지하고 모든 누적 점수를 다시 계산한다", () => {
+  const snapshot = (firstScore) => adaptLeaderboardTeams({ teams: [{
+    team_id: "dynamic", team_name: "Dynamic", team_score: firstScore + 200,
+    solves: [
+      { challenge_id: "first", source_type: "JEOPARDY", points: firstScore, solved_at: "2026-09-01T01:00:00Z" },
+      { challenge_id: "second", source_type: "JEOPARDY", points: 200, solved_at: "2026-09-01T02:00:00Z" },
+    ],
+  }] });
+  const previousTeams = snapshot(500);
+  const previous = buildScoreSeries(previousTeams);
+  const refreshed = buildScoreSeries(snapshot(400));
+  assert.deepEqual(previous.series[0].points.map(p => p.score), [500, 700]);
+  assert.deepEqual(refreshed.series[0].points.map(p => p.score), [400, 600]);
+  assert.deepEqual(refreshed.series[0].points.map(p => p.timestamp), previous.series[0].points.map(p => p.timestamp));
+  assert.equal(refreshed.series[0].finalScore, 600);
+  assert.equal(previousTeams[0].solves[0].points, 500);
+  assert.equal(scoreAtTime(refreshed.series[0].points, Date.parse("2026-09-01T01:30:00Z")), 400);
 });
 test("뒷페이지의 서버 순위를 유지하고 그래프 밖 팀의 풀이 수를 추측하지 않는다", () => {
   const rows = adaptRankingRows({ rankings: [{ team_id: "unknown", rank: 7, team_score: 0 }] });

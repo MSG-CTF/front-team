@@ -50,8 +50,8 @@ export default function LeaderboardScoreGraph({ teams, status }) {
   const zoomed = hasSeries && range[1] - range[0] < fullRange[1] - fullRange[0] - 1;
   const showSeconds = hasSeries && range[1] - range[0] < 10 * 60 * 1000;
   const solveTimes = useMemo(() => Array.from(new Set(chartData.series.flatMap((entry) => entry.points
-    .filter((point) => !point.isBoundary).map((point) => point.timestamp)))).sort((a, b) => a - b), [chartData]);
-  const visibleTimes = hasSeries ? Array.from(new Set([range[0], ...solveTimes.filter((time) => time >= range[0] && time <= range[1]), range[1]])) : [];
+    .map((point) => point.timestamp)))).sort((a, b) => a - b), [chartData]);
+  const visibleTimes = hasSeries ? solveTimes.filter((time) => time >= range[0] && time <= range[1]) : [];
   const hoverTime = hoverX !== null && hasSeries ? nearestTime(visibleTimes, hoverX, scales.x) : null;
   const clipId = chartId + "-plot";
   const glowId = chartId + "-glow";
@@ -115,6 +115,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
     }
     if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
+    if (!visibleTimes.length) return;
     const index = visibleTimes.indexOf(hoverTime);
     const next = event.key === "Home" ? 0 : event.key === "End" ? visibleTimes.length - 1
       : Math.max(0, Math.min(visibleTimes.length - 1, index + (event.key === "ArrowRight" ? 1 : -1)));
@@ -150,9 +151,9 @@ export default function LeaderboardScoreGraph({ teams, status }) {
       role="img" tabIndex={0} onFocus={() => setHoverX(0)} onBlur={() => setHoverX(null)} onKeyDown={onKeyDown}
       aria-labelledby={chartId + "-title " + chartId + "-description"}>
       <title id={chartId + "-title"}>팀별 누적 점수 그래프</title>
-      <desc id={chartId + "-description"}>마우스로 구간을 드래그하거나 더하기 키로 확대하고 Escape로 전체 보기, 좌우 방향키로 점수 탐색, 시간은 KST</desc>
+      <desc id={chartId + "-description"}>실제 풀이 점을 직선으로 연결하고 현재 문제 점수로 누적 점수를 다시 계산합니다. 마우스로 구간을 드래그하거나 더하기 키로 확대하고 Escape로 전체 보기, 좌우 방향키로 점수 탐색, 시간은 KST</desc>
       <defs>
-        <clipPath id={clipId}><rect width={plotWidth} height={plotHeight} /></clipPath>
+        <clipPath id={clipId}><rect x={-5} y={-5} width={plotWidth + 10} height={plotHeight + 10} /></clipPath>
         <filter id={glowId} x="-10%" y="-20%" width="120%" height="140%">
           <feGaussianBlur stdDeviation="2.4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
         </filter>
@@ -160,14 +161,15 @@ export default function LeaderboardScoreGraph({ teams, status }) {
       <g transform={"translate(" + PLOT.left + " " + PLOT.top + ")"}>
         <rect width={plotWidth} height={plotHeight} className={styles.keyboardFocus} />
         <g clipPath={"url(#" + clipId + ")"}>
-          {chartData.series.map((entry) => <polyline key={entry.key} points={toPolylinePoints(entry.points, scales.x, scales.y)}
-            className={styles.scoreLine} style={compact ? undefined : { filter: "url(#" + glowId + ")" }} fill="none" stroke={entry.color}
-            strokeWidth={compact ? 2 : entry.isTop3 ? 3.6 : 3} vectorEffect="non-scaling-stroke" data-is-top3={entry.isTop3 || undefined} />)}
-          {hoverTime !== null && !drag && <>
-            <line x1={scales.x(hoverTime)} x2={scales.x(hoverTime)} y1={0} y2={plotHeight} className={styles.hoverLine} />
-            {chartData.series.map((entry) => <circle key={entry.key} cx={scales.x(hoverTime)} cy={scales.y(scoreAtTime(entry.points, hoverTime))}
-              r={3.5} fill={entry.color} className={styles.hoverPoint} />)}
-          </>}
+          {hoverTime !== null && !drag && <line x1={scales.x(hoverTime)} x2={scales.x(hoverTime)} y1={0} y2={plotHeight} className={styles.hoverLine} />}
+          {chartData.series.map((entry) => <g key={entry.key} data-score-series={entry.key}>
+            {entry.points.length > 1 && <polyline points={toPolylinePoints(entry.points, scales.x, scales.y)}
+              className={styles.scoreLine} style={compact ? undefined : { filter: "url(#" + glowId + ")" }} fill="none" stroke={entry.color}
+              strokeWidth={compact ? 2 : entry.isTop3 ? 3.6 : 3} vectorEffect="non-scaling-stroke" data-is-top3={entry.isTop3 || undefined} />}
+            {entry.points.map((point, index) => <circle key={index} data-score-point={point.timestamp} data-score={point.score}
+              cx={scales.x(point.timestamp)} cy={scales.y(point.score)}
+              r={point.timestamp === hoverTime && !drag ? 4.5 : 3.5} fill={entry.color} className={styles.scorePoint} />)}
+          </g>)}
           {drag && <rect x={Math.min(drag.startX, drag.endX)} width={Math.abs(drag.endX - drag.startX)} height={plotHeight} className={styles.zoomSelection} />}
         </g>
         <rect width={plotWidth} height={plotHeight} fill="transparent" className={styles.interactionArea}

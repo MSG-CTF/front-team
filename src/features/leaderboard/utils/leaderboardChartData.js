@@ -51,8 +51,10 @@ export function buildScoreSeries(teams) {
   const series = visibleTeams
     .map((team, index) => {
       let cumulativeScore = 0;
-      const points = [{ timestamp: minTime, score: 0, isBoundary: true }];
+      const points = [];
 
+      // Each refresh contains current challenge values, including earlier solves.
+      // Rebuild the whole cumulative series instead of appending to old totals.
       team.solves.forEach((solve) => {
         const timestamp = asTimestamp(solve.solvedAt);
         if (timestamp === null) return;
@@ -60,8 +62,6 @@ export function buildScoreSeries(teams) {
         cumulativeScore += solve.points;
         points.push({ timestamp, score: cumulativeScore });
       });
-
-      if (points.length > 1) points.push({ timestamp: maxTime, score: cumulativeScore, isBoundary: true });
 
       return {
         key: team.key,
@@ -72,7 +72,7 @@ export function buildScoreSeries(teams) {
         finalScore: cumulativeScore,
       };
     })
-    .filter((entry) => entry.points.length > 1);
+    .filter((entry) => entry.points.length > 0);
 
   const maxScore = Math.max(...series.map((entry) => entry.finalScore), 0);
 
@@ -90,11 +90,9 @@ export function createChartScales({ minTime, maxTime, maxScore, width, height })
 }
 
 export function toPolylinePoints(points, scaleX, scaleY) {
-  return points.flatMap((point, index) => {
-    const position = `${scaleX(point.timestamp).toFixed(2)},${scaleY(point.score).toFixed(2)}`;
-    if (index === 0) return [position];
-    return [`${scaleX(point.timestamp).toFixed(2)},${scaleY(points[index - 1].score).toFixed(2)}`, position];
-  }).join(" ");
+  return points.map((point) =>
+    `${scaleX(point.timestamp).toFixed(2)},${scaleY(point.score).toFixed(2)}`,
+  ).join(" ");
 }
 
 export function scoreAtTime(points, time) {
