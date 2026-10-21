@@ -221,6 +221,7 @@ export default function useBoardController() {
       actionId,
       prefix,
       request,
+      requestKey,
       silentCodes = [],
       allowWhileAwaitingDiscard = false,
     }) => {
@@ -240,7 +241,7 @@ export default function useBoardController() {
       try {
         idempotencyKey = actionId === "dice-roll"
           ? await pendingDiceRoll.acquire(mutationKeysRef.current.get(actionId))
-          : mutationKeysRef.current.get(actionId) ?? createBoardIdempotencyKey(prefix);
+          : mutationKeysRef.current.get(actionId) ?? requestKey ?? createBoardIdempotencyKey(prefix);
         mutationKeysRef.current.set(actionId, idempotencyKey);
         const result = await request(idempotencyKey);
         if (actionId === "dice-roll") {
@@ -323,22 +324,36 @@ export default function useBoardController() {
   );
 
   const handleConfirmDice = useCallback(
-    () =>
-      runMutation({
-        actionId: "dice-confirm",
+    () => {
+      // Bind retries to the movement shown in this browser, including after reload.
+      const requestKey = pendingRoll?.confirmRequestKey ?? diceStatus?.pendingConfirmRequestKey;
+      return runMutation({
+        actionId: requestKey ? `dice-confirm:${requestKey}` : "dice-confirm",
         prefix: "dice-confirm",
+        requestKey,
         request: async (idempotencyKey) => {
-          const confirmResult = adaptMovementResult(
-            unwrapBoardResponse(await confirmDice({ idempotencyKey })),
-          );
+          let confirmResult;
+          try {
+            confirmResult = adaptMovementResult(
+              unwrapBoardResponse(await confirmDice({ idempotencyKey })),
+            );
+          } catch (requestError) {
+            const { code } = getBoardError(requestError);
+            if (["DICE_CONFIRM_REQUEST_EXPIRED", "NO_PENDING_ROLL"].includes(code)) {
+              if (mountedRef.current) setPendingRoll(null);
+              await syncProgress();
+            }
+            throw requestError;
+          }
           await animateMovement(confirmResult.movementPath, { previousPosition: confirmResult.previousPosition, accelerateStart: true });
           if (mountedRef.current) setPendingRoll(null);
           showStartReward(confirmResult, idempotencyKey);
           await syncProgress();
           return confirmResult;
         },
-      }),
-    [animateMovement, runMutation, showStartReward, syncProgress],
+      });
+    },
+    [animateMovement, diceStatus?.pendingConfirmRequestKey, pendingRoll?.confirmRequestKey, runMutation, showStartReward, syncProgress],
   );
 
   const handleOpenChallenge = useCallback(

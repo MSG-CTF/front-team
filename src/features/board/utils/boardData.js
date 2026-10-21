@@ -107,6 +107,7 @@ export function adaptDiceStatus(data) {
     timerRunning: data?.timer_running === true,
     blockedReason: data?.blocked_reason ?? null,
     unconfirmedRollRequestKey: data?.unconfirmed_roll_request_key,
+    pendingConfirmRequestKey: data?.pending_confirm_request_key,
     serverTime: data?.server_time ?? null,
     nextDiceResetAt: data?.next_dice_reset_at ?? null,
     receivedAt: Date.now(),
@@ -206,6 +207,7 @@ export function adaptMovementResult(data) {
     startReward: data?.start_reward ?? null,
     boardEventCode: data?.board_event_code ?? null,
     pendingConfirm: data?.pending_confirm === true,
+    confirmRequestKey: data?.pending_confirm_request_key,
     usableChanceCard: data?.usable_chance_card ?? null,
   };
 }
