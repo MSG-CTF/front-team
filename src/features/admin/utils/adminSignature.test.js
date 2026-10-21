@@ -4,6 +4,13 @@ import { signaturePayload, validateSignature } from "./adminSignature.js";
 
 const form = { clubId: "club-1", title: " 시그니처 ", description: " 설명 ", flag: " LOCAL ", score: "300.25" };
 
+test("비공개 초안은 지문과 플래그를 나눠 저장하고 공개 중인 문제는 지문을 요구한다", () => {
+  const draft = { ...form, description: "", flag: "" };
+  assert.equal(validateSignature(draft, true, true), "");
+  assert.ok(validateSignature(draft, true, false));
+  assert.ok(validateSignature(draft, false, false));
+});
+
 test("시그니처 등록은 동아리와 필수 필드, 서버 점수 범위를 확인한다", () => {
   assert.equal(validateSignature(form), "");
   for (const change of [{ clubId: "" }, { title: " " }, { title: "가".repeat(201) }, { description: " " }, { flag: "" }, { flag: "x".repeat(513) }]) {

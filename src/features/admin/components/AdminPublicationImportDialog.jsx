@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { createAdminIdempotencyKey, getPublishedChallenges, importPublishedChallenge, previewPublishedChallenge } from "../../../api/admin.js";
+import { createAdminIdempotencyKey, getAdminChallenge, getPublishedChallenges, importPublishedChallenge, previewPublishedChallenge } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
 import { latestPublications, mergePublications, publicationAttempt, publicationFileLabel } from "../utils/adminPublications.js";
@@ -81,6 +81,12 @@ export default function AdminPublicationImportDialog({ onClose, onImported, onOp
     attempt.current = null;
   }
 
+  function openExisting(row) {
+    return fetchRead("현재 문제 설정을 확인하고 있습니다",
+      (signal) => getAdminChallenge(row.challenge_id, { signal }),
+      (data) => onOpenSettings?.(data), () => openExisting(row));
+  }
+
   async function submit(event) {
     event.preventDefault();
     if (pending.current || !preview?.can_import || result) return;
@@ -137,7 +143,7 @@ export default function AdminPublicationImportDialog({ onClose, onImported, onOp
             <td>{row.has_release_artifact ? "실행 이미지" : "파일 정보"}{row.has_release_artifact && row.has_files_artifact ? " · 파일 정보" : ""}
               {row.workflow_state === "failed" && <span className={styles.secondary}>발행 실패</span>}
               {row.workflow_state === "running" && <span className={styles.secondary}>발행 진행 중</span>}</td>
-            <td><div className={styles.rowActions}>{row.challenge_id && <button type="button" className={styles.button} onClick={() => onOpenSettings?.({ challenge_id: row.challenge_id, title: row.title || row.challenge_slug, challenge_slug: row.challenge_slug })}>설정 열기</button>}<button type="button" className={styles.button} disabled={Boolean(loading) || ["failed", "running"].includes(row.workflow_state)} aria-label={`${row.title || row.challenge_slug} 발행본 확인`} onClick={() => selectPublication(row)}>{row.challenge_id ? "발행본 확인" : "가져오기"}</button></div></td>
+            <td><div className={styles.rowActions}>{row.challenge_id && <button type="button" className={styles.button} disabled={Boolean(loading)} onClick={() => openExisting(row)}>설정 열기</button>}<button type="button" className={styles.button} disabled={Boolean(loading) || ["failed", "running"].includes(row.workflow_state)} aria-label={`${row.title || row.challenge_slug} 발행본 확인`} onClick={() => selectPublication(row)}>{row.challenge_id ? "발행본 확인" : "가져오기"}</button></div></td>
           </tr>)}</tbody>
         </table>
         {!filtered.length && !loading && <p className={styles.empty}>{search ? "검색 결과가 없습니다" : scope === "new" && latest.length ? "불러온 문제는 모두 등록되어 있습니다 ‘등록된 문제’에서 확인할 수 있습니다" : "표시할 발행본이 없습니다"}{nextPage ? " 목록을 더 불러오면 다른 문제도 확인할 수 있습니다" : ""}</p>}
