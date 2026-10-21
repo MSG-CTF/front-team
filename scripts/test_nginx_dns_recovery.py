@@ -53,6 +53,12 @@ HTTPServer(('0.0.0.0',8000),Handler).serve_forever()
 
     try:
         docker('network','create',network)
+        allocated=json.loads(docker('network','inspect',network))[0]['IPAM']['Config']
+        assert len(allocated)==1 and ':' not in allocated[0]['Subnet']
+        # Newer Docker versions allow --ip only with an explicit subnet.
+        # Reuse the subnet Docker just allocated so it cannot overlap an existing network.
+        docker('network','rm',network)
+        docker('network','create','--subnet',allocated[0]['Subnet'],network)
         start_backend('before')
         old_ip=inspect(backend)['NetworkSettings']['Networks'][network]['IPAddress']
         owned.append(frontend)
