@@ -892,8 +892,9 @@
   .page::before { content: ""; position: fixed; inset: 0; z-index: -1; background: linear-gradient(#20170e55, #20170e88), url("/assets/challenge-detail/bg-forest.webp") center / cover; pointer-events: none; }
   .teamCard, .historyPanel { border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 / 8px stretch; border-radius: 0; background: none; }
   .teamCard .bakedLabel:first-child { min-width: 70%; padding: 8px 24px; clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); background: #842b28; }
-  .metricPanel { isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; border-radius: 0; background: #2c1c11; background-clip: padding-box; }
-  .metricPanel .bakedLabel { font-size: 15px; white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+  .metricPanel { isolation: isolate; container-type: inline-size; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; border-radius: 0; background: #2c1c11; background-clip: padding-box; }
+  .metricPanel .bakedLabel { font-size: clamp(13px, 15cqw, 15px); letter-spacing: min(.16em, 1cqw); white-space: normal; overflow: visible; overflow-wrap: anywhere; }
+  .metricValue { font-size: clamp(24px, 24cqw, 44px); }
   .refreshButton, .historyPagination button { min-width: 44px; min-height: 44px; }
   .rank, .unit { position: static; margin-top: 8px; text-align: right; }
   .historyTable { min-width: 680px; font-size: 15px; }
