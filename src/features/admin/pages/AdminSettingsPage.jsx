@@ -99,7 +99,7 @@ export default function AdminSettingsPage() {
         <form onSubmit={handleSave} className="flex flex-col gap-4 rounded-lg border border-admin-divider bg-white/30 p-4">
           <fieldset disabled={isSaving} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <Field
-              label="주사위 충전 개수"
+              label="주사위 최대 보유 수"
               min={1}
               max={20}
               value={form.dice_rolls_per_reset}
@@ -134,6 +134,10 @@ export default function AdminSettingsPage() {
               onChange={(value) => setForm({ ...form, lock_seconds: value })}
             />
           </fieldset>
+
+          <p className="m-0 text-xs text-admin-muted">
+            새 팀은 최대 보유 수만큼 시작하며, 기존 팀은 남은 주사위를 유지하고 1개씩 충전합니다
+          </p>
 
           <button
             type="submit"
