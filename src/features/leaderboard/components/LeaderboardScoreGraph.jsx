@@ -38,7 +38,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
   // The responsive parchment is at most 900px wide. Keep labels and controls
   // inside it through the tablet layout, including the 1100px breakpoint.
   const compact = size.width <= 900;
-  const { plot: PLOT, plotWidth, plotHeight, timeTicks, scoreTicks, scoreOffset } = getScoreGraphLayout({ ...size, compact, labels });
+  const { plot: PLOT, plotWidth, plotHeight, timeTicks, timeLabelStep, scoreTicks, scoreOffset } = getScoreGraphLayout({ ...size, compact, labels });
   const [hoverX, setHoverX] = useState(null);
   const [zoom, setZoom] = useState(null);
   const [drag, setDrag] = useState(null);
@@ -139,7 +139,7 @@ export default function LeaderboardScoreGraph({ teams, status }) {
       // 회전 직후 ResizeObserver의 다음 갱신 전에도 눈금은 현재 화면 폭을 따른다.
       return <span key={index} data-axis-label="time" className={styles.axisTime} style={compact ? {
         left: `calc(${fraction * 100}% + ${PLOT.left * (1 - fraction) - PLOT.right * fraction}px)`,
-        top: `calc(100% - ${PLOT.bottom - 17}px)`,
+        top: `calc(100% - ${PLOT.bottom - 17 - index * timeLabelStep}px)`,
       } : { left: PLOT.left + scales.x(time), top: size.height - PLOT.bottom + 17 }}>{formatTime(time, showSeconds)}</span>;
     })}
     {hasSeries && <svg className={styles.svg} viewBox={"0 0 " + size.width + " " + size.height} preserveAspectRatio="none"

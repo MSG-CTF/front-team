@@ -31,3 +31,18 @@ test("좁은 확대 화면에서는 시작과 끝 눈금만 표시하고 줄바�
   assert.ok(layout.plot.top > labels.controlsHeight);
   assert.ok(layout.plotHeight > 0);
 });
+
+test("200% 확대에서 초 단위 시작과 끝 시간이 겹치면 두 줄로 배치한다", () => {
+  const labels = { scoreWidth: 42, scoreHeight: 20, timeWidth: 56, timeHeight: 20, controlsHeight: 96 };
+  const layout = getScoreGraphLayout({ width: 139, height: 300, compact: true, labels });
+  assert.equal(layout.timeTicks, 2);
+  assert.ok(layout.plotWidth < labels.timeWidth);
+  assert.ok(layout.timeLabelStep >= labels.timeHeight + 4);
+  assert.ok(layout.plot.bottom >= 17 + layout.timeLabelStep + labels.timeHeight);
+  assert.ok(layout.plotHeight > 0);
+
+  const normal = getScoreGraphLayout({ width: 334, height: 300, compact: true, labels });
+  const desktop = getScoreGraphLayout({ width: 1280, height: 392, compact: false, labels });
+  assert.equal(normal.timeLabelStep, 0);
+  assert.equal(desktop.timeLabelStep, 0);
+});

@@ -9,12 +9,17 @@ export function getScoreGraphLayout({ width, height, compact, labels = {} }) {
     }
     : { left: 42, top: 30, right: 4, bottom: 48 };
   const plotWidth = Math.max(1, width - plot.left - plot.right);
+  const timeTicks = compact && plotWidth < (labels.timeWidth || 0) * 2.5 ? 2 : compact ? 3 : 5;
+  const timeLabelStep = compact && timeTicks === 2 && plotWidth < (labels.timeWidth || 0) + 8
+    ? (labels.timeHeight || 20) + 4 : 0;
+  plot.bottom += timeLabelStep;
   const plotHeight = Math.max(1, height - plot.top - plot.bottom);
   return {
     plot,
     plotWidth,
     plotHeight,
-    timeTicks: compact && plotWidth < (labels.timeWidth || 0) * 2.5 ? 2 : compact ? 3 : 5,
+    timeTicks,
+    timeLabelStep,
     scoreTicks: compact
       ? [6, 5, 3, 2].find(count => count <= Math.max(2, Math.floor(plotHeight / ((labels.scoreHeight || 20) + 8)) + 1))
       : 6,
