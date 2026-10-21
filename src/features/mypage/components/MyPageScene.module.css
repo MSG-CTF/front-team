@@ -23,10 +23,11 @@
   --gold: #d38e25;
   --minus: #9f4343;
   --line: #8d6b3b;
-  --serif: "MyPage Fell", "MyPage Pretendard", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", serif;
-  --label: "MyPage Caslon", "MyPage Fell", "MyPage Pretendard", "Pretendard", serif;
-  --number: "MyPage Caslon", "MyPage Pretendard", "Pretendard", serif;
-  --sans: "MyPage Pretendard", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  /* 로컬 서브셋과 전체 글꼴 fallback이 있어 CDN의 같은 글꼴을 중복 요청하지 않는다 */
+  --serif: "MyPage Fell", "MyPage Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", serif;
+  --label: "MyPage Caslon", "MyPage Fell", "MyPage Pretendard", serif;
+  --number: "MyPage Caslon", "MyPage Pretendard", serif;
+  --sans: "MyPage Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   min-height: 100dvh;
   padding: 12px 10px 24px;
   color: var(--brown);

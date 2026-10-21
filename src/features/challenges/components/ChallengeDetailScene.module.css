@@ -21,9 +21,10 @@
   --brown-soft: #8a5e2e;
   --gold: #d38e25;
   --line: #8d6b3b;
-  --serif: "Detail Fell", "Detail Pretendard", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", serif;
-  --label: "Detail Caslon", "Detail Fell", "Detail Pretendard", "Pretendard", serif;
-  --sans: "Detail Pretendard", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  /* 로컬 서브셋과 전체 글꼴 fallback이 있어 CDN의 같은 글꼴을 중복 요청하지 않는다 */
+  --serif: "Detail Fell", "Detail Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", serif;
+  --label: "Detail Caslon", "Detail Fell", "Detail Pretendard", serif;
+  --sans: "Detail Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --mono: "Kode Mono", "Detail Pretendard", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --asset: "/assets/challenge-detail";
   min-height: 100dvh;
