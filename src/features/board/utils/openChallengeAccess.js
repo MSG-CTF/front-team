@@ -9,7 +9,7 @@ export async function openChallengeAccess({ challengeId, idempotencyKey, refresh
     cellIndex: openResult.cell_index,
     challengeId: openResult.challenge_id,
     openedAt: openResult.opened_at,
-    solveDeadlineAt: getChallengeDeadline(openResult.opened_at),
+    solveDeadlineAt: getChallengeDeadline(openResult.opened_at, openResult.solve_deadline_at),
     remainingSeconds: openResult.remaining_seconds,
   };
 }

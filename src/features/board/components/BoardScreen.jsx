@@ -223,6 +223,7 @@ export default function BoardScreen({
     <FixedAspectStage frameRef={frameRef} backdropSrc="/assets/board/bg-1920x1080-display.webp" frameClassName={styles.frame} className={styles.stage}>
       <BoardDiceStatusPanel
         rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
+        maxRolls={diceStatus?.maxDiceRolls ?? myBoard?.maxDiceRolls ?? 3}
         canRoll={canRoll}
         blockedMessage={blockedMessage}
         diceStatus={diceStatus}

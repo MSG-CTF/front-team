@@ -7,8 +7,11 @@ export function toKst(isoUtc, options = {}) {
   });
 }
 
-// 추가 주사위 보상 기간은 개방 시각부터 15분이며 이후에도 정답 제출은 가능하다
-export function getChallengeDeadline(openedAt) {
+// 서버 마감을 우선 사용하고, 마감 필드가 없는 구버전 응답은 기본 15분으로 계산한다
+export function getChallengeDeadline(openedAt, solveDeadlineAt) {
+  if (typeof solveDeadlineAt === "string" && Number.isFinite(Date.parse(solveDeadlineAt))) {
+    return new Date(solveDeadlineAt).toISOString();
+  }
   if (typeof openedAt !== "string" || !openedAt.trim()) return null;
   const openedTimestamp = Date.parse(openedAt);
   if (!Number.isFinite(openedTimestamp)) return null;

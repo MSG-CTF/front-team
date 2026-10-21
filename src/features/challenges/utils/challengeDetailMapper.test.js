@@ -133,19 +133,19 @@ test("미제공 상태/시간을 목록이나 예전 deadline 필드로 추측�
   }
 });
 
-test("Board는 opened_at에서 마감을 계산하고 서버 시각으로 남은 시간을 보정한다", () => {
+test("Board는 서버 마감을 사용하고 서버 시각으로 남은 시간을 보정한다", () => {
   const board = adaptMyBoard({
     active_challenge: {
       challenge_id: "test-challenge",
       opened_at: openedAt,
-      solve_deadline_at: "2020-01-01T00:00:00Z",
+      solve_deadline_at: "2026-09-07T00:00:00Z",
     },
     cell_states: [
       { cell_index: 2, status: "OPENED" },
       { cell_index: 3, status: "CLEARED" },
     ],
   });
-  assert.equal(board.activeChallenge.solveDeadlineAt, deadline);
+  assert.equal(board.activeChallenge.solveDeadlineAt, "2026-09-07T00:00:00.000Z");
   assert.deepEqual(
     board.cellStates.map((cell) => cell.status),
     ["OPENED", "CLEARED"],
@@ -157,7 +157,7 @@ test("Board는 opened_at에서 마감을 계산하고 서버 시각으로 남은
       diceStatus,
       70_000,
     ),
-    840,
+    240,
   );
   assert.equal(
     getRemainingSeconds(

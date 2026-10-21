@@ -62,6 +62,7 @@ export function adaptMyBoard(data) {
     position: data?.position ?? null,
     type: data?.type ?? null,
     diceRollsLeft: data?.dice_rolls_left ?? 0,
+    maxDiceRolls: data?.max_dice_rolls ?? 3,
     nextDiceResetAt: data?.next_dice_reset_at ?? null,
     airportMoveUsed: data?.airport_move_used === true,
     hasPassedStart: data?.has_passed_start === true,
@@ -88,7 +89,10 @@ export function adaptMyBoard(data) {
       ? {
           challengeId: data.active_challenge.challenge_id,
           openedAt: data.active_challenge.opened_at,
-          solveDeadlineAt: getChallengeDeadline(data.active_challenge.opened_at),
+          solveDeadlineAt: getChallengeDeadline(
+            data.active_challenge.opened_at,
+            data.active_challenge.solve_deadline_at,
+          ),
           remainingSeconds: data.active_challenge.remaining_seconds,
         }
       : null,
@@ -99,6 +103,7 @@ export function adaptDiceStatus(data) {
   return {
     canRoll: data?.can_roll === true,
     diceRollsLeft: data?.dice_rolls_left ?? 0,
+    maxDiceRolls: data?.max_dice_rolls ?? 3,
     timerRunning: data?.timer_running === true,
     blockedReason: data?.blocked_reason ?? null,
     serverTime: data?.server_time ?? null,
