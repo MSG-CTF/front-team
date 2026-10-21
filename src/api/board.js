@@ -1,9 +1,10 @@
 import apiClient from "./client.js";
 
 // 보드 페이지 API. 경로와 스키마는 README.md "2. 문제 리스트(보드) 페이지"
-// (Notion API명세서 2026-08-23 스냅샷) 기준. 16개 엔드포인트 전부 백엔드 완료.
+// (Notion API명세서 2026-08-23 스냅샷)와 브라우저 간 요청 복구 계약 기준.
 //
-// 쓰기 계열(POST)은 전부 Idempotency-Key 헤더 필수 + 이동/굴림 계열은 팀장만.
+// 굴림·이동 쓰기는 Idempotency-Key 필수이며 팀장만 호출한다.
+// 요청 준비·결과 확인은 서버의 미확인 요청을 사용해 자체적으로 중복을 막는다.
 // 같은 논리 작업의 재시도에는 controller가 같은 키를 다시 전달한다.
 // 응답 성공 판정은 HTTP 상태가 아니라 utils/response.js isSuccess() (README 0-2절).
 

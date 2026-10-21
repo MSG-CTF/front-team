@@ -282,7 +282,7 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 
 인증: 모든 보드 API에 Bearer 필요.
 
-> **이 절은 최신 보드 계약 기준으로 갱신되었다.** 굴림 -> 확정 2단계 흐름, 찬스카드 폐기, `cell_states`, 룰렛칸 2개를 반영한다. `POST` 쓰기 계열은 전부 `Idempotency-Key` 헤더(`<이름>-<UUID>`) 필수, 이동/굴림 계열은 팀장만.
+> 굴림 -> 확정 2단계 흐름, 찬스카드 폐기, `cell_states`, 룰렛칸 2개를 반영한다. 굴림·이동 쓰기는 `Idempotency-Key` 헤더 필수이며 팀장만 호출한다. 요청 준비·결과 확인 API는 아래 복구 계약을 따른다.
 
 | Method | URL | 설명 |
 |---|---|---|
@@ -290,6 +290,8 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 | GET | `/board/me` | 내 팀 보드 상태 전체 |
 | GET | `/board/dice/status` | 주사위 굴릴 수 있는지 상태 |
 | POST | `/board/dice/roll` | 주사위 2개 굴려 이동(팀장만) |
+| POST | `/board/dice/request` | 미확인 굴림 요청 준비·이어받기(팀장만) |
+| POST | `/board/dice/request/ack` | 굴림 결과 확인 완료(팀장만) |
 | POST | `/board/dice/confirm` | 보류된 굴림 결과 확정(팀장만) |
 | GET | `/board/cell/current` | 도착한 칸 상세 + 문제 후보 3개 |
 | POST | `/board/cell/open` | 문제 선택해 오픈 |
@@ -307,6 +309,16 @@ STOPPED / FAILED / EXPIRED -> CLEANUP_PENDING -> CLEANED
 - `GET /board` (인증 없음) -> `{ total_cell_count: 36, cells: [{ cell_index, type, difficulty, name }] }`. 특수칸 고정: 1=START, 7·30=CHANCE("황금열쇠"), 16·25=ROULETTE, 21=AIRPORT("세계여행"/"기차여행"), 나머지 CHALLENGE. `difficulty`는 CHALLENGE 칸만(`EASY`/`MEDIUM`/`HARD`), 그 외 null. 프론트는 서버의 `cell_index`를 그대로 사용한다. 추가 에러: `500 BOARD_LOAD_FAILED`. (프론트는 `club_name`을 `cell/current`, `opened_challenges`에서 받는다)
 - `GET /board/me` -> `{ position, type, dice_rolls_left, next_dice_reset_at, airport_move_used, has_passed_start, board_completed, consumed_cell_indexes: [n], cell_states: [{cell_index, status, category}], chance_cards: [{card_id, used, discarded, usable_now}], active_challenge: {challenge_id, opened_at, solve_deadline_at, remaining_seconds} | null }`. **`cell_states[].status`: `CONSUMED`(소모됐지만 문제 미오픈) / `OPENED` / `CLEARED`.** `chance_cards`는 뽑은 전체 이력(`used`, `discarded` 둘 다 false + `usable_now`인 것이 보유분, 최대 2장). `board_completed`는 START 포함 36칸 전부 소모 시 true. `active_challenge`의 `solve_deadline_at` = `opened_at + 15분`.
 - `GET /board/dice/status` -> `{ can_roll, dice_rolls_left, timer_running, blocked_reason, server_time, next_dice_reset_at }`. `blocked_reason`(먼저 걸리는 하나): `BOARD_COMPLETED` -> `CHALLENGE_NOT_SELECTED` -> `PENDING_CONFIRM` -> `NO_ROLL_LEFT`. **주사위 충전: 보유량이 3회 미만이 된 시각부터 15분마다 1회씩, 최대 3회까지**(정시 아님, 팀별 상이). 추가 소비는 기존 `next_dice_reset_at`을 유지한다. 보상·충전으로 3회가 되면 null로 종료하고 이후 소비부터 새 15분을 계산한다. 남은 초는 프론트가 `next_dice_reset_at - server_time`로 계산.
+
+### 브라우저·기기 간 굴림 복구
+
+`POST /board/dice/request`는 본문 없이 호출하며 `{ request_key }`를 반환한다. 다른 브라우저도 같은 계정·팀의 미확인 요청을 이어받는다. 받은 키를 기존 굴림 API의 `Idempotency-Key`로 보낸다.
+
+굴림 결과와 최신 보드 상태를 받은 뒤 `POST /board/dice/request/ack`에 `{ request_key }`를 보낸다. 확인 응답만 유실됐을 때는 이미 받은 굴림 결과를 실패로 바꾸지 않는다. 확인이 끝난 뒤의 새 굴림은 새 키를 사용한다.
+
+`GET /board/dice/status`의 `unconfirmed_roll_request_key`는 미확인 키 또는 null이다. 새 브라우저는 이를 복구하며 재접속만으로 주사위를 사용하지 않는다. 확인을 마친 서버 발급 키는 로컬에서도 정리한다. 요청 준비·결과 확인 API는 별도 `Idempotency-Key` 헤더를 요구하지 않는다.
+
+백엔드 마이그레이션과 복구 API를 먼저 배포한 뒤 이 프론트를 배포한다.
 
 ### 이동 / 굴림 (전부 팀장만, Idempotency-Key 필수)
 
