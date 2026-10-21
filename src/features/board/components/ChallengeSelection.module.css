@@ -302,6 +302,14 @@
   .reopen { position: fixed; left: 50%; top: auto; bottom: 36px; z-index: 40; }
 }
 
+@container board-stage (max-width: 280px) {
+  .reopen { position: relative; inset: auto; align-self: center; width: calc(100% - 24px); margin: 12px 0; padding: 10px 8px; transform: none; font-size: 16px; word-break: keep-all; }
+}
+
+@media (max-width: 1100px) and (max-height: 480px) {
+  .reopen { position: relative; inset: auto; align-self: center; max-width: calc(100% - 24px); margin: 12px 0; transform: none; }
+}
+
 @media (max-width: 600px) {
   .scene { --choice-width: min(100cqw, 410px); padding: 84px 22px 32px; }
   .selection { aspect-ratio: auto; }

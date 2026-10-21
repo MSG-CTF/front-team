@@ -499,4 +499,22 @@
   .diceStatus > svg { display: block; }
   .diceStatus > .dicePanelArtwork { display: none; }
   .mobileNav a.mobileNavPrimary { min-width: 44px; }
+  .stage { container-name: board-stage; }
+}
+
+/* 확대해 실제 내용 폭이 좁아져도 글자와 원본 아이콘을 줄이지 않는다. */
+@container board-stage (max-width: 280px) {
+  .mobileNav { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 6px; padding-inline: 4px; }
+  .mobileMenuItems { right: 4px; width: calc(100% - 8px); grid-template-columns: minmax(0, 1fr); }
+  .stage .diceStatus { grid-template-columns: minmax(0, 1fr); }
+  .diceStatus > .mobileDiceIcon { grid-row: 1; justify-self: center; }
+  .diceStatus .diceReadout { grid-column: 1; grid-row: 2; }
+  .diceStatus .diceChallengeRow { grid-column: 1; grid-row: 3; white-space: normal; text-align: center; }
+  .diceStatus > p { grid-row: 4; }
+  .diceCountRow { justify-content: center; white-space: normal; }
+  .diceCountRow > span { max-width: 100%; text-align: center; word-break: keep-all; }
+  .diceReadout strong, .diceChallengeRow strong { white-space: nowrap; }
+  .boardTools { flex-direction: column; align-items: stretch; }
+  .stage .openToggle { width: 100%; justify-content: center; padding-inline: 8px; word-break: keep-all; }
+  .boardControls { justify-content: center; }
 }
