@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { forceResetInstance, forceStopInstance, getAdminChallenges, getAdminInstances, setChallengeVisibility } from "../../../api/admin.js";
 import { INSTANCE_STATUS } from "../../../constants/enums.js";
 import { isSuccess } from "../../../utils/response.js";
@@ -11,6 +12,7 @@ import AdminChallengeCreateDialog from "../components/AdminChallengeCreateDialog
 import AdminChallengeManageDialog from "../components/AdminChallengeManageDialog.jsx";
 import AdminPublicationImportDialog from "../components/AdminPublicationImportDialog.jsx";
 import AdminTabs from "../components/AdminTabs.jsx";
+import AdminBoardReadiness from "../components/AdminBoardReadiness.jsx";
 import styles from "../components/AdminWorkspace.module.css";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
@@ -123,6 +125,7 @@ export default function AdminChallengesPage() {
     <AdminTabs idPrefix="challenge-management" label="문제 관리 메뉴" value={tab} onChange={setTab} disabled={busy}
       items={[{ id: "challenges", label: "문제 목록" }, { id: "instances", label: "인스턴스" }]}/>
     <section role="tabpanel" id="challenge-management-panel-challenges" aria-labelledby="challenge-management-tab-challenges" hidden={tab !== "challenges"} className={styles.panel}>
+    <AdminBoardReadiness revision={challenges.data}/>
     <p className={styles.panelIntro}>출제자가 GitHub에 반영하면 CI 발행본을 백엔드가 수집합니다 문제의 배포 설정에서 새 버전을 확인하고 적용할 수 있습니다</p>
     <div className={styles.toolbar}>
       <label>분야 <select value={category} className={SELECT} onChange={(event) => { setCategory(event.target.value); setPage(1); }}>
@@ -134,7 +137,7 @@ export default function AdminChallengesPage() {
       <div className="flex flex-wrap gap-2">
         <button type="button" onClick={challenges.retry} disabled={busy || challenges.status === "loading"} className={BUTTON}>새로고침</button>
         <button type="button" onClick={() => setCreating(true)} disabled={busy} className={BUTTON}>직접 등록</button>
-        <button type="button" onClick={() => setImporting(true)} disabled={busy} className={styles.primary}>새 문제 첫 등록</button>
+        <button type="button" onClick={() => setImporting(true)} disabled={busy} className={styles.primary}>GitHub에서 가져오기</button>
       </div>
     </div>
     <AdminStatusMessage status={challenges.status} error={challenges.error} onRetry={challenges.retry}/>
@@ -149,7 +152,7 @@ export default function AdminChallengesPage() {
           <td>{challenge.running_instance_count} {challenge.failed_instance_count > 0 && <span className="text-admin-failed">(실패 {challenge.failed_instance_count})</span>}</td>
           <td><button type="button" disabled={busy} aria-label={challenge.title + " 공개 상태 변경"} onClick={() => { setSelected(challenge); setReason(""); setNotice(""); }}><AdminBadge tone={challenge.is_published ? "good" : "neutral"}>{challenge.is_published ? "공개" : "비공개"}</AdminBadge></button></td>
           <td className={styles.deploymentCell}><DeploymentSummary deployment={challenge.deployment}/></td>
-          <td><button type="button" className={BUTTON} disabled={busy} aria-label={challenge.title + " 설정"} onClick={() => setEditing({ challenge, section: "problem" })}>설정 열기</button></td>
+          <td><div className={styles.rowActions}><button type="button" className={BUTTON} disabled={busy} aria-label={challenge.title + " 설정"} onClick={() => setEditing({ challenge, section: "problem" })}>설정 열기</button><Link className={styles.fileLink} to={`/admin/challenges/${challenge.challenge_id}/preview`} target="_blank" rel="noreferrer" aria-label={`${challenge.title} 미리보기`}>미리보기 ↗</Link></div></td>
         </tr>)}</tbody>
       </table>
       {challenges.data?.challenges?.length === 0 && <p className="p-4 text-center">표시할 문제가 없습니다</p>}

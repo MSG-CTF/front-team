@@ -1,7 +1,7 @@
-export function validateSignature(form, editing = false) {
+export function validateSignature(form, editing = false, draft = false) {
   if (!editing && !form.clubId) return "동아리를 선택하세요";
   if (!form.title.trim() || [...form.title.trim()].length > 200) return "제목은 1~200자로 입력하세요";
-  if (!form.description.trim()) return "문제 설명을 입력하세요";
+  if (!draft && !form.description.trim()) return "문제 설명을 입력하세요";
   // 수정에서 빈 입력은 기존 플래그 유지, 새 플래그의 공백은 원문 그대로 전송
   if ((!editing && !form.flag) || [...form.flag].length > 512) return "플래그는 1~512자로 입력하세요";
   const score = String(form.score).trim();

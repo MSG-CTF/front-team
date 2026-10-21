@@ -32,6 +32,14 @@ export function getAdminChallenge(challengeId, config) {
   return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}`, config);
 }
 
+export function getAdminChallengePreview(challengeId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/preview`, config);
+}
+
+export function getAdminBoardReadiness(config) {
+  return apiClient.get("/admin/board/readiness", config);
+}
+
 export function getAdminChallengeSolves(challengeId, { startAt, endAt, hour, sort = "latest", page = 1, size = 20 } = {}, config) {
   return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/solves`, {
     ...config, params: { start_at: startAt, end_at: endAt, hour, sort, page, size },

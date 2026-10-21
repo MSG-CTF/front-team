@@ -280,3 +280,14 @@ test("연장 한도와 만료 시간을 반영하며 미제공 연장 횟수는 
     null,
   );
 });
+test("separate health endpoints use the probe path without allowing another origin", () => {
+  const instance = mapChallengeInstance({ status: "RUNNING", endpoints: [
+    { container_name: "service", service_url: "http://example.test:30001", port: 8080 },
+    { container_name: "service", service_url: "http://example.test:30002", port: 9090, healthcheck_path: "/healthz" },
+    { container_name: "unsafe", service_url: "http://example.test:30003", healthcheck_path: "//other.test" },
+  ] });
+  assert.equal(instance.endpoints[0].url, "http://example.test:30001");
+  assert.equal(instance.endpoints[1].url, "http://example.test:30002/healthz");
+  assert.equal(instance.endpoints[1].name, "service · 상태 확인");
+  assert.equal(instance.endpoints[2].url, "http://example.test:30003");
+});

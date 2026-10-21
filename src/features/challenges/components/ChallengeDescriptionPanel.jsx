@@ -14,6 +14,7 @@ function renderDescription(paragraph) {
 export default function ChallengeDescriptionPanel({
   description,
   attachments = [],
+  downloadFile,
 }) {
   return (
     <section
@@ -49,6 +50,7 @@ export default function ChallengeDescriptionPanel({
               <ChallengeAttachment
                 key={`${attachment.fileId ?? index}:${attachment.url}`}
                 attachment={attachment}
+                downloadFile={downloadFile}
               />
             ))}
           </ul>

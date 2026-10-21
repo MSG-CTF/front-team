@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import AdminDialog from "./AdminDialog.jsx";
 import AdminTabs from "./AdminTabs.jsx";
 import AdminChallengeSettingsDialog from "./AdminChallengeSettingsDialog.jsx";
@@ -29,6 +30,7 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
   return <AdminDialog title={title} subtitle={challenge.challenge_slug || "저장소 미연결"}
     headerMeta={<AdminBadge tone={challenge.is_published ? "good" : "neutral"}>{challenge.is_published ? "공개" : "비공개"}</AdminBadge>}
     onClose={onClose} busy={busy} variant="workspace">
+    <div className={styles.previewLinkRow}><Link className={styles.button} to={`/admin/challenges/${challenge.challenge_id}/preview`} target="_blank" rel="noreferrer">참가자 화면 미리보기 ↗</Link><span className={styles.helpText}>저장한 내용으로 열립니다</span></div>
     <AdminTabs idPrefix="challenge-workspace" label="문제 관리" variant="primary" value={section} onChange={selectSection} disabled={busy}
       items={[
         { id: "problem", label: "기본 정보" },

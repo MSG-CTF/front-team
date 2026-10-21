@@ -11,6 +11,15 @@ export function mergePublications(current, incoming) {
   return [...rows.values()];
 }
 
+export function latestPublications(rows) {
+  const latest = new Map();
+  for (const row of rows) {
+    const previous = latest.get(row.challenge_slug);
+    if (!previous || Number(row.run_id) > Number(previous.run_id)) latest.set(row.challenge_slug, row);
+  }
+  return [...latest.values()].sort((a, b) => Number(b.run_id) - Number(a.run_id));
+}
+
 export function publicationAttempt(previous, body, newKey) {
   if (previous?.body.preview_token === body.preview_token && previous.body.difficulty === body.difficulty
     && Boolean(previous.body.update_metadata) === Boolean(body.update_metadata)) return previous;

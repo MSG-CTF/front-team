@@ -36,6 +36,8 @@ export default function ChallengeDetailScreen({
   onConfirmAction,
   onCancelAction,
   onRetry,
+  readOnly = false,
+  downloadFile,
 }) {
   const showBonus = submission.remainingSeconds != null && !submission.blocked;
   const showInstance = challenge?.requiresInstance || instance != null;
@@ -94,6 +96,7 @@ export default function ChallengeDetailScreen({
                 <ChallengeDescriptionPanel
                   description={challenge.description}
                   attachments={challenge.attachments}
+                  downloadFile={downloadFile}
                 />
                 <div className={styles.actionColumn}>
                   {showInstance && (
@@ -107,7 +110,7 @@ export default function ChallengeDetailScreen({
                         instance={instance}
                         otherInstance={otherInstance}
                         controls={controls}
-                        unavailable={instanceUnavailable}
+                        unavailable={readOnly || instanceUnavailable}
                         pendingAction={pendingAction}
                         onAction={onInstanceAction}
                       />
@@ -117,9 +120,9 @@ export default function ChallengeDetailScreen({
                     value={flagValue}
                     onChange={onFlagChange}
                     onSubmit={onSubmitFlag}
-                    disabled={submitDisabled}
+                    disabled={readOnly || submitDisabled}
                     inputDisabled={
-                      pendingAction === "submit-flag" || submission.blocked
+                      readOnly || pendingAction === "submit-flag" || submission.blocked
                     }
                     busy={pendingAction === "submit-flag"}
                     retrySeconds={retrySeconds}
@@ -199,7 +202,7 @@ export default function ChallengeDetailScreen({
           )}
         </main>
       </div>
-      {confirmation && (
+      {!readOnly && confirmation && (
         <InstanceActionDialog
           returnFocusTo={confirmation.trigger}
           action={confirmation.action}

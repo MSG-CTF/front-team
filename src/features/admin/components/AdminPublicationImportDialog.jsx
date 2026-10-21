@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createAdminIdempotencyKey, getPublishedChallenges, importPublishedChallenge, previewPublishedChallenge } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import { toKst } from "../../../utils/time.js";
-import { mergePublications, publicationAttempt, publicationFileLabel } from "../utils/adminPublications.js";
+import { latestPublications, mergePublications, publicationAttempt, publicationFileLabel } from "../utils/adminPublications.js";
 import AdminDialog from "./AdminDialog.jsx";
 import { AdminBadge } from "./AdminLayout.jsx";
 import styles from "./AdminWorkspace.module.css";
@@ -17,6 +17,7 @@ export default function AdminPublicationImportDialog({ onClose, onImported, onOp
   const [source, setSource] = useState(null);
   const [nextPage, setNextPage] = useState(1);
   const [query, setQuery] = useState("");
+  const [scope, setScope] = useState("new");
   const [preview, setPreview] = useState(null);
   const [difficulty, setDifficulty] = useState("UNASSIGNED");
   const [updateMetadata, setUpdateMetadata] = useState(false);
@@ -98,7 +99,10 @@ export default function AdminPublicationImportDialog({ onClose, onImported, onOp
   }
 
   const search = query.trim().toLocaleLowerCase();
-  const filtered = rows.filter((item) => `${item.title || ""} ${item.challenge_slug}`.toLocaleLowerCase().includes(search));
+  const latest = latestPublications(rows);
+  const newCount = latest.filter((item) => !item.challenge_id).length;
+  const filtered = latest.filter((item) => (scope === "all" || (scope === "new" ? !item.challenge_id : item.challenge_id))
+    && `${item.title || ""} ${item.challenge_slug}`.toLocaleLowerCase().includes(search));
   const registered = Boolean(preview?.challenge_id);
 
   return <AdminDialog title="GitHub에서 문제 가져오기" variant="workspace" busy={saving} onClose={onClose}
@@ -114,6 +118,11 @@ export default function AdminPublicationImportDialog({ onClose, onImported, onOp
     {loading && <p role="status" className={styles.fileNotice}>{loading}</p>}
 
     {!preview && <>
+      <div className={styles.catalogFilters} role="group" aria-label="등록 여부">
+        {[["new", `새 문제 ${newCount}`], ["registered", `등록된 문제 ${latest.length - newCount}`], ["all", "전체"]].map(([value, label]) =>
+          <button key={value} type="button" className={scope === value ? styles.primary : styles.button}
+            aria-pressed={scope === value} onClick={() => setScope(value)}>{label}</button>)}
+      </div>
       <div className={styles.publicationSearch}>
         <label>불러온 목록에서 검색<input className={styles.input} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="문제 이름 또는 폴더 이름"/></label>
         <button type="button" className={styles.button} disabled={Boolean(loading)} onClick={() => loadPage(1)}>새로고침</button>
@@ -128,14 +137,14 @@ export default function AdminPublicationImportDialog({ onClose, onImported, onOp
             <td>{row.has_release_artifact ? "실행 이미지" : "파일 정보"}{row.has_release_artifact && row.has_files_artifact ? " · 파일 정보" : ""}
               {row.workflow_state === "failed" && <span className={styles.secondary}>발행 실패</span>}
               {row.workflow_state === "running" && <span className={styles.secondary}>발행 진행 중</span>}</td>
-            <td><button type="button" className={styles.button} disabled={Boolean(loading) || ["failed", "running"].includes(row.workflow_state)} aria-label={`${row.title || row.challenge_slug} 발행본 확인`} onClick={() => selectPublication(row)}>확인</button></td>
+            <td><div className={styles.rowActions}>{row.challenge_id && <button type="button" className={styles.button} onClick={() => onOpenSettings?.({ challenge_id: row.challenge_id, title: row.title || row.challenge_slug, challenge_slug: row.challenge_slug })}>설정 열기</button>}<button type="button" className={styles.button} disabled={Boolean(loading) || ["failed", "running"].includes(row.workflow_state)} aria-label={`${row.title || row.challenge_slug} 발행본 확인`} onClick={() => selectPublication(row)}>{row.challenge_id ? "발행본 확인" : "가져오기"}</button></div></td>
           </tr>)}</tbody>
         </table>
-        {!filtered.length && !loading && <p className={styles.empty}>{search ? "불러온 목록에 일치하는 문제가 없습니다 이전 발행본도 확인해주세요" : "가져올 수 있는 발행본이 없습니다"}</p>}
+        {!filtered.length && !loading && <p className={styles.empty}>{search ? "검색 결과가 없습니다" : scope === "new" && latest.length ? "불러온 문제는 모두 등록되어 있습니다 ‘등록된 문제’에서 확인할 수 있습니다" : "표시할 발행본이 없습니다"}{nextPage ? " 목록을 더 불러오면 다른 문제도 확인할 수 있습니다" : ""}</p>}
       </div>
       <div className={styles.publicationPagination}>
-        <p className={styles.helpText}>최신순 · ZIP 유무는 발행본을 선택하면 확인할 수 있습니다</p>
-        {nextPage && <button type="button" className={styles.button} disabled={Boolean(loading)} onClick={() => loadPage(nextPage)}>이전 발행본 더 보기</button>}
+        <p className={styles.helpText}>불러온 문제 {latest.length}개 · 문제마다 최신 발행본 하나만 표시합니다</p>
+        {nextPage && <button type="button" className={styles.button} disabled={Boolean(loading)} onClick={() => loadPage(nextPage)}>목록 더 불러오기</button>}
       </div>
     </>}
 

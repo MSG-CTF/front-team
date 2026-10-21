@@ -1,6 +1,18 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { mergePublications, publicationAttempt, publicationFileLabel } from "./adminPublications.js";
+import { latestPublications, mergePublications, publicationAttempt, publicationFileLabel } from "./adminPublications.js";
+
+test("different pages keep one latest publication per problem and preserve registration", () => {
+  const rows = [
+    { challenge_slug: "web-a", run_id: 11, challenge_id: "registered" },
+    { challenge_slug: "web-b", run_id: 12, challenge_id: null },
+    { challenge_slug: "web-a", run_id: 9, challenge_id: "registered" },
+  ];
+  const latest = latestPublications(rows);
+  assert.deepEqual(latest.map((row) => row.run_id), [12, 11]);
+  assert.equal(latest.filter((row) => !row.challenge_id).length, 1);
+  assert.equal(rows.length, 3);
+});
 
 test("publication pairs across pages merge but separate workflow runs stay selectable", () => {
   const old = [{ challenge_slug: "web-test", run_id: 10, artifact_id: 7, has_release_artifact: true, has_files_artifact: false }];

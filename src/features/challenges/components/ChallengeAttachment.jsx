@@ -8,7 +8,7 @@ import {
 } from "../utils/challengeFileDownload.js";
 import styles from "./ChallengeDetailScene.module.css";
 
-export default function ChallengeAttachment({ attachment }) {
+export default function ChallengeAttachment({ attachment, downloadFile = downloadChallengeFile }) {
   const target = getAttachmentDownload(attachment);
   const request = useRef(null);
   const objectUrls = useRef(new Map());
@@ -32,7 +32,7 @@ export default function ChallengeAttachment({ attachment }) {
     request.current = controller;
     setState({ status: "loading", message: "파일을 받는 중입니다" });
     try {
-      const response = await downloadChallengeFile(
+      const response = await downloadFile(
         target.challengeId,
         target.fileId,
         { signal: controller.signal },

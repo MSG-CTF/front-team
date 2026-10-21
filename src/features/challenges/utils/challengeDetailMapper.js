@@ -146,10 +146,14 @@ export function mapInstanceEndpoints(data) {
         url.password
       )
         return [];
+      const healthPath = endpoint.healthcheck_path;
+      const healthcheck = ["http:", "https:"].includes(url.protocol)
+        && typeof healthPath === "string" && /^\/(?!\/)[^\s\\?#]*$/.test(healthPath);
+      if (healthcheck) url.pathname = healthPath;
       return [
         {
-          name: endpoint.container_name || "서비스",
-          url: endpoint.service_url,
+          name: `${endpoint.container_name || "서비스"}${healthcheck ? " · 상태 확인" : ""}`,
+          url: healthcheck ? url.href : endpoint.service_url,
           isWeb: ["http:", "https:"].includes(url.protocol),
         },
       ];

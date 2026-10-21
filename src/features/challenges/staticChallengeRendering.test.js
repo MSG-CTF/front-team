@@ -24,7 +24,7 @@ after(async () => server?.close());
 
 const driveUrl = "https://drive.google.com/drive/folders/1dXQ_Td4J-vK8BAJh7mHFe6oVh9F1WCQN";
 
-function renderDetail(requiresInstance) {
+function renderDetail(requiresInstance, readOnly = false) {
   return renderToStaticMarkup(createElement(Screen, {
     loading: false,
     pageError: null,
@@ -46,8 +46,17 @@ function renderDetail(requiresInstance) {
     pendingAction: null,
     submitDisabled: false,
     instanceUnavailable: false,
+    readOnly,
   }));
 }
+
+test("관리자 미리보기는 참가자 화면을 쓰면서 제출과 실행 버튼을 모두 비활성화한다", () => {
+  const html = renderDetail(true, true);
+  for (const label of ["인스턴스 생성", "인스턴스 TTL 연장", "인스턴스 재시작", "인스턴스 종료"]) {
+    assert.match(html, new RegExp(`<button(?=[^>]*aria-label="${label}")(?=[^>]*disabled)[^>]*>`));
+  }
+  assert.match(html, /<input[^>]*disabled/);
+});
 
 test("정적 문제는 다운로드 링크와 플래그 제출만 보이고 인스턴스 작업은 숨긴다", () => {
   const html = renderDetail(false);

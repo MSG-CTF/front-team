@@ -36,6 +36,7 @@ const RulesPage = lazy(() => import("../features/rules/pages/RulesPage.jsx"));
 const AdminDashboardPage = lazy(
   () => import("../features/admin/pages/AdminDashboardPage.jsx"),
 );
+const AdminChallengePreviewPage = lazy(() => import("../features/admin/pages/AdminChallengePreviewPage.jsx"));
 const AdminTeamsPage = lazy(
   () => import("../features/admin/pages/AdminTeamsPage.jsx"),
 );
@@ -182,6 +183,7 @@ export default function AppRoutes() {
             </AdminRoute>
           }
         />
+        <Route path="/admin/challenges/:challengeId/preview" element={<AdminRoute><AdminChallengePreviewPage /></AdminRoute>} />
         <Route
           path={ROUTES.adminMileage}
           element={
