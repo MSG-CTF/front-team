@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import styles from "./RulesScreen.module.css";
 
 export default function RulesPanel({ rules }) {
@@ -20,7 +21,11 @@ export default function RulesPanel({ rules }) {
             <h2 className={styles.ruleTitle}>
               <span aria-hidden="true">{rule.icon}</span> {rule.title}
             </h2>
-            <p className={styles.ruleDescription}>{rule.description}</p>
+            <p className={styles.ruleDescription}>
+              {Array.isArray(rule.description)
+                ? rule.description.map((line, index) => <Fragment key={line}>{index > 0 && <br />}{line}</Fragment>)
+                : rule.description}
+            </p>
           </article>
         ))}
       </div>

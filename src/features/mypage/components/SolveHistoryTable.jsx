@@ -30,12 +30,13 @@ export default function SolveHistoryTable({ state }) {
       <h2 className={styles.bakedLabel}>SOLVE HISTORY</h2>
       <div className={styles.historyScroll} tabIndex={0} aria-label="풀이 기록 표">
         <table className={styles.historyTable} aria-describedby="solve-score-note">
+          {/* 열 경계는 패널 그림의 CHALLENGE·CATEGORY 시작선과 숫자 열 제목의 끝선에 맞춘 비율 */}
           <colgroup>
-            <col style={{ width: "31.33%" }} />
-            <col style={{ width: "23.38%" }} />
-            <col style={{ width: "10.72%" }} />
-            <col style={{ width: "18.3%" }} />
-            <col style={{ width: "16.27%" }} />
+            <col style={{ width: "31.325%" }} />
+            <col style={{ width: "22.861%" }} />
+            <col style={{ width: "10.672%" }} />
+            <col style={{ width: "18.767%" }} />
+            <col style={{ width: "16.375%" }} />
           </colgroup>
           <thead>
             <tr>
@@ -55,10 +56,10 @@ export default function SolveHistoryTable({ state }) {
               rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((row) => (
                 <tr key={row.id} title={rowTitle(row)}>
                   <td className={styles.cellText} title={row.challenge}>{row.challenge}</td>
-                  <td className={styles.cellText}>{row.category || "—"}</td>
+                  <td className={`${styles.cellText}${row.category ? "" : ` ${styles.cellBlank}`}`}>{row.category || "-"}</td>
                   <td className={`${styles.cellNumber} ${styles.cellPoints} ${styles.numeric}`}>{row.points}</td>
                   <td className={`${styles.cellNumber} ${styles.numeric}`}>{row.solvedAt}</td>
-                  <td className={`${styles.cellNumber} ${styles.numeric}`}>{row.elapsed || "—"}</td>
+                  <td className={`${styles.cellNumber} ${styles.numeric}${row.elapsed ? "" : ` ${styles.cellBlank}`}`}>{row.elapsed || "-"}</td>
                 </tr>
               ))
             )}

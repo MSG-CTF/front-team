@@ -290,11 +290,19 @@ test("리더보드 표는 모든 열과 긴 팀명, 원래 1~3위 이미지를 �
   assert.equal((html.match(/scope="col"/g) || []).length, 14);
 });
 
-test("순위표는 모바일에서도 모든 열과 점수를 유지하고 표 안에서만 가로 이동한다", () => {
+test("순위표는 폰에서 팀마다 카드로 쌓이고 태블릿에서는 모든 열을 유지한 채 표 안에서만 가로 이동한다", () => {
   const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
   assert.ok(declarations(root, ".rankingGrid").some(([key, value]) => key === "width" && value === "100%"));
   assert.ok(declarations(root, ".tableContainer").some(([key, value]) => key === "overflow-x" && value === "auto"));
-  assert.ok(!declarations(root, ".rankingGrid tbody tr").some(([key]) => key === "grid-template-columns"));
+  // 폰 구간에서만 줄이 격자 카드가 되고, 밀어서 보라는 안내는 사라지며, 분야 이름이 값 위에 붙는다
+  const phone = root.nodes.find((node) => node.type === "atrule" && node.params === "(max-width: 767px)"
+    && declarations(node, ".rankingGrid tbody tr").length > 0);
+  assert.ok(declarations(phone, ".rankingGrid tbody tr").some(([key]) => key === "grid-template-columns"));
+  assert.ok(declarations(phone, ".mobileTableHint").some(([key, value]) => key === "display" && value === "none"));
+  assert.ok(declarations(phone, ".mobileCellLabel").some(([key, value]) => key === "display" && value === "block"));
+  const tablet = root.nodes.filter((node) => node.type === "atrule" && node.params === "(max-width: 1100px)");
+  assert.ok(tablet.some((node) => declarations(node, ".rankingGrid").some(([key, value]) => key === "min-width" && value === "960px")));
+  assert.ok(!tablet.some((node) => declarations(node, ".rankingGrid tbody tr").some(([key]) => key === "grid-template-columns")));
   assert.ok(!declarations(root, ".rankingGrid thead").some(([key]) => key === "clip-path"));
   const html = render("Leaderboard", {
     teams: [], leaderboardStatus: "empty", rankingStatus: "success",
@@ -677,7 +685,7 @@ test("모션 축소 설정에서는 카드 등장과 이동을 끄고 고대비 
 test("모바일에서 반복 안내를 줄여도 주사위 상태와 제한 시간은 접근성 정보에 남는다", () => {
   const ready = render("DiceStatusPanel", { rollsLeft: 3, canRoll: true });
   assert.match(ready, /data-roll-ready="true"/);
-  assert.match(ready, /aria-label="주사위 보유 3\/3\. 주사위를 굴릴 수 있습니다\./);
+  assert.match(ready, /aria-label="주사위 보유 3\/3\. 주사위를 굴릴 수 있습니다/);
   const waiting = render("DiceStatusPanel", {
     rollsLeft: 2, canRoll: false, blockedMessage: "문제 풀이 제한 시간이 끝나면 다시 이동할 수 있습니다", challengeRemainingSeconds: 900,
   });

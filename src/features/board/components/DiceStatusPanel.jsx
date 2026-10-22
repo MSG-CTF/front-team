@@ -10,7 +10,7 @@ const COMPACT_MESSAGES = {
   [BLOCKED_REASON_MESSAGES.TIMER_RUNNING]: "제한시간이 끝나면 이동 가능",
   [BLOCKED_REASON_MESSAGES.PENDING_CONFIRM]: "주사위 결과 확정 대기",
   [BLOCKED_REASON_MESSAGES.BOARD_COMPLETED]: "모든 보드 칸 완료",
-  "보유한 찬스카드 한 장을 먼저 폐기해주세요.": "찬스카드 한 장 폐기 필요",
+  "보유한 찬스카드 한 장을 먼저 폐기해주세요": "찬스카드 한 장 폐기 필요",
 };
 
 function Countdown({ seconds }) {
@@ -32,7 +32,7 @@ export default function DiceStatusPanel({
 }) {
   const rechargeVisible = rollsLeft < maxRolls && resetInSeconds != null;
   const statusLabel =
-    blockedMessage || (canRoll ? "주사위를 굴릴 수 있습니다." : "상태 확인 중");
+    blockedMessage || (canRoll ? "주사위를 굴릴 수 있습니다" : "상태 확인 중");
   const compactStatus = blockedMessage
     ? (Object.hasOwn(COMPACT_MESSAGES, blockedMessage) ? COMPACT_MESSAGES[blockedMessage] : "이동 대기 중")
     : canRoll ? "주사위 굴리기 가능" : "상태 확인 중";

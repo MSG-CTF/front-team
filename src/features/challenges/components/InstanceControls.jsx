@@ -72,7 +72,7 @@ export default function InstanceControls({
             <span>연장 횟수 3회를 모두 사용했습니다</span>
           )}
           {controls.expired && (
-            <span>사용 시간이 만료됐습니다. 서버 상태를 확인하고 있습니다</span>
+            <span>사용 시간이 만료됐습니다 서버 상태를 확인하고 있습니다</span>
           )}
           {otherInstance && otherInstance.status !== "RUNNING" && (
             <span>다른 인스턴스의 준비가 끝나면 전환할 수 있습니다</span>

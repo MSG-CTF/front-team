@@ -25,11 +25,12 @@ export default function MileageHistoryTable({ state }) {
       <h2 className={styles.bakedLabel}>MILEAGE HISTORY</h2>
       <div className={styles.historyScroll} tabIndex={0} aria-label="마일리지 기록 표">
         <table className={styles.historyTable}>
+          {/* 열 경계는 패널 그림의 DATE·REASON·CHANGE 시작선과 BALANCE 끝선에 맞춘 비율 */}
           <colgroup>
-            <col style={{ width: "27.36%" }} />
-            <col style={{ width: "48.34%" }} />
-            <col style={{ width: "12.75%" }} />
-            <col style={{ width: "11.55%" }} />
+            <col style={{ width: "27.844%" }} />
+            <col style={{ width: "47.569%" }} />
+            <col style={{ width: "12.661%" }} />
+            <col style={{ width: "11.926%" }} />
           </colgroup>
           <thead>
             <tr>
@@ -50,7 +51,7 @@ export default function MileageHistoryTable({ state }) {
                   <td className={styles.cellNumber}>{row.date}</td>
                   <td className={styles.cellText} title={row.reason}>{row.reason}</td>
                   <td className={`${styles.cellNumber} ${styles.cellMinus}`}>{row.change}</td>
-                  <td className={`${styles.cellNumber} ${styles.numeric}`}>{row.balance}</td>
+                  <td className={`${styles.cellNumber} ${styles.numeric}${row.balance && row.balance !== "-" ? "" : ` ${styles.cellBlank}`}`}>{row.balance}</td>
                 </tr>
               ))
             )}

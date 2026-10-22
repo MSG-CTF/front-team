@@ -62,7 +62,7 @@ export default function LoginPage() {
       if (!isSuccess(envelope) || !accessToken || !refreshToken) {
         setFeedback({
           type: "error",
-          message: envelope?.message || "로그인 응답을 확인할 수 없습니다.",
+          message: envelope?.message || "로그인 응답을 확인할 수 없습니다",
         });
         return;
       }
@@ -74,12 +74,12 @@ export default function LoginPage() {
       } else {
         localStorage.removeItem(ROLE_STORAGE_KEY);
       }
-      setFeedback({ type: "success", message: "로그인에 성공했습니다." });
+      setFeedback({ type: "success", message: "로그인에 성공했습니다" });
       navigate(role === ROLE.ADMIN ? ROUTES.adminDashboard : ROUTES.board, { replace: true });
     } catch (error) {
       setFeedback({
         type: "error",
-        message: error.response?.data?.message || "로그인 요청에 실패했습니다.",
+        message: error.response?.data?.message || "로그인 요청에 실패했습니다",
       });
     } finally {
       setSubmitting(false);

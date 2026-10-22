@@ -10,8 +10,10 @@ export default function AirportTravelOverlay({ destination, isMutating, onConfir
       {!destination && (
         <p
           role="status"
-          // 시안 555:366: Pretendard Bold 36px, #e5dccc, 자간 6.12px, 687,506 (1920x1080 무대)
-          className={`${styles.airportHint} pointer-events-none absolute left-[35.78%] top-[46.85%] z-30 m-0 whitespace-nowrap font-pretendard text-[1.875cqw] font-bold leading-none tracking-[0.319cqw] text-[#e5dccc] [text-shadow:0_0.08cqw_0.4cqw_rgba(0,0,0,0.75)]`}
+          // 시안 555:366: Pretendard Bold 36px, #e5dccc, 자간 6.12px, y 506 (1920x1080 무대)
+          // 실제 글자 폭이 시안과 달라도 원판 중심(923.5 / 1920)에 오도록 가운데 기준으로 두고
+          // 마지막 글자 뒤 자간만큼 왼쪽을 채워 잉크 중심을 맞춘다
+          className={`${styles.airportHint} pointer-events-none absolute left-[48.099%] top-[46.85%] z-30 m-0 -translate-x-1/2 whitespace-nowrap pl-[0.319cqw] font-pretendard text-[1.875cqw] font-bold leading-none tracking-[0.319cqw] text-[#e5dccc] [text-shadow:0_0.08cqw_0.4cqw_rgba(0,0,0,0.75)]`}
         >
           가고 싶은 장소를 골라주세요!
         </p>
@@ -38,7 +40,7 @@ export default function AirportTravelOverlay({ destination, isMutating, onConfir
             {destination.name ? `${destination.name} ` : ""}칸으로 이동할까요?
           </p>
           <p className="m-0 mt-[0.25cqw] font-pretendard text-[0.55cqw] text-[#6d5238]">
-            기차여행은 팀마다 한 번만 쓸 수 있습니다.
+            기차여행은 팀마다 한 번만 쓸 수 있습니다
           </p>
           <div className="mt-[0.6cqw] flex justify-center gap-[0.5cqw]">
             <button

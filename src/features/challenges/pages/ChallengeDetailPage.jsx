@@ -115,7 +115,7 @@ function ChallengeDetailContent({ challengeId }) {
       setFlagFeedback(
         feedbackFromEnvelope(
           envelope,
-          "플래그를 제출하지 못했습니다. 잠시 후 다시 시도해주세요",
+          "플래그를 제출하지 못했습니다 잠시 후 다시 시도해주세요",
         ),
       );
       if (envelope?.code === "ALREADY_SOLVED") {
@@ -166,7 +166,7 @@ function ChallengeDetailContent({ challengeId }) {
         setInstanceFeedback(
           feedbackFromEnvelope(
             error?.response?.data,
-            "인스턴스 요청을 처리하지 못했습니다. 상태를 확인한 뒤 다시 시도해주세요",
+            "인스턴스 요청을 처리하지 못했습니다 상태를 확인한 뒤 다시 시도해주세요",
           ),
         );
     } finally {
@@ -210,7 +210,7 @@ function ChallengeDetailContent({ challengeId }) {
       setInstanceFeedback({
         type: "error",
         message:
-          "인스턴스 상태가 변경됐습니다. 현재 상태를 확인한 뒤 다시 선택해주세요",
+          "인스턴스 상태가 변경됐습니다 현재 상태를 확인한 뒤 다시 선택해주세요",
       });
       return;
     }

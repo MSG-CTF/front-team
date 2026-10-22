@@ -34,9 +34,12 @@
 .resultStatus { top: 35%; min-height: 10.5%; gap: 1px; font-size: clamp(12px, 1.5cqw, 14px); }
 .resultStatus .reward { font-size: clamp(18px, 2.7cqw, 24px); }
 .total { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); font-size: 0.8em; color: #745733; }
-.chances { position: absolute; left: 58%; top: 53.4%; width: 35.6%; text-align: center; }
+/* 두 숫자 사이 간격의 가운데를 그림 속 슬래시 중심(1319 중 1003.5, 689 중 402)에 맞춘다 */
+.chances { position: absolute; left: 58.28%; top: 54.8%; width: 35.6%; text-align: center; }
 .chancesLabel { display: none; }
-.chancesValue { display: flex; justify-content: center; gap: 5.2cqw; font-size: 3.5cqw; line-height: 1.1; color: #31190b; }
+.chancesValue { display: grid; grid-template-columns: 1fr 1fr; column-gap: 5.2cqw; font-size: 3.5cqw; line-height: 1.1; color: #31190b; }
+.chancesValue > :first-child { justify-self: end; }
+.chancesValue > :last-child { justify-self: start; }
 .chancesSeparator { display: none; }
 .action { position: absolute; left: 58.28%; top: 66.81%; width: 35.83%; height: 14.75%; }
 .spin, .confirm { width: 100%; height: 100%; border: 0; padding: 0; background: none; cursor: pointer; }
@@ -73,7 +76,7 @@
   .total { position: static; width: auto; height: auto; overflow: visible; clip: auto; font-size: 12px; }
   .chances { position: static; display: flex; align-items: center; justify-content: center; gap: 14px; width: auto; font-size: 14px; }
   .chancesLabel { display: inline; }
-  .chancesValue { gap: 8px; font-size: 20px; }
+  .chancesValue { display: flex; gap: 8px; font-size: 20px; }
   .chancesSeparator { display: inline; color: #94723d; }
   .action { position: static; flex-shrink: 0; width: min(100%, 300px); height: 60px; }
   .spin, .confirm { min-height: 48px; }

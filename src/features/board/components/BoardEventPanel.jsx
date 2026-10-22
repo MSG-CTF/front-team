@@ -59,8 +59,8 @@ function PendingRollActions({
     <PanelShell title="주사위 결과 확인">
       <p className="my-[0.55cqw] text-[0.76cqw]">
         {pendingRoll
-          ? `${pendingRoll.diceA} + ${pendingRoll.diceB} = ${pendingRoll.rolledNumber}, ${pendingRoll.currentPosition}번 칸으로 이동합니다.`
-          : "보류 중인 주사위 이동 결과가 있습니다."}
+          ? `${pendingRoll.diceA} + ${pendingRoll.diceB} = ${pendingRoll.rolledNumber}, ${pendingRoll.currentPosition}번 칸으로 이동합니다`
+          : "보류 중인 주사위 이동 결과가 있습니다"}
       </p>
       <div className="grid gap-[0.35cqw]">
         <ActionButton disabled={isMutating} onClick={onConfirmDice}>
@@ -69,7 +69,7 @@ function PendingRollActions({
         {postRollCards.map((card) => (
           <div
             key={card.cardId}
-            className="flex items-center gap-[0.35cqw] rounded border border-[#b1814f] bg-[#fff2cf]/70 p-[0.3cqw]"
+            className={`${styles.eventCardRow} flex items-center gap-[0.35cqw] rounded border border-[#b1814f] bg-[#fff2cf]/70 p-[0.3cqw]`}
           >
             <span className="min-w-0 flex-1 truncate text-[0.66cqw]">
               {card.name || card.cardId}
@@ -111,7 +111,7 @@ function ChanceChoice({ choice, isMutating, onConfirmChance }) {
   return (
     <PanelShell title="주사위 결과 선택">
       <p className="my-[0.45cqw] text-[0.72cqw]">
-        두 결과 중 이동에 사용할 숫자를 선택해주세요.
+        두 결과 중 이동에 사용할 숫자를 선택해주세요
       </p>
       <div className="grid grid-cols-2 gap-[0.45cqw]">
         <ActionButton
@@ -141,13 +141,15 @@ function DiscardChanceCard({ cards, isMutating, onDiscardChance }) {
   return (
     <PanelShell title="찬스카드 폐기">
       <p className="my-[0.45cqw] text-[0.72cqw]">
-        보유 한도를 초과했습니다. 다른 행동 전에 한 장을 선택해 폐기해주세요.
+        보유 한도를 초과했습니다
+        <br />
+        다른 행동 전에 한 장을 선택해 폐기해주세요
       </p>
       <div className="grid gap-[0.3cqw]">
         {cards.map((card) => (
           <label
             key={card.cardId}
-            className="flex cursor-pointer items-start gap-[0.35cqw] rounded border border-[#a97949] bg-[#fff2cf]/70 p-[0.35cqw] text-[0.65cqw]"
+            className={`${styles.eventCardRow} flex cursor-pointer items-start gap-[0.35cqw] rounded border border-[#a97949] bg-[#fff2cf]/70 p-[0.35cqw] text-[0.65cqw]`}
           >
             <input
               type="radio"
@@ -179,7 +181,7 @@ function ChanceDrawEvent({ event, isMutating, onRetry, onClose }) {
     return (
       <PanelShell title="황금열쇠">
         <p className="my-[0.55cqw] text-[0.72cqw]">
-          찬스카드를 뽑고 있습니다.
+          찬스카드를 뽑고 있습니다
         </p>
       </PanelShell>
     );

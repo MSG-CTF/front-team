@@ -1,3 +1,4 @@
+import { useId, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { formatNumber } from "../utils/myPageData.js";
 import styles from "./MyPageScene.module.css";
@@ -57,12 +58,19 @@ function PersonalRank({ memberRanking }) {
   );
 }
 
+// 넓은 화면 카드 그림에는 팀원 글머리표가 두 줄만 있다 셋째 팀원부터는 접어 두고 "외 N명"으로 펼친다
+// 좁은 화면은 카드가 길어지므로 모두 보이고 펼치기 단추는 감춘다
+const CARD_MEMBER_ROWS = 2;
+
 // Figma 309:306 — TEAM 리본, 구분선, MEMBERS, MSG CTF는 카드 그림에 그려져 있다
 export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQr, qrDisabled, onLogout, isLoggingOut }) {
-  let teamName = profile.data?.teamName || "—";
+  const membersId = useId();
+  const [showAllMembers, setShowAllMembers] = useState(false);
+  let teamName = profile.data?.teamName || "-";
   if (profile.status === "loading") teamName = "LOADING";
   if (profile.status === "error") teamName = "UNAVAILABLE";
-  const members = profile.status === "success" ? (profile.data.members ?? []).slice(0, 2) : [];
+  const members = profile.status === "success" ? profile.data.members ?? [] : [];
+  const foldedMembers = members.length - CARD_MEMBER_ROWS;
   return (
     <section className={styles.teamCard} aria-label="팀 정보">
       <p className={styles.bakedLabel}>TEAM</p>
@@ -72,11 +80,17 @@ export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQ
         로그아웃
       </button>
       <h2 className={styles.srOnly}>MEMBERS</h2>
-      <ul className={styles.members}>
+      <ul id={membersId} className={styles.members} data-expanded={showAllMembers || undefined}>
         {members.map((member, index) => (
           <li key={member + index} title={member}>{member}</li>
         ))}
       </ul>
+      {foldedMembers > 0 && (
+        <button type="button" className={styles.moreMembers} aria-expanded={showAllMembers} aria-controls={membersId}
+          onClick={() => setShowAllMembers((value) => !value)}>
+          {showAllMembers ? "접기" : `외 ${foldedMembers}명`}
+        </button>
+      )}
       <PersonalRank memberRanking={memberRanking} />
     </section>
   );

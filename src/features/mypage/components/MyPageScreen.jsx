@@ -10,7 +10,7 @@ import PanelTexture from "../../../components/common/PanelTexture.jsx";
 function profileText(state, field) {
   if (state.status === "loading") return "LOADING";
   if (state.status === "error") return "ERROR";
-  return state.status === "success" ? formatNumber(state.data[field]) : "—";
+  return state.status === "success" ? formatNumber(state.data[field]) : "-";
 }
 
 function statusMessage({ profileData, hasScore, scoreRefreshError, refreshError, logoutError }) {
@@ -19,7 +19,7 @@ function statusMessage({ profileData, hasScore, scoreRefreshError, refreshError,
   if (scoreRefreshError) return { text: hasScore
     ? "점수와 순위를 갱신하지 못했습니다 마지막으로 확인한 값을 표시합니다"
     : "점수와 순위를 불러오지 못했습니다 새로고침으로 다시 시도해주세요", alert: true };
-  if (refreshError) return { text: "일부 정보를 갱신하지 못했습니다. 다시 시도하세요", alert: true };
+  if (refreshError) return { text: "일부 정보를 갱신하지 못했습니다 다시 시도하세요", alert: true };
   return { text: "30초마다 갱신 · 표시 시간 KST", alert: false };
 }
 
@@ -86,7 +86,7 @@ export default function MyPageScreen({
               <span>LINE {formatNumber(profileData.lineScore)}</span>
             </p>
             <p className={styles.rank}>
-              RANK<strong>{profile.status === "success" ? formatNumber(profileData.rank) : "—"}</strong>
+              RANK<strong>{profile.status === "success" ? formatNumber(profileData.rank) : "-"}</strong>
             </p>
           </section>
           <section className={`${styles.metricPanel} ${styles.mileagePanel}`} aria-label="마일리지 잔액">

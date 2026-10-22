@@ -3,7 +3,7 @@ import styles from "./ChallengeDetailScene.module.css";
 const formatMetric = (value) =>
   typeof value === "number" && Number.isFinite(value)
     ? value.toLocaleString("ko-KR")
-    : "—";
+    : "-";
 
 export default function ChallengeHeaderPanel({ challenge }) {
   const {

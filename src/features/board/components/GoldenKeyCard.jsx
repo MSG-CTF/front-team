@@ -13,7 +13,7 @@ export const GOLDEN_KEY_NAMES = Object.freeze({
 export function getGoldenKeyText(card) {
   return {
     title: GOLDEN_KEY_NAMES[card.cardId] || card.name || "황금열쇠 카드",
-    description: card.description || "획득한 카드의 효과와 사용 조건은 보유 찬스카드에서 확인해 주세요.",
+    description: card.description || "획득한 카드의 효과와 사용 조건은 보유 찬스카드에서 확인해 주세요",
   };
 }
 

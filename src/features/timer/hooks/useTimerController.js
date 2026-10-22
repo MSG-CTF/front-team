@@ -38,7 +38,7 @@ export default function useTimerController() {
       const envelope = response.data;
 
       if (!isSuccess(envelope)) {
-        throw new Error(envelope?.message || "타이머 정보를 불러오지 못했습니다.");
+        throw new Error(envelope?.message || "타이머 정보를 불러오지 못했습니다");
       }
 
       if (!envelope.data) {
@@ -56,7 +56,7 @@ export default function useTimerController() {
       setState({
         status: "error",
         contest: null,
-        error: getErrorMessage(error, "타이머 정보를 불러오지 못했습니다."),
+        error: getErrorMessage(error, "타이머 정보를 불러오지 못했습니다"),
       });
     }
   }, []);

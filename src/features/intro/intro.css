@@ -211,7 +211,8 @@
 }
 .msg-intro .header-actions {
   display: flex;
-  align-items: center;
+  /* 글자 크기가 다른 참가 신청과 LOGIN을 같은 기준선에 둔다 */
+  align-items: baseline;
   gap: 24px;
   flex-shrink: 0;
 }
@@ -236,7 +237,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
+  /* 참가 신청 링크와 같은 44px 상자로 둬서 기준선을 맞출 때 큰 글자 쪽이 움직이지 않게 한다 */
+  min-height: 44px;
   padding: 7px 0;
   border: 0;
   background: none;
@@ -257,6 +259,7 @@
 }
 .msg-intro .menu-toggle {
   display: none;
+  align-self: center;
   position: relative;
   background: none;
   border: 0;
@@ -299,6 +302,8 @@
   padding: 24px 40px 16px;
   background: #483320 url("/assets/intro/hero-plaza.webp")
     calc(50% + clamp(18px, 2vw, 40px)) 44% / cover no-repeat;
+  /* 오른쪽으로 민 만큼 배경을 넓혀 왼쪽 끝에 빈 띠가 생기지 않게 한다, 1.5는 원본 1536x1024 비율 */
+  background-size: auto max(100%, calc((100vw + 2 * clamp(18px, 2vw, 40px)) / 1.5));
 }
 @media (max-width: 680px) {
   .msg-intro .cover {
@@ -698,6 +703,7 @@
 .msg-intro .event-facts > div {
   display: grid;
   grid-template-columns: 90px minmax(0, 1fr);
+  align-items: baseline;
   gap: 22px;
   padding: 14px 0;
   border-bottom: 1px solid #ffffff14;
@@ -752,7 +758,8 @@
   line-height: 1.35;
 }
 .msg-intro .venue-map {
-  height: 200px;
+  /* 지도 아래 대회장 이름이 왼쪽 "대회 장소" 값과 같은 기준선에 오도록 높이를 맞춘다 */
+  height: 206px;
   margin: 16px 0;
   background: #ebe8e2;
 }
@@ -765,7 +772,8 @@
 .msg-intro .venue-details {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
+  /* 오른쪽 교통 안내 줄을 대회장 이름과 같은 기준선에 둔다 */
+  align-items: baseline;
   align-content: start;
   gap: var(--space-3);
 }
@@ -798,7 +806,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0 24px;
-  margin-top: 4px;
+  /* 두 칸으로 놓일 때 지도 링크가 왼쪽 주소와 같은 기준선에 오도록 위 여백을 두지 않는다 */
+  margin-top: 0;
 }
 .msg-intro .venue-map-links a {
   display: inline-flex;
@@ -1044,6 +1053,8 @@
 .msg-intro .prize-table td {
   padding: 17px 8px;
   border-bottom: 1px solid var(--line);
+  /* 트랙 이름과 상금 글자 크기가 달라도 한 줄 기준선을 맞춘다 */
+  vertical-align: baseline;
 }
 .msg-intro .prize-table thead th {
   color: var(--muted);
@@ -1097,6 +1108,8 @@
   grid-template-columns: 1fr 1fr;
   gap: var(--space-6);
   align-items: end;
+  /* 모집 기간 날짜와 참가 자격 마지막 줄을 같은 기준선에 둔다 */
+  align-items: last baseline;
   margin-top: var(--space-4);
 }
 .msg-intro .registration-action {
@@ -1196,6 +1209,7 @@
 }
 .msg-intro .selection-rules > div {
   display: flex;
+  align-items: baseline;
   gap: 24px;
   padding-block: 8px;
 }
@@ -1281,6 +1295,14 @@
   align-items: center;
   min-height: 44px;
   text-underline-offset: 5px;
+}
+/* 첫 줄이 링크인 칸도 누르는 영역은 44px로 두고 글자는 옆 칸 첫 줄과 같은 높이에 둔다 */
+.msg-intro .onsite-contact .onsite-email {
+  margin-block: calc((44px - 1lh) / -2);
+}
+/* 주소 아래 지도 링크도 누르는 영역만 44px로 두고 줄 간격은 위 두 줄과 같게 둔다 */
+.msg-intro .onsite-contact .onsite-map {
+  margin-block: calc((44px - 1lh) / -2);
 }
 .msg-intro .history-section > h2 {
   text-align: center;
@@ -1383,6 +1405,7 @@
 .msg-intro .history-facts > div {
   display: grid;
   grid-template-columns: 80px minmax(0, 1fr);
+  align-items: baseline;
   gap: var(--space-3);
   padding-block: var(--space-2);
   border-top: 1px solid var(--line);
@@ -1496,6 +1519,11 @@
 .msg-intro .booth-lineup h3[lang="en"] {
   letter-spacing: 0;
   font-size: 23px;
+  /* 영문 제목만 1px 작아도 한글 제목과 줄 높이를 같게 둬서 옆 칸 설명 줄이 어긋나지 않게 한다 */
+  line-height: calc(24px * 1.45);
+  /* 같은 줄 상자에서 23px 글자는 기준선이 1px 높아 글자만 내려 옆 칸 한글 제목과 맞춘다 */
+  position: relative;
+  top: 1px;
 }
 .msg-intro .booth-lineup h3 + p {
   margin-top: var(--space-1);
@@ -1510,7 +1538,8 @@
   align-items: center;
   min-width: 170px;
   min-height: 52px;
-  padding: 12px 2px;
+  /* 글자 왼쪽 끝을 위 문단과 같은 세로선에 둔다 */
+  padding: 12px 2px 12px 0;
   border: 0;
   border-bottom: 1px solid #9d8560;
   background: none;
@@ -1699,6 +1728,10 @@
   color: var(--muted);
   font-size: 15px;
 }
+/* 문단 안 링크는 누르는 영역만 44px로 두고 윗줄과 같은 줄 간격을 지킨다 */
+.msg-intro .document-section > p > .text-link {
+  margin-block: calc((44px - 1lh) / -2);
+}
 .msg-intro .document-section .event-facts {
   margin: 0 0 24px;
 }
@@ -1742,7 +1775,8 @@
   content: "열기";
   position: absolute;
   right: 0;
-  top: 23px;
+  /* 16px 질문 글자와 12px 열기 표시를 같은 기준선에 둔다 */
+  top: 26px;
   color: var(--muted);
   font-weight: 400;
   font-size: 12px;
@@ -1849,6 +1883,9 @@
   .msg-intro .venue-details {
     grid-template-columns: minmax(0, 1fr);
     gap: var(--space-2);
+  }
+  .msg-intro .venue-map-links {
+    margin-top: 4px;
   }
   .msg-intro .overview-copy .event-facts > div {
     grid-template-columns: 80px minmax(0, 1fr);
@@ -2362,6 +2399,8 @@
   .msg-intro .booth-lineup h3,
   .msg-intro .booth-lineup h3[lang="en"] {
     font-size: 22px;
+    line-height: 1.45;
+    top: 0;
   }
   .msg-intro .action-button {
     min-width: 150px;
@@ -2455,6 +2494,9 @@
   .msg-intro summary {
     padding-right: 34px;
     font-size: 14px;
+  }
+  .msg-intro summary::after {
+    top: 23px;
   }
   .msg-intro details > div,
   .msg-intro details > p {

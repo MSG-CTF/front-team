@@ -192,10 +192,11 @@
   z-index: 3;
   color: #402e26;
 }
+/* 제목과 쪽 번호는 글자 크기가 달라 가운데 정렬 대신 기준선을 맞춘다 */
 .rankingToolbar {
   display: grid;
   grid-template-columns: 240px 1fr 260px;
-  align-items: center;
+  align-items: baseline;
   height: 44px;
 }
 .rankingTitle { font-family: "Libre Caslon Text", Georgia, serif; font-size: 20px; color: #754315; letter-spacing: 0.04em; }
@@ -210,7 +211,8 @@
 .pagination button:focus-visible, .refreshControls button:focus-visible { outline: 2px solid #8d4f1c; outline-offset: -2px; }
 .pagination button:disabled, .refreshControls button:disabled { opacity: 0.35; cursor: not-allowed; }
 .pageTotal { margin-left: 8px; color: #8b6848; font-size: 16px; }
-.refreshControls { display: flex; justify-content: flex-end; align-items: center; gap: 12px; font-size: 17px; }
+/* 첫 조회 전에는 갱신 시각이 없어 아이콘 아래 끝이 기준선이 되므로 갱신 묶음은 가운데 정렬로 둔다 */
+.refreshControls { display: flex; align-self: center; justify-content: flex-end; align-items: center; gap: 12px; font-size: 17px; }
 .refreshControls time { font-size: 14px; white-space: nowrap; }
 .refreshControls button { padding-right: 0; }
 .refreshControls svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
@@ -267,8 +269,9 @@
   .legendState { position: static; grid-column: 1 / -1; font-size: 14px; color: #472a14; }
   .rankingPanel { position: static; width: 100%; min-width: 0; }
   .rankingGrid .tableState { color: #593517; }
-  .rankingToolbar { display: flex; flex-wrap: wrap; height: auto; gap: 10px 6px; }
-  .rankingTitle { font-size: 16px; }
+  .rankingToolbar { display: flex; flex-wrap: wrap; align-items: center; height: auto; gap: 10px 6px; }
+  /* 가운데 정렬 줄에서 16px 제목의 기준선이 12px 갱신 시각보다 2 낮아, 상자를 4 키워 글자를 2 올린다 */
+  .rankingTitle { font-size: 16px; padding-bottom: 4px; }
   .pagination { order: 1; flex: 0 0 100%; flex-wrap: wrap; gap: 2px; font-size: 14px; }
   .pagination button, .refreshControls button { min-width: 44px; min-height: 44px; height: auto; padding: 6px; gap: 4px; }
   .pageTotal { font-size: 14px; margin-left: 3px; color: #684322; }
@@ -298,4 +301,28 @@
   .rankingGrid col:nth-child(4) { width: 56px; }
   .rankingGrid col:nth-last-child(-n + 2) { width: 72px; }
   .rankingGrid thead th { white-space: nowrap; }
+}
+
+/* ───────── 폰에서는 순위표를 옆으로 미는 대신 팀마다 카드로 쌓는다 ───────── */
+@media (max-width: 767px) {
+  .mobileTableHint { display: none; }
+  .tableContainer { overflow: visible; }
+  .rankingGrid { display: block; min-width: 0; }
+  .rankingGrid colgroup, .rankingGrid thead { display: none; }
+  .rankingGrid tbody { display: block; }
+  /* 첫 줄은 순위·팀·점수, 그 아래 분야별 점수를 네 칸씩 */
+  .rankingGrid tbody tr { display: grid; grid-template-columns: 44px repeat(3, minmax(0, 1fr)); gap: 8px 10px; align-items: center; height: auto; padding: 12px 0 14px; border-bottom: 1px solid rgb(145 92 43 / 24%); }
+  .rankingGrid tbody tr:last-child { border-bottom: 0; }
+  .rankingGrid tbody th, .rankingGrid tbody td { display: block; min-width: 0; padding: 0; border: 0; text-align: left; }
+  /* 순위 칸이 왼쪽 세로줄을 다 차지해 분야 점수는 팀 이름 아래 세 칸씩 정렬된다 */
+  .rankingGrid tbody .rankCell { grid-column: 1; grid-row: 1 / span 5; align-self: start; font-size: 20px; }
+  .rankArtwork { margin: 0; }
+  .rankingGrid tbody .teamNameCell { grid-column: 2 / 4; grid-row: 1; padding-inline: 0; font-size: 16px; font-weight: 600; }
+  .rankingGrid tbody .pointCell { grid-column: 4; grid-row: 1; font-size: 20px; text-align: right; }
+  .rankingGrid tbody .pointCell .mobileCellLabel { display: none; }
+  /* 분야 칸은 작은 제목 아래 값 */
+  .rankingGrid tbody td[data-column] { padding: 2px 0; }
+  .mobileCellLabel { display: block; font-family: "Libre Caslon Text", Georgia, serif; font-size: 11px; letter-spacing: .04em; line-height: 1.3; color: #8a6a43; }
+  .rankingGrid tbody td[data-column] .cellValue { font-size: 15px; color: #4a2e14; }
+  .rankingGrid tbody .tableState { grid-column: 1 / -1; height: auto; padding: 28px 0; text-align: center; }
 }

@@ -9,14 +9,17 @@
 .diceReadout, .diceChallengeRow { font-family: var(--board-label-font); font-weight: 400; font-synthesis: none; }
 .diceStatusMessage, .chancePanel, .eventPanel, .loading, .empty, .error { font-family: var(--board-body-font); }
 .chancePanel h2, .eventPanel h2 { font-family: var(--board-label-font); font-weight: 400; }
+/* 폐기 카드의 13px 라디오를 글자 크기에 따라 달라지는 이름 첫 줄 가운데에 맞춘다 */
+.eventCardRow input[type="radio"] { flex: none; width: 13px; height: 13px; margin: calc((1lh - 13px) / 2) 0 0; }
 .diceReadout strong, .diceChallengeRow strong { font-family: var(--board-body-font); font-weight: 600; }
 .track { position: absolute; left: calc(448 / 1920 * 100%); top: calc(289 / 1080 * 100%); width: calc(951 / 1920 * 100%); aspect-ratio: 1772 / 1330; }
-.diceReadout { display: grid; gap: 0.2cqw; top: 43%; padding-block: 0; font-size: clamp(12px, 0.72cqw, 14px); line-height: 1.4; }
+/* 오른쪽 끝을 문제 제한 줄(right 10%)과 같은 90% 선에 맞춘다 */
+.diceReadout { display: grid; gap: 0.2cqw; top: 43%; width: 77.5%; padding-block: 0; font-size: clamp(12px, 0.72cqw, 14px); line-height: 1.4; }
 .diceCountRow { display: flex; align-items: center; justify-content: space-between; gap: 0.3cqw; white-space: nowrap; }
 .diceReadout strong { font-variant-numeric: tabular-nums; }
 .diceChallengeRow { color: #e7c68f; text-align: right; font-size: clamp(11px, 0.66cqw, 14px); line-height: 1.4; white-space: nowrap; }
 .diceChallengeRow strong { font-variant-numeric: tabular-nums; }
-.diceStatusMessage { top: 55%; left: 12.5%; width: 77%; font-size: clamp(11px, 0.58cqw, 12px); line-height: 1.2; }
+.diceStatusMessage { top: 55%; left: 12.5%; width: 77.5%; font-size: clamp(11px, 0.58cqw, 12px); line-height: 1.2; }
 .diceStatusFull { display: none; }
 .airportTitleRow { position: relative; display: flex; align-items: center; justify-content: center; min-height: 36px; }
 .airportConfirm .trainSoundButton {
@@ -248,6 +251,8 @@
 .openInstance button, .openInstance strong { display: block; width: 100%; min-width: 0; margin-top: 4px; border: 0; background: none; color: #482d12; font: 600 12px/1.5 "Pretendard", sans-serif; overflow-wrap: anywhere; text-align: left; }
 .openInstance button { min-height: 44px; cursor: pointer; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 .openNotice { margin: 10px 0; color: #795b38; font: 12px/1.6 "Pretendard", sans-serif; word-break: keep-all; }
+/* 좁은 패널에서 "니다." 같은 음절만 다음 줄로 떨어지지 않게 낱말 단위로 줄을 바꾼다 */
+.openEmpty { word-break: keep-all; }
 .openNotice button { display: block; min-height: 44px; padding: 4px 0; border: 0; background: none; color: #654018; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .openPanelBody :is(input, select, button):focus-visible, .openPanelBody:focus-visible { outline: 2px solid #825725; outline-offset: -2px; }
 .openPanel .openClose { width: 44px; height: 44px; padding: 12px; }
@@ -255,21 +260,24 @@
 .lineSummary { margin-bottom: 12px; border-bottom: 1px solid #9c754875; color: #513717; font: clamp(16px, 1.05cqw, 18px)/1.5 "Song Myung", serif; }
 .lineSummary > summary { min-height: 44px; padding: 8px 0 12px; cursor: pointer; }
 .lineSummary > summary::marker { color: #805726; }
-.lineProgressStatus { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; color: #795c39; font: 18px/1.35 "Song Myung", serif; word-break: keep-all; overflow-wrap: normal; }
+/* 1920에서는 요약 제목과 같은 18px, 제목이 16px로 줄어드는 화면에서는 제목보다 커지지 않는다 */
+.lineProgressStatus { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; color: #795c39; font: 18px/1.35 "Song Myung", serif; font-size: min(1em, 18px); word-break: keep-all; overflow-wrap: normal; }
 .lineProgressStatus > span { display: block; }
 .lineList { list-style: none; padding: 0; margin: 0; }
 .lineList li + li { border-top: 1px solid #9c75483d; }
 .lineScoreColumns, .lineList li button, .lineScoreTotals { display: grid; grid-template-columns: minmax(0, 1.1fr) repeat(2, minmax(0, 1fr)); align-items: center; gap: 6px; }
-.lineScoreColumns { padding: 4px 2px 8px; border-bottom: 1px solid #9c754875; color: #795c39; font-size: 0.88em; }
+/* 표의 글자도 요약·상세와 같은 왼쪽·오른쪽 끝을 쓴다 */
+.lineScoreColumns { padding: 4px 0 8px; border-bottom: 1px solid #9c754875; color: #795c39; font-size: 0.88em; }
 .lineScoreColumns span:not(:first-child) { text-align: right; }
-.lineList li button { width: 100%; min-height: 52px; padding: 8px 2px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.lineList li button { width: 100%; min-height: 52px; padding: 8px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .lineList li button[aria-pressed="true"] { background: #d0ad7240; }
-.lineName { min-width: 0; overflow-wrap: anywhere; }
+/* 라인 이름과 상태는 낱말 단위로 줄을 바꾸고 한 낱말이 칸보다 길 때만 어디서든 끊는다 */
+.lineName { min-width: 0; word-break: keep-all; overflow-wrap: anywhere; }
 .lineName > span { display: block; }
 .lineName small { display: block; margin-top: 2px; font-size: 0.78em; font-weight: 400; color: #795c39; }
 .lineScore, .lineScoreTotals > :not(:first-child) { min-width: 0; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .lineScore[data-score-state="unearned"], .lineScore[data-score-state="pending"] { color: #795c39; font-size: 0.9em; }
-.lineScoreTotals { margin-bottom: 4px; padding: 8px 2px; border-bottom: 1px solid #9c754875; }
+.lineScoreTotals { margin-bottom: 4px; padding: 8px 0; border-bottom: 1px solid #9c754875; }
 .lineScoreTotals strong { color: #6a3e13; font-weight: 700; }
 .lineSummary .completedLineRow { color: #78501c; font-weight: 700; }
 .lineSummary :is(button, summary):focus-visible { outline: 2px solid #825725; outline-offset: -2px; }
@@ -348,7 +356,8 @@
   .diceStatusCompact { display: none; }
   .diceStatus[data-roll-ready="true"] > p { display: none; }
   .boardArea { display: flex; flex-direction: column; min-width: 0; }
-  .boardTools { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 16px; }
+  /* 주사위판·찬스카드·인라인 안내판과 같은 12px 바깥선을 쓴다 */
+  .boardTools { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 12px; }
   .mobileCellInfo { display: block; margin: 0; padding: 8px 16px; font: 16px/1.5 "Pretendard", sans-serif; color: #f8ead0; background: #21150dcc; word-break: keep-all; }
   .boardControls { display: flex; flex: 0 0 auto; align-items: center; color: #f8ead0; font-family: var(--board-label-font); }
   .boardHint { display: none; }
@@ -366,7 +375,7 @@
   .boardViewport[data-zoomed="true"] { overflow-x: auto; overscroll-behavior-x: contain; }
   .boardViewport[data-zoomed="true"] .boardScene { width: max(150%, 620px); margin-inline: 0; }
   .lineSummary { font-size: 15px; }
-  .stage .chancePanel { position: relative; inset: auto; width: auto; max-height: none; margin: 16px 20px 0; padding: 16px; }
+  .stage .chancePanel { position: relative; inset: auto; width: auto; max-height: none; margin: 16px 12px 0; padding: 16px; }
   .chancePanel h2 { font-size: 18px; margin-bottom: 12px; }
   .chancePanel :is(li, p, span, select, button) { font-size: 14px; line-height: 1.6; }
   .chancePanel li { margin-top: 12px; padding: 12px; }
@@ -393,8 +402,13 @@
   .eventPanel > div:first-child { margin-bottom: 12px; }
   .eventPanel :is(p, li, span, label, button) { font-size: 14px; line-height: 1.6; }
   .eventPanel p { margin-block: 12px; }
-  .eventPanel button, .eventPanel select, .eventPanel input { min-height: 44px; padding: 8px 12px; }
+  /* 라디오는 줄 전체가 누르는 영역이라 44px 높이를 주지 않고 카드 이름 줄에 맞춘다 */
+  .eventPanel button, .eventPanel select, .eventPanel input:not([type="radio"]) { min-height: 44px; padding: 8px 12px; }
   .eventPanel select, .eventPanel input { font-size: 16px; }
+  /* 카드 줄은 데스크톱 cqw 여백(약 1px)을 쓰지 않고 다른 카드 목록처럼 안쪽 여백을 둔다 */
+  .eventPanel .eventCardRow { gap: 10px; padding: 8px 12px; }
+  /* 카드 이름 첫 줄(14px × 1.6) 가운데에 16px 라디오를 맞춘다 */
+  .eventPanel .eventCardRow input[type="radio"] { flex: none; width: 16px; height: 16px; margin: 3.2px 0 0; }
   .stage .loading { position: fixed; font-size: 16px; padding: 24px; }
   .stage .empty { position: relative; inset: auto; width: 100%; padding: 16px; font-size: 16px; }
   .stage .error { position: fixed; inset: 12px 12px auto; width: auto; padding: 12px; gap: 12px; font-size: 14px; flex-wrap: wrap; }
@@ -465,7 +479,7 @@
   .mobileOpenOverlay .openSearch { gap: 8px; }
 
   /* 목적지 안내는 메뉴를 덮지 않고 주사위 상태 바로 아래에 둔다 확인창만 하단 시트로 연다 */
-  .stage .airportHint { position: static; inset: auto; order: -1; z-index: auto; margin: 8px 16px 4px; white-space: normal; text-align: left; font-size: 16px; letter-spacing: 1px; line-height: 1.5; padding: 0; background: none; border: 0; }
+  .stage .airportHint { position: static; inset: auto; order: -1; z-index: auto; margin: 8px 12px 4px; white-space: normal; text-align: left; font-size: 16px; letter-spacing: 1px; line-height: 1.5; padding: 0; background: none; border: 0; translate: none; }
   .stage .airportConfirm { position: fixed; inset: auto 12px 16px; z-index: 45; width: min(calc(100% - 24px), 520px); margin-inline: auto; padding: 20px; }
   .airportConfirm h2 { font-size: 20px; }
   .airportConfirm :is(p, button) { font-size: 14px; line-height: 1.6; }

@@ -23,7 +23,7 @@ export function unwrapBoardResponse(response) {
 
   if (!isSuccess(envelope)) {
     throw new BoardApiError(
-      envelope?.message || "보드 정보를 불러오지 못했습니다.",
+      envelope?.message || "보드 정보를 불러오지 못했습니다",
       envelope?.code,
       true,
       response?.config,
@@ -37,7 +37,7 @@ export function getBoardError(error) {
   const envelope = error?.response?.data;
   return {
     code: envelope?.code || error?.code || "BOARD_REQUEST_FAILED",
-    message: envelope?.message || error?.message || "보드 요청에 실패했습니다.",
+    message: envelope?.message || error?.message || "보드 요청에 실패했습니다",
   };
 }
 

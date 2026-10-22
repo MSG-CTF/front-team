@@ -23,7 +23,7 @@ export function adaptLeaderboardTeams(data) {
   return data.teams.slice(0, 8).map((team, teamIndex) => ({
     key: team.team_id || `leaderboard-team-${teamIndex}`,
     teamKey: team.team_id || null,
-    name: team.team_name || "—",
+    name: team.team_name || "-",
     teamScore: asFiniteNumber(team.team_score),
     isTop3: team.is_top3 === true,
     solvesComplete: Array.isArray(team.solves) && team.solves.every((solve) =>
@@ -50,7 +50,7 @@ export function adaptRankingRows(data) {
     key: ranking.team_id || `ranking-team-${index}`,
     rank: asFiniteNumber(ranking.rank, index + 1),
     teamKey: ranking.team_id || null,
-    teamName: ranking.team_name || "—",
+    teamName: ranking.team_name || "-",
     teamScore: asFiniteNumber(ranking.team_score),
     lastSolvedAt: ranking.last_solved_at || null,
     mileage: asFiniteNumber(ranking.mileage),

@@ -34,8 +34,8 @@ export default function BoardCellTooltip({ hovered, id, onDismiss }) {
     <div ref={ref} id={id} role="tooltip" className={styles.tooltip}
       data-tail={position?.tail.side}
       style={{ left: position?.left, top: position?.top, "--tail-left": `${position?.tail.offset ?? 20}px`, visibility: position ? "visible" : "hidden" }}>
-      <dl><div><dt>유형</dt><dd>{hovered.cell.type || "—"}</dd></div>
-        <div><dt>난이도</dt><dd>{hovered.cell.difficulty || "—"}</dd></div></dl>
+      <dl><div><dt>유형</dt><dd>{hovered.cell.type || "-"}</dd></div>
+        <div><dt>난이도</dt><dd>{hovered.cell.difficulty || "-"}</dd></div></dl>
     </div>, document.body,
   );
 }

@@ -193,12 +193,15 @@
   to { opacity: 1; transform: translate3d(0, 0, 0) rotateZ(0deg) rotateX(0deg) scale(1); }
 }
 .artwork { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; user-select: none; }
+/* 세 카드 그림은 왕관 아래 끝(1455 중 260)과 구분선(545.5)이 모두 같은 높이라
+   색과 글자 길이에 관계없이 그 사이 가운데(27.68%)에 글줄 가운데를 맞춘다 */
 .category {
   position: absolute;
   z-index: 2;
-  top: 19.762846%;
+  top: 27.680412%;
   left: 8%;
   width: 84%;
+  transform: translateY(-50%);
   overflow-wrap: anywhere;
   color: #e8bd68;
   background: linear-gradient(#fff 0%, #cf8817 66.8269%);
@@ -207,8 +210,6 @@
   font-size: 4.092072cqw;
   line-height: 1.375;
 }
-.card[data-tone="1"] .category { top: 20.761246%; }
-.card[data-tone="2"] .category { top: 20.948617%; }
 .titleArea {
   position: absolute;
   z-index: 2;
@@ -232,17 +233,16 @@
   font-weight: 500;
   line-height: 1.35;
   white-space: pre-line;
+  word-break: keep-all;
   overflow-wrap: anywhere;
   text-wrap: pretty;
   text-shadow: 0 1.278772cqw .511509cqw #0004;
 }
-.card[data-tone="1"] .titleArea { top: 43.16782%; }
-.card[data-tone="2"] .titleArea { top: 44.322134%; }
 .card[data-tone="1"] .title { max-width: 100%; }
 .card[data-tone="2"] .title { max-width: 100%; }
 .card[data-long-title="true"] .titleArea { top: 39%; height: 52%; left: 10%; width: 80%; }
 .card[data-long-title="true"] .title { max-width: 100%; line-height: 1.3; }
-.card .category[data-long="true"] { top: 22%; font-size: max(14px, 2.7cqw); white-space: nowrap; }
+.card .category[data-long="true"] { font-size: max(14px, 2.7cqw); white-space: nowrap; }
 .close {
   position: absolute;
   right: 0;

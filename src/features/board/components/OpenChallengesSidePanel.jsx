@@ -173,9 +173,9 @@ export default function OpenChallengesSidePanel({
         ))}
         {!loading && !error && challenges.length === 0 && (
           <li className={`${styles.openEmpty} pt-[1cqw] text-center font-pretendard text-[0.62cqw] leading-relaxed text-[#613d15]`}>
-            아직 연 문제가 없습니다.
+            아직 연 문제가 없습니다
             <br />
-            문제 칸에 도착하면 문제를 골라 열 수 있습니다.
+            문제 칸에 도착하면 문제를 골라 열 수 있습니다
           </li>
         )}
         {!loading && challenges.length > 0 && groups.items.length === 0 && <li className={styles.openNotice}>

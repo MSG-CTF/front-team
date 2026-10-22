@@ -59,6 +59,7 @@ export default function OnsiteGuide() {
             {eventConfig.venueAddress}
             <br />
             <a
+              className="onsite-map"
               href={eventConfig.venueMapUrl}
               target="_blank"
               rel="noopener noreferrer"
@@ -74,7 +75,7 @@ export default function OnsiteGuide() {
         <div>
           <dt>문의</dt>
           <dd>
-            <a href={`mailto:${eventConfig.contactEmail}`}>
+            <a className="onsite-email" href={`mailto:${eventConfig.contactEmail}`}>
               {eventConfig.contactEmail}
             </a>
           </dd>

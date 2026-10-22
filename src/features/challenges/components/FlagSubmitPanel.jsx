@@ -54,7 +54,7 @@ export default function FlagSubmitPanel({
       />
       <p id="flag-hint" className={styles.flagHint}>
         {solved
-          ? "이미 해결한 문제입니다. 제출한 정답이 팀 기록에 반영됐습니다"
+          ? "이미 해결한 문제입니다 제출한 정답이 팀 기록에 반영됐습니다"
           : "문제에서 찾은 플래그를 입력해주세요"}
       </p>
       <button

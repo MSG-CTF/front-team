@@ -27,7 +27,8 @@
 .art { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
 .art img { position: absolute; width: 145%; max-width: none; height: auto; left: -22.5%; top: -11%; }
 .ribbon, .title, .description { position: absolute; margin: 0; text-align: center; }
-.ribbon { top: 10.7%; left: 15%; width: 70%; color: #fff0c4; font-size: 6.1cqw; font-weight: 700; line-height: 1.3; text-shadow: 0 1px 2px #291308; }
+/* 리본의 어두운 면(카드 높이의 10.7..16.9%) 가운데에 글자를 맞춘다 */
+.ribbon { top: 11.66%; left: 15%; width: 70%; color: #fff0c4; font-size: 6.1cqw; font-weight: 700; line-height: 1.3; text-shadow: 0 1px 2px #291308; }
 .title { top: 25.8%; left: 12%; width: 76%; height: 9%; display: grid; align-content: center; font-size: 6cqw; line-height: 1.35; word-break: keep-all; overflow-wrap: anywhere; }
 .description { top: 70.5%; left: 13%; width: 74%; max-height: 17.5%; overflow-y: auto; font-size: max(12px, 4.5cqw); line-height: 1.35; word-break: keep-all; overflow-wrap: anywhere; white-space: pre-wrap; }
 .close { position: absolute; top: -8px; right: -8px; width: 32px; height: 32px; border: 2px solid #c69544; border-radius: 50%; background: #513116; color: #ffe2a3; font: 22px/1 serif; cursor: pointer; }

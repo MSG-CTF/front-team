@@ -1,7 +1,7 @@
 import { Link, useParams } from "react-router-dom";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { toKst } from "../../../utils/time.js";
-import FlagSubmitPanel from "../../challenges/components/FlagSubmitPanel.jsx";
+import SignatureFlagPanel from "../components/SignatureFlagPanel.jsx";
 import { useSignatureDetail } from "../hooks/useSignatures.js";
 import { getFestivalBrand } from "../utils/festivalBrand.js";
 import BoothAchievement from "../components/BoothAchievement.jsx";
@@ -115,7 +115,7 @@ function SignatureDetail({ signatureId }) {
                 )}
               </section>
               <div className={shared.actionColumn}>
-                <FlagSubmitPanel
+                <SignatureFlagPanel
                   value={state.flag}
                   onChange={state.setFlag}
                   onSubmit={state.submit}
@@ -134,7 +134,7 @@ function SignatureDetail({ signatureId }) {
                     <br />
                     마일리지와 추가 주사위는 지급되지 않습니다
                   </p>
-                </FlagSubmitPanel>
+                </SignatureFlagPanel>
                 {state.status === "loading" && (
                   <p role="status">풀이 기록을 확인하는 중</p>
                 )}

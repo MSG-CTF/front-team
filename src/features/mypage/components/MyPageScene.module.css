@@ -286,6 +286,17 @@
   background: #8a6a3e;
   transform: translateY(-50%) rotate(45deg);
 }
+/* 넓은 화면 카드에서만 셋째 팀원부터 펼치는 단추를 보인다 좁은 화면은 팀원이 모두 보인다 */
+.moreMembers {
+  display: none;
+  border: 0;
+  background: transparent;
+  color: #605145;
+  font-family: var(--sans);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
 .personalRank {
   width: 100%;
   padding-top: 10px;
@@ -339,7 +350,8 @@
   position: relative;
   min-width: 0;
   min-height: 150px;
-  padding: 18px 20px;
+  /* 위아래로 쌓인 팀 카드·기록 패널과 같은 안쪽 여백이라 글자 왼쪽 선이 이어진다 */
+  padding: 18px 16px;
   border: 3px double #a9803f;
   border-radius: 6px;
   background: linear-gradient(135deg, #35291b, #1f170f);
@@ -407,7 +419,8 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
-.historyPanel .bakedLabel:first-child {
+/* 패널 제목만 대상으로 한다 표 머리글의 첫 열(th)까지 제목 크기로 커지지 않게 직계 자식으로 한정 */
+.historyPanel > .bakedLabel:first-child {
   position: static;
   width: auto;
   height: auto;
@@ -683,10 +696,11 @@
     text-align: center;
   }
   /* Figma 451:300 로그아웃: 무대 x481 y616 → 카드 x356 y421 */
+  /* 같은 줄의 QR 안내 문구와 기준선을 맞추려고 3 올린다 */
   .logoutButton {
     position: absolute;
     left: calc(var(--u) * 350);
-    top: calc(var(--u) * 413);
+    top: calc(var(--u) * 410);
     min-height: 0;
     height: calc(var(--u) * 30);
     padding: 0 calc(var(--u) * 6);
@@ -698,14 +712,55 @@
     top: calc(var(--u) * 567);
     width: calc(var(--u) * 300);
   }
+  /* 카드 그림의 마름모 글머리표 간격(52)과 같은 줄 간격 */
   .members li {
-    height: calc(var(--u) * 56);
+    height: calc(var(--u) * 52);
     padding: 0;
     font-size: calc(var(--u) * 24);
     line-height: calc(var(--u) * 30);
   }
   .members li::before {
     display: none;
+  }
+  /* 카드 그림의 글머리표는 두 줄뿐이라 셋째 팀원부터 접는다 */
+  .members:not([data-expanded]) li:nth-child(n + 3) {
+    display: none;
+  }
+  /* 펼치면 MEMBERS 아래부터 아래 구분선(725) 위까지 종이 판을 띄워 모두 보인다 */
+  .members[data-expanded] {
+    z-index: 2;
+    left: calc(var(--u) * 56);
+    top: calc(var(--u) * 500);
+    width: calc(var(--u) * 358);
+    max-height: calc(var(--u) * 222);
+    padding: calc(var(--u) * 8) calc(var(--u) * 14);
+    overflow-y: auto;
+    border: calc(var(--u) * 1) solid #b99a66;
+    background: #efdcb8;
+    box-shadow: 0 calc(var(--u) * 8) calc(var(--u) * 24) rgb(60 40 20 / 28%);
+  }
+  .members[data-expanded] li {
+    height: auto;
+    padding: calc(var(--u) * 4) 0 calc(var(--u) * 4) calc(var(--u) * 28);
+    font-size: calc(var(--u) * 20);
+    line-height: calc(var(--u) * 26);
+  }
+  .members[data-expanded] li::before {
+    display: block;
+    left: calc(var(--u) * 8);
+    width: calc(var(--u) * 9);
+    height: calc(var(--u) * 9);
+  }
+  /* MEMBERS 글자 오른쪽 끝, 펼친 판 바로 위 */
+  .moreMembers {
+    display: block;
+    position: absolute;
+    z-index: 3;
+    right: calc(var(--u) * 56);
+    top: calc(var(--u) * 468);
+    height: calc(var(--u) * 28);
+    padding: 0 calc(var(--u) * 6);
+    font-size: max(10px, calc(var(--u) * 15));
   }
   .personalRank {
     position: absolute;
@@ -767,10 +822,12 @@
     left: calc(var(--u) * 1232);
     background: url("/assets/mypage/panel-mileage.png") center / 100% 100% no-repeat;
   }
+  /* 두 패널 그림의 제목 글자와 구분선이 x40에서 시작해 값도 같은 왼쪽 선에 둔다 */
+  /* top 79는 마일리지 패널 그림에 구운 MI 단위와 같은 기준선이고 점수 패널은 아래에서 따로 정한다 */
   .metricValue {
     position: absolute;
-    left: calc(var(--u) * 36);
-    top: calc(var(--u) * 82);
+    left: calc(var(--u) * 40);
+    top: calc(var(--u) * 79);
     width: calc(var(--u) * 360);
     overflow: hidden;
     font-size: calc(var(--u) * 76);
@@ -778,14 +835,14 @@
     white-space: nowrap;
   }
   .mileagePanel .metricValue {
-    left: calc(var(--u) * 44);
     width: calc(var(--u) * 420);
   }
   /* Figma 95:351/95:355: RANK 무대 x1055 y332 → 패널 x419 y137 */
+  /* 같은 줄의 점수 숫자와 기준선을 맞추려고 top을 119로 둔다 */
   .rank {
     left: calc(var(--u) * 419);
     right: auto;
-    top: calc(var(--u) * 125);
+    top: calc(var(--u) * 119);
     bottom: auto;
     font-size: calc(var(--u) * 24);
     line-height: calc(var(--u) * 30);
@@ -800,7 +857,7 @@
   .breakdown {
     position: absolute;
     right: calc(var(--u) * 39);
-    left: calc(var(--u) * 36);
+    left: calc(var(--u) * 40);
     top: calc(var(--u) * 162);
     margin: 0;
     font-size: max(9px, calc(var(--u) * 11));
@@ -810,11 +867,13 @@
     white-space: nowrap;
   }
   .scorePanel .metricValue { top: calc(var(--u) * 78); font-size: calc(var(--u) * 68); line-height: calc(var(--u) * 80); }
+  /* 그림에 구운 SOLVE HISTORY 제목(기준선 y51)과 같은 기준선 */
+  /* 글자 크기 하한 10px이 걸리는 작은 화면에서도 맞도록 줄 상자 위에서 기준선까지(0.95em)를 뺀다 */
   .historyNote {
     position: absolute;
     left: calc(var(--u) * 370);
     right: calc(var(--u) * 190);
-    top: calc(var(--u) * 38);
+    top: calc(var(--u) * 51 - 0.95em);
     font-size: max(10px, calc(var(--u) * 12));
     line-height: 1.25;
   }
@@ -830,7 +889,7 @@
     border: 0;
     border-radius: 0;
   }
-  .historyPanel .bakedLabel:first-child {
+  .historyPanel > .bakedLabel:first-child {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -851,6 +910,16 @@
     top: calc(var(--u) * 108);
     width: calc(var(--u) * 1082);
     overflow: hidden;
+  }
+  /* 패널 그림에 구운 열 제목의 글자 가장자리에 맞춘다 왼쪽 정렬 열은 시작, 숫자 열은 끝 */
+  /* 마일리지 표 왼쪽 44는 고정폭 숫자 1의 왼쪽 여백(4)만큼 DATE 제목(x48)보다 앞선 값 */
+  .mileageHistory .historyScroll {
+    left: calc(var(--u) * 44);
+    width: calc(var(--u) * 1090);
+  }
+  .solveHistory .historyScroll {
+    left: calc(var(--u) * 46);
+    width: calc(var(--u) * 1087);
   }
   .historyTable {
     min-width: 0;
@@ -876,10 +945,11 @@
   .historyEmpty {
     height: calc(var(--u) * 138);
   }
+  /* 그림에 구운 패널 제목 글자(y34~51)의 세로 중심에 맞춘다 */
   .historyPagination {
     position: absolute;
     right: calc(var(--u) * 40);
-    top: calc(var(--u) * 20);
+    top: calc(var(--u) * 27.5);
     gap: calc(var(--u) * 8);
     font-size: max(10px, calc(var(--u) * 16));
   }
@@ -914,8 +984,9 @@
   .metricPanel .bakedLabel { font-size: clamp(13px, 15cqw, 15px); letter-spacing: min(.16em, 1cqw); white-space: normal; overflow: visible; overflow-wrap: anywhere; }
   .metricValue { font-size: clamp(24px, 24cqw, 44px); }
   .refreshButton, .historyPagination button { min-width: 44px; min-height: 44px; }
-  .rank, .unit { position: static; margin-top: 8px; text-align: right; }
-  .historyTable { min-width: 680px; font-size: 15px; table-layout: auto; }
+  .rank, .unit { position: static; display: block; margin-top: 8px; text-align: right; }
+  /* 태블릿에서는 패널 폭(약 660px)에 맞춰 열이 잘리지 않게 폭 하한을 두지 않는다 */
+  .historyTable { min-width: 0; font-size: 15px; table-layout: auto; }
   .historyTable th { white-space: nowrap; }
   .historyTable td.cellText { max-width: 18em; }
   .historyTable td.cellNumber { overflow: visible; }
@@ -967,4 +1038,31 @@
   .board { padding: 4px; border-width: 6px; border-image-width: 6px; }
   .teamCard, .historyPanel, .metricPanel { padding: 14px 10px; border-width: 6px; border-image-width: 6px; }
   .teamCard .bakedLabel:first-child { padding-inline: 8px; }
+}
+
+/* ───────── 폰에서는 기록 표를 옆으로 미는 대신 줄마다 카드처럼 쌓는다 ───────── */
+/* 값이 없는 칸(줄표)은 넓은 화면에서는 열을 지키고 폰에서는 자리를 차지하지 않는다 */
+@media (max-width: 639px) {
+  .historyScroll { overflow: visible; }
+  .historyTable { display: block; width: 100%; min-width: 0; }
+  .historyTable colgroup, .historyTable thead { display: none; }
+  .historyTable tbody { display: block; }
+  .historyTable tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid #c4a77a88; }
+  .historyTable tr:last-child { border-bottom: 0; }
+  .historyTable td { display: block; height: auto; min-width: 0; max-width: none; padding: 0; overflow: visible; white-space: normal; text-overflow: clip; overflow-wrap: anywhere; }
+  .historyTable td.cellBlank { display: none; }
+  .historyTable td.historyEmpty { grid-column: 1 / -1; }
+  /* 마일리지: 날짜와 변동을 한 줄에, 사유는 아래 한 줄 가득 */
+  .mileageHistory td:nth-child(1) { grid-row: 1; grid-column: 1; font-size: 14px; color: var(--brown-soft); }
+  .mileageHistory td:nth-child(3) { grid-row: 1; grid-column: 2; font-size: 17px; }
+  .mileageHistory td:nth-child(2) { grid-row: 2; grid-column: 1 / -1; }
+  .mileageHistory td:nth-child(4) { grid-row: 3; grid-column: 2; font-size: 13px; color: var(--brown-soft); }
+  .mileageHistory td:nth-child(4):not(.cellBlank)::before { content: "BALANCE "; font-family: var(--serif); font-size: 11px; letter-spacing: .08em; }
+  /* 풀이: 문제와 점수를 한 줄에, 푼 시각은 아래 왼쪽, 분야는 아래 오른쪽 */
+  .solveHistory td:nth-child(1) { grid-row: 1; grid-column: 1; }
+  .solveHistory td:nth-child(3) { grid-row: 1; grid-column: 2; font-size: 17px; }
+  .solveHistory td:nth-child(4) { grid-row: 2; grid-column: 1; text-align: left; font-size: 14px; color: var(--brown-soft); }
+  .solveHistory td:nth-child(2) { grid-row: 2; grid-column: 2; font-size: 13px; color: var(--brown-soft); }
+  .solveHistory td:nth-child(5) { grid-row: 3; grid-column: 2; font-size: 13px; color: var(--brown-soft); }
+  .solveHistory td:nth-child(5):not(.cellBlank)::before { content: "ELAPSED "; font-family: var(--serif); font-size: 11px; letter-spacing: .08em; }
 }

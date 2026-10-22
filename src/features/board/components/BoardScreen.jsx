@@ -168,7 +168,7 @@ export default function BoardScreen({
 
   const cells = boardDefinition?.cells ?? [];
   const blockedMessage = awaitingDiscard
-    ? "보유한 찬스카드 한 장을 먼저 폐기해주세요."
+    ? "보유한 찬스카드 한 장을 먼저 폐기해주세요"
     : diceStatus?.blockedReason
       ? BLOCKED_REASON_MESSAGES[diceStatus.blockedReason] ||
         diceStatus.blockedReason
@@ -270,7 +270,7 @@ export default function BoardScreen({
             </button>
           </div>
         </div>
-        {inspectedCell && <p className={styles.mobileCellInfo} role="status">{inspectedCell.cellIndex}번 · 유형 {inspectedCell.type} · 난이도 {inspectedCell.difficulty || "—"}</p>}
+        {inspectedCell && <p className={styles.mobileCellInfo} role="status">{inspectedCell.cellIndex}번 · 유형 {inspectedCell.type} · 난이도 {inspectedCell.difficulty || "-"}</p>}
         <div
           id={boardRegionId}
           ref={boardViewport}
@@ -396,13 +396,13 @@ export default function BoardScreen({
 
       {isLoading && (
         <div className={`${styles.loading} absolute inset-0 z-50 grid place-items-center bg-[#2b1609]/35 font-inria-serif text-[1.2cqw] text-[#fff0c4]`}>
-          보드 정보를 불러오는 중입니다.
+          보드 정보를 불러오는 중입니다
         </div>
       )}
 
       {!isLoading && boardDefinition && cells.length === 0 && (
         <div className={`${styles.empty} absolute left-[34%] top-[47%] z-40 w-[30%] rounded-[0.6cqw] border border-[#8a5728] bg-[#f2d7a7]/95 p-[1cqw] text-center font-inria-serif text-[0.85cqw] text-[#3e2818]`}>
-          표시할 보드 칸이 없습니다.
+          표시할 보드 칸이 없습니다
         </div>
       )}
 

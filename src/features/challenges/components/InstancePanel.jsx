@@ -74,7 +74,7 @@ function Endpoint({ endpoint, compact }) {
       </span>
       {copyError && (
         <p className={styles.copyError} role="status">
-          복사하지 못했습니다. 주소를 선택해 복사해주세요
+          복사하지 못했습니다 주소를 선택해 복사해주세요
         </p>
       )}
     </div>
@@ -199,7 +199,7 @@ export default function InstancePanel({ instance, otherInstance, error }) {
         ) : (
           <p className={styles.instanceHint}>
             <strong>{otherInstance.challengeTitle}</strong>에서 사용 중인
-            인스턴스가 있습니다. 전환하면 기존 인스턴스가 종료됩니다
+            인스턴스가 있습니다 전환하면 기존 인스턴스가 종료됩니다
           </p>
         ))}
       <p
@@ -221,7 +221,7 @@ export default function InstancePanel({ instance, otherInstance, error }) {
         <div className={styles.ttlFill} style={{ width: `${ratio * 100}%` }} />
       </div>
       <p className={styles.extendsValue} aria-label="연장 횟수">
-        {running && instance.extendsUsed != null ? instance.extendsUsed : "—"}{" "}
+        {running && instance.extendsUsed != null ? instance.extendsUsed : "-"}{" "}
         / 3
       </p>
       {running && (hasTime || hasHardTime) && (

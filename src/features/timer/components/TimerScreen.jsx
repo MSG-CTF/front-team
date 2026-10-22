@@ -43,7 +43,7 @@ export default function TimerScreen({
         </div>
       )}
 
-      {status === "empty" && <p>현재 진행 중이거나 예정된 대회가 없습니다.</p>}
+      {status === "empty" && <p>현재 진행 중이거나 예정된 대회가 없습니다</p>}
 
       {status === "success" && contest && (
         <>
@@ -56,7 +56,8 @@ export default function TimerScreen({
             </p>
           )}
 
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm opacity-80">
+          {/* 시작·종료 시각의 글자 폭이 달라도 값의 왼쪽 선이 맞도록 목록만 왼쪽 정렬한다 */}
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-left text-sm opacity-80">
             <dt>시작</dt>
             <dd>{toKst(contest.startTime)}</dd>
             <dt>종료</dt>
@@ -65,8 +66,9 @@ export default function TimerScreen({
 
           {!isSynced && (
             <p className="text-xs opacity-60">
-              서버 시각 동기화에 실패해 이 기기의 로컬 시계를 기준으로 표시하고
-              있습니다. 표시된 시간이 실제와 다를 수 있습니다.
+              서버 시각 동기화에 실패해 이 기기의 로컬 시계를 기준으로 표시하고 있습니다
+              <br />
+              표시된 시간이 실제와 다를 수 있습니다
             </p>
           )}
         </>

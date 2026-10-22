@@ -188,7 +188,8 @@
   min-width: 0;
   height: 52px;
   margin: 0;
-  padding: 0 18px 0 62px;
+  /* 이 글꼴은 대문자가 줄 가운데보다 2px 높게 그려져서 위 여백으로 입력칸 아이콘과 가운데를 맞춘다 */
+  padding: 4px 18px 0 62px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -315,6 +316,8 @@
     margin: -8px auto 22px;
   }
   .field {
+    /* 20px 글자는 대문자가 1px 정도만 높게 그려져서 위 여백도 2px만 둔다 */
+    padding-top: 2px;
     font-size: 20px;
   }
   .loginButton {

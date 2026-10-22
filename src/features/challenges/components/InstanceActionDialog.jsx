@@ -27,7 +27,7 @@ export default function InstanceActionDialog({
       title: "이 문제의 인스턴스로 전환",
       description:
         (otherInstance?.challengeTitle || "다른 문제") +
-        "에서 사용 중인 인스턴스를 종료하고 새로 생성합니다. 기존 작업 내용은 유지되지 않습니다",
+        "에서 사용 중인 인스턴스를 종료하고 새로 생성합니다 기존 작업 내용은 유지되지 않습니다",
       button: "전환하고 생성",
     },
     restart: {
@@ -39,7 +39,7 @@ export default function InstanceActionDialog({
     stop: {
       title: "인스턴스 종료",
       description:
-        "현재 문제의 실행 환경을 종료합니다. 다시 사용하려면 새 인스턴스를 생성해주세요",
+        "현재 문제의 실행 환경을 종료합니다 다시 사용하려면 새 인스턴스를 생성해주세요",
       button: "종료하기",
     },
   }[action];
