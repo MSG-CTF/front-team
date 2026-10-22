@@ -17,3 +17,8 @@ export function deploymentTestSteps(test) {
       : index !== undefined ? (position < index ? "done" : position === index ? "current" : "waiting") : "waiting",
   }));
 }
+
+// 시작 요청이 409 DEPLOYMENT_TEST_ACTIVE 로 거절되면 응답 data.active_test 에 진행 중인 테스트가 온다
+export function activeTestFromFailure(failure) {
+  return failure?.response?.data?.data?.active_test ?? null;
+}

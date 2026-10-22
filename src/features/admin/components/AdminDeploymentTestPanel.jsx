@@ -4,7 +4,7 @@ import { isSuccess } from "../../../utils/response.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import { mapInstanceEndpoints } from "../../challenges/utils/challengeDetailMapper.js";
-import { deploymentTestStatus, deploymentTestSteps } from "../utils/adminDeploymentTests.js";
+import { activeTestFromFailure, deploymentTestStatus, deploymentTestSteps } from "../utils/adminDeploymentTests.js";
 import { AdminBadge } from "./AdminLayout.jsx";
 import styles from "./AdminWorkspace.module.css";
 
@@ -78,7 +78,8 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
     } catch (failure) {
       if (mounted.current) {
         setError(failure.response?.data?.message || "요청 결과를 확인하지 못했습니다 새로고침 후 같은 요청으로 다시 확인할 수 있습니다");
-        if (failure.response?.data?.data?.active_test) setData((current) => ({ ...current, active_test: failure.response.data.data.data.active_test }));
+        const conflict = activeTestFromFailure(failure);
+        if (conflict) setData((current) => ({ ...current, active_test: conflict }));
         if (failure.response && failure.response.status < 500) request.current = null;
       }
     } finally { pending.current = false; if (mounted.current) setBusy(false); }
