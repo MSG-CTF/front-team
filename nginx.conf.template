@@ -32,6 +32,12 @@ server {
         try_files $uri $uri/ /index.html;
     }
 
+    # SPA 주소별로 오래된 HTML을 재사용해 이전 화면이 남지 않게 한다
+    # expires는 서버의 보안 헤더 상속을 유지하면서 Cache-Control: no-cache를 설정한다
+    location = /index.html {
+        expires -1;
+    }
+
     # Runtime이 사용하는 비밀값 조회 경로만 백엔드로 전달한다
     location = /internal/v1/runtime-secrets/resolve {
         client_max_body_size 16k;

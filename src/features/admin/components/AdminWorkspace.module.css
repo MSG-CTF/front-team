@@ -12,13 +12,13 @@
 .testSteps li[data-state="done"] > span { color: #436347; border-color: #799276; background: #eef2e5; }
 .testSteps small { display: block; font-size: 11px; font-weight: 400; }
 .testResult { padding: 20px; background: var(--admin-paper); border: 1px solid var(--admin-line); border-radius: 3px; }
-.testResultHeader { display: flex; gap: 10px; align-items: center; margin-bottom: 16px; }
+.testResultHeader { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
 .testResultHeader button { margin-left: auto; }
 .testTimes { display: flex; flex-wrap: wrap; gap: 14px 40px; margin-bottom: 18px; font-size: 12px; }
 .testTimes dt { color: var(--admin-subtle); margin-bottom: 3px; }
 .testEndpoint { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--admin-line); }
-.testEndpoint > div { min-width: 0; }
-.testEndpoint > div:last-child { display: flex; gap: 8px; align-items: center; }
+.testEndpoint > div { min-width: 0; max-width: 100%; }
+.testEndpoint > div:last-child { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .testEndpoint strong { font-size: 13px; }
 .testEndpoint code { display: block; overflow-wrap: anywhere; font-size: 12px; margin-top: 4px; }
 .testError { margin: 12px 0; padding: 12px 14px; color: #8c3526; background: #f4dfd3; border-left: 3px solid #b86546; overflow-wrap: anywhere; }
@@ -73,7 +73,9 @@
   cursor: pointer;
   font-weight: 500;
   text-decoration: none;
-  white-space: nowrap;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .button:hover:not(:disabled) { background: #f5e7c8; border-color: #946329; }
 .primary { background: var(--admin-accent); border-color: var(--admin-accent); color: #fff8e9; }
@@ -124,8 +126,8 @@
   gap: 16px;
   margin: 0 0 18px;
 }
-.toolbar label { display: grid; gap: 6px; color: var(--admin-text); font-size: 13px; font-weight: 600; line-height: 20px; }
-.toolbar .select { font-size: 14px; }
+.toolbar label { display: grid; gap: 6px; min-width: 0; max-width: 100%; color: var(--admin-text); font-size: 13px; font-weight: 600; line-height: 20px; }
+.toolbar .select { min-width: 0; width: 100%; font-size: 14px; }
 .toolbar > :last-child { margin-left: auto; }
 .description { margin: -10px 0 24px; color: var(--admin-subtle); }
 .tableWrap { overflow-x: auto; border: 1px solid var(--admin-line); border-radius: 3px; background: var(--admin-paper); }
@@ -353,7 +355,7 @@
   .environmentSummary > div + div { padding-top: 12px; border-top: 1px solid var(--admin-line); }
 }
 .catalogFilters { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 12px; }
-.rowActions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.rowActions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; max-width: 100%; }
 .previewLinkRow { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
 .previewNotice { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: 12px; padding: 14px 24px; background: #f4eedf; color: #443c2f; border-bottom: 1px solid #c6baa3; font-family: "Song Myung", serif; }
 .previewNotice > div { display: flex; flex-wrap: wrap; gap: 8px 20px; }
@@ -457,7 +459,7 @@
 /* 버튼: 기본은 양피지 이중선, 주요 동작은 결제 화면의 나무색 버튼, 위험 동작은 붉은 나무색 */
 .workspace .button, .dialog .button { min-height: 40px; padding: 7px 14px; border: 1px solid #a78a5b; border-radius: 2px; background: #f6e8cc; box-shadow: inset 0 0 0 2px #f6e8cc, inset 0 0 0 3px #d9c49a; color: #5a3a19; font-weight: 500; }
 .workspace .button:hover:not(:disabled), .dialog .button:hover:not(:disabled) { border-color: #7a5a2c; background: #fdf4df; box-shadow: inset 0 0 0 2px #fdf4df, inset 0 0 0 3px #cdb27e; }
-.workspace .primary, .dialog .primary, .dangerSolid { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 7px 18px; border: 1px solid #5a3526; border-radius: 2px; background: #75412f; box-shadow: inset 0 0 0 2px #ffffff12, 0 2px 0 #57361f; color: #fff3dc; font: 400 15px/22px "Song Myung", "MSG Admin Title", serif; cursor: pointer; white-space: nowrap; }
+.workspace .primary, .dialog .primary, .dangerSolid { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; max-width: 100%; padding: 7px 18px; border: 1px solid #5a3526; border-radius: 2px; background: #75412f; box-shadow: inset 0 0 0 2px #ffffff12, 0 2px 0 #57361f; color: #fff3dc; font: 400 15px/22px "Song Myung", "MSG Admin Title", serif; cursor: pointer; white-space: normal; overflow-wrap: anywhere; }
 .workspace .primary:hover:not(:disabled), .dialog .primary:hover:not(:disabled) { background: #5e3225; }
 .workspace .primary:disabled, .dialog .primary:disabled, .dangerSolid:disabled { border-color: #b9a17a; background: #dbc8a1; box-shadow: none; color: #786344; opacity: 1; cursor: default; }
 .dangerSolid { border-color: #6a2416; background: #8b3320; box-shadow: inset 0 0 0 2px #ffffff12, 0 2px 0 #5a1f12; }

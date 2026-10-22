@@ -86,6 +86,14 @@ HTTPServer(('0.0.0.0',8000),Handler).serve_forever()
             raise AssertionError('Proxy did not resolve the expected backend: '+str(last))
 
         wait_for('before')
+        html_paths=['/','/index.html','/login','/admin/challenges']
+        for path in html_paths:
+            with urllib.request.urlopen(base+path,timeout=2) as response:
+                assert 'no-cache' in response.headers.get('Cache-Control',''), path
+                assert response.headers.get('X-Frame-Options')=='DENY', path
+                assert response.headers.get('Content-Security-Policy')=="frame-ancestors 'none'", path
+                assert response.headers.get('X-Content-Type-Options')=='nosniff', path
+                assert b'<div id="root">' in response.read(), path
         cases=[('/api/v1/qa/items/a%2Fb?tag=a%2Bb&tag=x%2Fy',None),
                ('/api/v1/qa/submit?source=browser','{"flag":"qa-fixture"}'),
                ('/internal/v1/runtime-secrets/resolve','{"references":[]}'),('/healthz',None)]
@@ -112,6 +120,7 @@ HTTPServer(('0.0.0.0',8000),Handler).serve_forever()
         check_paths('after')
         assert inspect(frontend)['State']['StartedAt']==front_started
         print(json.dumps({'backend_ip_changed':True,'frontend_not_restarted':True,
+                          'html_routes_revalidate_with_security_headers':len(html_paths),
                           'recovered_in_seconds':recovered_in,'request_cases_before_and_after':len(cases)*2,
                           'paths_queries_post_bodies_and_headers_preserved':True}))
     finally:
