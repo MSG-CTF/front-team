@@ -74,6 +74,22 @@ export function mileageFilterQuery(key) {
   return filter?.types.length ? filter.types.join(",") : undefined;
 }
 
+// 마일리지 내역 조회: 백엔드 main 은 아직 type 을 하나만 받고 여러 유형 묶음은 400 으로 거절한다
+// 그때는 같은 쪽을 유형 없이 다시 받아 이 화면에서 거르고, 거른 쪽이라는 표시(filtered_locally)를 붙인다
+export async function loadMileageHistory(fetchHistory, { teamId, filter, page, size = 50 }, config) {
+  const type = mileageFilterQuery(filter);
+  try {
+    return await fetchHistory({ teamId, type, page, size }, config);
+  } catch (error) {
+    if (!type?.includes(",") || error?.response?.status !== 400) throw error;
+    const response = await fetchHistory({ teamId, page, size }, config);
+    const data = response?.data?.data;
+    if (!data) return response;
+    const types = new Set(type.split(","));
+    return { ...response, data: { ...response.data, data: { ...data, history: (data.history ?? []).filter((row) => types.has(row.type)), filtered_locally: true } } };
+  }
+}
+
 // 유형마다 색 하나: 결제는 주황, 환불은 초록, 관리자 지급은 파랑, 회수는 빨강, 게임 보상은 노랑과 보라, 문제 풀이는 회색
 export const MILEAGE_TYPE_TONES = {
   PURCHASE: "orange", REFUND: "good", ADMIN_GRANT: "blue", ADMIN_DEDUCT: "bad",

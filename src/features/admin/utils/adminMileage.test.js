@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { canRefund, formatMileageAmount, getMileageTypeLabel, mileageAttempt, paymentErrorMessage, validateCheckout, validateMileageAdjustment } from "./adminMileage.js";
-import { MILEAGE_FILTERS, mileageFilterQuery } from "./adminMileage.js";
+import { MILEAGE_FILTERS, loadMileageHistory, mileageFilterQuery } from "./adminMileage.js";
 
 test("같은 마일리지 요청의 재시도는 키를 유지하고 내용이 달라지면 새 키를 쓴다", () => {
   let count = 0;
@@ -90,4 +90,24 @@ test("지급과 회수는 양수 금액에 부호만 붙인다", async () => {
   assert.equal(signedMileageAmount("deduct", "300"), "-300");
   assert.equal(signedMileageAmount("deduct", ""), "");
   assert.equal(validateMileageAdjustment({ teamId: "t", amount: signedMileageAmount("deduct", "300"), reason: "정정" }), "");
+});
+
+test("백엔드가 유형 묶음을 거절하면 같은 쪽을 유형 없이 다시 받아 화면에서 거른다", async () => {
+  const calls = [];
+  const rows = [{ type: "PURCHASE" }, { type: "CHALLENGE_SOLVE" }, { type: "REFUND" }];
+  const fetchHistory = async (params) => {
+    calls.push(params.type);
+    if (params.type?.includes(",")) throw Object.assign(new Error("bad"), { response: { status: 400 } });
+    return { data: { code: "SUCCESS", data: { history: rows, total_count: 3, page: 1, size: 50 } } };
+  };
+  const result = await loadMileageHistory(fetchHistory, { filter: "payment", page: 1 });
+  assert.deepEqual(calls, ["PURCHASE,REFUND", undefined]);
+  assert.deepEqual(result.data.data.history.map((row) => row.type), ["PURCHASE", "REFUND"]);
+  assert.equal(result.data.data.filtered_locally, true);
+  // 유형 하나나 전체는 그대로 보내고, 400 이 아닌 오류는 그대로 올린다
+  calls.length = 0;
+  await loadMileageHistory(fetchHistory, { filter: "solve", page: 1 });
+  assert.deepEqual(calls, ["CHALLENGE_SOLVE"]);
+  const failing = async () => { throw Object.assign(new Error("down"), { response: { status: 503 } }); };
+  await assert.rejects(loadMileageHistory(failing, { filter: "ops", page: 1 }), /down/);
 });

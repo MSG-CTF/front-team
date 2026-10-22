@@ -20,7 +20,7 @@ import {
   MILEAGE_TYPE_TONES,
   formatMileageAmount,
   getMileageTypeLabel,
-  mileageFilterQuery,
+  loadMileageHistory,
 } from "../utils/adminMileage.js";
 import paymentStyles from "../components/AdminPayments.module.css";
 import pickerStyles from "../components/AdminPicker.module.css";
@@ -61,11 +61,7 @@ export default function AdminMileagePage() {
   const teamOptions = useAdminTeamOptions();
   const teams = teamOptions.data?.teams ?? [];
   const history = useAdminResource(
-    (config) =>
-      getAdminMileageHistory(
-        { teamId: teamId || undefined, type: mileageFilterQuery(filter), page, size: 50 },
-        config,
-      ),
+    (config) => loadMileageHistory(getAdminMileageHistory, { teamId: teamId || undefined, filter, page, size: 50 }, config),
     [teamId, filter, page],
     "마일리지 내역을 불러오지 못했습니다",
   );
@@ -152,6 +148,7 @@ export default function AdminMileagePage() {
               {MILEAGE_FILTERS.map((item) => <button key={item.key} type="button" className={pickerStyles.chip}
                 aria-pressed={filter === item.key} onClick={() => { setFilter(item.key); setPage(1); }}>{item.label}</button>)}
             </div>
+            {history.data?.filtered_locally && <p className={ui.quietNote}>유형 묶음 필터는 백엔드 반영 전이라 50건씩 받아 이 화면에서 거릅니다</p>}
           </div>
           {(!history.data || ["error", "unavailable"].includes(history.status)) && (
             <div className={ui.cardBody}>

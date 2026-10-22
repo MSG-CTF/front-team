@@ -539,7 +539,7 @@ Bearer 인증 필요.
 **계정 (2026-09-07 신규)**
 
 - `POST /admin/accounts` - Req `{ login_id, password(4자 이상), nickname, role("PARTICIPANT"|"ADMIN", 기본 PARTICIPANT), is_leader?, team_id? | team_name? }` -> `{ user_id, login_id, nickname, role, is_leader, team_id, team_name, team_created, registered_at, registered_by }`. 이 대회는 회원가입 페이지가 없고 아이디/비밀번호를 관리자가 미리 등록해 참가자에게 일괄 배포한다. `team_id`/`team_name` 중 하나만 보내고 `team_name`이 기존에 없으면 새 팀을 생성한다(둘 다 비우면 무소속). 추가 에러: `400 INVALID_REQUEST` / `409 LOGIN_ID_TAKEN`.
-- `GET /admin/mileage_history` - Query `team_id`(선택), `type`(선택, 쉼표로 여러 개, 예: `PURCHASE,REFUND`), `page`, `size` -> `{ history: [{history_id, team_id, team_name, type, amount, reason, created_at}], total_count, page, size }`. 팀 상세의 `recent_mileage_history`와 달리 팀 구분 없이 전체를 한 화면에서 본다("마일리지 관리" 사이드바 항목). `type`은 2026-10-23 프론트 요청: 문제 풀이 적립(`CHALLENGE_SOLVE`)이 대부분이라 화면은 기본으로 그 밖의 7종(운영 내역)을 먼저 보이고, 칩으로 결제·환불 / 관리자 조정 / 게임 보상 / 문제 풀이 / 전체를 고른다. 알 수 없는 값은 `400 INVALID_REQUEST`, 비우면 전체. 백엔드 반영 전에는 무시돼 전체가 내려올 수 있다.
+- `GET /admin/mileage_history` - Query `team_id`(선택), `type`(선택, 쉼표로 여러 개, 예: `PURCHASE,REFUND`), `page`, `size` -> `{ history: [{history_id, team_id, team_name, type, amount, reason, created_at}], total_count, page, size }`. 팀 상세의 `recent_mileage_history`와 달리 팀 구분 없이 전체를 한 화면에서 본다("마일리지 관리" 사이드바 항목). `type`은 2026-10-23 프론트 요청: 문제 풀이 적립(`CHALLENGE_SOLVE`)이 대부분이라 화면은 기본으로 그 밖의 7종(운영 내역)을 먼저 보이고, 칩으로 결제·환불 / 관리자 조정 / 게임 보상 / 문제 풀이 / 전체를 고른다. 알 수 없는 값은 `400 INVALID_REQUEST`, 비우면 전체. 백엔드 main(ab849ff)은 아직 `type`을 하나만 받아 쉼표 묶음을 `400`으로 거절하므로, 프론트는 그때 같은 쪽을 `type` 없이 다시 받아 화면에서 거르고 안내 문구를 띄운다.
 
 **대시보드**
 
