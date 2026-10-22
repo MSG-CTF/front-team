@@ -1,14 +1,32 @@
 import { useState } from "react";
+import { StatStrip, StatTile } from "../components/AdminWidgets.jsx";
+import useAdminResource from "../hooks/useAdminResource.js";
+import { getLeaderboard } from "../../../api/leaderboard.js";
+import { getAdminDashboard } from "../../../api/admin.js";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../routes/routePaths.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
 import useAdminTeams from "../hooks/useAdminTeams.js";
 import { formatAdminNumber } from "../utils/adminNumber.js";
+import { AdminBanDialog } from "../components/AdminFormParts.jsx";
 import ui from "../components/AdminWorkspace.module.css";
 
+// 팀원 한 줄: 팀장을 앞에 두고 넷까지 이름을 보인다 관리자 계정은 파란 꼬리표를 붙인다
+function MemberLine({ members = [], limit = 4 }) {
+  if (!members?.length) return null;
+  const sorted = [...members].sort((a, b) => Number(Boolean(b.is_leader)) - Number(Boolean(a.is_leader)));
+  return <span className={ui.memberLine}>
+    {sorted.slice(0, limit).map((member) => <span key={member.user_id}>
+      {member.nickname}
+      {member.is_leader && <small>팀장</small>}
+      {member.role === "ADMIN" && <small data-tone="admin">관리자</small>}
+    </span>)}
+    {sorted.length > limit && <span>외 {sorted.length - limit}명</span>}
+  </span>;
+}
+
 function BanControl({ team, isMutating, onBan, onUnban }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [reason, setReason] = useState("");
+  const [open, setOpen] = useState(false);
 
   if (team.is_banned) {
     return (
@@ -17,63 +35,20 @@ function BanControl({ team, isMutating, onBan, onUnban }) {
         disabled={isMutating}
         onClick={() => onUnban(team.team_id)}
         className={`${ui.button} ${ui.small}`}
-      >
-        밴 해제
-      </button>
+      >밴 해제</button>
     );
   }
 
-  if (isOpen) {
-    return (
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!reason.trim()) return;
-          onBan(team.team_id, reason.trim()).then((ok) => {
-            if (ok) {
-              setIsOpen(false);
-              setReason("");
-            }
-          });
-        }}
-        className={ui.rowActions}
-      >
-        <input
-          autoFocus
-          value={reason}
-          onChange={(event) => setReason(event.target.value)}
-          placeholder="밴 사유"
-          aria-label={`${team.team_name} 밴 사유`}
-          className={`${ui.input} ${ui.small} ${ui.reasonInput}`}
-        />
-        <button
-          type="submit"
-          disabled={isMutating || !reason.trim()}
-          className={`${ui.dangerSolid} ${ui.small}`}
-        >
-          확인
-        </button>
-        <button
-          type="button"
-          onClick={() => setIsOpen(false)}
-          className={`${ui.button} ${ui.small}`}
-        >
-          취소
-        </button>
-      </form>
-    );
-  }
-
-  return (
+  return <>
     <button
       type="button"
       disabled={isMutating}
-      onClick={() => setIsOpen(true)}
+      onClick={() => setOpen(true)}
       className={`${ui.button} ${ui.small} ${ui.danger}`}
-    >
-      밴 처리
-    </button>
-  );
+    >밴 처리</button>
+    {open && <AdminBanDialog team={team} busy={isMutating} onClose={() => setOpen(false)}
+      onConfirm={(reason) => onBan(team.team_id, reason).then((ok) => { if (ok) setOpen(false); })} />}
+  </>;
 }
 
 // 팀별 목록 - README.md "8. 관리자 페이지 > 팀". 검색/정렬은 백엔드가 실제로
@@ -84,9 +59,19 @@ export default function AdminTeamsPage() {
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState("");
   const lastPage = teams.params.page * teams.params.size >= teams.totalCount;
+  const summary = useAdminResource(getAdminDashboard, [], "집계를 불러오지 못했습니다");
+  const leaderboard = useAdminResource((config) => getLeaderboard(config), [], "순위를 불러오지 못했습니다");
+  const leader = [...(leaderboard.data?.teams ?? [])].sort((a, b) => (b.team_score ?? 0) - (a.team_score ?? 0))[0];
+  const count = (value) => (value == null ? "-" : formatAdminNumber(value));
 
   return (
     <AdminLayout title="팀별 목록">
+      <StatStrip label="팀 집계" className={ui.pageStrip}>
+        <StatTile glyph="teams" label="전체 팀" value={count(summary.data?.teams?.total_count ?? teams.totalCount)} />
+        <StatTile glyph="ban" label="밴 팀" value={count(summary.data?.teams?.banned_count)} tone={summary.data?.teams?.banned_count ? "bad" : undefined} />
+        <StatTile glyph="mileage" label="팀 보유 마일리지" value={<>{count(summary.data?.teams?.total_mileage)}<small>MI</small></>} />
+        <StatTile glyph="rank" label="선두" value={leader?.team_name ?? "-"} text sub={leader ? `${count(leader.team_score)}점` : ""} tone="gold" to={leader ? ROUTES.adminTeamDetail(leader.team_id) : undefined} />
+      </StatStrip>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -124,7 +109,7 @@ export default function AdminTeamsPage() {
       {teams.status === "success" && teams.error && <p role="alert" className={ui.callout} data-tone="bad">{teams.error}</p>}
 
       {teams.status === "success" && (
-        <div className={ui.tableWrap}>
+        <div className={`${ui.tableWrap} ${ui.teamStack}`}>
           <table className={ui.table} aria-label="팀 목록">
             <thead>
               <tr>
@@ -147,6 +132,7 @@ export default function AdminTeamsPage() {
                     >
                       {team.team_name}
                     </button>
+                    <MemberLine members={team.members} />
                   </td>
                   <td className={ui.num}>{formatAdminNumber(team.team_score)}</td>
                   <td className={ui.num}>{formatAdminNumber(team.mileage)}</td>
@@ -171,7 +157,7 @@ export default function AdminTeamsPage() {
               {teams.teams.length === 0 && (
                 <tr className={ui.emptyRow}>
                   <td colSpan={6} className={ui.empty}>
-                    표시할 팀이 없습니다.
+                    표시할 팀이 없습니다
                   </td>
                 </tr>
               )}

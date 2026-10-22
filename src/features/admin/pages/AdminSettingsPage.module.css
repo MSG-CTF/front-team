@@ -1,0 +1,16 @@
+/* 대회 시각: 시작 · 종료 입력 두 칸과 대회 길이 한 칸이 같은 줄에 선다 */
+.contest { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(140px, auto); gap: 16px 20px; align-items: start; }
+.duration { display: grid; gap: 6px; align-content: start; }
+.duration span { color: var(--label); font-size: 13px; font-weight: 600; line-height: 18px; }
+.duration strong { display: flex; align-items: center; height: 40px; color: var(--label); font: 700 20px/1 var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+
+/* 확인 창: 바뀌기 전과 후를 한 줄에 */
+.changes { display: grid; gap: 8px; margin: 0 0 16px; padding: 12px 14px; border-radius: var(--radius-md); background: var(--surface-sunken); }
+.changes > div { display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: baseline; gap: 8px; }
+.changes dt { color: var(--label-3); font-size: 12px; font-weight: 600; }
+.changes dd { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; margin: 0; color: var(--label-2); font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.changes dd strong { color: var(--label); font-weight: 700; }
+
+@container admin-layout (max-width: 767px) {
+  .contest { grid-template-columns: minmax(0, 1fr); }
+}

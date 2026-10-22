@@ -49,7 +49,7 @@ before(async () => {
   for (const [name, path] of Object.entries(paths)) {
     components[name] = (await server.ssrLoadModule(`/src/features/${path}.jsx`)).default;
   }
-  components.QuickAction = (await server.ssrLoadModule("/src/features/admin/pages/AdminDashboardPage.jsx")).QuickActionButton;
+  components.QuickAction = (await server.ssrLoadModule("/src/features/admin/components/AdminWidgets.jsx")).ActionTile;
   components.DiceFallback = (await server.ssrLoadModule("/src/features/board/components/DiceFallback.jsx")).DiceFallback;
   components.LiveDiceStatus = (await server.ssrLoadModule("/src/features/board/components/BoardCountdownPanels.jsx")).BoardDiceStatusPanel;
   components.RouteLoadBoundary = (await server.ssrLoadModule("/src/routes/RouteLoadBoundary.jsx")).default;
@@ -361,8 +361,8 @@ test("관리자 공통 틀은 결제 탭 여부와 관계없이 같은 메뉴와
 
 test("관리자 빠른 작업에는 실제 동작 이름만 표시하고 다른 동작의 이미지 문구를 재사용하지 않는다", () => {
   for (const [variant, label] of [["restart", "강제 재시작"], ["stop", "강제 종료"], ["mileage", "마일리지 지급"], ["rollback", "롤백 실행"]]) {
-    const html = render("QuickAction", { variant, label });
-    assert.match(html, new RegExp(`data-action="${variant}">${label}<\/button>`));
+    const html = render("QuickAction", { glyph: variant, label });
+    assert.match(html, new RegExp(`data-action="${variant}"[^>]*>[\\s\\S]*?<span[^>]*>${label}<\\/span><\\/button>`));
     assert.doesNotMatch(html, /btn-(?:create|extend)\.png/);
   }
 });

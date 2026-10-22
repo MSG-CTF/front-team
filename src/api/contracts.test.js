@@ -8,7 +8,7 @@ import { getLeaderboard, getRankings, getMyMemberRanking } from "./leaderboard.j
 import { getMyProfile, getMyMileageHistory, getMySolves, issueMyQrToken } from "./mypage.js";
 import { getKothClub, getKothClubs, getKothLeaderboard, getKothTeamToken, getMyKothProgress } from "./koth.js";
 import { getSignatures, getSignature, submitSignatureFlag } from "./signatures.js";
-import { adjustMileage, checkoutPayment, createAdminSignature, getAdminSignatures, getAdminMileageHistory, getAdminTeamDetail, getPaymentHistory, publishAdminSignature, refundPayment, updateAdminSignature } from "./admin.js";
+import { adjustMileage, checkoutPayment, createAdminSignature, getAdminKothChallenge, getAdminKothChallenges, getAdminKothPeriods, getAdminKothRepository, getAdminSignatures, getAdminMileageHistory, getAdminTeamDetail, getPaymentHistory, publishAdminSignature, refundPayment, updateAdminSignature } from "./admin.js";
 
 let calls;
 const originalAdapter = apiClient.defaults.adapter;
@@ -46,6 +46,10 @@ test("다섯 화면의 조회는 /api/v1과 최신 경로, Bearer 계약을 쓴�
     [() => getKothTeamToken(config), "/koth/team_token"],
     [() => getAdminTeamDetail("team-1", {}, config), "/admin/teams/team-1"],
     [() => getAdminSignatures(config), "/admin/signatures"],
+    [() => getAdminKothChallenges(config), "/admin/koth/challenges"],
+    [() => getAdminKothChallenge("koth-1", config), "/admin/koth/challenges/koth-1"],
+    [() => getAdminKothPeriods("koth-1", {}, config), "/admin/koth/challenges/koth-1/periods"],
+    [() => getAdminKothRepository(config), "/admin/koth/repository"],
   ];
   for (const [call, path] of cases) {
     await call();

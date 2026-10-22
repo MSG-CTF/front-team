@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import { StatStrip, StatTile } from "../components/AdminWidgets.jsx";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   adjustDiceRolls,
   adjustMileage,
   banTeam,
-  createAdminIdempotencyKey,
   getAdminTeamDetail,
   getTeamSnapshots,
   moveBoardPosition,
@@ -16,11 +16,12 @@ import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import { formatAdminNumber } from "../utils/adminNumber.js";
+import { RECENT_LIMIT, latestFirst } from "../utils/adminLists.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
 import { AdminTeamDeleteDialog, AdminTeamEditDialog } from "../components/AdminTeamManagementDialogs.jsx";
 import { getAdminRequestError } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { formatMileageAmount, getMileageTypeLabel, mileageAttempt, validateMileageAdjustment } from "../utils/adminMileage.js";
+import { formatMileageAmount, getMileageTypeLabel } from "../utils/adminMileage.js";
 import {
   BOARD_CELL_MAX,
   BOARD_CELL_MIN,
@@ -29,65 +30,10 @@ import {
   validateBoardCellUpdate,
   validateBoardPositionMove,
 } from "../utils/adminBoard.js";
+import { AdminAmountChips, AdminBanDialog, AdminReasonField } from "../components/AdminFormParts.jsx";
+import { DICE_AMOUNTS, REASON_PRESETS } from "../utils/adminReasons.js";
+import AdminMileageAdjustForm from "../components/AdminMileageAdjustForm.jsx";
 import ui from "../components/AdminWorkspace.module.css";
-
-function MileageForm({ teamId, isMutating, onSubmit }) {
-  const [amount, setAmount] = useState("");
-  const [reason, setReason] = useState("");
-  // 재시도 시 같은 Idempotency-Key를 재사용해야 중복 지급이 막힌다. 성공하면
-  // 비우고, 다음 제출에서 새로 발급한다.
-  const idempotencyKeyRef = useRef(null);
-
-  return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        const parsed = Number(amount);
-        if (isMutating || validateMileageAdjustment({ teamId, amount, reason })) return;
-        idempotencyKeyRef.current = mileageAttempt(idempotencyKeyRef.current, { teamId, amount, reason }, () => createAdminIdempotencyKey("admin-mileage"));
-        onSubmit(teamId, parsed, reason.trim(), idempotencyKeyRef.current.key).then((ok) => {
-          if (ok) {
-            idempotencyKeyRef.current = null;
-            setAmount("");
-            setReason("");
-          }
-        });
-      }}
-      className={ui.adjustForm}
-    >
-      <label className={ui.field}>
-        <span className={ui.fieldLabel}>변동량</span>
-        <input
-          type="number"
-          step={1}
-          disabled={isMutating}
-          value={amount}
-          onChange={(event) => setAmount(event.target.value)}
-          placeholder="+지급 / -회수"
-          className={ui.input}
-        />
-      </label>
-      <label className={ui.field}>
-        <span className={ui.fieldLabel}>사유</span>
-        <input
-          value={reason}
-          disabled={isMutating}
-          maxLength={500}
-          onChange={(event) => setReason(event.target.value)}
-          placeholder="지급하거나 회수하는 이유"
-          className={ui.input}
-        />
-      </label>
-      <button
-        type="submit"
-        disabled={isMutating || Boolean(validateMileageAdjustment({ teamId, amount, reason }))}
-        className={ui.primary}
-      >
-        마일리지 조정
-      </button>
-    </form>
-  );
-}
 
 // 보드 강제 개입 3종 - clear 칸 관리 / 말 위치 이동(백엔드 머지됨) / 주사위 지급/회수.
 // 칸 번호는 1(START)~36이다. 0번 칸은 없다(백엔드 #81~#85).
@@ -148,15 +94,7 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
             <option value="CLEARED">CLEARED</option>
           </select>
         </label>
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>사유</span>
-          <input
-            value={cellReason}
-            maxLength={500}
-            onChange={(event) => setCellReason(event.target.value)}
-            className={ui.input}
-          />
-        </label>
+        <AdminReasonField label="사유" value={cellReason} onChange={setCellReason} presets={REASON_PRESETS.cell} />
         <button
           type="submit"
           disabled={isMutating || Boolean(validateBoardCellUpdate({ cellIndex, status: cellStatus, reason: cellReason }))}
@@ -166,7 +104,7 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
         </button>
         {CELL_STATUSES_REQUIRING_OPENED_CHALLENGE.includes(cellStatus) && (
           <p className={ui.fieldHint}>
-            OPENED/CLEARED는 이 칸에서 이미 연 문제가 있어야 합니다. 없으면 서버가 400으로 거절합니다.
+            OPENED/CLEARED는 이 칸에서 이미 연 문제가 있어야 적용됩니다
           </p>
         )}
       </form>
@@ -204,15 +142,7 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
           <input type="checkbox" checked={consumeCell} onChange={(event) => setConsumeCell(event.target.checked)} />
           도착 칸 소모 처리
         </label>
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>사유</span>
-          <input
-            value={positionReason}
-            maxLength={500}
-            onChange={(event) => setPositionReason(event.target.value)}
-            className={ui.input}
-          />
-        </label>
+        <AdminReasonField label="사유" value={positionReason} onChange={setPositionReason} presets={REASON_PRESETS.move} />
         <button
           type="submit"
           disabled={isMutating || Boolean(validateBoardPositionMove({ position, reason: positionReason }))}
@@ -240,27 +170,22 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
           <strong>주사위 지급/회수</strong>
           <span>보유 수를 늘리거나 줄입니다</span>
         </div>
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>변동량 <small>-20~20</small></span>
+        <div className={ui.field}>
+          <label htmlFor="team-dice-amount" className={ui.fieldLabel}>변동량 <small>-20~20</small></label>
+          <AdminAmountChips values={DICE_AMOUNTS} current={diceAmount} onPick={setDiceAmount} unit="개" label="주사위 빠른 입력" />
           <input
+            id="team-dice-amount"
             type="number"
             min={-20}
             max={20}
             value={diceAmount}
             onChange={(event) => setDiceAmount(event.target.value)}
-            placeholder="+지급 / -회수"
+            placeholder="직접 입력"
             className={ui.input}
           />
-        </label>
+        </div>
         <p className={ui.inlineNote}>어떤 경로로도 0~3회 범위로 고정됩니다</p>
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>사유</span>
-          <input
-            value={diceReason}
-            onChange={(event) => setDiceReason(event.target.value)}
-            className={ui.input}
-          />
-        </label>
+        <AdminReasonField label="사유" value={diceReason} onChange={setDiceReason} presets={REASON_PRESETS.dice} />
         <button
           type="submit"
           disabled={isMutating || !diceAmount || !diceReason.trim()}
@@ -275,6 +200,7 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
 
 function RollbackSection({ teamId, isMutating, onRollback }) {
   const [snapshots, setSnapshots] = useState(null);
+  const [snapshotTotal, setSnapshotTotal] = useState(0);
   const [snapshotId, setSnapshotId] = useState("");
   const [reason, setReason] = useState("");
   const [loadError, setLoadError] = useState("");
@@ -284,13 +210,14 @@ function RollbackSection({ teamId, isMutating, onRollback }) {
       .then((res) => {
         if (isSuccess(res.data)) {
           setSnapshots(res.data.data.snapshots ?? []);
+          setSnapshotTotal(res.data.data.total_count ?? 0);
           setLoadError("");
         } else {
-          setLoadError(res.data?.message || "롤백 지점을 불러오지 못했습니다.");
+          setLoadError(res.data?.message || "롤백 지점을 불러오지 못했습니다");
         }
       })
       .catch((err) => {
-        setLoadError(getAdminRequestError(err, "롤백 지점을 불러오지 못했습니다.").error);
+        setLoadError(getAdminRequestError(err, "롤백 지점을 불러오지 못했습니다").error);
         setSnapshots([]);
       });
   };
@@ -300,6 +227,9 @@ function RollbackSection({ teamId, isMutating, onRollback }) {
   if (snapshots === null) {
     return <p role="status" className={ui.statusLoading}>롤백 지점을 불러오는 중입니다</p>;
   }
+  // 롤백 지점 API는 쪽 나눔이 없어 최근 것부터 20개만 보인다
+  const recentSnapshots = latestFirst(snapshots, RECENT_LIMIT).items;
+  const total = Math.max(snapshotTotal, snapshots.length);
 
   return (
     <form
@@ -318,12 +248,12 @@ function RollbackSection({ teamId, isMutating, onRollback }) {
       {loadError && <p role="alert" className={ui.callout} data-tone="bad">{loadError}</p>}
       {snapshots.length === 0 && !loadError && (
         <p className={ui.fieldHint}>
-          아직 롤백 지점이 없습니다. 밴/clear 칸 관리/위치 이동/주사위 지급을 하면 그 직전 상태가 자동으로 남습니다.
+          아직 롤백 지점이 없습니다 밴, clear 칸 관리, 위치 이동, 주사위 지급을 하면 그 직전 상태가 자동으로 남습니다
         </p>
       )}
       {snapshots.length > 0 && (
         <div className={ui.choiceList}>
-          {snapshots.map((snapshot) => (
+          {recentSnapshots.map((snapshot) => (
             <label key={snapshot.snapshot_id} className={ui.check}>
               <input
                 type="radio"
@@ -339,15 +269,9 @@ function RollbackSection({ teamId, isMutating, onRollback }) {
           ))}
         </div>
       )}
+      {total > RECENT_LIMIT && <p className={ui.fieldHint}>최근 {RECENT_LIMIT}개만 표시합니다 · 전체 {formatAdminNumber(total)}개</p>}
       <div className={ui.reasonForm}>
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>롤백 사유</span>
-          <input
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            className={ui.input}
-          />
-        </label>
+        <AdminReasonField label="롤백 사유" value={reason} onChange={setReason} presets={REASON_PRESETS.rollback} />
         <button
           type="submit"
           disabled={isMutating || !snapshotId || !reason.trim()}
@@ -368,7 +292,7 @@ export default function AdminTeamDetailPage() {
   const detail = useAdminResource(
     (config) => getAdminTeamDetail(teamId, {}, config),
     [teamId],
-    "팀 상세 정보를 불러오지 못했습니다.",
+    "팀 상세 정보를 불러오지 못했습니다",
   );
   const [isMutating, setIsMutating] = useState(false);
   const [actionError, setActionError] = useState("");
@@ -400,40 +324,36 @@ export default function AdminTeamDetailPage() {
   };
 
   const handleMileageAdjust = (id, amount, reason, idempotencyKey) =>
-    runAction(() => adjustMileage(id, { amount, reason, idempotencyKey }), "마일리지 조정에 실패했습니다.");
+    runAction(() => adjustMileage(id, { amount, reason, idempotencyKey }), "마일리지 조정에 실패했습니다");
 
+  const [banOpen, setBanOpen] = useState(false);
   const handleBanToggle = async () => {
     if (!data.is_banned) {
-      // 취소를 누르면 null이 반환된다 - 이 경우 사유 없이 밴이 나가면 안 되므로
-      // 여기서 바로 중단한다. admin.js 주석대로 ban_reason은 1자 이상 필수라
-      // 빈 문자열 제출도 함께 막는다.
-      const reason = window.prompt("밴 사유를 입력해주세요");
-      if (reason === null) return;
-      if (!reason.trim()) {
-        setActionError("밴 사유를 입력해야 합니다.");
-        return;
-      }
-      await runAction(() => banTeam(teamId, { banReason: reason.trim() }), "처리에 실패했습니다.");
+      setBanOpen(true);
       return;
     }
-    await runAction(() => unbanTeam(teamId), "처리에 실패했습니다.");
+    await runAction(() => unbanTeam(teamId), "처리에 실패했습니다");
+  };
+  const confirmBan = async (reason) => {
+    const ok = await runAction(() => banTeam(teamId, { banReason: reason }), "처리에 실패했습니다");
+    if (ok) setBanOpen(false);
   };
 
   const handleCellUpdate = (cellIndex, status, reason) =>
-    runAction(() => updateBoardCell(teamId, cellIndex, { status, reason }), "칸 상태 변경에 실패했습니다.");
+    runAction(() => updateBoardCell(teamId, cellIndex, { status, reason }), "칸 상태 변경에 실패했습니다");
 
   const handlePositionMove = (position, consumeCell, reason) =>
-    runAction(() => moveBoardPosition(teamId, { position, consumeCell, reason }), "위치 이동에 실패했습니다.");
+    runAction(() => moveBoardPosition(teamId, { position, consumeCell, reason }), "위치 이동에 실패했습니다");
 
   const handleDiceAdjust = (amount, reason) =>
-    runAction(() => adjustDiceRolls(teamId, { amount, reason }), "주사위 지급/회수에 실패했습니다.");
+    runAction(() => adjustDiceRolls(teamId, { amount, reason }), "주사위 지급/회수에 실패했습니다");
 
   const handleRollback = async (snapshotId, reason) => {
     const ok = await runAction(
       () => rollbackTeam(teamId, { snapshotId, reason }),
-      "이 팀에는 아직 롤백 지점이 없거나, 이미 삭제된 지점입니다.",
+      "이 팀에는 아직 롤백 지점이 없거나, 이미 삭제된 지점입니다",
     );
-    if (ok) setActionMessage("롤백을 실행했습니다.");
+    if (ok) setActionMessage("롤백을 실행했습니다");
     return ok;
   };
 
@@ -462,26 +382,15 @@ export default function AdminTeamDetailPage() {
       {actionMessage && <p role="status" className={ui.callout} data-tone="good">{actionMessage}</p>}
 
       {data && (
-        <div className={ui.stack}>
+        <div className={ui.pageColumns}>
+          <div className={ui.stack}>
           <section className={ui.card} aria-label="팀 요약">
-            <dl className={ui.dl}>
-              <div>
-                <dt>점수</dt>
-                <dd>{formatAdminNumber(data.team_score)}</dd>
-              </div>
-              <div>
-                <dt>마일리지</dt>
-                <dd>{formatAdminNumber(data.mileage)}</dd>
-              </div>
-              <div>
-                <dt>보드 위치</dt>
-                <dd>{data.position ?? data.board_position_states ?? "미제공"}</dd>
-              </div>
-              <div>
-                <dt>팀원</dt>
-                <dd>{members.length}<small>명</small></dd>
-              </div>
-            </dl>
+            <StatStrip label="팀 요약" flush>
+              <StatTile glyph="rank" label="점수" value={formatAdminNumber(data.team_score)} tone="gold" />
+              <StatTile glyph="mileage" label="마일리지" value={formatAdminNumber(data.mileage)} />
+              <StatTile glyph="dice" label="보드 위치" value={data.position ?? data.board_position_states ?? "-"} />
+              <StatTile glyph="teams" label="팀원" value={<>{members.length}<small>명</small></>} />
+            </StatStrip>
             {data.is_banned && (
               <dl className={`${ui.dl} ${ui.dlDivided}`}>
                 <div>
@@ -500,6 +409,7 @@ export default function AdminTeamDetailPage() {
                   <li key={member.user_id}>
                     <span>{member.nickname}</span>
                     {member.is_leader && <AdminBadge>팀장</AdminBadge>}
+                    {member.role === "ADMIN" && <AdminBadge tone="blue">관리자</AdminBadge>}
                   </li>
                 ))}
                 {members.length === 0 && <li>팀원 없음</li>}
@@ -509,7 +419,7 @@ export default function AdminTeamDetailPage() {
 
           <section className={ui.card} aria-labelledby="team-board">
             <header className={ui.cardHeader}>
-              <h2 id="team-board" className={ui.cardTitle}><span className={ui.eyebrow}>BOARD</span>보드 강제 개입</h2>
+              <h2 id="team-board" className={ui.cardTitle}>보드 강제 개입</h2>
               <span className={ui.cardMeta}>실행하면 직전 상태가 롤백 지점으로 남습니다</span>
             </header>
             <div className={ui.cardBody}>
@@ -523,33 +433,43 @@ export default function AdminTeamDetailPage() {
             </div>
           </section>
 
-          <div className={`${ui.halves} ${ui.halvesEqual}`}>
+          <section className={ui.card} data-tone="bad" aria-labelledby="team-danger">
+            <header className={ui.cardHeader}>
+              <h2 id="team-danger" className={ui.cardTitle}>위험 조치</h2>
+            </header>
+            <div className={`${ui.cardBody} ${ui.dangerRow}`}>
+              <p>팀과 소속 계정 및 모든 팀 기록을 영구 삭제합니다 되돌릴 수 없습니다</p>
+              <button type="button" disabled={isMutating} onClick={() => setTeamDialog("delete")} className={ui.dangerSolid}>팀 삭제</button>
+            </div>
+          </section>
+          </div>
+          <div className={ui.stack}>
             <section className={ui.card} aria-labelledby="team-mileage">
               <header className={ui.cardHeader}>
-                <h2 id="team-mileage" className={ui.cardTitle}><span className={ui.eyebrow}>MILEAGE</span>마일리지 조정</h2>
+                <h2 id="team-mileage" className={ui.cardTitle}>마일리지 조정</h2>
                 <span className={ui.cardMeta}>현재 {formatAdminNumber(data.mileage)}</span>
               </header>
               <div className={ui.cardBody}>
-                <MileageForm teamId={teamId} isMutating={isMutating} onSubmit={handleMileageAdjust} />
+                <AdminMileageAdjustForm team={{ team_id: teamId, team_name: data.team_name, mileage: data.mileage }} disabled={isMutating}
+                  submit={({ teamId: id, amount, reason, idempotencyKey }) => handleMileageAdjust(id, amount, reason, idempotencyKey)} />
               </div>
             </section>
 
             <section className={ui.card} aria-labelledby="team-rollback">
               <header className={ui.cardHeader}>
-                <h2 id="team-rollback" className={ui.cardTitle}><span className={ui.eyebrow}>ROLLBACK</span>롤백</h2>
+                <h2 id="team-rollback" className={ui.cardTitle}>롤백</h2>
               </header>
               <div className={ui.cardBody}>
                 <RollbackSection teamId={teamId} isMutating={isMutating} onRollback={handleRollback} />
               </div>
             </section>
-          </div>
 
           {Array.isArray(data.recent_mileage_history) && (
             <section className={ui.card} aria-labelledby="team-mileage-history">
               <header className={ui.cardHeader}>
-                <h2 id="team-mileage-history" className={ui.cardTitle}><span className={ui.eyebrow}>HISTORY</span>최근 마일리지 내역</h2>
+                <h2 id="team-mileage-history" className={ui.cardTitle}>최근 마일리지 내역</h2>
               </header>
-              <div className={`${ui.tableWrap} ${ui.tableFlush}`}>
+              <div className={`${ui.tableWrap} ${ui.tableFlush} ${ui.teamHistoryStack}`}>
                 <table className={ui.table} aria-label="최근 마일리지 내역">
                   <thead>
                     <tr>
@@ -578,24 +498,16 @@ export default function AdminTeamDetailPage() {
               </div>
             </section>
           )}
-
-          <section className={ui.card} data-tone="bad" aria-labelledby="team-danger">
-            <header className={ui.cardHeader}>
-              <h2 id="team-danger" className={ui.cardTitle}><span className={ui.eyebrow}>DANGER</span>위험 조치</h2>
-            </header>
-            <div className={`${ui.cardBody} ${ui.dangerRow}`}>
-              <p>팀과 소속 계정 및 모든 팀 기록을 영구 삭제합니다. 되돌릴 수 없습니다.</p>
-              <button type="button" disabled={isMutating} onClick={() => setTeamDialog("delete")} className={ui.dangerSolid}>팀 삭제</button>
-            </div>
-          </section>
+          </div>
         </div>
       )}
+      {banOpen && data && <AdminBanDialog team={data} busy={isMutating} onClose={() => setBanOpen(false)} onConfirm={confirmBan} />}
       {teamDialog === "edit" && data && (
         <AdminTeamEditDialog team={data} onClose={() => setTeamDialog(null)} onSaved={async () => {
           setTeamDialog(null);
           const refreshed = await detail.reload();
-          setActionMessage(refreshed ? "팀 정보를 수정했습니다. 소속 또는 팀장 정보가 변경된 팀원은 다시 로그인해야 변경사항이 반영됩니다."
-            : "수정은 완료됐지만 상세 정보를 다시 불러오지 못했습니다. 새로고침해 확인하세요.");
+          setActionMessage(refreshed ? "팀 정보를 수정했습니다 소속 또는 팀장 정보가 변경된 팀원은 다시 로그인해야 변경사항이 반영됩니다"
+            : "수정은 완료됐지만 상세 정보를 다시 불러오지 못했습니다 새로고침해 확인하세요");
         }} />
       )}
       {teamDialog === "delete" && data && (

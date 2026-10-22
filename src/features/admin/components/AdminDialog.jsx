@@ -63,7 +63,7 @@ export default function AdminDialog({
   }, []);
   // 결제 창만 별도 틀을 쓰고 나머지는 같은 양피지 창에 폭만 다르게 연다
   const payment = variant === "payment";
-  const size = variant === "workspace" ? "" : wide ? workspace.dialogWide : workspace.dialogCompact;
+  const size = variant === "workspace" ? workspace.dialogFixed : wide ? workspace.dialogWide : workspace.dialogCompact;
   return (
     <div className={payment ? styles.overlay : workspace.overlay}>
       <section

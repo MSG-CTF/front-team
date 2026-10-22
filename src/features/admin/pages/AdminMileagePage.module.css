@@ -1,0 +1,10 @@
+/* 마일리지 화면: 넓은 화면에서는 왼쪽에 폭이 정해진 지급 · 회수 폼, 오른쪽에 내역
+   폼은 내역을 내려도 툴바 아래에 붙어 있다 좁은 화면에서는 위에서 아래로 쌓는다 */
+.columns { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); align-items: start; }
+@container admin-layout (min-width: 1101px) {
+  .columns { grid-template-columns: 340px minmax(0, 1fr); }
+  .grant { position: sticky; top: 80px; }
+}
+@media (max-height: 820px) {
+  .grant { top: 64px; }
+}

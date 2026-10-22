@@ -1,12 +1,16 @@
 import { useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { createAdminSignature, getAdminSignatures, publishAdminSignature, updateAdminSignature } from "../../../api/admin.js";
 import { getKothClubs } from "../../../api/koth.js";
 import { isSuccess } from "../../../utils/response.js";
 import AdminDialog from "../components/AdminDialog.jsx";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
+import { IconButton } from "../components/AdminWidgets.jsx";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { signaturePayload, validateSignature } from "../utils/adminSignature.js";
 import { formatAdminNumber } from "../utils/adminNumber.js";
+import { AdminSwitch } from "../components/AdminFormParts.jsx";
+import { Glyph } from "../components/AdminGlyph.jsx";
 import ui from "../components/AdminWorkspace.module.css";
 
 const EMPTY_FORM = { clubId: "", title: "", description: "", flag: "", score: "300" };
@@ -78,13 +82,13 @@ export default function AdminSignaturesPage() {
   }
 
   return <AdminLayout title="시그니처 문제" actions={<>
-    <button type="button" className={ui.button} onClick={signatures.retry} disabled={busy || signatures.status === "loading"}>새로고침</button>
+    <IconButton icon="refresh" label="새로고침" onClick={signatures.retry} disabled={busy || signatures.status === "loading"} />
     <button type="button" className={ui.primary} onClick={() => openEditor()} disabled={busy || signatures.status !== "success" || clubs.status !== "success" || availableClubs.length === 0}>시그니처 등록</button>
   </>}>
     <AdminStatusMessage status={signatures.status} error={signatures.error} onRetry={signatures.retry} hasData={Boolean(signatures.data)} />
     <AdminStatusMessage status={clubs.status} error={clubs.error} onRetry={clubs.retry} hasData={Boolean(clubs.data)} />
     {notice && <p role="status" className={ui.callout} data-tone="good">{notice}</p>}
-    {signatures.data && <div className={ui.tableWrap}>
+    {signatures.data && <div className={`${ui.tableWrap} ${ui.signatureStack}`}>
       <table className={ui.table} aria-label="시그니처 문제 목록">
         <thead><tr>
           <th>동아리</th>
@@ -101,22 +105,27 @@ export default function AdminSignaturesPage() {
             <td className={ui.num}>{formatAdminNumber(entry.score)}</td>
             <td className={ui.num}>{entry.solved_team_count}</td>
             <td>
-              <AdminBadge tone={entry.is_published ? "good" : entry.missing_fields?.length ? "warn" : "neutral"}>
-                {entry.is_published ? "공개" : entry.missing_fields?.length ? "준비 중" : "비공개"}
-              </AdminBadge>
+              <span className={ui.publishCell}>
+                <AdminSwitch checked={entry.is_published} disabled={busy || (!entry.is_published && entry.missing_fields?.length > 0)}
+                  label={`${entry.club_name} ${entry.is_published ? "비공개로 전환" : "공개로 전환"}`}
+                  onChange={() => { setError(""); setNotice(""); setDialog({ kind: "publish", entry }); }} />
+                <span data-on={entry.is_published || undefined}>{entry.is_published ? "공개" : entry.missing_fields?.length ? "준비 중" : "비공개"}</span>
+              </span>
               {entry.missing_fields?.length > 0 && <span className={ui.secondary}>{entry.missing_fields.map((field) => MISSING_FIELD_LABELS[field]).join(" · ")} 미등록</span>}
             </td>
             <td><div className={ui.rowActions}>
               <button type="button" className={`${ui.button} ${ui.small}`} disabled={busy} aria-label={`${entry.club_name} 문제 수정`} onClick={() => openEditor(entry)}>수정</button>
-              <button type="button" className={`${ui.button} ${ui.small}`} disabled={busy || (!entry.is_published && entry.missing_fields?.length > 0)} aria-label={`${entry.club_name} ${entry.is_published ? "비공개" : "공개"} 전환`}
-                onClick={() => { setError(""); setNotice(""); setDialog({ kind: "publish", entry }); }}>{entry.is_published ? "비공개로 전환" : "공개로 전환"}</button>
+              <Link className={ui.fileLink} to={`/admin/signatures/${entry.signature_id}/preview`} target="_blank" rel="noreferrer"
+                aria-label={`${entry.club_name} 참가자 화면 미리보기`} title="저장한 내용으로 열립니다">미리보기 ↗</Link>
             </div></td>
           </tr>)}
           {rows.length === 0 && <tr className={ui.emptyRow}><td colSpan={6} className={ui.empty}>등록된 시그니처 문제가 없습니다</td></tr>}
         </tbody>
       </table>
     </div>}
-    {dialog && <AdminDialog title={dialog.kind === "publish" ? "공개 상태 변경" : editing ? "시그니처 수정" : "시그니처 등록"} busy={busy} onClose={closeDialog}>
+    {dialog && <AdminDialog title={dialog.kind === "publish" ? "공개 상태 변경" : editing ? "시그니처 수정" : "시그니처 등록"} busy={busy} onClose={closeDialog}
+      headerMeta={editing && dialog.entry && <Link className={ui.headerLink} to={`/admin/signatures/${dialog.entry.signature_id}/preview`} target="_blank" rel="noreferrer"
+        aria-label="참가자 화면 미리보기" title="저장한 내용으로 열립니다"><Glyph name="external" size={13} strokeWidth={2.2} /><span>참가자 화면</span></Link>}>
       <form onSubmit={save} className={ui.formStack}>
         {dialog.kind === "publish" ? <div>
           <p className={ui.dialogLead}><strong>{dialog.entry.club_name}</strong> · {dialog.entry.title}</p>

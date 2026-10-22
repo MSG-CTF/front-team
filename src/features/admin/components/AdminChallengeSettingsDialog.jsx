@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { getAdminChallenge, updateAdminChallenge, getAdminChallengeFlag, revealAdminChallengeFlag } from "../../../api/admin.js";
+import { getAdminChallenge, getAdminChallengeFiles, updateAdminChallenge, getAdminChallengeFlag, revealAdminChallengeFlag } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
-import { challengeDetailsDraft, challengeDetailsChanges, challengeScoresValid } from "../utils/adminChallengeSettings.js";
+import { challengeDetailsDraft, challengeDetailsChanges, challengeScoresValid, formatFileSize } from "../utils/adminChallengeSettings.js";
+import { formatAdminTime } from "../utils/adminTime.js";
+import AdminFileDownloadButton from "./AdminFileDownloadButton.jsx";
 import AdminDialog from "./AdminDialog.jsx";
 import { AdminBadge, AdminStatusMessage } from "./AdminLayout.jsx";
 import styles from "./AdminWorkspace.module.css";
@@ -86,14 +88,14 @@ function FlagPanel({ challengeId, disabled, onBusyChange }) {
       {data.reveal_available && <p className={styles.flagSource}>{data.source === "repository" ? "info.yaml" : "저장된 비밀값"}에서 확인 · 원문은 1분 뒤 숨겨집니다</p>}
       {!editing ? <button type="button" className={styles.button} disabled={disabled || busy}
         onClick={() => { setEditing(true); setError(""); setNotice(""); }}>플래그 변경</button>
-        : <div className="mt-3 space-y-2">
+        : <div className={styles.flagEditor}>
           <label>새 채점 플래그<input type="password" autoComplete="new-password" aria-label="새 채점 플래그"
             className={styles.input} value={newFlag} disabled={disabled || busy} maxLength={4096}
             onChange={(event) => setNewFlag(event.target.value)}
             onKeyDown={(event) => { if (event.key === "Enter") { event.preventDefault(); saveFlag(); } }}/></label>
           <p className={styles.helpText}>저장하면 이전 플래그는 정답으로 인정되지 않습니다</p>
           <p className={styles.helpText}>실행 중인 문제에는 기존 값이 남습니다 비밀값과 새 배포 버전도 함께 설정해주세요</p>
-          <div className="flex gap-2">
+          <div className={styles.rowActions}>
             <button type="button" className={styles.primary} disabled={disabled || busy || invalidFlag} onClick={saveFlag}>
               {busy ? "저장 중…" : "채점 플래그 저장"}</button>
             <button type="button" className={styles.button} disabled={disabled || busy}
@@ -104,7 +106,39 @@ function FlagPanel({ challengeId, disabled, onBusyChange }) {
   </section>;
 }
 
-export default function AdminChallengeSettingsDialog({ challenge, onClose, onSaved, embedded = false, active = true, onBusyChange }) {
+const FILE_STATUS = {
+  no_release: "배포 버전을 고르면 그 버전의 파일이 연결됩니다",
+  pending: "이 버전의 파일 수집 기록이 없습니다",
+  none: "첨부파일 없이 발행된 문제입니다",
+  disabled: "지금 버전은 첨부파일을 주지 않습니다",
+  unavailable: "연결된 파일을 찾지 못했습니다",
+};
+
+// 참가자 첨부파일: 기본 정보에서도 지금 참가자가 받는 ZIP 을 바로 받아 본다 바꾸는 건 배포 설정의 참가자 파일에서
+function ParticipantFileCard({ challengeId, onOpenFiles }) {
+  const files = useAdminResource((config) => getAdminChallengeFiles(challengeId, config), [challengeId], "참가자 파일을 불러오지 못했습니다");
+  const data = files.data;
+  const file = data?.status === "available" ? data.current_file : null;
+  return <section className={styles.fileCard} aria-label="참가자 첨부파일">
+    <div className={styles.fileCardHead}><h3>참가자 파일</h3>
+      {data && <AdminBadge tone={file ? "good" : "neutral"}>{file ? "제공 중" : "없음"}</AdminBadge>}
+    </div>
+    <div className={styles.fileCardBody}>
+      <AdminStatusMessage status={files.status} error={files.error} onRetry={files.retry} hasData={Boolean(data)}/>
+      {file ? <>
+        <p className={styles.fileCardName}><strong>{file.file_name}</strong><span>{file.file_count}개 · {formatFileSize(file.file_size)}</span></p>
+        <p className={styles.helpText}>{[data.release_version && `배포 v${data.release_version}`, file.registry_revision && `발행 #${file.registry_revision}`,
+          file.created_at && `${formatAdminTime(file.created_at, { seconds: false })} 수집`].filter(Boolean).join(" · ")}</p>
+      </> : data && <p className={styles.helpText}>{FILE_STATUS[data.status] ?? "파일 정보를 확인해주세요"}</p>}
+    </div>
+    <div className={styles.fileCardActions}>
+      {file && <AdminFileDownloadButton challengeId={challengeId} file={file} small/>}
+      {onOpenFiles && data && <button type="button" className={`${styles.button} ${styles.small}`} onClick={onOpenFiles}>{file ? "바꾸기" : "배포 설정에서 연결"}</button>}
+    </div>
+  </section>;
+}
+
+export default function AdminChallengeSettingsDialog({ challenge, onClose, onSaved, embedded = false, active = true, onBusyChange, onOpenFiles }) {
   const detail = useAdminResource((config) => getAdminChallenge(challenge.challenge_id, config), [challenge.challenge_id], "문제 정보를 불러오지 못했습니다");
   const [draft, setDraft] = useState(null);
   const [saved, setSaved] = useState(null);
@@ -154,10 +188,11 @@ export default function AdminChallengeSettingsDialog({ challenge, onClose, onSav
           <label htmlFor="challenge-statement">문제 지문<textarea id="challenge-statement" aria-describedby="challenge-statement-help" value={draft.description} rows={8} onChange={(event) => change("description", event.target.value)} className={styles.statementInput} disabled={busy}/></label>
           <p id="challenge-statement-help" className={styles.helpText}>참가자에게 보여줄 문제 설명을 작성해주세요</p>
         </div>
+        {active && <div className={styles.basicFiles}><ParticipantFileCard challengeId={challenge.challenge_id} onOpenFiles={onOpenFiles}/></div>}
         <aside className={styles.basicGrading}>
           {active && <FlagPanel challengeId={challenge.challenge_id} disabled={busy} onBusyChange={setRevealing}/>}
           <dl className={styles.scoreSummary}><dt>현재 배점</dt><dd>{Number(saved.current_score).toLocaleString("ko-KR")}<span>점</span></dd></dl>
-          <div className="mt-3 grid grid-cols-2 gap-3">
+          <div className={styles.scoreFields}>
             <label>최대 점수<input type="number" min="0" max="9999999999" step="1" inputMode="numeric" className={styles.input}
               value={draft.initial_score} disabled={busy} onChange={(event) => change("initial_score", event.target.value)}/></label>
             <label>최저 점수<input type="number" min="0" max="9999999999" step="1" inputMode="numeric" className={styles.input}
@@ -168,7 +203,8 @@ export default function AdminChallengeSettingsDialog({ challenge, onClose, onSav
         </aside>
       </div>
       <div className={styles.basicFooter}>
-        <p className={dirty ? styles.unsaved : styles.helpText}>{dirty ? "저장하지 않은 변경 사항이 있습니다" : "모든 배포 버전에 공통으로 적용되는 정보입니다"}</p>
+        <p className={dirty ? styles.unsaved : styles.helpText}>{dirty ? "저장하지 않은 변경 사항이 있습니다"
+          : `모든 배포 버전에 공통으로 적용되는 정보입니다${saved.updated_at ? ` · 마지막 저장 ${formatAdminTime(saved.updated_at, { seconds: false })}` : ""}`}</p>
         <button type="submit" className={styles.primary} disabled={busy || !dirty || !titleValid || !scoresValid}>{mutating ? "저장 중…" : "변경 사항 저장"}</button>
       </div>
     </form>}

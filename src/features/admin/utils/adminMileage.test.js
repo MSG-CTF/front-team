@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { canRefund, formatMileageAmount, getMileageTypeLabel, mileageAttempt, paymentErrorMessage, validateCheckout, validateMileageAdjustment } from "./adminMileage.js";
+import { MILEAGE_FILTERS, mileageFilterQuery } from "./adminMileage.js";
 
 test("같은 마일리지 요청의 재시도는 키를 유지하고 내용이 달라지면 새 키를 쓴다", () => {
   let count = 0;
@@ -55,4 +56,38 @@ test("마일리지 내역은 유형 이름과 부호가 붙은 천 단위 금액
   assert.equal(formatMileageAmount(-300), "-300");
   assert.equal(formatMileageAmount(0), "0");
   assert.equal(formatMileageAmount(null), "-");
+});
+
+test("마일리지 내역 필터는 문제 풀이를 뺀 운영 내역이 기본이고 묶음은 쉼표로 보낸다", () => {
+  assert.equal(MILEAGE_FILTERS[0].key, "ops");
+  assert.ok(!mileageFilterQuery("ops").split(",").includes("CHALLENGE_SOLVE"));
+  assert.equal(mileageFilterQuery("payment"), "PURCHASE,REFUND");
+  assert.equal(mileageFilterQuery("solve"), "CHALLENGE_SOLVE");
+  assert.equal(mileageFilterQuery("all"), undefined);
+  assert.equal(mileageFilterQuery("missing"), undefined);
+  const covered = new Set(MILEAGE_FILTERS.filter((item) => item.key !== "ops" && item.key !== "all").flatMap((item) => item.types));
+  assert.equal(covered.size, 8);
+});
+
+test("최근 품목은 같은 이름을 한 번만, 환불된 결제와 환불 줄은 빼고 최신 순으로 뽑는다", async () => {
+  const { recentPaymentItems } = await import("./adminMileage.js");
+  const history = [
+    { type: "PURCHASE", reason: "다람쥐 키링", amount: -300, is_refunded: false },
+    { type: "REFUND", reason: "결제 환불", amount: 300 },
+    { type: "PURCHASE", reason: "도토리 쿠키", amount: -150, is_refunded: true },
+    { type: "PURCHASE", reason: "다람쥐 키링", amount: -250, is_refunded: false },
+    { type: "PURCHASE", reason: " 가을 엽서 ", amount: -100, is_refunded: false },
+    { type: "PURCHASE", reason: "", amount: -100 },
+  ];
+  assert.deepEqual(recentPaymentItems(history), [{ itemName: "다람쥐 키링", amount: 300 }, { itemName: "가을 엽서", amount: 100 }]);
+  assert.deepEqual(recentPaymentItems(history, 1), [{ itemName: "다람쥐 키링", amount: 300 }]);
+  assert.deepEqual(recentPaymentItems(), []);
+});
+
+test("지급과 회수는 양수 금액에 부호만 붙인다", async () => {
+  const { signedMileageAmount, validateMileageAdjustment } = await import("./adminMileage.js");
+  assert.equal(signedMileageAmount("grant", "300"), "300");
+  assert.equal(signedMileageAmount("deduct", "300"), "-300");
+  assert.equal(signedMileageAmount("deduct", ""), "");
+  assert.equal(validateMileageAdjustment({ teamId: "t", amount: signedMileageAmount("deduct", "300"), reason: "정정" }), "");
 });

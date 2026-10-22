@@ -74,3 +74,39 @@ export function buildDerivedSettings(draft, secrets) {
   });
   return { containers };
 }
+
+// 배포 버전의 출처: 백엔드가 origin 을 주면 그 값을, 아니면 지금 응답 필드로 가른다
+// derived_from_release_id 가 있으면 플랫폼에서 고친 버전, CI 자동 수집과 GitHub 발행본 가져오기는 note 로 남는다
+export const RELEASE_ORIGINS = {
+  GITHUB: { label: "GitHub 원본", tone: "blue" },
+  PLATFORM: { label: "플랫폼 수정", tone: "purple" },
+  MANUAL: { label: "수동 등록", tone: "neutral" },
+  BACKFILL: { label: "이전 기록", tone: "quiet" },
+};
+const GITHUB_NOTE = /^(공급망 자동 등록|GitHub 발행본 가져오기|GitHub CI)/;
+
+export function releaseOrigin(release) {
+  if (RELEASE_ORIGINS[release?.origin]) return release.origin;
+  if (release?.derived_from_release_id) return "PLATFORM";
+  if (release?.source_ref === "backfill" || release?.registry_revision === 0) return "BACKFILL";
+  if (GITHUB_NOTE.test(String(release?.note ?? ""))) return "GITHUB";
+  return "MANUAL";
+}
+
+// GitHub 에 가장 최근에 올린 버전: 플랫폼 수정이 아닌 버전 중 발행 번호(실행 번호)가 가장 큰 것
+export function latestGithubRelease(releases = []) {
+  return releases.filter((release) => releaseOrigin(release) === "GITHUB")
+    .sort((a, b) => b.registry_revision - a.registry_revision || b.version - a.version)[0] ?? null;
+}
+
+export function describeRelease(release, releases = []) {
+  const origin = releaseOrigin(release);
+  const base = release?.derived_from_release_id ? releases.find((item) => item.release_id === release.derived_from_release_id) : null;
+  const latest = latestGithubRelease(releases);
+  return {
+    origin, ...RELEASE_ORIGINS[origin],
+    baseVersion: base?.version ?? null,
+    isLatestGithub: Boolean(latest && latest.release_id === release?.release_id),
+    newerGithub: latest && release && latest.release_id !== release.release_id && latest.registry_revision > (release.registry_revision ?? 0) ? latest : null,
+  };
+}

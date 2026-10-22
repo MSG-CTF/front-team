@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { applyKothClubDetail, validateKothClubDetail, createKothChallengeViewModels, flattenKothChallenges, getKothCardAvailability, getKothConnection, validateKothClubs } from "./kothChallengeState.js";
+import { applyKothClubDetail, validateKothClubDetail, createKothChallengeViewModels, flattenKothChallenges, getKothCardAvailability, getKothConnection, kothFile, validateKothClubs } from "./kothChallengeState.js";
 import { KOTH_CHALLENGE_VISUALS } from "../config/kothVisualConfig.js";
 
 const clubs = Array.from({ length: 6 }, (_, index) => ({
@@ -66,4 +66,18 @@ test("비활성 카드는 닫고 진행 중 카드는 최초 득점 후에도 �
 
 test("목록 갱신에 실패하면 지난 ACTIVE 상태로 문제를 열지 않는다", () => {
   assert.equal(getKothCardAvailability({ status: "ACTIVE" }, true).disabled, true);
+});
+
+test("문제 파일은 이름이 있는 zip 하나만 보이고 새 상세 응답이 없애면 따라 없앤다", () => {
+  assert.deepEqual(kothFile({ file_name: "koth-jenga.zip", size_bytes: 13284 }), { name: "koth-jenga.zip", sizeBytes: 13284 });
+  assert.deepEqual(kothFile({ file_name: "a.zip", size_bytes: -1 }), { name: "a.zip", sizeBytes: null });
+  assert.equal(kothFile({ file_name: " " }), null);
+  assert.equal(kothFile(null), null);
+  const withFile = clubs.map((club, index) => index === 0 ? { ...club, challenges: [{ ...club.challenges[0], file: { file_name: "k0.zip", size_bytes: 10 } }] } : club);
+  const [row] = createKothChallengeViewModels(KOTH_CHALLENGE_VISUALS, withFile, []);
+  assert.equal(row.file.name, "k0.zip");
+  const detail = { club_id: "club-0", name: "동아리 0", challenge_count: 1, challenges: [{ ...withFile[0].challenges[0], file: null }] };
+  assert.equal(applyKothClubDetail(row, detail).file, null);
+  const silent = { ...detail, challenges: [{ ...clubs[0].challenges[0] }] };
+  assert.equal(applyKothClubDetail(row, silent).file.name, "k0.zip");
 });

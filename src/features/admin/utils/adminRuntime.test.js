@@ -69,3 +69,22 @@ test("new settings reject missing secret, duplicate names, and raw flag", () => 
   draft[0].secret_env = [{ name: "FLAG", value: "flag" }];
   assert.throws(() => buildDerivedSettings(draft, []));
 });
+
+test("버전 출처는 파생 여부와 수집 기록으로 가르고 GitHub 최신 버전을 찾는다", async () => {
+  const { describeRelease, latestGithubRelease, releaseOrigin } = await import("./adminRuntime.js");
+  const releases = [
+    { release_id: "r4", version: 4, registry_revision: 41, note: "공급망 자동 등록: web-cookie" },
+    { release_id: "r3", version: 3, registry_revision: 38, derived_from_release_id: "r2", note: "app .env 가져오기" },
+    { release_id: "r2", version: 2, registry_revision: 38, note: "GitHub 발행본 가져오기 · 실행 9912" },
+    { release_id: "r1", version: 1, registry_revision: 0, source_ref: "backfill" },
+    { release_id: "r5", version: 5, registry_revision: 41, note: "관리자 릴리스 파일 등록" },
+  ];
+  assert.deepEqual(releases.map(releaseOrigin), ["GITHUB", "PLATFORM", "GITHUB", "BACKFILL", "MANUAL"]);
+  assert.equal(releaseOrigin({ origin: "MANUAL", note: "공급망 자동 등록" }), "MANUAL");
+  assert.equal(latestGithubRelease(releases).release_id, "r4");
+  const derived = describeRelease(releases[1], releases);
+  assert.equal(derived.baseVersion, 2);
+  assert.equal(derived.newerGithub.release_id, "r4");
+  assert.equal(describeRelease(releases[0], releases).isLatestGithub, true);
+  assert.equal(describeRelease(releases[0], releases).newerGithub, null);
+});

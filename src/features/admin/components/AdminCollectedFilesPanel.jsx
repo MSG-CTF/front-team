@@ -10,7 +10,7 @@ export function RepositoryFilesDetails({ challengeId }) {
   const [showSource, setShowSource] = useState(false);
   return <details className={styles.details} onToggle={(event) => setShowSource(event.currentTarget.open)}>
     <summary>출제 저장소의 원본 파일 보기</summary>
-    {showSource && <div className="mt-5"><RepositoryFilesPanel challengeId={challengeId}/></div>}
+    {showSource && <div className={styles.detailsBody}><RepositoryFilesPanel challengeId={challengeId}/></div>}
   </details>;
 }
 

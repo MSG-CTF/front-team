@@ -34,3 +34,13 @@ export function getKothTeamToken(config) {
 export function getKothLeaderboard(challengeId, config) {
   return apiClient.get("/koth/leaderboard", { ...config, params: { koth_challenge_id: challengeId } });
 }
+
+export function downloadKothFile(kothChallengeId, { signal } = {}) {
+  // GET /koth/challenges/{id}/file (Bearer, 프론트 요청 계약)
+  // 저장소 prob/for_user 를 묶은 zip 하나 문제가 파일을 주지 않으면 404
+  return apiClient.get(`/koth/challenges/${encodeURIComponent(kothChallengeId)}/file`, {
+    responseType: "blob",
+    timeout: 60000,
+    signal,
+  });
+}

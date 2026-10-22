@@ -65,7 +65,7 @@ export default function KothTeamTokenPanel({
         </button>
         <h2 id="koth-token-title">KOTH TEAM TOKEN</h2>
 
-        {status === "loading" && <p>팀 토큰을 불러오는 중입니다.</p>}
+        {status === "loading" && <p>팀 토큰을 불러오는 중입니다</p>}
 
         {status === "error" && (
           <div className={styles.tokenState}>
@@ -86,9 +86,9 @@ export default function KothTeamTokenPanel({
               spellCheck="false"
             />
             <button type="button" onClick={handleCopy}>토큰 복사</button>
-            {copyStatus === "success" && <p role="status">복사했습니다.</p>}
+            {copyStatus === "success" && <p role="status">복사했습니다</p>}
             {copyStatus === "error" && (
-              <p role="alert">자동 복사에 실패했습니다. 토큰을 직접 선택해 복사해주세요.</p>
+              <p role="alert">자동 복사에 실패했습니다 토큰을 직접 선택해 복사해주세요</p>
             )}
             {data.issued_at && (
               <p className={styles.tokenIssuedAt}>

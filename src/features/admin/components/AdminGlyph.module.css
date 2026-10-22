@@ -1,0 +1,45 @@
+/* 색 타일: 위가 살짝 밝은 둥근 사각형, 모서리는 타일 크기의 27%로 iOS 아이콘과 같은 비율
+   크기는 부르는 쪽이 --icon-size로 주고, 화면 높이에 맞춰 줄일 때는 클래스에서 --size로 덮는다 */
+.appIcon {
+  --tile: #8b8d98;
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  --s: var(--size, var(--icon-size, 22px));
+  width: var(--s);
+  height: var(--s);
+  border-radius: calc(var(--s) * 0.27);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--tile) 80%, #fff) 0%, var(--tile) 100%);
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 10%), 0 0.5px 1px rgb(0 0 0 / 14%);
+  color: #fff;
+}
+.appIcon svg {
+  width: 62%;
+  height: 62%;
+}
+.appIcon[data-tone="orange"] { --tile: #ef7419; }
+.appIcon[data-tone="red"] { --tile: #e5484d; }
+.appIcon[data-tone="yellow"] { --tile: #f0a20b; }
+.appIcon[data-tone="green"] { --tile: #2f9e62; }
+.appIcon[data-tone="teal"] { --tile: #13a39b; }
+.appIcon[data-tone="blue"] { --tile: #2f7fe6; }
+.appIcon[data-tone="indigo"] { --tile: #5b5bd6; }
+.appIcon[data-tone="purple"] { --tile: #8e4ec6; }
+.appIcon[data-tone="gray"] { --tile: #8d8a86; }
+.appIcon[data-tone="graphite"] { --tile: #5f5c58; }
+
+/* 상태 기호 */
+.status {
+  --dot: #a8a39d;
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--dot);
+  color: #fff;
+}
+.status[data-tone="good"] { --dot: #2f9e62; }
+.status[data-tone="warn"] { --dot: #ee8a0a; }
+.status[data-tone="bad"] { --dot: #e5484d; }

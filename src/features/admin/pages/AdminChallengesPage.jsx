@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { forceResetInstance, forceStopInstance, getAdminChallenges, getAdminInstances, setChallengeVisibility } from "../../../api/admin.js";
 import { INSTANCE_STATUS } from "../../../constants/enums.js";
 import { isSuccess } from "../../../utils/response.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import { formatAdminNumber } from "../utils/adminNumber.js";
+import { formatResourceAmount } from "../utils/adminNodeAllocation.js";
+import { canForceStop } from "../utils/adminAttention.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
+import { IconButton } from "../components/AdminWidgets.jsx";
 import AdminPagination from "../components/AdminPagination.jsx";
 import AdminDialog from "../components/AdminDialog.jsx";
 import AdminChallengeCreateDialog from "../components/AdminChallengeCreateDialog.jsx";
@@ -14,6 +17,8 @@ import AdminChallengeManageDialog from "../components/AdminChallengeManageDialog
 import AdminPublicationImportDialog from "../components/AdminPublicationImportDialog.jsx";
 import AdminTabs from "../components/AdminTabs.jsx";
 import AdminBoardReadiness from "../components/AdminBoardReadiness.jsx";
+import { AdminReasonField, AdminSwitch } from "../components/AdminFormParts.jsx";
+import { REASON_PRESETS } from "../utils/adminReasons.js";
 import styles from "../components/AdminWorkspace.module.css";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
 import useAdminResource from "../hooks/useAdminResource.js";
@@ -21,17 +26,30 @@ import useAdminResource from "../hooks/useAdminResource.js";
 const BUTTON = styles.button;
 const SELECT = styles.select;
 
+// 배포 상태 칸: 버전 알약(초록 점이면 참가자에게 나가는 중), 새 발행본 대기 꼬리표, 실행 환경 한 줄
 function DeploymentSummary({ deployment }) {
-  if (!deployment) return <span className={styles.secondary}>실행 설정 없음</span>;
+  if (!deployment) return <span className={styles.deployCell}>
+    <span className={styles.deployTop}><span className={styles.deployPill} data-state="none">파일만</span></span>
+    <span className={styles.deployMeta}>실행 환경 없이 파일만 제공</span>
+  </span>;
   const runtime = { KUBERNETES: "Kubernetes", DOCKER: "Docker", VM: "VM" }[deployment.runtime_type] ?? deployment.runtime_type;
-  return <div className={styles.deploymentSummary}>
-    <span>{deployment.is_current ? `v${deployment.version} 적용 중` : `v${deployment.version} 미적용`} · {runtime} · {deployment.architecture}</span>
-    <span>컨테이너 {deployment.containers.length}개 · CPU {deployment.resource_profile.cpu_millicores}m · {deployment.resource_profile.memory_mib}MiB</span>
-  </div>;
+  const profile = deployment.resource_profile ?? {};
+  const latest = deployment.latest_release;
+  const newer = latest && latest.version > deployment.version ? latest : null;
+  return <span className={styles.deployCell}>
+    <span className={styles.deployTop}>
+      <span className={styles.deployPill} data-state={deployment.is_current ? "live" : "idle"} title={deployment.is_current ? "새 인스턴스에 적용 중" : "아직 적용 전"}>
+        <i aria-hidden="true" />v{deployment.version}</span>
+      <span className={styles.deployState}>{deployment.is_current ? "사용 중" : "적용 전"}</span>
+      {newer && <span className={styles.deployNew} title={`발행 #${newer.registry_revision ?? "-"}`}>새 버전 v{newer.version}</span>}
+    </span>
+    <span className={styles.deployMeta}>{[runtime, deployment.architecture, `컨테이너 ${deployment.containers?.length ?? 0}`].filter(Boolean).join(" · ")}</span>
+    <span className={styles.deployMeta}>{[profile.cpu_millicores != null && formatResourceAmount(profile.cpu_millicores, "cpu_millicores"), profile.memory_mib != null && formatResourceAmount(profile.memory_mib, "memory_mib")].filter(Boolean).join(" · ") || "자원 정보 없음"}</span>
+  </span>;
 }
 
-function InstancesSection() {
-  const [filter, setFilter] = useState("");
+function InstancesSection({ initialStatus = "" }) {
+  const [filter, setFilter] = useState(initialStatus);
   const [page, setPage] = useState(1);
   const [confirmation, setConfirmation] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -54,30 +72,29 @@ function InstancesSection() {
       if (!isSuccess(response.data)) throw new Error(response.data?.message || "요청이 처리되지 않았습니다");
       setConfirmation(null);
       const refreshed = await instances.reload();
-      setNotice(refreshed ? "요청이 접수되었습니다. 상태가 자동으로 갱신됩니다" : "요청은 접수됐지만 최신 상태를 조회하지 못했습니다");
+      setNotice(refreshed ? "요청이 접수되었습니다 상태가 자동으로 갱신됩니다" : "요청은 접수됐지만 최신 상태를 조회하지 못했습니다");
     } catch (error) { setNotice(error?.response?.data?.message || error.message || "요청이 처리되지 않았습니다"); }
     finally { pending.current = false; setBusy(false); }
   }
   return <section>
-    <p className={styles.panelIntro}>실행 중인 팀과 문제를 확인합니다 상태는 10초마다 갱신됩니다</p>
     <div className={styles.toolbar}>
       <label>상태 <select value={filter} disabled={busy} onChange={(event) => { setFilter(event.target.value); setPage(1); }} className={SELECT}>
         <option value="">전체</option>{Object.values(INSTANCE_STATUS).map((status) => <option key={status} value={status}>{status}</option>)}
       </select></label>
-      <button type="button" onClick={instances.retry} disabled={busy || instances.status === "loading"} className={BUTTON}>인스턴스 새로고침</button>
+      <button type="button" onClick={instances.retry} disabled={busy || instances.status === "loading"} className={BUTTON}>인스턴스 새로고침</button><span className={styles.cardMeta}>10초마다 자동 갱신</span>
     </div>
     <AdminStatusMessage status={instances.status} error={instances.error} onRetry={instances.retry} hasData={Boolean(instances.data)}/>
     {notice && <p role="status" className={styles.callout}>{notice}</p>}
-    {instances.data && <div className={styles.tableWrap}>
+    {instances.data && <div className={`${styles.tableWrap} ${styles.instanceStack}`}>
       <table className={styles.table} aria-label="인스턴스 목록"><thead><tr>{["팀", "문제", "상태", "만료 (KST)", "조치"].map((text) => <th key={text}>{text}</th>)}</tr></thead>
         <tbody>{(instances.data?.instances ?? []).map((instance) => <tr key={instance.instance_id}>
           <td><span className={styles.title}>{instance.team_name}</span><details className={styles.secondary}><summary className={styles.idSummary}>인스턴스 ID</summary><span className={`${styles.mono} ${styles.idValue}`}>{instance.instance_id}</span></details></td>
           <td className={styles.wrap}>{instance.challenge_title}</td><td><AdminBadge tone={instance.status === "FAILED" ? "bad" : instance.status === "RUNNING" ? "good" : "neutral"}>{instance.status}</AdminBadge></td>
           <td className={styles.time}>{formatAdminTime(instance.expires_at)}</td>
-          <td><div className={styles.rowActions}>
-            <button type="button" className={`${BUTTON} ${styles.small}`} disabled={busy || instance.status !== "RUNNING"} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "reset" }); }}>강제 재시작</button>
-            <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy || instance.status !== "RUNNING"} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "stop" }); }}>강제 종료</button>
-          </div></td>
+          <td>{canForceStop(instance) ? <div className={styles.rowActions}>
+            {instance.status === "RUNNING" && <button type="button" className={`${BUTTON} ${styles.small}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "reset" }); }}>강제 재시작</button>}
+            <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "stop" }); }}>강제 종료</button>
+          </div> : <span className={styles.muted}>-</span>}</td>
         </tr>)}</tbody>
       </table>
       {instances.data?.instances?.length === 0 && <p className={styles.empty}>표시할 인스턴스가 없습니다</p>}
@@ -97,7 +114,10 @@ function InstancesSection() {
 }
 
 export default function AdminChallengesPage() {
-  const [tab, setTab] = useState("challenges");
+  // 대시보드 지표에서 ?tab=instances&status=FAILED 로 바로 들어온다
+  const [params] = useSearchParams();
+  const initialStatus = Object.values(INSTANCE_STATUS).includes(params.get("status")) ? params.get("status") : "";
+  const [tab, setTab] = useState(params.get("tab") === "instances" ? "instances" : "challenges");
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -130,7 +150,6 @@ export default function AdminChallengesPage() {
       items={[{ id: "challenges", label: "문제 목록" }, { id: "instances", label: "인스턴스" }]}/>
     <section role="tabpanel" id="challenge-management-panel-challenges" aria-labelledby="challenge-management-tab-challenges" hidden={tab !== "challenges"} className={styles.panel}>
     <AdminBoardReadiness revision={challenges.data}/>
-    <p className={styles.panelIntro}>출제자가 GitHub에 반영하면 CI 발행본을 백엔드가 수집합니다 문제의 배포 설정에서 새 버전을 확인하고 적용할 수 있습니다</p>
     <div className={styles.toolbar}>
       <label>분야 <select value={category} className={SELECT} onChange={(event) => { setCategory(event.target.value); setPage(1); }}>
         <option value="">전체</option>{ADMIN_CHALLENGE_CATEGORIES.map((value) => <option key={value}>{value}</option>)}
@@ -139,14 +158,14 @@ export default function AdminChallengesPage() {
         <option value="running">실행 수</option><option value="title">이름</option><option value="score">배점</option>
       </select></label>
       <div className={styles.rowActions}>
-        <button type="button" onClick={challenges.retry} disabled={busy || challenges.status === "loading"} className={BUTTON}>새로고침</button>
+        <IconButton icon="refresh" label="새로고침" onClick={challenges.retry} disabled={busy || challenges.status === "loading"} />
         <button type="button" onClick={() => setCreating(true)} disabled={busy} className={BUTTON}>직접 등록</button>
         <button type="button" onClick={() => setImporting(true)} disabled={busy} className={styles.primary}>GitHub에서 가져오기</button>
       </div>
     </div>
     <AdminStatusMessage status={challenges.status} error={challenges.error} onRetry={challenges.retry} hasData={Boolean(challenges.data)}/>
     {notice && <p role="status" className={styles.callout}>{notice}</p>}
-    {challenges.data && <div className={styles.tableWrap}>
+    {challenges.data && <div className={`${styles.tableWrap} ${styles.challengeStack}`}>
       <table className={styles.table} aria-label="문제 목록"><thead><tr>{["문제", "배점 · 풀이", "인스턴스", "공개 상태", "배포 상태", "관리"].map((text) => <th key={text}>{text}</th>)}</tr></thead>
         <tbody>{(challenges.data?.challenges ?? []).map((challenge) => <tr key={challenge.challenge_id}>
           <td><span className={styles.title}>{challenge.title}</span><span className={styles.secondary}>{challenge.category} · {challenge.difficulty === "UNASSIGNED" ? "난이도 미정" : challenge.difficulty}</span></td>
@@ -154,7 +173,11 @@ export default function AdminChallengesPage() {
             aria-label={`${challenge.title} 풀이 기록 ${challenge.solved_team_count}팀`}
             onClick={() => setEditing({ challenge, section: "solves" })}>{challenge.solved_team_count}팀 해결</button></td>
           <td>{challenge.running_instance_count}개 실행{challenge.failed_instance_count > 0 && <span className={styles.failedCount}>실패 {challenge.failed_instance_count}</span>}</td>
-          <td><button type="button" disabled={busy} aria-label={challenge.title + " 공개 상태 변경"} onClick={() => { setSelected(challenge); setReason(""); setNotice(""); }}><AdminBadge tone={challenge.is_published ? "good" : "neutral"}>{challenge.is_published ? "공개" : "비공개"}</AdminBadge></button></td>
+          <td><span className={styles.publishCell}>
+            <AdminSwitch checked={challenge.is_published} disabled={busy} label={`${challenge.title} ${challenge.is_published ? "비공개로 전환" : "공개로 전환"}`}
+              onChange={() => { setSelected(challenge); setReason(""); setNotice(""); }} />
+            <span data-on={challenge.is_published || undefined}>{challenge.is_published ? "공개" : "비공개"}</span>
+          </span></td>
           <td className={styles.deploymentCell}><DeploymentSummary deployment={challenge.deployment}/></td>
           <td><div className={styles.rowActions}><button type="button" className={BUTTON} disabled={busy} aria-label={challenge.title + " 설정"} onClick={() => setEditing({ challenge, section: "problem" })}>설정 열기</button><Link className={styles.fileLink} to={`/admin/challenges/${challenge.challenge_id}/preview`} target="_blank" rel="noreferrer" aria-label={`${challenge.title} 미리보기`}>미리보기 ↗</Link></div></td>
         </tr>)}</tbody>
@@ -164,16 +187,20 @@ export default function AdminChallengesPage() {
     <AdminPagination page={page} totalCount={challenges.data?.total_count} onChange={setPage} disabled={busy || challenges.status !== "success"}/>
     </section>
     <section role="tabpanel" id="challenge-management-panel-instances" aria-labelledby="challenge-management-tab-instances" hidden={tab !== "instances"} className={styles.panel}>
-      {tab === "instances" && <InstancesSection/>}
+      {tab === "instances" && <InstancesSection initialStatus={initialStatus}/>}
     </section>
-    {selected && <AdminDialog title="문제 공개 상태 변경" onClose={() => setSelected(null)} busy={busy}>
-      <p className={styles.dialogLead}><strong>{selected.title}</strong> · {selected.is_published ? "공개에서 비공개로" : "비공개에서 공개로"}</p>
+    {selected && <AdminDialog title={selected.is_published ? "비공개로 전환" : "공개로 전환"} onClose={() => setSelected(null)} busy={busy}>
+      <p className={styles.dialogLead}><strong>{selected.title}</strong> {selected.is_published
+        ? "참가자는 문제를 볼 수 없고 새 인스턴스도 만들 수 없습니다 이미 연 팀의 진행은 유지됩니다"
+        : "참가자가 문제를 보고 인스턴스를 만들 수 있게 됩니다"}</p>
       <form onSubmit={saveVisibility} className={styles.formStack}>
-        <label className={styles.field}><span className={styles.fieldLabel}>변경 사유 <small>1~500자</small></span><textarea required maxLength={500} value={reason} onChange={(event) => setReason(event.target.value)} disabled={busy} className={styles.textarea}/></label>
+        <AdminReasonField label="사유" note="1~500자" value={reason} onChange={setReason} disabled={busy} required autoFocus
+          presets={selected.is_published ? REASON_PRESETS.unpublish : REASON_PRESETS.publish} />
         {notice && <p role="alert" className={styles.errorText}>{notice}</p>}
         <div className={styles.formActions}>
           <button type="button" onClick={() => setSelected(null)} disabled={busy} className={BUTTON}>취소</button>
-          <button type="submit" disabled={busy || !reason.trim()} className={styles.primary}>변경 확인</button>
+          <button type="submit" disabled={busy || !reason.trim()} className={selected.is_published ? styles.dangerSolid : styles.primary}>
+            {selected.is_published ? "비공개로 전환" : "공개하기"}</button>
         </div>
       </form>
     </AdminDialog>}

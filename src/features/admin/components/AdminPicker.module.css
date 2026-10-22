@@ -1,0 +1,67 @@
+/* ───── 팀 검색 선택기 ───── */
+.picker { position: relative; display: block; min-width: 0; }
+.icon { position: absolute; top: 50%; left: 11px; color: var(--label-3); pointer-events: none; transform: translateY(-50%); }
+.input { width: 100%; padding-right: 32px; padding-left: 33px; text-overflow: ellipsis; }
+.picker[data-compact] .input { min-height: 32px; font-size: 13px; }
+.clear { position: absolute; top: 50%; right: 8px; display: grid; place-items: center; width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; background: var(--label-4); color: #fff; cursor: pointer; transform: translateY(-50%); }
+.clear:hover { background: var(--label-3); }
+
+/* 떠 있는 목록: macOS 메뉴처럼 반투명 흰 판, 고른 줄은 강조색으로 채운다 */
+.layer {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  max-height: min(320px, 46vh);
+  overflow: hidden;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: 0 0 0 0.5px rgb(0 0 0 / 12%), 0 14px 44px rgb(30 20 10 / 20%);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  animation: pickerIn 0.14s ease;
+}
+@keyframes pickerIn { from { opacity: 0; transform: translateY(-4px); } }
+.list { min-height: 0; margin: 0; padding: 5px; overflow-y: auto; list-style: none; overscroll-behavior: contain; }
+.option { display: flex; align-items: center; gap: 8px; min-height: 40px; padding: 5px 10px; border-radius: 9px; color: var(--label); cursor: pointer; }
+.option[data-active] { background: var(--accent); color: #fff; }
+.optionText { display: grid; flex: 1; min-width: 0; }
+.optionText strong { overflow: hidden; font-size: 14px; font-weight: 600; line-height: 19px; text-overflow: ellipsis; white-space: nowrap; }
+.optionText small { color: var(--label-3); font-size: 12px; line-height: 16px; font-variant-numeric: tabular-nums; }
+.option[data-active] small { color: rgb(255 255 255 / 78%); }
+.flag { flex-shrink: 0; height: 20px; padding: 0 7px; border-radius: 6px; background: var(--red-tint); color: var(--red-text); font-size: 11.5px; font-weight: 700; line-height: 20px; }
+.option[data-active] .flag { background: rgb(255 255 255 / 22%); color: #fff; }
+.check { flex-shrink: 0; color: var(--accent); }
+.option[data-active] .check { color: #fff; }
+.empty { padding: 16px 12px; color: var(--label-3); font-size: 13px; text-align: center; }
+.more { margin: 0; padding: 8px 12px; border-top: 1px solid var(--hairline); color: var(--label-3); font-size: 12px; }
+@media (prefers-reduced-motion: reduce) { .layer { animation: none; } }
+
+/* ───── 빠른 선택 칩 ───── */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { display: inline-flex; align-items: center; height: 28px; padding: 0 11px; border: 0; border-radius: 14px; background: var(--fill); color: var(--label); font: 600 12.5px/1 var(--font); white-space: nowrap; cursor: pointer; transition: background-color 0.12s ease, color 0.12s ease; }
+.chip:hover:not(:disabled):not([aria-pressed="true"]) { background: var(--fill-hover); }
+.chip[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.chip[data-tone="plus"] { font-variant-numeric: tabular-nums; }
+.chip[data-tone="minus"] { color: var(--red-text); font-variant-numeric: tabular-nums; }
+.chip[data-tone="minus"][aria-pressed="true"] { background: var(--red); color: #fff; }
+.chip:disabled { opacity: 0.45; cursor: default; }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ───── iOS 토글 ───── */
+.switch { position: relative; flex-shrink: 0; width: 40px; height: 24px; padding: 0; border: 0; border-radius: 12px; background: rgb(120 120 128 / 22%); cursor: pointer; transition: background-color 0.2s ease; }
+.switch[aria-checked="true"] { background: var(--green); }
+.knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgb(0 0 0 / 18%), 0 0 0 0.5px rgb(0 0 0 / 4%); transition: transform 0.2s cubic-bezier(0.3, 0.8, 0.4, 1.1); }
+.switch[aria-checked="true"] .knob { transform: translateX(16px); }
+.switch:disabled { opacity: 0.4; cursor: default; }
+.switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .switch, .knob { transition: none; } }
+
+/* 분할 단추: 옅은 홈 안에서 고른 칸만 흰 바탕으로 떠오른다 회수를 고르면 글자가 빨개진다 */
+.segmented { display: inline-grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; gap: 2px; padding: 2px; border-radius: var(--radius-md); background: var(--fill-hover); }
+.segmented > button { min-width: 64px; min-height: 30px; padding: 0 14px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--label-2); font: 600 13px/18px var(--font); cursor: pointer; transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease; }
+.segmented > button:hover:not(:disabled):not([aria-checked="true"]) { color: var(--label); }
+.segmented > button[aria-checked="true"] { background: var(--surface); box-shadow: 0 1px 2px rgb(0 0 0 / 8%), 0 0 0 0.5px rgb(0 0 0 / 5%); color: var(--label); }
+.segmented > button[aria-checked="true"][data-key="deduct"] { color: var(--red-text); }
+.segmented > button:disabled { opacity: 0.5; cursor: default; }
+.segmented > button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

@@ -1,0 +1,197 @@
+/* ═══════════ KoTH 관리 ═══════════ */
+
+/* ───── 목록 ───── */
+.rowLink { cursor: pointer; }
+.order { width: 56px; color: var(--label-3); font-weight: 600; }
+.periodTime { display: block; margin-bottom: 4px; color: var(--label-2); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.unlinked { color: var(--orange-text); font-weight: 600; }
+.chevron { display: inline-grid; place-items: center; color: var(--label-4); }
+.rowEnd { width: 1%; white-space: nowrap; text-align: right; }
+.rowEnd > * + * { margin-left: 12px; }
+
+/* ───── 상세 머리: 탭과 채점 경고 ───── */
+.tabsBar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: var(--inset-top) var(--inset) 0; }
+.tabsBar > [role="tablist"] { margin: 0; }
+.scoreWarning { color: var(--orange-text); font-size: 12.5px; font-weight: 600; }
+
+/* ───── 점수 환산 카드 ───── */
+.rule { display: grid; gap: 10px; margin: 0 0 16px; padding: 14px 16px; border-radius: var(--radius-lg); background: var(--surface-sunken); box-shadow: inset 0 0 0 0.5px var(--hairline); }
+.ruleHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.ruleHead strong { color: var(--label); font-size: 14px; font-weight: 700; }
+.ruleHead span { color: var(--label-3); font-size: 12.5px; }
+.points { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; margin: 0; padding: 0; overflow: hidden; border-radius: var(--radius-md); background: var(--hairline); list-style: none; }
+.points li { display: grid; justify-items: center; gap: 2px; padding: 8px 4px; background: var(--surface); }
+.points span { color: var(--label-3); font-size: 12px; font-weight: 600; }
+.points strong { color: var(--label); font: 700 20px/24px var(--font); font-variant-numeric: tabular-nums; }
+.points li:last-child strong { color: var(--label-4); }
+.ruleNote { margin: 0; color: var(--label-3); font-size: 12.5px; line-height: 18px; }
+
+/* ───── 틱 기록: 번호 칸 줄과 고른 틱의 결과 ───── */
+.periods { display: grid; gap: 14px; min-width: 0; }
+.tickHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+.tickSummary { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin: 0; color: var(--label-2); font-size: 13px; font-variant-numeric: tabular-nums; }
+.tickSummary strong { color: var(--label); font-size: 14px; }
+.tickSummary span { display: inline-flex; align-items: center; gap: 6px; }
+.tickSummary i { width: 8px; height: 8px; border-radius: 50%; background: var(--label-4); }
+.tickSummary i[data-tone="good"] { background: var(--green); }
+.tickSummary i[data-tone="bad"] { background: var(--red); }
+.tickSummary i[data-tone="warn"] { background: var(--yellow); }
+.tickStrip { display: grid; grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)); gap: 6px; }
+.tick { position: relative; display: grid; place-items: center; height: 40px; border: 0; border-radius: var(--radius-sm); background: var(--surface-sunken); box-shadow: inset 0 0 0 1px var(--hairline); color: var(--label); font: 600 13px/1 var(--font); font-variant-numeric: tabular-nums; cursor: pointer; transition: box-shadow 0.12s ease, transform 0.12s ease, background-color 0.12s ease; }
+.tick::after { position: absolute; right: 6px; bottom: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--green); content: ""; }
+.tick[data-tone="bad"] { background: var(--red-tint); color: var(--red-text); }
+.tick[data-tone="bad"]::after { background: var(--red); }
+.tick[data-tone="warn"] { background: var(--yellow-tint); color: var(--yellow-text); }
+.tick[data-tone="warn"]::after { background: var(--yellow); }
+.tick:hover:not([aria-selected="true"]) { transform: translateY(-1px); box-shadow: inset 0 0 0 1px var(--border); }
+.tick[aria-selected="true"] { background: var(--surface); box-shadow: inset 0 0 0 2px var(--accent), 0 2px 6px rgb(63 42 20 / 12%); }
+.tick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.tickMore { height: 40px; border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--accent-text); font: 600 12px/1 var(--font); cursor: pointer; }
+.tickMore:hover:not(:disabled) { background: var(--accent-tint); }
+.periodDetail { display: grid; gap: 12px; min-width: 0; padding-top: 14px; border-top: 1px solid var(--hairline); }
+.periodHead { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; min-height: 30px; }
+.periodHead h3 { margin: 0; color: var(--label); font: 700 18px/22px var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.periodClock { color: var(--label-2); font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.periodWhen { flex: 1; color: var(--label-3); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.periodTable { box-shadow: inset 0 0 0 0.5px var(--hairline); }
+.rank { width: 88px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.errorLine { display: block; margin-top: 2px; font-size: 12.5px; }
+
+/* ───── 누적 순위 ───── */
+.leaderboard { display: grid; gap: 0; }
+
+/* ───── 문제 정보 편집 ───── */
+.scheduleRow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 16px; align-items: end; }
+.scheduleRow > [role="group"] { padding-bottom: 6px; }
+.connection { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 300px); gap: 16px 20px; padding: 16px; border-radius: var(--radius-lg); background: var(--surface-sunken); box-shadow: inset 0 0 0 0.5px var(--hairline); }
+.connectionFields { display: grid; gap: 12px; min-width: 0; }
+.connectionCheck { display: grid; align-content: start; gap: 10px; padding-top: 24px; }
+.connectionCheck > button { justify-self: start; }
+.checkList { display: grid; gap: 8px; }
+.checkRow { display: grid; grid-template-columns: 8px auto minmax(0, 1fr); align-items: baseline; gap: 8px; color: var(--red-text); font-size: 12.5px; line-height: 18px; }
+.checkRow strong { color: var(--label); font-weight: 600; }
+.checkRow[data-ok] { color: var(--green-text); }
+.checkDot { width: 8px; height: 8px; border-radius: 50%; background: var(--red); transform: translateY(-1px); }
+.checkRow[data-ok] .checkDot { background: var(--green); }
+.checkTime { color: var(--label-3); font-size: 12px; }
+.editor { display: grid; gap: 18px; }
+.editorFields { display: grid; gap: 16px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.editorTop { display: grid; grid-template-columns: minmax(0, 1fr) 120px auto; gap: 16px; align-items: start; }
+.descriptionHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.description { min-height: 200px; font-size: 14px; line-height: 22px; }
+.descriptionPreview { min-height: 200px; padding: 14px 16px; border-radius: var(--radius-md); background: var(--surface-sunken); color: var(--label); font-size: 14px; line-height: 22px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.editorFooter { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; padding-top: 16px; border-top: 1px solid var(--hairline); }
+.changed { flex: 1 1 200px; min-width: 0; margin: 0; color: var(--label-3); font-size: 13px; line-height: 18px; }
+.changed[data-tone="bad"] { color: var(--red-text); }
+.changed[data-tone="good"] { color: var(--green-text); font-weight: 600; }
+
+/* ───── 저장소 연결 ───── */
+.repository { display: grid; gap: 16px; }
+.linked { display: grid; gap: 14px; padding: 16px; border-radius: var(--radius-lg); background: var(--surface-sunken); box-shadow: inset 0 0 0 0.5px var(--hairline); }
+.linkedHead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }
+.linkedFacts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.linkedFacts dt { color: var(--label-3); font-size: 12px; font-weight: 600; }
+.linkedFacts dd { margin: 4px 0 0; color: var(--label); font-size: 13.5px; overflow-wrap: anywhere; }
+.linkedActions { display: flex; flex-wrap: wrap; gap: 8px; }
+.picker { display: grid; gap: 14px; }
+.folderList { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.folder { display: flex; align-items: flex-start; gap: 10px; height: 100%; padding: 12px 14px; border-radius: var(--radius-lg); background: var(--surface); box-shadow: inset 0 0 0 1px var(--separator); cursor: pointer; transition: box-shadow 0.15s ease; }
+.folder:has(input:checked) { box-shadow: inset 0 0 0 1.5px var(--accent), 0 1px 3px rgb(63 42 20 / 10%); }
+.folder[data-disabled] { opacity: 0.55; cursor: default; }
+.folder input { margin-top: 3px; accent-color: var(--accent); }
+.folderText { display: grid; flex: 1; gap: 2px; min-width: 0; }
+.folderText strong { font-size: 14px; font-weight: 600; }
+.folderText span { color: var(--label-3); font-size: 12px; line-height: 16px; overflow-wrap: anywhere; }
+.applyChoices { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+
+/* ───── 참가자 파일 ───── */
+.files { display: grid; gap: 16px; }
+.filesHead { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.filesLead { margin: 0; color: var(--label-2); font-size: 13px; line-height: 20px; }
+.filesLead strong { color: var(--label); font-weight: 600; }
+.filesEmpty { display: grid; justify-items: start; gap: 6px; padding: 18px; border-radius: var(--radius-lg); background: var(--surface-sunken); box-shadow: inset 0 0 0 0.5px var(--hairline); }
+.filesEmpty strong { font-size: 14px; font-weight: 600; }
+.filesEmpty p { margin: 0 0 4px; color: var(--label-2); font-size: 13px; line-height: 20px; }
+.bundle { display: grid; gap: 12px; padding: 14px 16px 10px; border-radius: var(--radius-lg); background: var(--surface-sunken); box-shadow: inset 0 0 0 0.5px var(--hairline); transition: opacity 0.15s ease; }
+.bundle[data-muted] { opacity: 0.6; }
+.bundleHead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; }
+.bundleTitle { display: grid; flex: 1 1 260px; gap: 2px; min-width: 0; }
+.bundleTitle strong { font-size: 13.5px; font-weight: 600; overflow-wrap: anywhere; }
+.bundleTitle span { color: var(--label-3); font-size: 12px; line-height: 16px; font-variant-numeric: tabular-nums; }
+.fileWarnings { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.fileWarnings li { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: baseline; gap: 2px 10px; padding: 10px 12px; border-radius: var(--radius-md); background: rgb(240 162 11 / 10%); box-shadow: inset 0 0 0 0.5px rgb(240 162 11 / 35%); font-size: 12.5px; line-height: 18px; }
+.fileWarnings strong { color: var(--orange-text); font-weight: 700; white-space: nowrap; }
+.fileWarnings span { color: var(--label-2); }
+.fileWarnings code { grid-column: 2; overflow: hidden; color: var(--label-3); font-family: var(--font-mono); font-size: 11.5px; text-overflow: ellipsis; white-space: nowrap; }
+/* 파일 목록: 이름, 개수, 크기가 줄마다 같은 세로선에 선다 폴더는 눌러서 펼친다 */
+.fileTree, .fileChildren { display: grid; margin: 0; padding: 0; list-style: none; }
+.fileTree > li + li { border-top: 1px solid var(--hairline); }
+.fileChildren { padding-left: 22px; border-top: 1px solid var(--hairline); }
+.fileChildren > li + li { border-top: 1px solid var(--hairline); }
+.fileRow { display: grid; grid-template-columns: minmax(0, 1fr) 52px 72px; align-items: center; gap: 12px; width: 100%; min-height: 34px; padding: 0 4px; border: 0; background: none; color: var(--label); font: 13px/18px var(--font); text-align: left; }
+.fileRow > .fileName { grid-column: 1; }
+.fileRow > .fileSize { grid-column: 3; }
+.folderRow { cursor: pointer; border-radius: var(--radius-sm); transition: background-color 0.12s ease; }
+.folderRow:hover { background: rgb(63 42 20 / 4%); }
+.folderRow:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.fileRow[data-warn] .fileName { color: var(--orange-text); }
+.fileName { display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; font-family: var(--font-mono); font-size: 12.5px; text-overflow: ellipsis; white-space: nowrap; }
+.folderRow .fileName { font-weight: 600; }
+.folderCaret { flex-shrink: 0; width: 0; height: 0; border-top: 4px solid transparent; border-bottom: 4px solid transparent; border-left: 5px solid var(--label-3); transition: transform 0.15s ease; }
+.folderRow[aria-expanded="true"] .folderCaret { transform: rotate(90deg); }
+.fileCount, .fileSize { color: var(--label-3); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fileCount { grid-column: 2; }
+.filesSave { display: grid; gap: 12px; padding-top: 4px; }
+.filesSave > p { margin: 0; color: var(--label-2); font-size: 13px; line-height: 20px; }
+.filesMeta { margin: 0; color: var(--label-3); font-size: 12px; line-height: 16px; }
+
+/* ───── 좁은 화면 ───── */
+@container admin-layout (max-width: 900px) {
+  .connection { grid-template-columns: minmax(0, 1fr); }
+  .connectionCheck { padding-top: 0; }
+  .scheduleRow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .scheduleRow > [role="group"] { grid-column: 1 / -1; padding-bottom: 0; }
+  .editorTop { grid-template-columns: minmax(0, 1fr) 120px; }
+  .editorTop > :last-child { grid-column: 1 / -1; }
+}
+@container admin-layout (max-width: 767px) {
+  .tabsBar > [role="tablist"] { width: 100%; }
+  .tabsBar > [role="tablist"] button { padding: 0 4px; }
+  /* 틱 결과와 누적 순위는 네 칸뿐이라 폰에서도 가로 스크롤 없이 화면 폭에 맞춘다 */
+  .periodTable :global(table), .leaderboard :global(table) { min-width: 0; }
+  .periodTable :global(table) :is(th, td), .leaderboard :global(table) :is(th, td) { padding-right: 8px; padding-left: 8px; }
+  .periodTable td:nth-child(2), .leaderboard td:nth-child(2) { white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
+  .rank { width: 64px; }
+  .points { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .linkedFacts { grid-template-columns: minmax(0, 1fr); }
+  /* KoTH 목록은 폰에서 가로 스크롤 없이 카드로 쌓는다 순번은 왼쪽 칸, 제목과 상태가 첫 줄 */
+  .listStack :global(table) { min-width: 0; }
+  .listStack thead { display: none; }
+  .listStack tbody { display: block; }
+  .listStack tr { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; grid-template-areas: "order title status" ". owner count" ". tick tick" ". end end"; align-items: center; gap: 6px 10px; padding: 14px var(--inset); border-top: 1px solid var(--hairline); }
+  .listStack tr:first-child { border-top: 0; }
+  .listStack :global(table) td { display: block; width: auto; min-width: 0; padding: 0; border: 0; text-align: left; white-space: normal; }
+  .listStack td:nth-child(1) { grid-area: order; align-self: start; }
+  .listStack td:nth-child(2) { grid-area: title; }
+  .listStack td:nth-child(3) { grid-area: status; justify-self: end; align-self: start; }
+  .listStack td:nth-child(4) { grid-area: owner; }
+  .listStack td:nth-child(5) { grid-area: count; justify-self: end; color: var(--label-2); font-size: 12.5px; }
+  .listStack td:nth-child(5)::before { content: "득점 팀 "; color: var(--label-3); }
+  .listStack td:nth-child(6) { grid-area: tick; }
+  .listStack td:nth-child(7) { grid-area: end; display: flex; justify-content: space-between; }
+  .listStack tr:only-child td { grid-column: 1 / -1; }
+  .fileRow { grid-template-columns: minmax(0, 1fr) 40px 64px; gap: 8px; }
+  .fileWarnings li { grid-template-columns: minmax(0, 1fr); }
+  .fileWarnings code { grid-column: 1; }
+}
+
+/* ───── 최신화: 탭 위 오른쪽 줄과 문제 정보의 참가자 파일 요약 ───── */
+.tabsAside { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 14px; }
+.sourceLine { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0; color: var(--label-3); font-size: 12.5px; line-height: 18px; }
+.sourceLine strong { color: var(--label-2); font-weight: 600; }
+.sourceNew { min-height: 24px; padding: 0 8px; border: 0; border-radius: 999px; background: var(--orange-tint, rgb(240 140 50 / 14%)); color: var(--orange-text); font: 600 12px/18px var(--font); cursor: pointer; }
+.sourceNew:hover { filter: brightness(0.97); }
+.fileSummary { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 10px 14px; border-radius: var(--radius-lg); background: var(--surface-sunken); box-shadow: inset 0 0 0 0.5px var(--hairline); }
+.fileSummaryLabel { color: var(--label-2); font-size: 13px; font-weight: 600; }
+.fileSummaryText { flex: 1 1 240px; min-width: 0; color: var(--label-3); font-size: 12.5px; line-height: 18px; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.fileSummaryText strong { margin-right: 6px; color: var(--label); font-weight: 600; }

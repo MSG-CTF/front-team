@@ -1,14 +1,50 @@
-.links { display: grid; }
-.links a { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 3px 18px; padding: 13px 0; border-bottom: 1px solid var(--admin-line-soft); text-decoration: none; color: var(--admin-heading); }
-.links a:first-child { padding-top: 0; }
-.links a:last-child { border: 0; }
-.links strong { font-family: 'Song Myung', serif; font-size: 18px; font-weight: 400; }
-.links span { color: var(--admin-subtle); font-size: 12px; }
-.links a:hover strong { text-decoration: underline; }
-.links a:focus-visible { outline: 2px solid var(--admin-accent); outline-offset: 3px; }
+/* 운영 대시보드: 노트북 한 화면에 대회 시간과 지표, 노드 현황, 실패·지연 인스턴스, 최근 기록, 빠른 작업이 다 들어간다
+   넓은 화면에서는 12칸 격자에 위젯을 얹는다 위젯은 안쪽에서 스크롤하지 않고 정해진 줄만 보인다 좁은 화면에서는 위에서 아래로 쌓는다 */
+.board { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+@container admin-layout (min-width: 1101px) {
+  .board {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: stretch;
+    gap: var(--gap);
+  }
+  .contestArea { grid-column: span 3; }
+  .metricsArea { grid-column: span 9; }
+  .nodesArea { grid-column: span 7; }
+  .attentionArea { grid-column: span 5; }
+  .eventsArea { grid-column: span 7; }
+  .actionsArea { grid-column: span 5; }
+}
+
+/* 실패·지연 인스턴스: 팀과 문제 한 줄, 원인과 경과 한 줄, 오른쪽에 조치 */
+.inset { padding: 0 var(--inset); }
+.inset:empty { display: none; }
+.allClear { display: flex; align-items: center; gap: 8px; margin: 0; padding: 2px var(--inset) var(--inset); color: var(--label-2); font-size: 13px; line-height: 18px; }
+.attention { margin: 0; padding: 0; list-style: none; }
+.attention li { position: relative; display: grid; grid-template-areas: "who action" "why action"; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px var(--inset); }
+.attention li + li::before { position: absolute; top: 0; right: var(--inset); left: var(--inset); height: 1px; background: var(--hairline); content: ""; }
+.attention li > :last-child { grid-area: action; }
+.who { display: flex; grid-area: who; align-items: baseline; gap: 8px; min-width: 0; }
+.who strong { flex-shrink: 0; max-width: 60%; overflow: hidden; color: var(--label); font-size: 14px; font-weight: 600; line-height: 19px; text-overflow: ellipsis; white-space: nowrap; }
+.who span { overflow: hidden; color: var(--label-3); font-size: 12px; line-height: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.why { display: flex; grid-area: why; align-items: center; gap: 8px; min-width: 0; color: var(--label-3); font-size: 12px; line-height: 16px; font-variant-numeric: tabular-nums; }
+
+/* 최근 운영 기록: 시각 · 유형 · 한 줄 요약 */
 .events { margin: 0; padding: 0; list-style: none; }
-.events li { display: grid; grid-template-columns: minmax(110px, .28fr) minmax(0, 1fr); align-items: start; gap: 6px 20px; padding: 12px 0; border-bottom: 1px solid var(--admin-line-soft); font-size: 13px; }
-.events li:last-child { border: 0; }
-.events time { color: var(--admin-subtle); font-size: 12px; }
-.events p { margin: 0; overflow-wrap: anywhere; }
-@container admin-layout (max-width: 540px) { .events li { grid-template-columns: minmax(0, 1fr); } }
+.events li { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: center; gap: 10px; min-height: 36px; padding: 6px 0; border-top: 1px solid var(--hairline); font-size: 13px; line-height: 18px; }
+.events li:first-child { border-top: 0; }
+.events time { color: var(--label-3); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.events p { margin: 0; overflow: hidden; color: var(--label); text-overflow: ellipsis; white-space: nowrap; }
+@container admin-layout (max-width: 540px) {
+  .events li { grid-template-columns: auto minmax(0, 1fr); }
+  .events li > span { justify-self: start; }
+  .events p { display: -webkit-box; grid-column: 1 / -1; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal; overflow-wrap: anywhere; }
+}
+
+/* 13인치 노트북(높이 820px 아래)에서는 기록을 세 줄만 두고 빠른 작업 아이콘을 줄여 노드 다섯 줄이 스크롤 없이 보인다 */
+@media (max-height: 820px) {
+  .events li { min-height: 32px; padding: 4px 0; }
+  .events li:nth-child(n + 4) { display: none; }
+  .actionsArea [data-action] > span:first-child { --size: 38px; }
+  .actionsArea [role="group"] { gap: 8px 4px; }
+}

@@ -3,6 +3,7 @@ import AdminPagination from "../components/AdminPagination.jsx";
 import { getAdminEvents } from "../../../api/admin.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
+import { IconButton } from "../components/AdminWidgets.jsx";
 import useAdminResource from "../hooks/useAdminResource.js";
 import {
   ADMIN_EVENT_TYPES,
@@ -35,46 +36,38 @@ function EventMessage({ message }) {
 // 이벤트 type 11종, severity 4종(INFO/WARNING/CRITICAL/MANUAL_REVIEW)은 백엔드 #81~#85 기준.
 export default function AdminLogsPage() {
   const [page, setPage] = useState(1);
-  const [type, setType] = useState("");
   const [appliedType, setAppliedType] = useState("");
   const events = useAdminResource(
     (config) => getAdminEvents({ type: appliedType || undefined, page, size: 50 }, config),
     [page, appliedType],
-    "이벤트 로그를 불러오지 못했습니다.",
+    "이벤트 로그를 불러오지 못했습니다",
   );
   const eventRows = events.data?.events ?? [];
 
   return (
     <AdminLayout
       title="이벤트 로그"
-      actions={<button type="button" onClick={events.retry} className={ui.button}>새로고침</button>}
+      actions={<>
+        <label className={ui.inlineLabel}>
+          <span>이벤트 유형</span>
+          <select value={appliedType} onChange={(event) => { setPage(1); setAppliedType(event.target.value); }} className={ui.select}>
+            <option value="">전체</option>
+            {ADMIN_EVENT_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
+            <optgroup label="백엔드 PR 대기 중">
+              {ADMIN_EVENT_TYPES_PENDING.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
+            </optgroup>
+          </select>
+        </label>
+        <IconButton icon="refresh" label="새로고침" onClick={events.retry} disabled={events.status === "loading"} />
+      </>}
     >
       <div className={ui.stack}>
 
-        <section className={ui.card} aria-labelledby="logs-events">
-          <header className={ui.cardHeader}>
-            <h2 id="logs-events" className={ui.cardTitle}><span className={ui.eyebrow}>EVENTS</span>이벤트 로그</h2>
-            <form onSubmit={(event) => { event.preventDefault(); setPage(1); setAppliedType(type); }} className={ui.cardActions}>
-              <label className={ui.inlineLabel}>
-                <span>이벤트 유형</span>
-                <select value={type} onChange={(event) => setType(event.target.value)} className={`${ui.select} ${ui.small}`}>
-                  <option value="">전체</option>
-                  {ADMIN_EVENT_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
-                  <optgroup label="백엔드 PR 대기 중">
-                    {ADMIN_EVENT_TYPES_PENDING.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
-                  </optgroup>
-                </select>
-              </label>
-              <button type="submit" className={`${ui.button} ${ui.small}`}>필터 적용</button>
-            </form>
-          </header>
           {(!events.data || ["error", "unavailable"].includes(events.status)) && (
-            <div className={ui.cardBody}>
-              <AdminStatusMessage status={events.status} error={events.error} onRetry={events.retry} />
-            </div>
+            <AdminStatusMessage status={events.status} error={events.error} onRetry={events.retry} />
           )}
           {events.data && (
-            <div className={`${ui.tableWrap} ${ui.tableFlush}`}>
+            <div className={`${ui.tableWrap} ${ui.logStack}`}>
               <table className={ui.table} aria-label="이벤트 로그">
                 <thead>
                   <tr>
@@ -109,11 +102,7 @@ export default function AdminLogsPage() {
               </table>
             </div>
           )}
-          <div className={ui.cardFooter}>
-            <span className={ui.cardMeta}>한 페이지에 50건씩 보입니다</span>
-            <AdminPagination page={page} totalCount={events.data?.total_count} onChange={setPage} disabled={events.status !== "success"}/>
-          </div>
-        </section>
+          <AdminPagination page={page} totalCount={events.data?.total_count} onChange={setPage} disabled={events.status !== "success"}/>
       </div>
     </AdminLayout>
   );

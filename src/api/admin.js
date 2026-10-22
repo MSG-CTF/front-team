@@ -46,6 +46,14 @@ export function getAdminChallengeSolves(challengeId, { startAt, endAt, hour, sor
   });
 }
 
+// [프론트 요청, 백엔드 PR 대기] 제출 기록: 백엔드 FlagSubmission 에 정답, 오답, 잠김 제출이 모두 저장된다
+// 원문 플래그는 저장하지 않으므로 해시 앞부분만 받는다
+export function getAdminChallengeSubmissions(challengeId, { result, teamId, page = 1, size = 20 } = {}, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/submissions`, {
+    ...config, params: { result, team_id: teamId, page, size },
+  });
+}
+
 export function updateAdminChallenge(challengeId, changes) {
   return apiClient.patch(`/admin/challenges/${encodeURIComponent(challengeId)}`, changes, MUTATION_CONFIG);
 }
@@ -341,6 +349,74 @@ export function updateAdminSignature(signatureId, { title, description, flag, sc
 export function publishAdminSignature(signatureId, isPublished) {
   return apiClient.patch(`/admin/signatures/${encodeURIComponent(signatureId)}/publish`, {
     is_published: isPublished,
+  }, MUTATION_CONFIG);
+}
+
+// ── KoTH ─────────────────────────────────────────────────────────────────
+// [프론트 요청, 백엔드 PR 대기] 관리자 KoTH API README 8절 KoTH 관리
+// 백엔드에는 KothChallenge · KothScorePeriod 모델과 참가자 API(GET /koth/clubs, /koth/leaderboard)만 있다
+// 관리자 화면은 아래 API가 없으면 참가자 API로 목록과 누적 순위만 보인다
+export function getAdminKothChallenges(config) {
+  return apiClient.get("/admin/koth/challenges", config);
+}
+
+export function getAdminKothChallenge(kothChallengeId, config) {
+  return apiClient.get(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}`, config);
+}
+
+export function getAdminKothPeriods(kothChallengeId, { page = 1, size = 48 } = {}, config) {
+  return apiClient.get(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/periods`, { ...config, params: { page, size } });
+}
+
+export function updateAdminKothChallenge(kothChallengeId, body) {
+  // body: { title?, description?, challenge_url?, open_group?, status?, reason }
+  return apiClient.patch(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}`, body, MUTATION_CONFIG);
+}
+
+// 접속 주소와 채점 주소가 실제로 응답하는지 서버가 대신 불러 본다 (저장하지 않고 확인만)
+export function testAdminKothConnection(kothChallengeId, { challengeUrl, scoreApiUrl, scoreApiTokenEnv }) {
+  return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/connection_test`, {
+    challenge_url: challengeUrl || null, score_api_url: scoreApiUrl || null, score_api_token_env: scoreApiTokenEnv || null,
+  }, MUTATION_CONFIG);
+}
+
+// 반영되지 못한 틱을 문제 서버에서 다시 불러와 반영한다 이미 반영된 틱은 그대로 둔다
+export function retryAdminKothPeriod(kothChallengeId, periodId) {
+  return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/periods/${encodeURIComponent(periodId)}/retry`, null, MUTATION_CONFIG);
+}
+
+// KoTH 참가자 파일: 저장소 prob/for_user 묶음을 주거나 주지 않는다
+export function getAdminKothFiles(kothChallengeId, config) {
+  return apiClient.get(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/files`, config);
+}
+
+// 참가자가 받는 zip 을 관리자가 먼저 받아 본다
+export function downloadAdminKothFiles(kothChallengeId, config) {
+  return apiClient.get(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/files/download`, {
+    ...config, responseType: "blob", timeout: 60000,
+  });
+}
+
+export function updateAdminKothFiles(kothChallengeId, { mode, reason }) {
+  return apiClient.put(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/files`, { mode, reason }, MUTATION_CONFIG);
+}
+
+export function getAdminKothRepository(config) {
+  return apiClient.get("/admin/koth/repository", config);
+}
+
+export function linkAdminKothRepository(kothChallengeId, { slug, apply = [], reason }) {
+  // apply: 저장소 info.yaml에서 가져올 칸 ["title", "description"]
+  return apiClient.put(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/repository`, { slug, apply, reason }, MUTATION_CONFIG);
+}
+
+// [프론트 요청, 백엔드 PR 대기] 계정 단위 배치 조정: 크레딧이 바닥날 계정에는 새 인스턴스를 놓지 않는다
+// 브로커는 계정 enabled 와 CREDIT_EXHAUSTED · BUDGET_EXCEEDED 판단을 이미 갖고 있다 (instance-scheduler)
+export function updateAdminResourceAccount(accountId, { schedulingEnabled, billing, reason }) {
+  return apiClient.patch(`/admin/resources/accounts/${encodeURIComponent(accountId)}`, {
+    ...(schedulingEnabled === undefined ? {} : { scheduling_enabled: schedulingEnabled }),
+    ...(billing === undefined ? {} : { billing }),
+    reason,
   }, MUTATION_CONFIG);
 }
 

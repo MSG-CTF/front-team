@@ -511,23 +511,35 @@ Bearer 인증 필요.
 | DELETE | `/admin/instances/{instance_id}` | 인스턴스 강제 종료 | **완료** |
 | GET | `/admin/challenges` | 문제 목록(문제별 인스턴스 현황) | **완료** |
 | PATCH | `/admin/challenges/{challenge_id}/visibility` | 문제 공개/비공개 전환 | PR 대기 |
+| GET | `/admin/challenges/{challenge_id}/submissions` | 문제별 제출 기록(오답, 잠김 포함) | 프론트 요청, PR 대기 |
 | POST | /admin/challenges/{challenge_id}/releases | 문제 릴리스 등록 | 백엔드 #101 연동 |
 | GET | /admin/challenges/{challenge_id}/releases | 릴리스와 비밀값 연결 조회 | 백엔드 #101 연동 |
 | POST | /admin/challenges/{challenge_id}/releases/{release_id}/activate | 현재 릴리스 전환 | 백엔드 #101 연동 |
 | GET | /admin/challenges/{challenge_id}/runtime-secrets | 비밀값 이름과 버전 조회 | 백엔드 #101 연동 |
 | POST | /admin/challenges/{challenge_id}/runtime-secrets | 비밀값 새 버전 저장 | 백엔드 #101 연동 |
 | GET | `/admin/resources` | 계정/노드별 리소스 상태 | PR #85 리뷰 중 |
+| PATCH | `/admin/resources/accounts/{account_id}` | 계정 요금 계획, 새 배치 받기 켜고 끄기 | 프론트 요청, PR 대기 |
 | GET | `/admin/events` | 최근 이벤트 로그 | **완료(main 머지)** |
 | GET | `/admin/payment/history` | 전체 결제 히스토리 | **완료** |
 | POST | `/admin/payment/checkout` | QR 스캔 결제 처리(부스) | **완료** |
 | DELETE | `/admin/payment/{history_id}/refund` | 결제 환불 | **완료** |
-| GET | `/admin/settings` | 대회 설정 조회 | 시작 전 |
-| PATCH | `/admin/settings` | 대회 설정 변경(부분 수정) | 시작 전 |
+| GET | `/admin/settings` | 대회 설정 조회 | **완료(main)** |
+| PATCH | `/admin/settings` | 대회 설정 변경(부분 수정, 대회 시작·종료 시각 포함) | **완료(main)** |
+| GET | `/admin/koth/challenges` | KoTH 문제 목록(관리자용, 구간 수집 상태와 저장소 연결 포함) | 프론트 요청, PR 대기 |
+| GET | `/admin/koth/challenges/{koth_challenge_id}` | KoTH 문제 상세와 누적 순위 | 프론트 요청, PR 대기 |
+| GET | `/admin/koth/challenges/{koth_challenge_id}/periods` | 15분 구간별 순위·문제 점수·환산 점수 | 프론트 요청, PR 대기 |
+| PATCH | `/admin/koth/challenges/{koth_challenge_id}` | KoTH 제목·지문·접속 주소·공개 순번·상태 수정 | 프론트 요청, PR 대기 |
+| GET | `/admin/koth/repository` | 문제 저장소 koth-* 폴더 목록 | 프론트 요청, PR 대기 |
+| PUT | `/admin/koth/challenges/{koth_challenge_id}/repository` | 저장소 폴더 연결과 info.yaml 반영 | 프론트 요청, PR 대기 |
+| POST | `/admin/koth/challenges/{koth_challenge_id}/connection_test` | 접속 주소와 채점 주소 연결 확인(저장 전 값) | 프론트 요청, PR 대기 |
+| POST | `/admin/koth/challenges/{koth_challenge_id}/periods/{period_id}/retry` | 실패하거나 반영 전인 틱 다시 불러오기 | 프론트 요청, PR 대기 |
+| GET, PUT | `/admin/koth/challenges/{koth_challenge_id}/files` | 참가자 파일(저장소 prob/for_user zip) 주기, 내리기 | 프론트 요청, PR 대기 |
+| GET | `/admin/koth/challenges/{koth_challenge_id}/files/download` | 참가자가 받는 KoTH zip 미리 받기 | 프론트 요청, PR 대기 |
 
 **계정 (2026-09-07 신규)**
 
 - `POST /admin/accounts` - Req `{ login_id, password(4자 이상), nickname, role("PARTICIPANT"|"ADMIN", 기본 PARTICIPANT), is_leader?, team_id? | team_name? }` -> `{ user_id, login_id, nickname, role, is_leader, team_id, team_name, team_created, registered_at, registered_by }`. 이 대회는 회원가입 페이지가 없고 아이디/비밀번호를 관리자가 미리 등록해 참가자에게 일괄 배포한다. `team_id`/`team_name` 중 하나만 보내고 `team_name`이 기존에 없으면 새 팀을 생성한다(둘 다 비우면 무소속). 추가 에러: `400 INVALID_REQUEST` / `409 LOGIN_ID_TAKEN`.
-- `GET /admin/mileage_history` - Query `team_id`(선택), `page`, `size` -> `{ history: [{history_id, team_id, team_name, type, amount, reason, created_at}], total_count, page, size }`. 팀 상세의 `recent_mileage_history`와 달리 팀 구분 없이 전체를 한 화면에서 본다("마일리지 관리" 사이드바 항목).
+- `GET /admin/mileage_history` - Query `team_id`(선택), `type`(선택, 쉼표로 여러 개, 예: `PURCHASE,REFUND`), `page`, `size` -> `{ history: [{history_id, team_id, team_name, type, amount, reason, created_at}], total_count, page, size }`. 팀 상세의 `recent_mileage_history`와 달리 팀 구분 없이 전체를 한 화면에서 본다("마일리지 관리" 사이드바 항목). `type`은 2026-10-23 프론트 요청: 문제 풀이 적립(`CHALLENGE_SOLVE`)이 대부분이라 화면은 기본으로 그 밖의 7종(운영 내역)을 먼저 보이고, 칩으로 결제·환불 / 관리자 조정 / 게임 보상 / 문제 풀이 / 전체를 고른다. 알 수 없는 값은 `400 INVALID_REQUEST`, 비우면 전체. 백엔드 반영 전에는 무시돼 전체가 내려올 수 있다.
 
 **대시보드**
 
@@ -567,6 +579,7 @@ Bearer 인증 필요.
 - `PATCH /admin/challenges/{challenge_id}/visibility` - Req `{ is_published: bool, reason }`(1~500자) -> `{ challenge_id, title, previous_is_published, is_published, affected_team_count, changed_at, changed_by }`. 비공개로 바꿔도 **이미 연 팀의 진행은 유지**(Notion 초안 가정). 보드 팀별 open(`opened_challenges`)과는 다른 층위. 추가 에러: `400 INVALID_REQUEST` / `404 CHALLENGE_NOT_FOUND`.
 - `POST /admin/challenges/{challenge_id}/releases` - 공급망 `artifact-v2.json`의 `artifact` 블록을 그대로 담고 `note`만 선택 추가. Req `{ artifact: {schema_version:"2.0", challenge_slug, revision, name, runtime_type, architecture, workload:{containers:[{name, image(digest 고정), ports:[{port, public}]}]}, resource_profile:{cpu_millicores, memory_mib, ephemeral_storage_mib}, source_ref, scan_result}, note? }` -> `{ release_id, challenge_id, version, registry_revision, challenge_slug, architecture, containers: [{name, image_ref, ports}], is_current, is_deployable, note, created_at }`. `version`은 문제별 1부터 서버 자동 증가. `is_deployable`: 컨테이너 1개 + public 포트 1개면 true(멀티 컨테이너는 등록, 이력만, Scheduler 계약 확장 전까지 활성화 불가). 검증: `schema_version` `2.0`만, `scan_result` `PASS`만, image는 `ghcr.io/msg-ctf/challenges/<slug>/<name>@sha256:<64hex>` digest 고정만(태그, latest 거절), `challenge_slug` 문제 slug와 일치. `docker_image` API는 이 릴리스 체계로 대체됨. 추가 에러: `400 RELEASE_INVALID` / `404 CHALLENGE_NOT_FOUND` / `409 RELEASE_DUPLICATED`(같은 `registry_revision`).
 - `GET /admin/challenges/{challenge_id}/releases` (Query 없음) -> `{ challenge_id, current_release_id: string|null, releases: [{ release_id, version, registry_revision, architecture, containers, is_current, is_deployable, note, created_at }](버전 내림차순), total_count }`. `current_release_id: null`이면 릴리스 없음 -> 인스턴스 생성 시 `RUNTIME_CONFIG_NOT_FOUND`. 추가 에러: `404 CHALLENGE_NOT_FOUND`.
+- 버전 출처 (2026-10-23 프론트 요청): 배포 설정 화면은 버전마다 GitHub 원본, 플랫폼 수정, 수동 등록, 이전 기록을 구분하고 GitHub에 가장 최근 올린 버전과 등록 시각을 보인다. 지금은 `derived_from_release_id`(플랫폼에서 만든 버전), `source_ref: "backfill"`과 `registry_revision: 0`(이전 기록), `note`의 `공급망 자동 등록`·`GitHub 발행본 가져오기` 문구로 가른다. 문구에 기대지 않도록 릴리스 응답에 `origin`(`GITHUB` | `PLATFORM` | `MANUAL` | `BACKFILL`)과 `created_by`를 더해 달라고 요청한다. `GET /admin/challenges`의 `deployment`에는 아직 적용하지 않은 가장 새 버전 `latest_release: { release_id, version, note, registry_revision, derived_from_release_id, created_at } | null`을 더해 문제 목록에서 새 버전이 있는지 바로 보이게 한다.
 - `POST /admin/challenges/{challenge_id}/releases/{release_id}/activate` (Body 없음) -> `{ challenge_id, release_id, version, registry_revision, previous_release_id: string|null, activated_at }`. 옛 릴리스를 지정하면 그대로 롤백. 전환 이후 생성 인스턴스부터 새 릴리스 적용(실행 중 인스턴스, `reset`은 기존 유지, 재생성 필요). 이미 현재 버전이면 멱등(200, `previous_release_id: null`). 추가 에러: `400 RELEASE_NOT_DEPLOYABLE` / `404 CHALLENGE_NOT_FOUND` / `404 RELEASE_NOT_FOUND`.
 
 **리소스 / 로그**
@@ -582,10 +595,16 @@ Bearer 인증 필요.
 
 **설정**
 
-- `GET /admin/settings` -> `{ contest: {status, started_at, ends_at}, board: {dice_rolls_per_reset, dice_reset_interval_minutes, solve_deadline_minutes}, flag: {max_attempts, lock_seconds}, updated_at, updated_by }`. 대회 시각 원본은 타이머 도메인(`timer.Contest`), 이 API는 읽기용. `board`/`flag` 값은 흩어져 있던 상수를 설정으로 끌어올린 것 - 각 도메인 담당자가 자기 상수를 등록해야 완성. `AdminSetting` 키-값 테이블 신설 필요.
+- `GET /admin/settings` -> `{ contest: {status, started_at, ends_at}, board: {dice_rolls_per_reset, dice_reset_interval_minutes, solve_deadline_minutes}, flag: {max_attempts, lock_seconds}, updated_at, updated_by }`. 대회 시각 원본은 타이머 도메인(`timer.Contest`). PATCH 의 `contest: {started_at, ends_at}`(UTC 오프셋 포함 ISO)로 시각을 바꾼다(백엔드 main 구현 완료, 프론트 "대회 설정 > 대회 시각"에서 사용). 시작한 대회의 시작 시각을 바꾸면 `409 CONTEST_ALREADY_STARTED`, 활성 대회가 없으면 `400 INVALID_REQUEST`. `board`/`flag` 값은 흩어져 있던 상수를 설정으로 끌어올린 것 - 각 도메인 담당자가 자기 상수를 등록해야 완성. `AdminSetting` 키-값 테이블 신설 필요.
+- 시작한 대회의 시작 시각 변경 (2026-10-23 프론트 요청): `PATCH /admin/settings`의 `contest`에 `force: true`를 함께 보내면 이미 시작한 대회의 시작 시각도 바꾼다(예 `{ contest: { started_at, force: true } }`). 시작 지연이나 공지 후 일정 조정용이며 참가자 타이머와 대시보드 진행률만 새 시각을 따른다. 주사위 충전과 문제 제한 시간은 팀별 시각을 쓰므로 바뀌지 않는다. 반영 전 백엔드는 `409 CONTEST_ALREADY_STARTED`를 그대로 주고, 화면은 종료 시각은 따로 바꿀 수 있다고 안내한다.
 - `PATCH /admin/settings` - Req는 보낸 키만 부분 수정(예 `{ board: {dice_rolls_per_reset: 4}, flag: {lock_seconds: 60} }`). 범위: `dice_rolls_per_reset` 1~20 / `dice_reset_interval_minutes` 1~1440 / `solve_deadline_minutes` 1~180 / `max_attempts` 1~10 / `lock_seconds` 1~3600 / `contest.ends_at > started_at`. -> `GET`과 동일한 전체 설정 객체 반환. 추가 에러: `400 INVALID_REQUEST` / `409 CONTEST_ALREADY_STARTED`(시작된 대회의 시작 시각 변경 시도).
 
 **신규 에러 코드**: `RELEASE_INVALID` / `RELEASE_DUPLICATED` / `RELEASE_NOT_FOUND` / `RELEASE_NOT_DEPLOYABLE` / `SNAPSHOT_NOT_FOUND` / `ALREADY_ROLLED_BACK` / `INSUFFICIENT_DICE` / `CONTEST_ALREADY_STARTED` - 공통 에러 코드 표(0-11절)에는 아직 없으니 연동 시 추가.
+
+- 제출 기록 (2026-10-23 프론트 요청): `GET /admin/challenges/{challenge_id}/submissions` - Query `result`(`CORRECT` | `INCORRECT` | `ALREADY_SOLVED` | `TOO_MANY_ATTEMPTS`, 선택), `team_id`(선택), `page`, `size`(상한 100) -> `{ challenge_id, summary: { total, incorrect, locked, teams, correct }, submissions: [{ submission_id, created_at, team_id, team_name, user: {user_id, nickname} | null, result, flag_hash, repeat_count }], total_count, page, size }`. 백엔드 `FlagSubmission`이 이미 모든 시도를 해시로만 남기므로 원문 플래그는 주지 않는다. `flag_hash`는 앞 12자리, `repeat_count`는 같은 문제에서 같은 오답 해시가 나온 횟수. 화면은 풀이 기록 옆 "제출 기록" 탭에서 오답을 기본으로 20개씩 보인다.
+- 노드 용량과 계정 요금 (2026-10-23 프론트 요청): `accounts[].nodes[].capacity`, `instance_type`, `accounts[].billing`, `scheduling_enabled`와 `PATCH /admin/resources/accounts/{account_id}`는 [`docs/admin-node-allocation.md`](docs/admin-node-allocation.md).
+- 대회 시작 전 접속 막기 (프론트 동작): 참가자가 대회 시작 전에 `/board`, `/challenges`, `/signatures`, `/koth`, `/leaderboard`로 들어오면 `GET /timer` 기준 대기 화면과 카운트다운을 보이고 시작 시각이 되면 저절로 연다. 게임 규칙, 마이페이지, 대회 타이머는 그대로 열리고 관리자는 막지 않는다. 화면만 막는 것이라 백엔드 API에도 시작 전 차단이 필요하다.
+- KoTH 관리 (2026-10-23 프론트 요청): 관리자 KoTH API와 화면 동작은 [`docs/admin-koth.md`](docs/admin-koth.md). 백엔드에는 참가자 API와 Django 관리자만 있어, 관리자 API가 없으면 화면은 `GET /koth/clubs`, `GET /koth/leaderboard`로 목록과 누적 순위만 보인다.
 
 **제품 요구사항 <-> 엔드포인트 매핑**: 팀별 목록 -> `/admin/teams`, 팀 상세 -> `/admin/teams/{id}`, 문제 목록(인스턴스 현황) -> `/admin/challenges`, 운영 대시보드 -> `/admin/dashboard`, 로그 -> `/admin/events`, 설정 -> `/admin/settings`, clear 칸 관리 -> `.../board/cells/{i}`, 문제 공개상태 -> `.../visibility`, 전체 인스턴스 목록/집계/필터/실패표시 -> `/admin/instances`, 강제 재시작, 종료 -> `/admin/instances/{id}/reset`, `DELETE`, 리소스 -> `/admin/resources`, 마일리지 관리 -> `.../mileage`, 주사위 오류/임의 지급 -> `.../board/dice`, 칸 위치 이동 -> `.../board/position`, 벤 -> `.../ban`, 롤백 -> `.../snapshots`+`.../rollback`, Docker 이미지 -> `.../releases`(체계 교체).
 

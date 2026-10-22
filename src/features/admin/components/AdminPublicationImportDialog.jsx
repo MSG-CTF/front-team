@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createAdminIdempotencyKey, getAdminChallenge, getPublishedChallenges, importPublishedChallenge, previewPublishedChallenge } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
-import { toKst } from "../../../utils/time.js";
+import { formatAdminTime } from "../utils/adminTime.js";
 import { latestPublications, mergePublications, publicationAttempt, publicationFileLabel } from "../utils/adminPublications.js";
 import AdminDialog from "./AdminDialog.jsx";
 import { AdminBadge } from "./AdminLayout.jsx";
@@ -135,11 +135,11 @@ export default function AdminPublicationImportDialog({ onClose, onImported, onOp
       </div>
       <div className={styles.tableWrap}>
         <table className={`${styles.table} ${styles.publicationTable}`} aria-label="GitHub 발행본">
-          <thead><tr><th>문제</th><th>발행일 (KST)</th><th>발행 내용</th><th><span className="sr-only">선택</span></th></tr></thead>
+          <thead><tr><th>문제</th><th>발행일 (KST)</th><th>발행 내용</th><th><span className={styles.srOnly}>선택</span></th></tr></thead>
           <tbody>{filtered.map((row) => <tr key={`${row.challenge_slug}:${row.run_id}`}>
             <td><span className={styles.title}>{row.title || row.challenge_slug}</span>
               <span className={styles.secondary}>{row.title ? `${row.challenge_slug} · ` : ""}{row.challenge_id ? "등록된 문제" : "새 문제"}</span></td>
-            <td>{toKst(row.published_at, { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}</td>
+            <td className={styles.time}>{formatAdminTime(row.published_at, { seconds: false })}</td>
             <td>{row.has_release_artifact ? "실행 이미지" : "파일 정보"}{row.has_release_artifact && row.has_files_artifact ? " · 파일 정보" : ""}
               {row.workflow_state === "failed" && <span className={styles.secondary}>발행 실패</span>}
               {row.workflow_state === "running" && <span className={styles.secondary}>발행 진행 중</span>}</td>

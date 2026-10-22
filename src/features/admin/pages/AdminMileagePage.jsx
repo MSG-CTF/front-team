@@ -1,167 +1,77 @@
-import { lazy, Suspense, useRef, useState } from "react";
+import { lazy, Suspense, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   adjustMileage,
-  createAdminIdempotencyKey,
+  getAdminDashboard,
   getAdminMileageHistory,
 } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import { formatAdminTime } from "../utils/adminTime.js";
-import AdminLayout, { AdminStatusMessage } from "../components/AdminLayout.jsx";
+import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
 import useAdminResource from "../hooks/useAdminResource.js";
 import useAdminTeamOptions from "../hooks/useAdminTeamOptions.js";
 import AdminPagination from "../components/AdminPagination.jsx";
+import AdminTeamPicker from "../components/AdminTeamPicker.jsx";
+import AdminMileageAdjustForm from "../components/AdminMileageAdjustForm.jsx";
+import { StatStrip, StatTile, IconButton } from "../components/AdminWidgets.jsx";
+import { formatAdminNumber } from "../utils/adminNumber.js";
 import {
+  MILEAGE_FILTERS,
+  MILEAGE_TYPE_TONES,
   formatMileageAmount,
   getMileageTypeLabel,
-  mileageAttempt,
-  validateMileageAdjustment,
+  mileageFilterQuery,
 } from "../utils/adminMileage.js";
 import paymentStyles from "../components/AdminPayments.module.css";
+import pickerStyles from "../components/AdminPicker.module.css";
 import ui from "../components/AdminWorkspace.module.css";
+import columns from "./AdminMileagePage.module.css";
 
 const AdminPaymentsPanel = lazy(
   () => import("../components/AdminPaymentsPanel.jsx"),
 );
 
-// 마일리지 관리 - Figma 사이드바 항목("마일리지 관리", node 384:417). 전용 화면
-// 시안은 없어서, 팀별 목록/팀 상세와 같은 카드와 표 규격으로 구성했다.
-// GET /admin/mileage_history(README 8절, 백엔드: PR 대기)로 팀 구분 없이 전체
-// 내역을 보여주고, 지급/회수는 기존 adjustMileage(팀 상세와 동일 엔드포인트)를 쓴다.
-function GrantForm({ onDone, teams, disabled }) {
-  const [teamId, setTeamId] = useState("");
-  const [amount, setAmount] = useState("");
-  const [reason, setReason] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
-  // 같은 지급/회수 시도를 재시도할 때 동일 키를 재사용해야 서버가 중복 지급을
-  // 막아준다. 성공하면 비우고, 다음 제출에서 새로 발급한다.
-  const attempt = useRef(null);
-  const pending = useRef(false);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const parsed = Number(amount);
-    if (pending.current || disabled) return;
-    const validation = validateMileageAdjustment({ teamId, amount, reason });
-    if (validation) {
-      setError(validation);
-      return;
-    }
-    pending.current = true;
-    setIsSubmitting(true);
-    setError("");
-    attempt.current = mileageAttempt(
-      attempt.current,
-      { teamId, amount, reason },
-      () => createAdminIdempotencyKey("admin-mileage"),
-    );
-    try {
-      const res = await adjustMileage(teamId, {
-        amount: parsed,
-        reason: reason.trim(),
-        idempotencyKey: attempt.current.key,
-      });
-      if (!isSuccess(res.data))
-        throw new Error(res.data?.message || "처리에 실패했습니다.");
-      attempt.current = null;
-      setAmount("");
-      setReason("");
-      const refreshed = await onDone();
-      if (!refreshed)
-        setError(
-          "마일리지 조정은 처리됐지만 내역을 불러오지 못했습니다 새로고침해서 확인하세요",
-        );
-    } catch (err) {
-      setError(
-        err.response?.data?.message ||
-          "처리 결과를 확인하지 못했습니다 같은 내용으로 다시 요청하면 중복 지급 없이 결과를 확인합니다",
-      );
-    } finally {
-      pending.current = false;
-      setIsSubmitting(false);
-    }
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className={ui.grantForm}>
-      <label className={ui.field}>
-        <span className={ui.fieldLabel}>팀</span>
-        <select
-          disabled={isSubmitting || disabled}
-          value={teamId}
-          onChange={(event) => setTeamId(event.target.value)}
-          className={ui.select}
-        >
-          <option value="">선택</option>
-          {teams.map((team) => (
-            <option key={team.team_id} value={team.team_id}>
-              {team.team_name}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label className={ui.field}>
-        <span className={ui.fieldLabel}>변동량</span>
-        <input
-          type="number"
-          step={1}
-          required
-          disabled={isSubmitting || disabled}
-          value={amount}
-          onChange={(event) => setAmount(event.target.value)}
-          placeholder="+지급 / -회수"
-          className={ui.input}
-        />
-      </label>
-      <label className={ui.field}>
-        <span className={ui.fieldLabel}>사유</span>
-        <input
-          required
-          maxLength={500}
-          disabled={isSubmitting || disabled}
-          value={reason}
-          onChange={(event) => setReason(event.target.value)}
-          placeholder="참가자에게 보이는 지급 이유"
-          className={ui.input}
-        />
-      </label>
-      <button
-        type="submit"
-        disabled={
-          isSubmitting ||
-          disabled ||
-          Boolean(validateMileageAdjustment({ teamId, amount, reason }))
-        }
-        className={ui.primary}
-      >
-        지급/회수
-      </button>
-      {error && (
-        <p role="alert" className={`${ui.errorText} ${ui.grantError}`}>
-          {error}
-        </p>
-      )}
-    </form>
-  );
+// 마일리지 · 결제: 지급과 회수, 전체 내역, 부스 QR 결제를 한 화면에서 다룬다
+// 넓은 화면에서는 왼쪽에 지급 · 회수 폼을 붙여 두고 오른쪽 내역만 길게 내려간다
+// GET /admin/mileage_history(README 8절)로 팀 구분 없이 전체 내역을 보고, 지급/회수는 팀 상세와 같은 adjustMileage를 쓴다
+function GrantForm({ onDone, teams, teamsLoading, teamsCapped, disabled }) {
+  return <AdminMileageAdjustForm teams={teams} teamsLoading={teamsLoading} teamsCapped={teamsCapped} disabled={disabled}
+    submit={async ({ teamId, amount, reason, idempotencyKey }) => {
+      const res = await adjustMileage(teamId, { amount, reason, idempotencyKey });
+      if (!isSuccess(res.data)) throw new Error(res.data?.message || "처리에 실패했습니다");
+      await onDone();
+      return true;
+    }} />;
 }
 
 export default function AdminMileagePage() {
-  const [tab, setTab] = useState("mileage");
-  const [paymentOpened, setPaymentOpened] = useState(false);
+  // 부스 스태프는 폰 즐겨찾기(?tab=payment)로 결제 탭을 바로 연다
+  const [params, setParams] = useSearchParams();
+  const initialTab = params.get("tab") === "payment" ? "payment" : "mileage";
+  const [tab, setTab] = useState(initialTab);
+  const [paymentOpened, setPaymentOpened] = useState(initialTab === "payment");
+  const selectTab = (next) => {
+    setTab(next);
+    if (next === "payment") setPaymentOpened(true);
+    setParams(next === "payment" ? { tab: "payment" } : {}, { replace: true });
+  };
   const [page, setPage] = useState(1);
   const [teamId, setTeamId] = useState("");
+  const [filter, setFilter] = useState(MILEAGE_FILTERS[0].key);
   const teamOptions = useAdminTeamOptions();
   const teams = teamOptions.data?.teams ?? [];
   const history = useAdminResource(
     (config) =>
       getAdminMileageHistory(
-        { teamId: teamId || undefined, page, size: 50 },
+        { teamId: teamId || undefined, type: mileageFilterQuery(filter), page, size: 50 },
         config,
       ),
-    [teamId, page],
-    "마일리지 내역을 불러오지 못했습니다.",
+    [teamId, filter, page],
+    "마일리지 내역을 불러오지 못했습니다",
   );
   const rows = history.data?.history ?? [];
+  const summary = useAdminResource(getAdminDashboard, [], "집계를 불러오지 못했습니다");
+  const count = (value) => (value == null ? "-" : formatAdminNumber(value));
 
   return (
     <AdminLayout
@@ -171,17 +81,14 @@ export default function AdminMileagePage() {
         <button
           type="button"
           aria-pressed={tab === "mileage"}
-          onClick={() => setTab("mileage")}
+          onClick={() => selectTab("mileage")}
         >
           지급 / 회수
         </button>
         <button
           type="button"
           aria-pressed={tab === "payment"}
-          onClick={() => {
-            setTab("payment");
-            setPaymentOpened(true);
-          }}
+          onClick={() => selectTab("payment")}
         >
           QR 결제 / 환불
         </button>
@@ -197,6 +104,8 @@ export default function AdminMileagePage() {
           <Suspense fallback={<p role="status" className={ui.statusLoading}>결제 화면을 불러오는 중</p>}>
             <AdminPaymentsPanel
               teams={teams}
+              teamsLoading={teamOptions.status === "loading"}
+              teamsCapped={teamOptions.data?.capped}
               onChanged={history.reload}
               active={tab === "payment"}
             />
@@ -205,15 +114,23 @@ export default function AdminMileagePage() {
       </div>
       <div hidden={tab !== "mileage"}>
         <div className={ui.stack}>
-        <section className={ui.card} aria-labelledby="mileage-grant">
+        <StatStrip label="마일리지 집계">
+          <StatTile glyph="mileage" tone="yellow" label="팀 보유 합계" value={count(summary.data?.teams?.total_mileage)} unit="MI" />
+          <StatTile glyph="payment" tone="orange" label="부스 결제" value={count(summary.data?.payment?.purchase_count)} unit="건" />
+          <StatTile glyph="rollback" tone="green" label="환불" value={count(summary.data?.payment?.refund_count)} unit="건" />
+          <StatTile glyph="rank" tone="indigo" label="순지출" value={count(summary.data?.payment?.net_spent)} unit="MI" />
+        </StatStrip>
+        <div className={columns.columns}>
+        <section className={`${ui.card} ${columns.grant}`} aria-labelledby="mileage-grant">
           <header className={ui.cardHeader}>
-            <h2 id="mileage-grant" className={ui.cardTitle}><span className={ui.eyebrow}>GRANT</span>마일리지 지급 · 회수</h2>
-            <span className={ui.cardMeta}>같은 내용으로 다시 보내도 한 번만 처리됩니다</span>
+            <h2 id="mileage-grant" className={ui.cardTitle}>마일리지 지급 · 회수</h2>
           </header>
           <div className={ui.cardBody}>
             <GrantForm
-              onDone={history.reload}
+              onDone={() => Promise.all([history.reload(), teamOptions.reload(), summary.reload()])}
               teams={teams}
+              teamsLoading={teamOptions.status === "loading"}
+              teamsCapped={teamOptions.data?.capped}
               disabled={teamOptions.status !== "success"}
             />
           </div>
@@ -221,36 +138,21 @@ export default function AdminMileagePage() {
 
         <section className={ui.card} aria-labelledby="mileage-history">
           <header className={ui.cardHeader}>
-            <h2 id="mileage-history" className={ui.cardTitle}><span className={ui.eyebrow}>HISTORY</span>마일리지 내역</h2>
+            <h2 id="mileage-history" className={ui.cardTitle}>마일리지 내역</h2>
             <div className={ui.cardActions}>
-              <label className={ui.inlineLabel}>
-                <span>팀</span>
-                <select
-                  value={teamId}
-                  onChange={(event) => {
-                    setTeamId(event.target.value);
-                    setPage(1);
-                  }}
-                  className={`${ui.select} ${ui.small}`}
-                >
-                  <option value="">전체</option>
-                  {teams.map((team) => (
-                    <option key={team.team_id} value={team.team_id}>
-                      {team.team_name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                type="button"
-                onClick={history.retry}
-                disabled={history.status === "loading"}
-                className={`${ui.button} ${ui.small}`}
-              >
-                새로고침
-              </button>
+              <div className={ui.historyTeam}>
+                <AdminTeamPicker teams={teams} value={teamId} onChange={(next) => { setTeamId(next); setPage(1); }}
+                  label="내역을 볼 팀" allowAll allLabel="모든 팀" compact loading={teamOptions.status === "loading"} capped={teamOptions.data?.capped} />
+              </div>
+              <IconButton icon="refresh" label="새로고침" onClick={history.retry} disabled={history.status === "loading"} />
             </div>
           </header>
+          <div className={ui.filterChips}>
+            <div className={pickerStyles.chips} role="group" aria-label="내역 종류">
+              {MILEAGE_FILTERS.map((item) => <button key={item.key} type="button" className={pickerStyles.chip}
+                aria-pressed={filter === item.key} onClick={() => { setFilter(item.key); setPage(1); }}>{item.label}</button>)}
+            </div>
+          </div>
           {(!history.data || ["error", "unavailable"].includes(history.status)) && (
             <div className={ui.cardBody}>
               <AdminStatusMessage
@@ -277,7 +179,7 @@ export default function AdminMileagePage() {
                     <tr key={entry.history_id}>
                       <td className={ui.time}>{formatAdminTime(entry.created_at)}</td>
                       <td><span className={ui.title}>{entry.team_name}</span></td>
-                      <td className={ui.muted} title={entry.type}>{getMileageTypeLabel(entry.type)}</td>
+                      <td title={entry.type}><AdminBadge tone={MILEAGE_TYPE_TONES[entry.type] ?? "neutral"}>{getMileageTypeLabel(entry.type)}</AdminBadge></td>
                       <td className={`${ui.num} ${entry.amount > 0 ? ui.amountPlus : ui.amountMinus}`}>
                         {formatMileageAmount(entry.amount)}
                       </td>
@@ -287,7 +189,7 @@ export default function AdminMileagePage() {
                   {rows.length === 0 && (
                     <tr className={ui.emptyRow}>
                       <td colSpan={5} className={ui.empty}>
-                        내역 없음
+                        이 조건의 내역이 없습니다
                       </td>
                     </tr>
                   )}
@@ -305,6 +207,7 @@ export default function AdminMileagePage() {
             />
           </div>
         </section>
+        </div>
         </div>
       </div>
     </AdminLayout>

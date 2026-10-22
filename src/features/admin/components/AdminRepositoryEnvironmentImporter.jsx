@@ -73,11 +73,11 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
     } finally { submitting.current = false; }
   }
 
-  return <section className="space-y-4" aria-label="저장소 환경변수 가져오기">
+  return <section className={styles.importerStack} aria-label="저장소 환경변수 가져오기">
     <p className={styles.panelIntro}>문제의 .env에 저장된 값을 불러옵니다 비밀값은 화면에서만 가려집니다</p>
-    <div className="flex flex-wrap items-end gap-3">
-      <label>컨테이너
-        <select className={styles.select + " ml-3"} aria-label="저장소 적용 컨테이너" value={container} disabled={unavailable}
+    <div className={styles.rowActions}>
+      <label className={styles.inlineField}>컨테이너
+        <select className={styles.select} aria-label="저장소 적용 컨테이너" value={container} disabled={unavailable}
           onChange={(event) => { clear(); setContainer(event.target.value); }}>
           {release.containers.map((item) => <option key={item.name} value={item.name}>{item.name}</option>)}
         </select>
@@ -85,23 +85,23 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
       <button type="button" className={styles.button} disabled={unavailable} onClick={load}>{source ? "저장소 다시 불러오기" : "저장소에서 불러오기"}</button>
     </div>
     {working && <p role="status">저장소 설정을 확인하고 있습니다</p>}
-    {error && <p role="alert" className="text-admin-failed">{error}</p>}
+    {error && <p role="alert" className={styles.errorText}>{error}</p>}
     {source && <>
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className={styles.splitRow}>
         <p>{rows.filter((row) => row.selected).length} / {rows.length}개 선택</p>
         {source.source_url ? <a href={source.source_url} target="_blank" rel="noreferrer" className={styles.secondary}>확인한 소스 · {source.source_revision.slice(0, 8)}</a>
           : <span className={styles.secondary}>로컬 원본 · {source.source_revision.slice(0, 8)}</span>}
       </div>
       <details className={styles.details}><summary>불러온 원본 파일 {sourceFiles.length}개</summary>
-        <ul className="mt-2 space-y-1">{sourceFiles.map((path) => <li key={path} className={styles.mono}>{path}</li>)}</ul>
+        <ul className={styles.detailsList}>{sourceFiles.map((path) => <li key={path} className={styles.mono}>{path}</li>)}</ul>
       </details>
       {source.warnings.length > 0 && <details className={styles.details}><summary>직접 확인할 내용 {source.warnings.length}개</summary>
-        <ul className="mt-2 space-y-1">{source.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
+        <ul className={styles.detailsList}>{source.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul>
       </details>}
       {rows.length === 0 ? <p className={styles.empty}>{sourceFiles.includes(`env/${container}.env`) ? "이 컨테이너의 .env에는 지정된 환경변수가 없습니다" : "이 컨테이너에서 사용하는 환경변수 선언을 찾지 못했습니다"}</p> : <>
         <datalist id="repository-secret-names">{[...new Set(secrets.map((secret) => secret.name))].map((name) => <option key={name} value={name}/>)}</datalist>
         <div className={styles.tableWrap}>
-          <table className={styles.table + " min-w-[700px]"} aria-label="저장소 환경변수">
+          <table className={`${styles.table} ${styles.repositoryTable}`} aria-label="저장소 환경변수">
             <thead><tr>{["가져오기", "이름", "종류", "값 또는 연결", "필수"].map((label) => <th key={label}>{label}</th>)}</tr></thead>
             <tbody>{rows.map((row) => <tr key={row.name}>
               <td><input type="checkbox" aria-label={`${row.name} 가져오기`} checked={row.selected} disabled={unavailable} onChange={(event) => change(row.name, { selected: event.target.checked })}/></td>
@@ -114,12 +114,12 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
                 onChange={(event) => change(row.name, { kind: event.target.value, mode: "repository", override: undefined })}>
                 <option value="env">일반 설정</option><option value="secret">비밀값</option>
               </select></td>
-              <td className="min-w-[230px]">
+              <td className={styles.valueCell}>
                 {row.kind === "env" ? <input aria-label={`${row.name} 값`} className={styles.input} value={row.override ?? row.value ?? ""}
                   placeholder={row.has_value ? "설정 확인 후 표시" : "값 입력"} disabled={unavailable}
                   onChange={(event) => change(row.name, { override: event.target.value, mode: "manual" })}/>
-                  : <div className="grid min-w-0 gap-2">
-                    <select aria-label={`${row.name} 값 선택`} className={styles.select + " w-full"} value={row.mode} disabled={unavailable}
+                  : <div className={styles.cellStack}>
+                    <select aria-label={`${row.name} 값 선택`} className={styles.select} value={row.mode} disabled={unavailable}
                       onChange={(event) => change(row.name, { mode: event.target.value, override: event.target.value === "manual" ? "" : undefined })}>
                       <option value="existing">저장된 비밀값 사용</option>
                       <option value="repository" disabled={!row.has_value}>출제자 원본값 사용</option>
@@ -137,9 +137,9 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
             </tr>)}</tbody>
           </table>
         </div>
-        {review?.errors.length > 0 && <ul role="alert" className="space-y-1 text-admin-failed">{review.errors.map((message) => <li key={message}>{message}</li>)}</ul>}
+        {review?.errors.length > 0 && <ul role="alert" className={styles.errorList}>{review.errors.map((message) => <li key={message}>{message}</li>)}</ul>}
         {review?.can_import && <p role="status" className={styles.notice}>선택한 {review.entries.length}개 항목을 확인했습니다 나머지 설정은 유지됩니다</p>}
-        <div className="flex flex-wrap gap-2">
+        <div className={styles.rowActions}>
           <button type="button" className={styles.button} disabled={unavailable} onClick={check}>설정 확인</button>
           <button type="button" className={styles.primary} disabled={unavailable || !review?.can_import} onClick={save}>새 설정 버전 저장</button>
         </div>

@@ -8,6 +8,8 @@ import {
   validateTeamReason,
 } from "../utils/adminTeamManagement.js";
 import AdminDialog from "./AdminDialog.jsx";
+import { AdminReasonField } from "./AdminFormParts.jsx";
+import { REASON_PRESETS } from "../utils/adminReasons.js";
 import ui from "./AdminWorkspace.module.css";
 
 export function AdminTeamEditDialog({ team, onClose, onSaved }) {
@@ -61,7 +63,7 @@ export function AdminTeamEditDialog({ team, onClose, onSaved }) {
                     ? [...current, member.user_id] : current.filter((id) => id !== member.user_id));
                   if (event.target.checked && leaderUserId === member.user_id) setLeaderUserId("");
                 }} />
-                <span>{member.nickname} <span className={ui.muted}>({member.login_id || member.user_id})</span>{member.is_leader ? " · 현재 팀장" : ""}</span>
+                <span>{member.nickname} <span className={ui.muted}>({member.login_id || member.user_id})</span>{member.is_leader ? " · 현재 팀장" : ""}{member.role === "ADMIN" ? " · 관리자" : ""}</span>
               </label>
             ))}
           </div>
@@ -69,7 +71,7 @@ export function AdminTeamEditDialog({ team, onClose, onSaved }) {
         <label className={ui.field}>
           <span className={ui.fieldLabel}>무소속 참가자 추가 <small>user_id</small></span>
           <textarea className={ui.textarea} rows={2} value={addUserIds} disabled={busy} onChange={(event) => setAddUserIds(event.target.value)} placeholder="UUID를 쉼표 또는 줄바꿈으로 구분" />
-          <span className={ui.fieldHint}>참가자 목록 조회 API가 없어 user_id를 직접 입력합니다. 다른 팀 소속 계정은 기존 팀에서 먼저 제외해야 합니다.</span>
+          <span className={ui.fieldHint}>참가자 목록 조회 API가 없어 user_id를 직접 입력합니다 다른 팀 소속 계정은 기존 팀에서 먼저 제외해야 합니다</span>
         </label>
         <label className={ui.field}>
           <span className={ui.fieldLabel}>변경 후 팀장</span>
@@ -79,11 +81,8 @@ export function AdminTeamEditDialog({ team, onClose, onSaved }) {
             {additions.map((id) => <option key={id} value={id}>추가 계정 {id}</option>)}
           </select>
         </label>
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>변경 사유 <small>필수, 1~500자</small></span>
-          <textarea className={ui.textarea} rows={2} maxLength={500} value={reason} disabled={busy} onChange={(event) => setReason(event.target.value)} />
-          <span className={ui.fieldHint}>소속 또는 팀장 정보가 변경된 팀원은 다시 로그인해야 변경사항이 반영됩니다.</span>
-        </label>
+        <AdminReasonField label="변경 사유" note="필수, 1~500자" value={reason} onChange={setReason} presets={REASON_PRESETS.teamEdit}
+          multiline disabled={busy} hint="소속 또는 팀장 정보가 변경된 팀원은 다시 로그인해야 변경사항이 반영됩니다" />
         {error && <p role="alert" className={ui.callout} data-tone="bad">{error}</p>}
         <div className={ui.formActions}>
           <button type="button" onClick={onClose} disabled={busy} className={ui.button}>취소</button>
@@ -106,7 +105,7 @@ export function AdminTeamDeleteDialog({ team, onClose, onDeleted }) {
     if (pending.current) return;
     const reasonError = validateTeamReason(reason);
     if (reasonError) { setError(reasonError); return; }
-    if (confirmation !== team.team_name) { setError("팀 이름을 정확히 입력하세요."); return; }
+    if (confirmation !== team.team_name) { setError("팀 이름을 정확히 입력하세요"); return; }
     pending.current = true;
     setBusy(true);
     setError("");
@@ -126,13 +125,10 @@ export function AdminTeamDeleteDialog({ team, onClose, onDeleted }) {
     <AdminDialog title="팀 영구 삭제" onClose={onClose} busy={busy}>
       <form onSubmit={submit} className={ui.formStack}>
         <div className={ui.callout} data-tone="bad">
-          <strong>이 작업은 되돌릴 수 없습니다.</strong> 소속 계정, 팀 풀이 기록, 마일리지, 결제 기록, 보드 기록이 함께 삭제됩니다.
+          <strong>이 작업은 되돌릴 수 없습니다</strong> 소속 계정, 팀 풀이 기록, 마일리지, 결제 기록, 보드 기록이 함께 삭제됩니다
         </div>
         <p className={ui.dialogLead}>삭제 대상 <strong>{team.team_name}</strong> · 팀원 {team.member_count ?? team.members?.length ?? 0}명</p>
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>삭제 사유 <small>필수, 1~500자</small></span>
-          <textarea className={ui.textarea} rows={2} maxLength={500} value={reason} disabled={busy} onChange={(event) => setReason(event.target.value)} />
-        </label>
+        <AdminReasonField label="삭제 사유" note="필수, 1~500자" value={reason} onChange={setReason} presets={REASON_PRESETS.teamDelete} multiline disabled={busy} />
         <label className={ui.field}>
           <span className={ui.fieldLabel}>확인을 위해 팀 이름 <strong>{team.team_name}</strong>을 입력하세요</span>
           <input className={ui.input} value={confirmation} disabled={busy} autoComplete="off" onChange={(event) => setConfirmation(event.target.value)} />

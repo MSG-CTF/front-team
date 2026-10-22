@@ -1,0 +1,29 @@
+/* 클라우드 표시: 공식 로고는 바탕 없이 정사각 칸 안에 비율을 지켜 담고, 로고 파일이 없는 곳은 앱 아이콘 같은 머리글자 타일 */
+.mark {
+  --mark: 20px;
+  --mark-bg: #8d8a86;
+  --mark-fg: #fff;
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: var(--mark);
+  height: var(--mark);
+  overflow: hidden;
+}
+.mark > svg { display: block; width: 100%; height: 100%; }
+.mark[data-kind="logo"][data-provider="AWS"] > svg { width: 104%; }
+.mark[data-kind="tile"] {
+  border-radius: calc(var(--mark) * 0.27);
+  background: var(--mark-bg);
+  box-shadow: inset 0 0 0 0.5px rgb(0 0 0 / 12%);
+  color: var(--mark-fg);
+  font: 800 calc(var(--mark) * 0.42) / 1 var(--font);
+  letter-spacing: -0.03em;
+}
+.mark[data-kind="tile"] > svg { width: 52%; height: 52%; }
+.mark > span[data-length="3"] { font-size: calc(var(--mark) * 0.34); }
+.mark > span[data-length="1"] { font-size: calc(var(--mark) * 0.56); }
+.mark[data-provider="NCP"] { --mark-bg: #03c75a; }
+.mark[data-provider="KT"] { --mark-bg: #e60012; }
+.mark[data-provider="NHN"] { --mark-bg: #2b5be0; }
+.mark[data-provider="ONPREM"] { --mark-bg: #5f5c58; }

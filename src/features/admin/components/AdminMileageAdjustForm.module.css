@@ -1,0 +1,26 @@
+/* 마일리지 지급 · 회수 폼: 칸마다 18px 간격으로 한 줄씩 내려가고, 맨 아래 요약과 실행 단추가 가는 선 아래에 선다 */
+.form { display: grid; gap: 18px; min-width: 0; }
+
+.amountHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 34px; }
+
+/* 금액 칸: 큰 숫자 앞에 부호, 뒤에 단위 회수를 고르면 부호가 빨개진다 */
+.amountBox { display: flex; align-items: center; gap: 8px; min-width: 0; height: 52px; padding: 0 14px; border-radius: var(--radius-md); background: var(--surface); box-shadow: inset 0 0 0 1px var(--border); transition: box-shadow 0.15s ease; }
+.amountBox:hover:not([data-disabled]) { box-shadow: inset 0 0 0 1px var(--border-strong); }
+.amountBox:focus-within { box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 0 3px var(--focus-ring); }
+.amountBox[data-disabled] { background: var(--surface-sunken); opacity: 0.6; }
+.sign { width: 14px; color: var(--green-text); font: 600 22px/1 var(--font); text-align: center; }
+.amountBox[data-mode="deduct"] .sign { color: var(--red-text); }
+.amountBox input { flex: 1 1 auto; width: 0; min-width: 0; height: 100%; padding: 0; border: 0; background: transparent; color: var(--label); font: 700 24px/1 var(--font); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; outline: none; }
+.amountBox input::placeholder { color: var(--label-4); }
+.unit { color: var(--label-3); font: 600 14px/1 var(--font); }
+
+.balance { margin: 0; color: var(--label-3); font-size: 12.5px; line-height: 18px; font-variant-numeric: tabular-nums; }
+.balance strong { color: var(--label); font-weight: 600; }
+.balance[data-short] { color: var(--red-text); }
+.balance[data-short] strong { color: var(--red-text); }
+
+.footer { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px; padding-top: 16px; border-top: 1px solid var(--hairline); }
+.summary { flex: 1 1 200px; min-width: 0; margin: 0; color: var(--label-2); font-size: 13px; line-height: 18px; overflow-wrap: anywhere; }
+.summary:empty { visibility: hidden; }
+.summary[data-tone="bad"] { color: var(--red-text); }
+.summary[data-tone="good"] { color: var(--green-text); font-weight: 600; }

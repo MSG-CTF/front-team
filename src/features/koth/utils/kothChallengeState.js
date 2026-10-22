@@ -23,6 +23,12 @@ export function flattenKothChallenges(clubs = []) {
     || normalizeIdentifier(left.koth_challenge_id).localeCompare(normalizeIdentifier(right.koth_challenge_id)));
 }
 
+// 참가자 파일: 저장소 prob/for_user 를 묶은 zip 하나 없으면 null
+export function kothFile(file) {
+  if (!file || typeof file.file_name !== "string" || !file.file_name.trim()) return null;
+  return { name: file.file_name, sizeBytes: Number.isFinite(file.size_bytes) && file.size_bytes > 0 ? file.size_bytes : null };
+}
+
 export function getKothConnection(challenge) {
   if (challenge?.status !== "ACTIVE" || typeof challenge.challengeUrl !== "string") return null;
   try {
@@ -44,7 +50,8 @@ export function applyKothClubDetail(selected, detail) {
   if (!selected || !validateKothClubDetail(detail, selected.clubId, selected.kothChallengeId)) return null;
   const challenge = detail.challenges.find((entry) => entry.koth_challenge_id === selected.kothChallengeId);
   return { ...selected, clubName: detail.name, title: challenge.title,
-    status: challenge.status, challengeUrl: challenge.challenge_url,
+    status: challenge.status, challengeUrl: challenge.challenge_url, description: challenge.description ?? selected.description ?? null,
+    file: challenge.file === undefined ? selected.file ?? null : kothFile(challenge.file),
     currentOwnerTeamName: challenge.current_owner_team_name,
     currentScore: challenge.current_score, openedAt: challenge.opened_at, closedAt: challenge.closed_at };
 }
@@ -65,7 +72,7 @@ export function createKothChallengeViewModels(visuals, clubs = [], teamChallenge
       ...visuals[index],
       clubId: challenge.club_id, clubName: challenge.club_name,
       kothChallengeId: challenge.koth_challenge_id, title: challenge.title,
-      challengeUrl: challenge.challenge_url ?? null,
+      challengeUrl: challenge.challenge_url ?? null, description: challenge.description ?? null, file: kothFile(challenge.file),
       status: challenge.status, openGroup: challenge.open_group,
       currentOwnerTeamName: challenge.current_owner_team_name,
       currentScore: challenge.current_score, openedAt: challenge.opened_at, closedAt: challenge.closed_at,

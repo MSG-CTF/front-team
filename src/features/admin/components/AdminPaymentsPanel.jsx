@@ -1,23 +1,29 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   checkoutPayment,
   getPaymentHistory,
   refundPayment,
 } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
-import { toKst } from "../../../utils/time.js";
+import { formatAdminTime } from "../utils/adminTime.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import {
   canRefund,
   paymentErrorMessage,
+  recentPaymentItems,
   validateCheckout,
 } from "../utils/adminMileage.js";
+import { amountDigits, formatAdminNumber, formatAmountDigits } from "../utils/adminNumber.js";
+import { PAYMENT_STEPS } from "../utils/adminReasons.js";
 import AdminDialog from "./AdminDialog.jsx";
 import AdminPagination from "./AdminPagination.jsx";
 import { AdminStatusMessage } from "./AdminLayout.jsx";
 import AdminQrScanner from "./AdminQrScannerLoader.jsx";
+import AdminTeamPicker from "./AdminTeamPicker.jsx";
 import PaymentIcon from "./PaymentIcon.jsx";
 import styles from "./AdminPayments.module.css";
+import pickerStyles from "./AdminPicker.module.css";
+import ui from "./AdminWorkspace.module.css";
 
 const EMPTY = { paymentToken: "", amount: "", itemName: "" };
 const number = (value) =>
@@ -26,7 +32,9 @@ const number = (value) =>
     : "미제공";
 
 export default function AdminPaymentsPanel({
-  teams,
+  teams = [],
+  teamsLoading = false,
+  teamsCapped = false,
   onChanged,
   active = true,
 }) {
@@ -70,6 +78,9 @@ export default function AdminPaymentsPanel({
     [teamId, page],
     "결제 내역을 불러오지 못했습니다",
   );
+  // 부스에서 자주 파는 품목은 최근 결제에서 뽑아 한 번에 품목과 금액을 채운다
+  const recentItems = useMemo(() => recentPaymentItems(history.data?.history), [history.data]);
+  const addAmount = (step) => setForm((current) => ({ ...current, amount: amountDigits(String(Number(current.amount || 0) + step)) }));
 
   async function runPayment() {
     if (pending.current || !confirmation) return;
@@ -275,28 +286,57 @@ export default function AdminPaymentsPanel({
             </div>
             <div>
               <h3 className={styles.detailsHeading}>결제 정보</h3>
+              {recentItems.length > 0 && (
+                <div className={styles.recentItems}>
+                  <span className={styles.recentLabel}>최근 품목</span>
+                  <div className={pickerStyles.chips} role="group" aria-label="최근 품목으로 채우기">
+                    {recentItems.map((item) => (
+                      <button
+                        key={item.itemName}
+                        type="button"
+                        className={pickerStyles.chip}
+                        aria-pressed={form.itemName.trim() === item.itemName && form.amount === String(item.amount)}
+                        onClick={() => setForm((current) => ({ ...current, itemName: item.itemName, amount: String(item.amount) }))}
+                      >
+                        {item.itemName}
+                        <span className={styles.recentPrice}>{formatAdminNumber(item.amount)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
               <label className={styles.amountField}>
                 결제 금액
                 <span className={styles.amountInput}>
                   <input
                     aria-label="결제 금액 (MI)"
                     ref={amountInput}
-                    data-long={form.amount.length > 8}
-                    type="number"
+                    data-long={form.amount.length > 7}
+                    type="text"
                     inputMode="numeric"
-                    min={1}
-                    max={2147483647}
-                    step={1}
+                    autoComplete="off"
                     required
                     placeholder="0"
-                    value={form.amount}
+                    value={formatAmountDigits(form.amount)}
                     onChange={(event) =>
-                      setForm({ ...form, amount: event.target.value })
+                      setForm({ ...form, amount: amountDigits(event.target.value) })
                     }
                   />
                   <span>MI</span>
                 </span>
               </label>
+              <div className={`${pickerStyles.chips} ${styles.amountSteps}`} role="group" aria-label="금액 더하기">
+                {PAYMENT_STEPS.map((step) => (
+                  <button key={step} type="button" className={pickerStyles.chip} data-tone="plus" onClick={() => addAmount(step)}>
+                    +{formatAdminNumber(step)}
+                  </button>
+                ))}
+                {form.amount && (
+                  <button type="button" className={pickerStyles.chip} onClick={() => setForm((current) => ({ ...current, amount: "" }))}>
+                    지우기
+                  </button>
+                )}
+              </div>
               <label className={styles.field}>
                 품목
                 <input
@@ -343,24 +383,23 @@ export default function AdminPaymentsPanel({
             )}
           </div>
           <div className={styles.historyTools}>
-            <label>
-              <span className={styles.srOnly}>팀 필터</span>
-              <select
+            {/* 팀이 수백 개여도 이름이나 초성으로 찾는다 비우거나 전체 팀을 고르면 거르지 않는다 */}
+            <div className={ui.historyTeam}>
+              <AdminTeamPicker
+                teams={teams}
                 value={teamId}
-                disabled={busy}
-                onChange={(event) => {
-                  setTeamId(event.target.value);
+                onChange={(nextId) => {
+                  setTeamId(nextId);
                   setPage(1);
                 }}
-              >
-                <option value="">전체 팀</option>
-                {teams.map((team) => (
-                  <option key={team.team_id} value={team.team_id}>
-                    {team.team_name}
-                  </option>
-                ))}
-              </select>
-            </label>
+                label="결제 내역을 볼 팀"
+                allowAll
+                allLabel="전체 팀"
+                disabled={busy}
+                loading={teamsLoading}
+                capped={teamsCapped}
+              />
+            </div>
             <button
               type="button"
               className={styles.iconButton}
@@ -412,7 +451,7 @@ export default function AdminPaymentsPanel({
                     {number(entry.amount)} <small>MI</small>
                   </td>
                   <td className={styles.entryMeta}>
-                    <span>{toKst(entry.created_at)}</span>
+                    <span>{formatAdminTime(entry.created_at)}</span>
                     <span>{entry.processed_by || "처리자 미제공"}</span>
                   </td>
                   <td className={styles.entryActions}>
@@ -573,7 +612,7 @@ export default function AdminPaymentsPanel({
             <dt>처리자</dt>
             <dd>{detail.processed_by || "미제공"}</dd>
             <dt>시각 (KST)</dt>
-            <dd>{toKst(detail.created_at)}</dd>
+            <dd>{formatAdminTime(detail.created_at)}</dd>
             <dt>내역 ID</dt>
             <dd>{detail.history_id}</dd>
           </dl>

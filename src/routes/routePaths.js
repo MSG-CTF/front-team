@@ -24,4 +24,7 @@ export const ROUTES = {
   adminLogs: "/admin/logs",
   adminResources: "/admin/resources",
   adminAccounts: "/admin/accounts",
+  adminKoth: "/admin/koth",
+  adminKothDetail: (kothChallengeId) => `/admin/koth/${encodeURIComponent(kothChallengeId)}`,
+  adminKothPreview: (kothChallengeId) => `/admin/koth/${encodeURIComponent(kothChallengeId)}/preview`,
 };

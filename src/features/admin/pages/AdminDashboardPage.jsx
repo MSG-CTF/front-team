@@ -1,175 +1,135 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { StatusSymbol } from "../components/AdminGlyph.jsx";
 import { Link } from "react-router-dom";
 import {
   adjustMileage,
-  createAdminIdempotencyKey,
-  forceResetInstance,
   forceStopInstance,
   getAdminDashboard,
   getAdminEvents,
+  getAdminInstances,
   getTeamSnapshots,
   rollbackTeam,
 } from "../../../api/admin.js";
+import { getLeaderboard } from "../../../api/leaderboard.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
 import Modal from "../components/AdminDialog.jsx";
-import AdminResourceSummary from "../components/AdminResourceSummary.jsx";
+import AdminNodeBoard from "../components/AdminNodeBoard.jsx";
+import { ActionGrid, ActionTile, ContestWidget, IconButton, StatStrip, StatTile, Widget } from "../components/AdminWidgets.jsx";
+import AdminTeamPicker from "../components/AdminTeamPicker.jsx";
+import { AdminReasonField } from "../components/AdminFormParts.jsx";
+import { REASON_PRESETS } from "../utils/adminReasons.js";
 import useAdminNodeResources from "../hooks/useAdminNodeResources.js";
 import intro from "./AdminDashboardPage.module.css";
 import useAdminTeamOptions from "../hooks/useAdminTeamOptions.js";
 import { getAdminRequestError } from "../utils/adminValidation.js";
 import { getAdminEventSeverity, getAdminEventTypeLabel } from "../utils/adminBoard.js";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { mileageAttempt, validateMileageAdjustment } from "../utils/adminMileage.js";
+import { ATTENTION_QUERIES, canForceStop, describeAttention, summarizeAttention } from "../utils/adminAttention.js";
+import { RECENT_LIMIT, latestFirst } from "../utils/adminLists.js";
+import { formatAdminNumber } from "../utils/adminNumber.js";
+import AdminMileageAdjustForm from "../components/AdminMileageAdjustForm.jsx";
 import ui from "../components/AdminWorkspace.module.css";
 
-// 운영 대시보드 - Figma node 384:396 "AdminDashboard_OpsOverview_v2".
-// 첫 화면은 운영 요약만 표시하고 전체 노드 배치는 전용 화면에서 조회한다
-// 시안의 "빠른 작업" 4개 버튼(강제 재시작/강제 종료/마일리지 지급/롤백 실행)은
-// 시안엔 입력 폼이 없어(대상 인스턴스/팀을 어떻게 고르는지 디자인이 없음) 각
-// 버튼을 누르면 뜨는 작은 모달로 구현했다. 실제 admin.js 함수를 그대로 호출한다.
+// 운영 대시보드: 당일 운영자가 노트북에서 보는 첫 화면
+// 대회 시간과 지표 6칸, 노드 현황, 실패·지연 인스턴스, 최근 기록, 빠른 작업이 노트북 한 화면에 들어간다
+// 위젯은 안쪽에서 스크롤하지 않고 정해진 줄 수만 보인다 나머지는 "모두 보기"로 넘긴다
+// 재시작과 종료는 인스턴스 ID를 적는 모달 대신 실패·지연 인스턴스 줄과 인스턴스 목록에서 바로 누른다
+// 마일리지 지급과 롤백은 대상을 고르는 작은 모달로 남긴다
 
+const count = (value) => (value == null ? "-" : formatAdminNumber(value));
 
-function StatCard({ value, label, tone }) {
-  return (
-    <div className={ui.stat} data-tone={tone}>
-      <span className={ui.statValue}>{value}</span>
-      <span className={ui.statLabel}>{label}</span>
-    </div>
-  );
+// 실패했거나 준비 단계에 5분 넘게 머문 인스턴스를 팀·문제·원인·경과로 늘어놓고 줄 안에서 바로 종료한다
+const ATTENTION_ROWS = 4;
+
+// 전체 목록 첫 쪽만 읽으면 실패가 뒤로 밀려 덜 센다 상태마다 따로 묻고 건수는 total_count로 맞춘다
+async function loadAttentionInstances(config) {
+  const responses = await Promise.all(ATTENTION_QUERIES.map(({ status, size }) => getAdminInstances({ status, size }, config)));
+  const pages = responses.map((response, index) => {
+    if (!isSuccess(response.data)) throw new Error(response.data?.message || "인스턴스 현황을 불러오지 못했습니다");
+    return { status: ATTENTION_QUERIES[index].status, instances: response.data.data?.instances, total_count: response.data.data?.total_count };
+  });
+  return { data: { code: "SUCCESS", data: { pages } } };
 }
 
-export function QuickActionButton({ variant, label, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={ui.quickAction}
-      data-action={variant}
-    >
-      {label}
-    </button>
-  );
-}
+function AttentionInstances({ instances, onChanged, className = "" }) {
+  const [busyId, setBusyId] = useState(null);
+  const [confirm, setConfirm] = useState(null);
+  const [notice, setNotice] = useState("");
+  const summary = useMemo(() => summarizeAttention(instances.data?.pages), [instances.data]);
+  const rows = summary.rows.slice(0, ATTENTION_ROWS);
+  const hidden = summary.count - rows.length;
+  const now = Date.now();
 
-function InstanceActionModal({ label, onClose, onSubmit }) {
-  const [instanceId, setInstanceId] = useState("");
-  const pending = useRef(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (pending.current || !instanceId.trim()) return;
-    pending.current = true;
-    setIsSubmitting(true);
-    setError("");
+  async function stop(instance) {
+    setBusyId(instance.instance_id);
+    setNotice("");
     try {
-      await onSubmit(instanceId.trim());
-      onClose();
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || "처리에 실패했습니다.");
+      const response = await forceStopInstance(instance.instance_id);
+      if (!isSuccess(response.data)) throw new Error(response.data?.message || "종료 요청이 처리되지 않았습니다");
+      setConfirm(null);
+      await onChanged();
+    } catch (error) {
+      setNotice(getAdminRequestError(error, "종료 요청이 처리되지 않았습니다").error);
     } finally {
-      pending.current = false;
-      setIsSubmitting(false);
+      setBusyId(null);
     }
-  };
+  }
 
-  return (
-    <Modal title={label} onClose={onClose} busy={isSubmitting}>
-      <form onSubmit={handleSubmit} className={ui.formStack}>
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>대상 인스턴스 ID</span>
-          <input
-            autoFocus
-            disabled={isSubmitting}
-            value={instanceId}
-            onChange={(event) => setInstanceId(event.target.value)}
-            placeholder="문제 · 인스턴스 화면에서 복사"
-            className={`${ui.input} ${ui.mono}`}
-          />
-        </label>
-        {error && <p role="alert" className={ui.errorText}>{error}</p>}
-        <div className={ui.formActions}>
-          <button type="button" onClick={onClose} disabled={isSubmitting} className={ui.button}>취소</button>
-          <button type="submit" disabled={isSubmitting || !instanceId.trim()} className={ui.dangerSolid}>실행</button>
-        </div>
-      </form>
-    </Modal>
-  );
+  return <Widget id="dashboard-attention" title="실패·지연 인스턴스" className={className} flush
+    count={instances.data ? summary.count : undefined} meta={summary.partial ? "일부만 집계" : undefined}
+    more={{ to: `${ROUTES.adminChallenges}?tab=instances`, label: hidden > 0 ? `${hidden}건 더 보기` : "모두 보기" }}>
+    <div className={intro.inset}><AdminStatusMessage status={instances.status} error={instances.error} onRetry={instances.retry} hasData={Boolean(instances.data)} /></div>
+    {notice && <p role="alert" className={`${ui.callout} ${ui.calloutInset}`} data-tone="bad">{notice}</p>}
+    {instances.data && rows.length === 0 && (summary.partial
+      ? <p className={intro.allClear}>목록이 길어 일부만 확인했습니다 인스턴스 목록에서 확인해주세요</p>
+      : <p className={intro.allClear}><StatusSymbol tone="good" />실패하거나 멈춘 인스턴스가 없습니다</p>)}
+    {rows.length > 0 && <ul className={intro.attention} aria-label="실패·지연 인스턴스">{rows.map((instance) => {
+      const why = describeAttention(instance, now);
+      const busy = busyId === instance.instance_id;
+      return <li key={instance.instance_id}>
+        <span className={intro.who}><strong>{instance.team_name || "-"}</strong><span>{instance.challenge_title || "-"}</span></span>
+        <span className={intro.why}><AdminBadge tone={why.kind === "failed" ? "bad" : "warn"}>{why.label}</AdminBadge><span>{why.age}</span></span>
+        {canForceStop(instance)
+          ? <button type="button" className={`${ui.button} ${ui.small} ${ui.danger}`} disabled={busy || Boolean(busyId)} onClick={() => setConfirm(instance)}>종료</button>
+          : <Link to={`${ROUTES.adminChallenges}?tab=instances&status=FAILED`} className={`${ui.button} ${ui.small}`}>보기</Link>}
+      </li>;
+    })}</ul>}
+    {confirm && <Modal title="인스턴스 강제 종료" onClose={() => setConfirm(null)} busy={Boolean(busyId)}>
+      <p className={ui.dialogLead}><strong>{confirm.team_name}</strong> · {confirm.challenge_title}</p>
+      <p className={ui.callout} data-tone="bad">참가자의 현재 접속이 끊기고 인스턴스가 정리됩니다</p>
+      <div className={ui.formActions}>
+        <button type="button" onClick={() => setConfirm(null)} disabled={Boolean(busyId)} className={ui.button}>취소</button>
+        <button type="button" onClick={() => stop(confirm)} disabled={Boolean(busyId)} className={ui.dangerSolid}>종료 실행</button>
+      </div>
+    </Modal>}
+  </Widget>;
 }
 
 function MileageGrantModal({ onClose, onDone }) {
   const teamOptions = useAdminTeamOptions();
-  const teams = teamOptions.data?.teams ?? [];
-  const [teamId, setTeamId] = useState("");
-  const [amount, setAmount] = useState("");
-  const [reason, setReason] = useState("");
-  const pending = useRef(false);
-  const attempt = useRef(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const parsed = Number(amount);
-    if (pending.current || teamOptions.status !== "success") return;
-    const validation = validateMileageAdjustment({ teamId, amount, reason });
-    if (validation) { setError(validation); return; }
-    pending.current = true;
-    setIsSubmitting(true);
-    setError("");
-    try {
-      attempt.current = mileageAttempt(attempt.current, { teamId, amount, reason }, () => createAdminIdempotencyKey("admin-mileage"));
-      const res = await adjustMileage(teamId, { amount: parsed, reason: reason.trim(), idempotencyKey: attempt.current.key });
-      if (!isSuccess(res.data)) throw new Error(res.data?.message || "마일리지 지급에 실패했습니다.");
-      attempt.current = null;
-      onDone();
-      onClose();
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || "마일리지 지급에 실패했습니다.");
-    } finally {
-      pending.current = false;
-      setIsSubmitting(false);
-    }
-  };
-
+  const [submitting, setSubmitting] = useState(false);
   return (
-    <Modal title="마일리지 지급" onClose={onClose} busy={isSubmitting}>
+    <Modal title="마일리지 지급 · 회수" onClose={onClose} busy={submitting}>
       <AdminStatusMessage status={teamOptions.status} error={teamOptions.error} onRetry={teamOptions.retry}/>
-      <form onSubmit={handleSubmit} className={ui.formStack}>
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>대상 팀</span>
-          <select disabled={isSubmitting} value={teamId} onChange={(event) => setTeamId(event.target.value)} className={ui.select}>
-            <option value="">선택</option>
-            {teams.map((team) => (
-              <option key={team.team_id} value={team.team_id}>{team.team_name}</option>
-            ))}
-          </select>
-        </label>
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>변동량 <small>+지급 / -회수</small></span>
-          <input type="number" required step={1} disabled={isSubmitting} value={amount} onChange={(event) => setAmount(event.target.value)} className={ui.input} />
-        </label>
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>사유</span>
-          <input required maxLength={500} disabled={isSubmitting} value={reason} onChange={(event) => setReason(event.target.value)} className={ui.input} />
-        </label>
-        {error && <p role="alert" className={ui.errorText}>{error}</p>}
-        <div className={ui.formActions}>
-          <button type="button" onClick={onClose} disabled={isSubmitting} className={ui.button}>취소</button>
-          <button
-            type="submit"
-            disabled={isSubmitting || teamOptions.status !== "success" || Boolean(validateMileageAdjustment({ teamId, amount, reason }))}
-            className={ui.primary}
-          >
-            지급
-          </button>
-        </div>
-      </form>
+      <AdminMileageAdjustForm teams={teamOptions.data?.teams ?? []} teamsLoading={teamOptions.status === "loading"} teamsCapped={teamOptions.data?.capped}
+        disabled={teamOptions.status !== "success"}
+        actions={<button type="button" onClick={onClose} disabled={submitting} className={ui.button}>취소</button>}
+        submit={async ({ teamId, amount, reason, idempotencyKey }) => {
+          setSubmitting(true);
+          try {
+            const res = await adjustMileage(teamId, { amount, reason, idempotencyKey });
+            if (!isSuccess(res.data)) throw new Error(res.data?.message || "마일리지 조정에 실패했습니다");
+            onDone();
+            onClose();
+            return true;
+          } finally {
+            setSubmitting(false);
+          }
+        }} />
     </Modal>
   );
 }
@@ -199,13 +159,17 @@ function RollbackModal({ onClose, onDone }) {
       if (!isSuccess(response.data) || !Array.isArray(response.data.data?.snapshots)) throw new Error("롤백 지점을 조회하지 못했습니다");
       if (active) {
         setSnapshots(response.data.data.snapshots);
-        setSnapshotState({ status: "success", teamId });
+        setSnapshotState({ status: "success", teamId, total: response.data.data.total_count });
       }
     }).catch((requestError) => {
       if (active) { setSnapshotState({ status: "error", teamId }); setError(getAdminRequestError(requestError, "롤백 지점을 조회하지 못했습니다").error); }
     });
     return () => { active = false; controller.abort(); };
   }, [teamId, snapshotRevision]);
+
+  // 롤백 지점 API는 쪽 나눔이 없어 최근 것부터 20개만 보인다
+  const recentSnapshots = latestFirst(snapshots, RECENT_LIMIT).items;
+  const snapshotTotal = Math.max(snapshotState.total ?? 0, snapshots.length);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -215,7 +179,7 @@ function RollbackModal({ onClose, onDone }) {
     setError("");
     try {
       const res = await rollbackTeam(teamId, { snapshotId, reason: reason.trim() });
-      if (!isSuccess(res.data)) throw new Error(res.data?.message || "롤백에 실패했습니다.");
+      if (!isSuccess(res.data)) throw new Error(res.data?.message || "롤백에 실패했습니다");
       onDone();
       onClose();
     } catch (err) {
@@ -230,33 +194,20 @@ function RollbackModal({ onClose, onDone }) {
     <Modal title="롤백 실행" onClose={onClose} busy={isSubmitting}>
       <AdminStatusMessage status={teamOptions.status} error={teamOptions.error} onRetry={teamOptions.retry}/>
       <form onSubmit={handleSubmit} className={ui.formStack}>
-        <label className={ui.field}>
+        <div className={ui.field}>
           <span className={ui.fieldLabel}>대상 팀</span>
-          <select
-            disabled={isSubmitting}
-            value={teamId}
-            onChange={(event) => {
-              setTeamId(event.target.value);
-              setSnapshotId("");
-              setSnapshots([]);
-            }}
-            className={ui.select}
-          >
-            <option value="">선택</option>
-            {teams.map((team) => (
-              <option key={team.team_id} value={team.team_id}>{team.team_name}</option>
-            ))}
-          </select>
-        </label>
+          <AdminTeamPicker teams={teams} value={teamId} label="롤백할 팀" disabled={isSubmitting} loading={teamOptions.status === "loading"} capped={teamOptions.data?.capped}
+            onChange={(next) => { setTeamId(next); setSnapshotId(""); setSnapshots([]); }} />
+        </div>
         {teamId && (
           <div className={ui.field}>
             <span className={ui.fieldLabel}>롤백 지점</span>
             {snapshotState.status === "loading" && <p role="status" className={ui.fieldHint}>롤백 지점 조회 중</p>}
             {snapshotState.status === "error" && <button type="button" className={`${ui.button} ${ui.small}`} onClick={() => setSnapshotRevision((value) => value + 1)}>다시 조회</button>}
-            {snapshotState.status === "success" && snapshots.length === 0 && <p className={ui.fieldHint}>롤백 지점이 없습니다.</p>}
+            {snapshotState.status === "success" && snapshots.length === 0 && <p className={ui.fieldHint}>롤백 지점이 없습니다</p>}
             {snapshots.length > 0 && (
               <div className={ui.choiceList}>
-                {snapshots.map((snapshot) => (
+                {recentSnapshots.map((snapshot) => (
                   <label key={snapshot.snapshot_id} className={ui.check} data-disabled={isSubmitting || snapshot.is_rolled_back}>
                     <input
                       type="radio"
@@ -270,12 +221,10 @@ function RollbackModal({ onClose, onDone }) {
                 ))}
               </div>
             )}
+            {snapshotTotal > RECENT_LIMIT && <p className={ui.fieldHint}>최근 {RECENT_LIMIT}개만 표시합니다 · 전체 {formatAdminNumber(snapshotTotal)}개</p>}
           </div>
         )}
-        <label className={ui.field}>
-          <span className={ui.fieldLabel}>사유</span>
-          <input required maxLength={500} disabled={isSubmitting} value={reason} onChange={(event) => setReason(event.target.value)} className={ui.input} />
-        </label>
+        <AdminReasonField label="사유" value={reason} onChange={setReason} presets={REASON_PRESETS.rollback} disabled={isSubmitting} required />
         {error && <p role="alert" className={ui.errorText}>{error}</p>}
         <div className={ui.formActions}>
           <button type="button" onClick={onClose} disabled={isSubmitting} className={ui.button}>취소</button>
@@ -287,103 +236,71 @@ function RollbackModal({ onClose, onDone }) {
 }
 
 export default function AdminDashboardPage() {
-  const dashboard = useAdminResource(getAdminDashboard, [], "대시보드 정보를 불러오지 못했습니다.");
-  const events = useAdminResource((config) => getAdminEvents({ size: 5 }, config), [], "이벤트 로그를 불러오지 못했습니다.");
+  const dashboard = useAdminResource(getAdminDashboard, [], "대시보드 정보를 불러오지 못했습니다");
+  const events = useAdminResource((config) => getAdminEvents({ size: 5 }, config), [], "이벤트 로그를 불러오지 못했습니다");
+  const instances = useAdminResource(loadAttentionInstances, [], "인스턴스 현황을 불러오지 못했습니다");
   const resources = useAdminNodeResources();
+  const leaderboard = useAdminResource((config) => getLeaderboard(config), [], "순위를 불러오지 못했습니다");
   const [openModal, setOpenModal] = useState(null);
 
   const data = dashboard.data;
   const eventRows = events.data?.events ?? [];
 
   const reloadAll = useCallback(() => Promise.all([
-    dashboard.reload(), events.reload(), resources.reload(),
-  ]), [dashboard.reload, events.reload, resources.reload]);
+    dashboard.reload(), events.reload(), instances.reload(), resources.reload(), leaderboard.reload(),
+  ]), [dashboard.reload, events.reload, instances.reload, resources.reload, leaderboard.reload]);
   useEffect(() => {
     if (openModal) return undefined;
     // Resource hooks perform the initial reads. Only schedule subsequent reads.
-    return startVisiblePolling(() => Promise.all([dashboard.reload(), events.reload()]), { immediate: false });
-  }, [dashboard.reload, events.reload, openModal]);
+    return startVisiblePolling(() => Promise.all([dashboard.reload(), events.reload(), instances.reload(), leaderboard.reload()]), { immediate: false });
+  }, [dashboard.reload, events.reload, instances.reload, leaderboard.reload, openModal]);
 
-  const refreshing = [dashboard, events, resources].some((item) => item.status === "loading");
+  const refreshing = [dashboard, events, instances, leaderboard].some((item) => item.status === "loading");
+  const leader = [...(leaderboard.data?.teams ?? [])].sort((a, b) => (b.team_score ?? 0) - (a.team_score ?? 0))[0];
+  const failed = data?.instances?.failed ?? 0;
+  const payment = data?.payment;
 
   return (
-    <AdminLayout
-      title="MSG CTF 운영 대시보드"
-      actions={<>
-        <button type="button" onClick={reloadAll} disabled={refreshing} className={ui.button}>새로고침</button>
-        <span className={ui.cardMeta}>운영 현황 30초마다 갱신 · 수집 {formatAdminTime(data?.collected_at)} KST</span>
-      </>}
-    >
+    <AdminLayout title="운영 대시보드" actions={<>
+      <span className={ui.cardMeta}>30초마다 갱신 · 수집 {formatAdminTime(data?.collected_at)}</span>
+      <IconButton icon="refresh" label="새로고침" onClick={reloadAll} disabled={refreshing} />
+    </>}>
       <AdminStatusMessage status={dashboard.status} error={dashboard.error} onRetry={dashboard.retry} hasData={Boolean(data)} />
 
-      <div className={ui.stack}>
-        <div className={ui.stats}>
-          <StatCard value={data?.instances?.running ?? "-"} label="실행 중 인스턴스" tone="good" />
-          <StatCard value={data?.instances?.failed ?? "-"} label="실패 인스턴스" tone="bad" />
-          <StatCard value={data?.teams?.total_count ?? "-"} label="참가 팀 수" tone="gold" />
-        </div>
-        <div className={`${ui.halves} ${ui.halvesEqual}`}>
-          <AdminResourceSummary resources={resources} />
-          <section className={ui.card} aria-labelledby="dashboard-manage">
-            <header className={ui.cardHeader}><h2 id="dashboard-manage" className={ui.cardTitle}><span className={ui.eyebrow}>MANAGEMENT</span>대회 관리</h2></header>
-            <nav className={`${ui.cardBody} ${intro.links}`} aria-label="관리 바로가기">
-              <Link to={ROUTES.adminChallenges}><strong>문제 · 인스턴스</strong><span>문제 설정과 실행 현황 →</span></Link>
-              <Link to={ROUTES.adminTeams}><strong>참가 팀</strong><span>팀별 진행 상황 →</span></Link>
-              <Link to={ROUTES.adminSettings}><strong>대회 설정</strong><span>운영 시간과 규칙 →</span></Link>
-            </nav>
-          </section>
-        </div>
-        <section className={ui.card} aria-labelledby="dashboard-events">
-          <header className={ui.cardHeader}>
-            <h2 id="dashboard-events" className={ui.cardTitle}><span className={ui.eyebrow}>EVENTS</span>최근 운영 기록</h2>
-            <Link to={ROUTES.adminLogs} className={`${ui.button} ${ui.small}`}>전체 로그</Link>
-          </header>
-          <div className={ui.cardBody}>
-            <AdminStatusMessage status={events.status} error={events.error} onRetry={events.retry} hasData={Boolean(events.data)} />
-            <ul className={intro.events}>{eventRows.slice(0, 3).map((event) => <li key={event.event_id}>
-              <time dateTime={event.created_at}>{formatAdminTime(event.created_at)} KST</time>
-              <p className={ui.clamp} title={event.message}><AdminBadge tone={getAdminEventSeverity(event.severity).tone}>{getAdminEventTypeLabel(event.type)}</AdminBadge> {event.message}</p>
-            </li>)}</ul>
-            {events.data && eventRows.length === 0 && <p className={ui.cardMeta}>아직 운영 기록이 없습니다</p>}
-          </div>
-        </section>
-        {/* Figma 384:396의 빠른 작업 네 개는 접지 않고 나무 버튼 그대로 둔다 */}
-        <section className={ui.card} aria-labelledby="dashboard-actions">
-          <header className={ui.cardHeader}>
-            <h2 id="dashboard-actions" className={ui.cardTitle}><span className={ui.eyebrow}>ACTIONS</span>빠른 작업</h2>
-            <span className={ui.cardMeta}>실행 전 대상과 사유를 한 번 더 확인합니다</span>
-          </header>
-          <div className={`${ui.cardBody} ${ui.quickActions}`}>
-            <QuickActionButton variant="restart" label="강제 재시작" onClick={() => setOpenModal("restart")} />
-            <QuickActionButton variant="stop" label="강제 종료" onClick={() => setOpenModal("stop")} />
-            <QuickActionButton variant="mileage" label="마일리지 지급" onClick={() => setOpenModal("mileage")} />
-            <QuickActionButton variant="rollback" label="롤백 실행" onClick={() => setOpenModal("rollback")} />
-          </div>
-        </section>
+      <div className={intro.board}>
+        <ContestWidget contest={data?.contest} className={intro.contestArea} to={ROUTES.adminSettings} />
+        <StatStrip label="운영 지표" className={intro.metricsArea}>
+          <StatTile glyph="instance" tone="green" label="실행 인스턴스" value={count(data?.instances?.running)} to={`${ROUTES.adminChallenges}?tab=instances&status=RUNNING`} />
+          <StatTile glyph="warning" tone="red" label="실패 인스턴스" value={count(data?.instances?.failed)} alert={failed > 0} to={`${ROUTES.adminChallenges}?tab=instances&status=FAILED`} />
+          <StatTile glyph="teams" tone="indigo" label="참가 팀" value={count(data?.teams?.total_count)} sub={data?.teams?.banned_count ? `밴 ${count(data.teams.banned_count)}팀` : ""} to={ROUTES.adminTeams} />
+          <StatTile glyph="rank" tone="yellow" label="선두" value={leader?.team_name ?? "-"} text sub={leader ? `${count(leader.team_score)}점` : ""} to={leader ? ROUTES.adminTeamDetail(leader.team_id) : ROUTES.adminTeams} />
+          <StatTile glyph="payment" tone="orange" label="부스 결제" value={count(payment?.net_spent)} unit={payment ? "MI" : undefined} sub={payment ? `${count(payment.purchase_count)}건 · 환불 ${count(payment.refund_count)}건` : ""} to={`${ROUTES.adminMileage}?tab=payment`} />
+        </StatStrip>
+        <AdminNodeBoard resources={resources} className={intro.nodesArea} />
+        <AttentionInstances instances={instances} onChanged={reloadAll} className={intro.attentionArea} />
+        <Widget id="dashboard-events" title="최근 운영 기록" className={intro.eventsArea} more={{ to: ROUTES.adminLogs }}>
+          <AdminStatusMessage status={events.status} error={events.error} onRetry={events.retry} hasData={Boolean(events.data)} />
+          <ul className={intro.events}>{eventRows.slice(0, 4).map((event) => <li key={event.event_id}>
+            <time dateTime={event.created_at}>{formatAdminTime(event.created_at)}</time>
+            <AdminBadge tone={getAdminEventSeverity(event.severity).tone}>{getAdminEventTypeLabel(event.type)}</AdminBadge>
+            <p title={event.message}>{event.message}</p>
+          </li>)}</ul>
+          {events.data && eventRows.length === 0 && <p className={ui.quietNote}>아직 운영 기록이 없습니다</p>}
+        </Widget>
+        <Widget id="dashboard-actions" title="빠른 작업" className={intro.actionsArea}>
+          <ActionGrid label="빠른 작업">
+            <ActionTile glyph="mileage" tone="yellow" label="마일리지 지급" onClick={() => setOpenModal("mileage")} />
+            <ActionTile glyph="rollback" tone="indigo" label="롤백 실행" onClick={() => setOpenModal("rollback")} />
+            <ActionTile glyph="payment" tone="orange" label="QR 결제" to={`${ROUTES.adminMileage}?tab=payment`} />
+            <ActionTile glyph="account" tone="blue" label="계정 등록" to={ROUTES.adminAccounts} />
+            <ActionTile glyph="stop" tone="red" label="인스턴스 종료" to={`${ROUTES.adminChallenges}?tab=instances&status=RUNNING`} />
+            <ActionTile glyph="ban" tone="graphite" label="팀 밴 처리" to={ROUTES.adminTeams} />
+            <ActionTile glyph="publish" tone="green" label="문제 공개" to={ROUTES.adminChallenges} />
+            <ActionTile glyph="settings" tone="gray" label="대회 설정" to={ROUTES.adminSettings} />
+          </ActionGrid>
+        </Widget>
       </div>
 
-      {openModal === "restart" && (
-        <InstanceActionModal
-          label="인스턴스 강제 재시작"
-          onClose={() => setOpenModal(null)}
-          onSubmit={async (id) => {
-            const res = await forceResetInstance(id);
-            if (!isSuccess(res.data)) throw new Error(res.data?.message || "재시작에 실패했습니다.");
-            reloadAll();
-          }}
-        />
-      )}
-      {openModal === "stop" && (
-        <InstanceActionModal
-          label="인스턴스 강제 종료"
-          onClose={() => setOpenModal(null)}
-          onSubmit={async (id) => {
-            const res = await forceStopInstance(id);
-            if (!isSuccess(res.data)) throw new Error(res.data?.message || "종료에 실패했습니다.");
-            reloadAll();
-          }}
-        />
-      )}
       {openModal === "mileage" && <MileageGrantModal onClose={() => setOpenModal(null)} onDone={reloadAll} />}
       {openModal === "rollback" && <RollbackModal onClose={() => setOpenModal(null)} onDone={reloadAll} />}
     </AdminLayout>

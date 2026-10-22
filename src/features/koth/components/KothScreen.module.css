@@ -216,6 +216,17 @@
   font-size: 1.15em;
 }
 
+.challengeDescription {
+  max-height: 8.6em;
+  margin: 0 0 0.8em;
+  overflow-y: auto;
+  font-size: 0.64em;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
 .challengeClub {
   margin: 0;
   font-size: 0.68em;
@@ -335,6 +346,20 @@
   font-size: max(0.9em, 14px);
 }
 
+/* 토큰 패널의 실행 버튼 모양이 닫기 버튼까지 덮지 않게 문제 정보 패널의 닫기와 같은 모양으로 되돌린다 */
+.tokenPanel .panelCloseButton {
+  min-width: 32px;
+  min-height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: #4b2b17;
+  background: transparent;
+  font-size: 1.3em;
+  font-weight: 400;
+  line-height: 1;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .challengeButton,
   .mainNavigationButton {
@@ -357,15 +382,30 @@
 }
 .challengeDetail { top: 17%; left: 30%; width: 40%; max-height: 43%; overflow-y: auto; }
 .connectButton { display: inline-block; padding: 0.5em 1em; color: #f4dfb4; background: #6f3e19; text-decoration: none; }
+/* 문제 파일 받기: 접속 버튼과 같은 줄에 테두리만 있는 버튼과 파일 이름을 둔다 */
+/* 패널 안에서는 지문 바로 아래에 두고, 밑줄로 점령 정보와 나눈다 */
+.challengeDetail .routeNotice { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 0 0 0.9em; padding: 0 0 0.9em; border-top: 0; border-bottom: 1px solid rgba(112, 64, 27, 0.35); white-space: normal; }
+.fileDownload { display: contents; }
+.fileButton { padding: 0.5em 1em; border: 1px solid #6f3e19; background: transparent; color: #6f3e19; font: inherit; cursor: pointer; }
+.fileButton:hover:not(:disabled) { background: rgba(111, 62, 25, 0.08); }
+.fileButton:disabled { opacity: 0.6; cursor: progress; }
+.fileMeta { min-width: 0; color: #7a5532; overflow-wrap: anywhere; }
+.fileMessage { flex-basis: 100%; margin: 0; color: #6f3e19; }
 .problemRanking { margin-top: 0.8em; font-size: 0.72em; }
 .problemRanking table { width: 100%; text-align: left; border-collapse: collapse; }
 .problemRanking th, .problemRanking td { border-bottom: 1px solid #b39260; padding: 0.4em; overflow-wrap: anywhere; }
+/* 표의 양 끝 글자를 패널 본문의 왼쪽·오른쪽 선에 붙이고 점수 열은 고정폭 숫자로 오른쪽 정렬한다 */
+.problemRanking th:first-child, .problemRanking td:first-child { padding-left: 0; }
+.problemRanking th:last-child, .problemRanking td:last-child { padding-right: 0; text-align: right; }
+.problemRanking td:first-child, .problemRanking td:last-child { font-variant-numeric: lining-nums tabular-nums; }
+.rankingMore { margin-top: 0.5em; padding: 0.4em 0; border: 0; background: none; color: #6f3e19; font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .teamSummary button:disabled { opacity: 0.5; cursor: not-allowed; }
 .challengeDetail h2 { font-size: clamp(18px, 1.15em, 23px); overflow-wrap: anywhere; }
 .challengeDetail .challengeClub { font-size: 12px; }
 .challengeDetail dt { font-size: 12px; }
 .challengeDetail dd { font-size: 13px; }
 .challengeDetail .routeNotice { font-size: 13px; }
+.challengeDetail .challengeDescription { font-size: 13px; }
 .challengeDetail .problemRanking { font-size: 13px; }
 .challengeDetail .panelCloseButton { min-width: 32px; min-height: 32px; }
 .detailFeedback { font-size: 13px; line-height: 1.7; }
@@ -445,15 +485,18 @@
   }
   .challengeDetail h2 { font-size: 24px; padding-right: 20px; }
   .challengeDetail .challengeClub, .challengeDetail dt, .challengeDetail dd,
-  .challengeDetail .routeNotice, .challengeDetail .problemRanking, .detailFeedback { font-size: 14px; line-height: 1.6; }
+  .challengeDetail .routeNotice, .challengeDetail .problemRanking, .challengeDetail .challengeDescription, .detailFeedback { font-size: 14px; line-height: 1.6; }
+  /* 폰에서는 패널 전체가 스크롤되므로 지문 안에서 따로 스크롤하지 않는다 */
+  .challengeDetail .challengeDescription { max-height: none; overflow: visible; }
   .challengeDetail dl { gap: 16px 12px; }
   .challengeDetail dd { white-space: normal; overflow-wrap: anywhere; }
-  .challengeDetail .panelCloseButton, .panelCloseButton { min-width: 44px; min-height: 44px; }
-  .connectButton, .detailFeedback button, .problemRanking button { min-height: 44px; padding: 10px 16px; }
+  .challengeDetail .panelCloseButton, .tokenPanel .panelCloseButton, .panelCloseButton { min-width: 44px; min-height: 44px; }
+  .connectButton, .fileButton, .detailFeedback button, .problemRanking button { min-height: 44px; padding: 10px 16px; }
   .problemRanking table { table-layout: fixed; }
   .tokenBackdrop { position: fixed; }
   .tokenPanel { width: min(calc(100% - 24px), 520px); min-height: 0; max-height: 84dvh; overflow-y: auto; padding: 28px 20px; background: #f0dcb7; }
-  .tokenPanel h2 { font-size: 22px; padding-right: 20px; }
+  /* 가운데 정렬 제목이 본문과 같은 축에 오도록 닫기 버튼이 차지하는 폭(34)을 양쪽에 똑같이 비운다 */
+  .tokenPanel h2 { font-size: 22px; padding-inline: 34px; }
   .tokenPanel p, .tokenPanel label, .tokenPanel button { font-size: 15px; line-height: 1.6; }
   .tokenPanel input { font-size: 16px; min-height: 48px; }
   .tokenPanel button { min-height: 44px; }
@@ -482,8 +525,9 @@
   .challengeRound { --round-gap: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px var(--round-gap); align-items: start; }
   .mobileRoundArtwork { display: block; grid-column: 1 / -1; width: calc(100% + var(--round-gap)); max-width: none; margin-left: calc(var(--round-gap) / -2); height: auto; }
   .challengeButton { gap: 8px; }
-  .challengeArtwork { display: block; position: relative; width: 100%; max-width: 190px; }
-  .challengeArtwork > .layerImage { width: 100%; height: auto; max-width: none; }
+  /* 여섯 카드 그림은 높이가 같고 폭만 216~227로 달라, 가장 넓은 비율 상자에 담아 같은 줄 두 카드의 아래 끝과 이름 줄을 맞춘다 */
+  .challengeArtwork { display: block; position: relative; width: 100%; max-width: 190px; aspect-ratio: 227 / 283; }
+  .challengeArtwork > .layerImage { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: contain; }
   .challengeArtwork .completionStamp { inset: 0 -8%; }
   .challengeArtwork .completionStamp .layerImage { object-fit: contain; }
   .challengeCaption { font-size: 16px; font-weight: 700; white-space: normal; overflow-wrap: anywhere; }

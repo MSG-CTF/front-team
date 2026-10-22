@@ -1,0 +1,54 @@
+/* 계정 등록: 왼쪽 입력 카드, 등록하면 오른쪽에 아이디와 비밀번호를 건넬 카드 */
+.layout { display: grid; grid-template-columns: minmax(0, 720px) minmax(0, 380px); gap: 16px; align-items: start; }
+.form { min-width: 0; }
+
+.password { display: flex; gap: 8px; }
+.passwordBox { position: relative; flex: 1; min-width: 0; }
+.passwordBox > .passwordInput { width: 100%; padding-right: 40px; }
+.passwordInput[data-generated] { font-family: var(--font-mono); letter-spacing: 0.02em; }
+.reveal { position: absolute; top: 50%; right: 4px; display: grid; place-items: center; width: 30px; height: 30px; border: 0; border-radius: 8px; background: none; color: var(--label-3); cursor: pointer; transform: translateY(-50%); }
+.reveal:hover { background: var(--fill); color: var(--label); }
+
+/* 세기 표시: 세 칸 막대와 한마디 */
+.strength { display: flex; align-items: center; gap: 8px; color: var(--label-3); font-size: 12px; line-height: 17px; }
+.meter { display: inline-grid; grid-template-columns: repeat(3, 18px); gap: 3px; }
+.meter > span { height: 4px; border-radius: 2px; background: var(--fill-hover); }
+.strength[data-level="1"] { color: var(--red-text); }
+.strength[data-level="1"] .meter > span:nth-child(1) { background: var(--red); }
+.strength[data-level="2"] { color: var(--yellow-text); }
+.strength[data-level="2"] .meter > span:nth-child(-n + 2) { background: var(--yellow); }
+.strength[data-level="3"] { color: var(--green-text); }
+.strength[data-level="3"] .meter > span { background: var(--green); }
+
+.leader { align-self: end; min-height: 36px; }
+/* 소속 팀: 설정 앱처럼 한 묶음 목록, 고른 줄 아래로 팀 선택 칸이 펼쳐진다 */
+.mode { display: block; background: var(--surface-sunken); }
+.mode + .mode { box-shadow: inset 0 1px 0 var(--hairline); }
+.mode:first-of-type { border-radius: 12px 12px 0 0; }
+.mode:last-of-type { border-radius: 0 0 12px 12px; }
+.mode > label { min-height: 44px; padding: 0 14px; }
+.mode > div { padding: 0 14px 14px 38px; background: transparent; box-shadow: none; }
+
+/* 등록 결과 카드 */
+.done { padding: 18px; }
+.doneHead { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.doneIcon { display: grid; flex-shrink: 0; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--green); color: #fff; }
+.doneHead h2 { margin: 0; font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+.doneHead p { margin: 2px 0 0; color: var(--label-3); font-size: 12.5px; }
+.credentials { display: grid; margin: 0 0 14px; overflow: hidden; border-radius: 12px; background: var(--surface-sunken); }
+.credentials > div { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 14px; }
+.credentials > div + div { border-top: 1px solid var(--hairline); }
+.credentials dt { color: var(--label-3); font-size: 13px; }
+.credentials dd { margin: 0; overflow-wrap: anywhere; font: 600 14px/20px var(--font-mono); text-align: right; user-select: all; }
+.credentials dd.plain { font-family: var(--font); font-weight: 600; user-select: text; }
+.doneActions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.doneActions > span { flex-basis: 100%; min-height: 20px; }
+
+@container admin-layout (max-width: 1100px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+}
+@container admin-layout (max-width: 767px) {
+  .password { flex-wrap: wrap; }
+  .passwordBox { flex-basis: 100%; }
+  .password > button:last-child { flex: 1; }
+}

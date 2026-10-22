@@ -37,6 +37,7 @@ const AdminDashboardPage = lazy(
   () => import("../features/admin/pages/AdminDashboardPage.jsx"),
 );
 const AdminChallengePreviewPage = lazy(() => import("../features/admin/pages/AdminChallengePreviewPage.jsx"));
+const AdminSignaturePreviewPage = lazy(() => import("../features/admin/pages/AdminSignaturePreviewPage.jsx"));
 const AdminTeamsPage = lazy(
   () => import("../features/admin/pages/AdminTeamsPage.jsx"),
 );
@@ -56,6 +57,9 @@ const AdminSettingsPage = lazy(
   () => import("../features/admin/pages/AdminSettingsPage.jsx"),
 );
 const AdminResourcesPage = lazy(() => import("../features/admin/pages/AdminResourcesPage.jsx"));
+const AdminKothPage = lazy(() => import("../features/admin/pages/AdminKothPage.jsx"));
+const AdminKothDetailPage = lazy(() => import("../features/admin/pages/AdminKothDetailPage.jsx"));
+const AdminKothPreviewPage = lazy(() => import("../features/admin/pages/AdminKothPreviewPage.jsx"));
 const AdminLogsPage = lazy(
   () => import("../features/admin/pages/AdminLogsPage.jsx"),
 );
@@ -185,6 +189,7 @@ export default function AppRoutes() {
           }
         />
         <Route path="/admin/challenges/:challengeId/preview" element={<AdminRoute><AdminChallengePreviewPage /></AdminRoute>} />
+        <Route path="/admin/signatures/:signatureId/preview" element={<AdminRoute><AdminSignaturePreviewPage /></AdminRoute>} />
         <Route
           path={ROUTES.adminMileage}
           element={
@@ -218,6 +223,9 @@ export default function AppRoutes() {
           }
         />
         <Route path={ROUTES.adminResources} element={<AdminRoute><AdminResourcesPage /></AdminRoute>} />
+        <Route path={ROUTES.adminKoth} element={<AdminRoute><AdminKothPage /></AdminRoute>} />
+        <Route path="/admin/koth/:kothChallengeId" element={<AdminRoute><AdminKothDetailPage /></AdminRoute>} />
+        <Route path="/admin/koth/:kothChallengeId/preview" element={<AdminRoute><AdminKothPreviewPage /></AdminRoute>} />
         <Route
           path={ROUTES.adminAccounts}
           element={
