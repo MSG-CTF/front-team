@@ -35,3 +35,25 @@ export function paymentErrorMessage(error) {
   }
   return error.response.data?.message || "결제 요청이 처리되지 않았습니다";
 }
+
+// 내역 표에는 사람이 읽는 이름을 보이고 원래 값은 title로 남긴다
+export const MILEAGE_TYPE_LABELS = {
+  CHALLENGE_SOLVE: "문제 풀이",
+  START_BONUS: "출발 보너스",
+  ROULETTE: "룰렛",
+  KOTH_REWARD: "KoTH 보상",
+  ADMIN_GRANT: "관리자 지급",
+  REFUND: "환불",
+  PURCHASE: "결제",
+  ADMIN_DEDUCT: "관리자 회수",
+};
+
+export function getMileageTypeLabel(type) {
+  return MILEAGE_TYPE_LABELS[type] ?? type ?? "-";
+}
+
+export function formatMileageAmount(amount) {
+  if (!Number.isFinite(amount)) return "-";
+  const text = Math.abs(amount).toLocaleString("ko-KR");
+  return amount > 0 ? `+${text}` : amount < 0 ? `-${text}` : "0";
+}

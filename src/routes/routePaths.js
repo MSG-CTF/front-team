@@ -22,5 +22,6 @@ export const ROUTES = {
   adminMileage: "/admin/mileage",
   adminSettings: "/admin/settings",
   adminLogs: "/admin/logs",
+  adminResources: "/admin/resources",
   adminAccounts: "/admin/accounts",
 };

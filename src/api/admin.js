@@ -346,8 +346,8 @@ export function publishAdminSignature(signatureId, isPublished) {
 
 // ── 리소스 / 로그 ─────────────────────────────────────────────────────────
 export function getAdminResources(config) {
-  // [백엔드: PR #85 리뷰 중] accounts[]: { account_id, provider, scope_id, status, running_instances, nodes }
-  // (account_name, instance_quota 삭제). cpu/memory_usage_percent, running_instances는 null이면 미수집.
+  // Current API reports container_count; running_instances belongs to the older contract.
+  // Null metrics are uncollected. Optional resource_allocation: docs/admin-node-allocation.md.
   // 수집된 VM이 없으면 200 + data: null, 리소스 브로커 연결 실패는 503 SCHEDULER_UNAVAILABLE.
   return apiClient.get("/admin/resources", config);
 }

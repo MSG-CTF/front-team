@@ -7,7 +7,7 @@ export default function AdminBoardReadiness({ revision }) {
   const check = useAdminResource(getAdminBoardReadiness, [revision], "보드 공개 현황을 불러오지 못했습니다");
   const data = check.data;
   return <section className={styles.readiness} aria-label="보드 문제 공개 현황">
-    <div className={styles.readinessHeading}><h2>보드 문제 공개 현황</h2>
+    <div className={styles.readinessHeading}><h2><span className={styles.eyebrow}>BOARD</span>보드 문제 공개 현황</h2>
       {data && <AdminBadge tone={data.ready ? "good" : "neutral"}>{data.ready ? "필요 수 충족" : "확인 필요"}</AdminBadge>}
       <button type="button" className={styles.button} onClick={check.retry} disabled={check.status === "loading"}>현황 새로고침</button></div>
     <AdminStatusMessage status={check.status} error={check.error} onRetry={check.retry}/>

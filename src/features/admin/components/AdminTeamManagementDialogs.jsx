@@ -8,8 +8,7 @@ import {
   validateTeamReason,
 } from "../utils/adminTeamManagement.js";
 import AdminDialog from "./AdminDialog.jsx";
-
-const inputClass = "w-full rounded border border-admin-divider bg-white/60 px-2 py-1.5 font-song-myung text-sm";
+import ui from "./AdminWorkspace.module.css";
 
 export function AdminTeamEditDialog({ team, onClose, onSaved }) {
   const [teamName, setTeamName] = useState(team.team_name);
@@ -47,42 +46,49 @@ export function AdminTeamEditDialog({ team, onClose, onSaved }) {
 
   return (
     <AdminDialog title={`${team.team_name} 수정`} onClose={onClose} busy={busy}>
-      <form onSubmit={submit} className="flex flex-col gap-3 font-song-myung text-sm">
-        <label className="flex flex-col gap-1">팀 이름
-          <input className={inputClass} value={teamName} maxLength={100} disabled={busy} onChange={(event) => setTeamName(event.target.value)} />
+      <form onSubmit={submit} className={ui.formStack}>
+        <label className={ui.field}>
+          <span className={ui.fieldLabel}>팀 이름</span>
+          <input className={ui.input} value={teamName} maxLength={100} disabled={busy} onChange={(event) => setTeamName(event.target.value)} />
         </label>
-        <fieldset className="rounded border border-admin-divider p-2" disabled={busy}>
-          <legend>현재 팀원</legend>
-          <div className="flex flex-col gap-1">
+        <fieldset className={ui.field} disabled={busy}>
+          <legend className={ui.fieldLabel}>팀에서 제외할 팀원</legend>
+          <div className={ui.choiceList}>
             {(team.members ?? []).map((member) => (
-              <label key={member.user_id} className="flex items-center gap-2">
+              <label key={member.user_id} className={ui.check}>
                 <input type="checkbox" checked={removedIds.includes(member.user_id)} onChange={(event) => {
                   setRemovedIds((current) => event.target.checked
                     ? [...current, member.user_id] : current.filter((id) => id !== member.user_id));
                   if (event.target.checked && leaderUserId === member.user_id) setLeaderUserId("");
                 }} />
-                {member.nickname} ({member.login_id || member.user_id}) {member.is_leader ? "- 현재 팀장" : ""} 제외
+                <span>{member.nickname} <span className={ui.muted}>({member.login_id || member.user_id})</span>{member.is_leader ? " · 현재 팀장" : ""}</span>
               </label>
             ))}
           </div>
         </fieldset>
-        <label className="flex flex-col gap-1">무소속 참가자 추가 (user_id)
-          <textarea className={inputClass} rows={2} value={addUserIds} disabled={busy} onChange={(event) => setAddUserIds(event.target.value)} placeholder="UUID를 쉼표 또는 줄바꿈으로 구분" />
+        <label className={ui.field}>
+          <span className={ui.fieldLabel}>무소속 참가자 추가 <small>user_id</small></span>
+          <textarea className={ui.textarea} rows={2} value={addUserIds} disabled={busy} onChange={(event) => setAddUserIds(event.target.value)} placeholder="UUID를 쉼표 또는 줄바꿈으로 구분" />
+          <span className={ui.fieldHint}>참가자 목록 조회 API가 없어 user_id를 직접 입력합니다. 다른 팀 소속 계정은 기존 팀에서 먼저 제외해야 합니다.</span>
         </label>
-        <p className="m-0 text-xs text-admin-muted">참가자 목록 조회 API가 없어 user_id를 직접 입력합니다. 다른 팀 소속 계정은 기존 팀에서 먼저 제외해야 합니다.</p>
-        <label className="flex flex-col gap-1">변경 후 팀장
-          <select className={inputClass} value={leaderUserId} disabled={busy} onChange={(event) => setLeaderUserId(event.target.value)}>
+        <label className={ui.field}>
+          <span className={ui.fieldLabel}>변경 후 팀장</span>
+          <select className={ui.select} value={leaderUserId} disabled={busy} onChange={(event) => setLeaderUserId(event.target.value)}>
             <option value="">팀장 공석</option>
             {remainingMembers.map((member) => <option key={member.user_id} value={member.user_id}>{member.nickname} ({member.login_id || member.user_id})</option>)}
             {additions.map((id) => <option key={id} value={id}>추가 계정 {id}</option>)}
           </select>
         </label>
-        <label className="flex flex-col gap-1">변경 사유 (필수, 1~500자)
-          <textarea className={inputClass} rows={2} maxLength={500} value={reason} disabled={busy} onChange={(event) => setReason(event.target.value)} />
+        <label className={ui.field}>
+          <span className={ui.fieldLabel}>변경 사유 <small>필수, 1~500자</small></span>
+          <textarea className={ui.textarea} rows={2} maxLength={500} value={reason} disabled={busy} onChange={(event) => setReason(event.target.value)} />
+          <span className={ui.fieldHint}>소속 또는 팀장 정보가 변경된 팀원은 다시 로그인해야 변경사항이 반영됩니다.</span>
         </label>
-        <p className="m-0 text-xs text-admin-muted">소속 또는 팀장 정보가 변경된 팀원은 다시 로그인해야 변경사항이 반영됩니다.</p>
-        {error && <p role="alert" className="m-0 text-admin-failed">{error}</p>}
-        <button type="submit" disabled={busy} className="self-end rounded border border-admin-ink px-3 py-1.5 disabled:opacity-50">변경 저장</button>
+        {error && <p role="alert" className={ui.callout} data-tone="bad">{error}</p>}
+        <div className={ui.formActions}>
+          <button type="button" onClick={onClose} disabled={busy} className={ui.button}>취소</button>
+          <button type="submit" disabled={busy} className={ui.primary}>변경 저장</button>
+        </div>
       </form>
     </AdminDialog>
   );
@@ -118,18 +124,24 @@ export function AdminTeamDeleteDialog({ team, onClose, onDeleted }) {
 
   return (
     <AdminDialog title="팀 영구 삭제" onClose={onClose} busy={busy}>
-      <form onSubmit={submit} className="flex flex-col gap-3 font-song-myung text-sm">
-        <p className="m-0 font-bold text-admin-failed">이 작업은 되돌릴 수 없습니다.</p>
-        <p className="m-0">삭제 대상: <strong>{team.team_name}</strong> / 팀원 {team.member_count ?? team.members?.length ?? 0}명</p>
-        <p className="m-0">소속 계정, 팀 풀이 기록, 마일리지, 결제 기록, 보드 기록이 함께 삭제됩니다.</p>
-        <label className="flex flex-col gap-1">삭제 사유 (필수, 1~500자)
-          <textarea className={inputClass} rows={2} maxLength={500} value={reason} disabled={busy} onChange={(event) => setReason(event.target.value)} />
+      <form onSubmit={submit} className={ui.formStack}>
+        <div className={ui.callout} data-tone="bad">
+          <strong>이 작업은 되돌릴 수 없습니다.</strong> 소속 계정, 팀 풀이 기록, 마일리지, 결제 기록, 보드 기록이 함께 삭제됩니다.
+        </div>
+        <p className={ui.dialogLead}>삭제 대상 <strong>{team.team_name}</strong> · 팀원 {team.member_count ?? team.members?.length ?? 0}명</p>
+        <label className={ui.field}>
+          <span className={ui.fieldLabel}>삭제 사유 <small>필수, 1~500자</small></span>
+          <textarea className={ui.textarea} rows={2} maxLength={500} value={reason} disabled={busy} onChange={(event) => setReason(event.target.value)} />
         </label>
-        <label className="flex flex-col gap-1">확인을 위해 팀 이름 <strong>{team.team_name}</strong>을 입력하세요
-          <input className={inputClass} value={confirmation} disabled={busy} autoComplete="off" onChange={(event) => setConfirmation(event.target.value)} />
+        <label className={ui.field}>
+          <span className={ui.fieldLabel}>확인을 위해 팀 이름 <strong>{team.team_name}</strong>을 입력하세요</span>
+          <input className={ui.input} value={confirmation} disabled={busy} autoComplete="off" onChange={(event) => setConfirmation(event.target.value)} />
         </label>
-        {error && <p role="alert" className="m-0 text-admin-failed">{error}</p>}
-        <button type="submit" disabled={busy || confirmation !== team.team_name || !reason.trim()} className="self-end rounded border border-admin-failed px-3 py-1.5 text-admin-failed disabled:opacity-50">팀 영구 삭제</button>
+        {error && <p role="alert" className={ui.callout} data-tone="bad">{error}</p>}
+        <div className={ui.formActions}>
+          <button type="button" onClick={onClose} disabled={busy} className={ui.button}>취소</button>
+          <button type="submit" disabled={busy || confirmation !== team.team_name || !reason.trim()} className={ui.dangerSolid}>팀 영구 삭제</button>
+        </div>
       </form>
     </AdminDialog>
   );

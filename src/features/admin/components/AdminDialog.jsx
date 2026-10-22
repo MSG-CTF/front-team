@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import PaymentIcon from "./PaymentIcon.jsx";
 import styles from "./AdminPayments.module.css";
 import workspace from "./AdminWorkspace.module.css";
@@ -16,7 +16,7 @@ export default function AdminDialog({
   const panel = useRef(null);
   const latest = useRef({ onClose, busy });
   latest.current = { onClose, busy };
-  useEffect(() => {
+  useLayoutEffect(() => {
     const previous = document.activeElement;
     panel.current?.focus();
     const handleKey = (event) => {
@@ -61,65 +61,37 @@ export default function AdminDialog({
       if (previous?.isConnected) previous.focus();
     };
   }, []);
+  // 결제 창만 별도 틀을 쓰고 나머지는 같은 양피지 창에 폭만 다르게 연다
+  const payment = variant === "payment";
+  const size = variant === "workspace" ? "" : wide ? workspace.dialogWide : workspace.dialogCompact;
   return (
-    <div
-      className={
-        variant === "payment"
-          ? styles.overlay
-          : variant === "workspace" ? workspace.overlay
-          : "fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-      }
-    >
+    <div className={payment ? styles.overlay : workspace.overlay}>
       <section
         ref={panel}
         tabIndex={-1}
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className={
-          variant === "payment"
-            ? styles.dialog
-            : variant === "workspace" ? workspace.dialog
-            : `max-h-[90vh] w-full ${wide ? "max-w-4xl" : "max-w-lg"} overflow-y-auto rounded-xl border border-admin-divider bg-[#f3e6cf] p-5 text-admin-ink shadow-xl`
-        }
+        className={payment ? styles.dialog : `${workspace.dialog} ${size}`}
       >
-        <header
-          className={
-            variant === "payment"
-              ? styles.dialogHeader
-              : variant === "workspace" ? workspace.dialogHeader
-              : "mb-3 flex items-center justify-between gap-3"
-          }
-        >
-          {variant === "workspace" ? <div className={workspace.dialogHeading}>
+        <header className={payment ? styles.dialogHeader : workspace.dialogHeader}>
+          {payment ? <h2>{title}</h2> : <div className={workspace.dialogHeading}>
             <h2>{title}</h2>
             {subtitle && <p className={workspace.dialogSubtitle}>{subtitle}</p>}
-          </div> : <h2
-            className={
-              variant === "payment" || variant === "workspace" ? undefined : "font-im-fell text-xl"
-            }
-          >
-            {title}
-          </h2>}
-          {variant === "workspace" && headerMeta}
+          </div>}
+          {!payment && headerMeta}
           <button
             type="button"
             disabled={busy}
             onClick={onClose}
             aria-label="닫기"
-            className={
-              variant === "payment"
-                ? styles.iconButton
-                : variant === "workspace" ? workspace.closeButton
-                : "rounded border border-admin-divider px-3 py-1 text-sm disabled:opacity-50"
-            }
+            className={payment ? styles.iconButton : workspace.closeButton}
           >
-            {variant === "payment" ? <PaymentIcon name="close" /> : variant === "workspace"
-              ? <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
-              : "닫기"}
+            {payment ? <PaymentIcon name="close" />
+              : <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>}
           </button>
         </header>
-        {variant === "workspace" ? <div className={workspace.dialogBody}>{children}</div> : children}
+        {payment ? children : <div className={workspace.dialogBody}>{children}</div>}
       </section>
     </div>
   );

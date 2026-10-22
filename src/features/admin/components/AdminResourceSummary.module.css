@@ -1,0 +1,23 @@
+.summary { min-width: 0; container: resource-summary / inline-size; }
+.counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 0 0 16px; }
+.counts > div { min-width: 0; padding-right: 12px; border-right: 1px solid var(--admin-line-soft); }
+.counts > div:last-child { border: 0; }
+.counts dt { color: var(--admin-subtle); font-size: 13px; overflow-wrap: anywhere; }
+.counts dd { margin: 4px 0 0; font-family: var(--admin-number); font-size: 30px; line-height: 1.2; overflow-wrap: anywhere; }
+.counts [data-attention="true"] dd { color: var(--admin-bad); }
+.note { margin: 8px 0 12px; font-size: 13px; color: var(--admin-subtle); }
+.attention { list-style: none; padding: 0; margin: 0 0 16px; border-top: 1px solid var(--admin-line-soft); }
+.attention a { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 18px; padding: 10px 0; border-bottom: 1px solid var(--admin-line-soft); color: var(--admin-heading); text-decoration: none; overflow-wrap: anywhere; }
+.attention strong { font-weight: 500; min-width: 0; }
+.attention span { color: var(--admin-subtle); font-size: 12px; }
+.attention a:hover strong { text-decoration: underline; }
+.attention a:focus-visible { outline: 2px solid var(--admin-accent); outline-offset: 3px; }
+@container admin-layout (max-width: 440px) {
+  .counts { gap: 8px; }
+  .counts dd { font-size: 26px; }
+}
+@container resource-summary (max-width: 280px) {
+  .counts { grid-template-columns: minmax(0, 1fr); }
+  .counts > div { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 12px; padding: 0 0 8px; border-right: 0; border-bottom: 1px solid var(--admin-line-soft); }
+  .counts dd { margin: 0; overflow-wrap: normal; white-space: nowrap; }
+}

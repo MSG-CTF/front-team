@@ -1,19 +1,18 @@
 import { useState } from "react";
 import AdminPagination from "../components/AdminPagination.jsx";
-import { getAdminEvents, getAdminResources } from "../../../api/admin.js";
-import { toKst } from "../../../utils/time.js";
+import { getAdminEvents } from "../../../api/admin.js";
+import { formatAdminTime } from "../utils/adminTime.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
 import useAdminResource from "../hooks/useAdminResource.js";
 import {
   ADMIN_EVENT_TYPES,
   ADMIN_EVENT_TYPES_PENDING,
-  formatCollectedValue,
-  formatResourceAccountName,
   getAdminEventSeverity,
   getAdminEventTypeLabel,
   isLongEventMessage,
   previewEventMessage,
 } from "../utils/adminBoard.js";
+import ui from "../components/AdminWorkspace.module.css";
 
 // 조작 사유가 500자를 넘게 들어올 수 있어 기본은 줄여 보여주고 펼칠 수 있게 한다.
 function EventMessage({ message }) {
@@ -21,10 +20,10 @@ function EventMessage({ message }) {
   if (!message) return "-";
   const long = isLongEventMessage(message);
   return (
-    <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">
+    <div className={ui.eventMessage}>
       {expanded || !long ? message : previewEventMessage(message)}
       {long && (
-        <button type="button" onClick={() => setExpanded((value) => !value)} className="ml-2 text-xs text-admin-gold underline">
+        <button type="button" onClick={() => setExpanded((value) => !value)} className={ui.textToggle}>
           {expanded ? "접기" : "전체 보기"}
         </button>
       )}
@@ -43,89 +42,79 @@ export default function AdminLogsPage() {
     [page, appliedType],
     "이벤트 로그를 불러오지 못했습니다.",
   );
-  const resources = useAdminResource(getAdminResources, [], "리소스 상태를 불러오지 못했습니다.");
+  const eventRows = events.data?.events ?? [];
 
   return (
-    <AdminLayout title="로그 / 리소스" actions={<button type="button" onClick={() => { events.retry(); resources.retry(); }} className="rounded border border-admin-divider px-3 py-1 text-sm">새로고침</button>}>
-      <section className="mb-8">
-        <h2 className="mb-2 text-sm font-bold text-admin-muted">계정/노드별 리소스 상태</h2>
-        <AdminStatusMessage status={resources.status} error={resources.error} onRetry={resources.retry} />
-        {resources.status === "success" && !resources.data && (
-          <p className="text-sm text-admin-muted">수집된 리소스 정보가 없습니다.</p>
-        )}
-        {resources.status === "success" && resources.data && (
-          <div className="flex flex-col gap-3">
-            <p className="text-xs text-admin-muted">수집 시각 {resources.data.collected_at ? toKst(resources.data.collected_at) : "-"} (KST)</p>
-            {(resources.data.accounts ?? []).map((account) => (
-              <div key={account.account_id} className="rounded-lg border border-admin-divider bg-white/30 p-3 text-sm">
-                <p className="m-0 font-bold">
-                  {formatResourceAccountName(account)} - {account.status} (실행 인스턴스 {formatCollectedValue(account.running_instances)})
-                </p>
-                <ul className="m-0 mt-2 flex flex-col gap-1 p-0 pl-4 text-xs text-admin-muted">
-                  {(account.nodes ?? []).map((node) => (
-                    <li key={node.node_id}>
-                      {node.node_name}: {node.status}, CPU {formatCollectedValue(node.cpu_usage_percent, "%")}, 메모리{" "}
-                      {formatCollectedValue(node.memory_usage_percent, "%")}, 인스턴스 {formatCollectedValue(node.running_instances)}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+    <AdminLayout
+      title="이벤트 로그"
+      actions={<button type="button" onClick={events.retry} className={ui.button}>새로고침</button>}
+    >
+      <div className={ui.stack}>
 
-      <section className="overflow-x-auto">
-        <form onSubmit={(event) => { event.preventDefault(); setPage(1); setAppliedType(type); }} className="mb-3 flex flex-wrap gap-2">
-          <label>이벤트 유형{" "}
-            <select value={type} onChange={(event) => setType(event.target.value)} className="rounded border border-admin-divider bg-white/60 px-2 py-1">
-              <option value="">전체</option>
-              {ADMIN_EVENT_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
-              <optgroup label="백엔드 PR 대기 중">
-                {ADMIN_EVENT_TYPES_PENDING.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
-              </optgroup>
-            </select>
-          </label>
-          <button type="submit" className="rounded border border-admin-divider px-3 py-1">필터 적용</button>
-        </form>
-        <h2 className="mb-2 text-sm font-bold text-admin-muted">최근 이벤트</h2>
-        <AdminStatusMessage status={events.status} error={events.error} onRetry={events.retry} />
-        {events.status === "success" && (
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-admin-divider text-left text-admin-muted">
-                <th className="px-2 py-1 font-normal">유형</th>
-                <th className="px-2 py-1 font-normal">심각도</th>
-                <th className="px-2 py-1 font-normal">메시지</th>
-                <th className="px-2 py-1 font-normal">팀/문제</th>
-                <th className="px-2 py-1 font-normal">시각</th>
-              </tr>
-            </thead>
-            <tbody>
-              {(events.data?.events ?? []).map((event) => (
-                <tr key={event.event_id} className="border-b border-admin-divider/40 last:border-0">
-                  <td className="px-2 py-1" title={event.type}>{getAdminEventTypeLabel(event.type)}</td>
-                  <td className="px-2 py-1">
-                    <AdminBadge tone={getAdminEventSeverity(event.severity).tone}>{getAdminEventSeverity(event.severity).label}</AdminBadge>
-                  </td>
-                  <td className="max-w-md px-2 py-1 align-top"><EventMessage message={event.message} /></td>
-                  <td className="px-2 py-1">
-                    {/* 삭제된 팀은 team_id/team_name이 null이고 정보는 message에 남는다 */}
-                    {[event.team_name, event.challenge_title].filter(Boolean).join(" / ") || "-"}
-                  </td>
-                  <td className="px-2 py-1">{toKst(event.created_at)}</td>
-                </tr>
-              ))}
-              {(events.data?.events ?? []).length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-2 py-4 text-center text-admin-muted">이벤트 없음</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        )}
-        <AdminPagination page={page} totalCount={events.data?.total_count} onChange={setPage} disabled={events.status !== "success"}/>
-      </section>
+        <section className={ui.card} aria-labelledby="logs-events">
+          <header className={ui.cardHeader}>
+            <h2 id="logs-events" className={ui.cardTitle}><span className={ui.eyebrow}>EVENTS</span>이벤트 로그</h2>
+            <form onSubmit={(event) => { event.preventDefault(); setPage(1); setAppliedType(type); }} className={ui.cardActions}>
+              <label className={ui.inlineLabel}>
+                <span>이벤트 유형</span>
+                <select value={type} onChange={(event) => setType(event.target.value)} className={`${ui.select} ${ui.small}`}>
+                  <option value="">전체</option>
+                  {ADMIN_EVENT_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
+                  <optgroup label="백엔드 PR 대기 중">
+                    {ADMIN_EVENT_TYPES_PENDING.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
+                  </optgroup>
+                </select>
+              </label>
+              <button type="submit" className={`${ui.button} ${ui.small}`}>필터 적용</button>
+            </form>
+          </header>
+          {(!events.data || ["error", "unavailable"].includes(events.status)) && (
+            <div className={ui.cardBody}>
+              <AdminStatusMessage status={events.status} error={events.error} onRetry={events.retry} />
+            </div>
+          )}
+          {events.data && (
+            <div className={`${ui.tableWrap} ${ui.tableFlush}`}>
+              <table className={ui.table} aria-label="이벤트 로그">
+                <thead>
+                  <tr>
+                    <th>시각 (KST)</th>
+                    <th>유형</th>
+                    <th>심각도</th>
+                    <th>메시지</th>
+                    <th>팀 / 문제</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {eventRows.map((event) => (
+                    <tr key={event.event_id} className={ui.topRow}>
+                      <td className={ui.time}>{formatAdminTime(event.created_at)}</td>
+                      <td title={event.type}>{getAdminEventTypeLabel(event.type)}</td>
+                      <td>
+                        <AdminBadge tone={getAdminEventSeverity(event.severity).tone}>{getAdminEventSeverity(event.severity).label}</AdminBadge>
+                      </td>
+                      <td className={`${ui.wrap} ${ui.messageCell}`}><EventMessage message={event.message} /></td>
+                      <td className={`${ui.wrap} ${ui.muted}`}>
+                        {/* 삭제된 팀은 team_id/team_name이 null이고 정보는 message에 남는다 */}
+                        {[event.team_name, event.challenge_title].filter(Boolean).join(" / ") || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                  {eventRows.length === 0 && (
+                    <tr className={ui.emptyRow}>
+                      <td colSpan={5} className={ui.empty}>이벤트 없음</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <div className={ui.cardFooter}>
+            <span className={ui.cardMeta}>한 페이지에 50건씩 보입니다</span>
+            <AdminPagination page={page} totalCount={events.data?.total_count} onChange={setPage} disabled={events.status !== "success"}/>
+          </div>
+        </section>
+      </div>
     </AdminLayout>
   );
 }

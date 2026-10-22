@@ -25,6 +25,7 @@ const ROUTE_TITLES = [
   ["/admin/mileage", "관리자 - 마일리지"],
   ["/admin/settings", "관리자 - 설정"],
   ["/admin/logs", "관리자 - 로그"],
+  ["/admin/resources", "관리자 - 노드 · 문제 배치"],
   ["/admin/accounts", "관리자 - 계정 등록"],
   ["/admin", "관리자 - 대시보드"],
 ];

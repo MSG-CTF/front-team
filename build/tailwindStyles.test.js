@@ -6,7 +6,10 @@ import postcss from "postcss";
 import tailwindcss from "@tailwindcss/postcss";
 
 const entry = new URL("../src/index.css", import.meta.url);
-const compiled = await postcss([tailwindcss()]).process(readFileSync(entry, "utf8"), { from: fileURLToPath(entry) });
+// Tailwind 4는 화면이 실제로 쓰는 유틸리티만 내보낸다 설정이 물려 있는지는 화면 사용 여부와 무관하게
+// 확인해야 하므로 팔레트, 글꼴, 글자 크기 후보를 검사용으로만 더해 컴파일한다
+const probe = '@source inline("text-admin-ink text-admin-gold text-admin-running font-song-myung font-im-fell font-pretendard text-xs text-sm text-lg text-xl");';
+const compiled = await postcss([tailwindcss()]).process(`${readFileSync(entry, "utf8")}\n${probe}`, { from: fileURLToPath(entry) });
 const declarations = [];
 compiled.root.walkDecls((declaration) => declarations.push(declaration));
 

@@ -1,204 +1,394 @@
+@import "../../../styles/pretendard/payment.generated.css";
+
+@font-face {
+  font-family: "MSG Admin Title";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/assets/intro/fonts/SongMyung-Regular.ttf") format("truetype");
+}
+
+/* 마이페이지와 순위표의 숫자 글꼴을 그대로 써서 게임 화면과 같은 숫자 모양을 낸다 */
+@font-face {
+  font-family: "MSG Admin Number";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/assets/leaderboard/fonts/libre-caslon-text-400.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "MSG Admin English";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
+}
+
+/* 광장 배경 위에 양피지 판 두 장(메뉴, 본문)을 올린다 Figma 384:396 */
 .layout {
-  background-image: var(--admin-background);
-  font-family:
-    "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  container: admin-layout / inline-size;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    linear-gradient(#1d120a66, #1d120a8c),
+    url("/assets/login/background-plaza.webp") center / cover fixed;
+  background-color: #21150d;
 }
 @media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
-  .layout { background-image: url("/assets/login/background-plaza-portrait.webp"); }
+  .layout {
+    background-image:
+      linear-gradient(#1d120a66, #1d120a8c),
+      url("/assets/login/background-plaza-portrait.webp");
+  }
 }
-.layout > div {
+.layout *,
+.layout *::before,
+.layout *::after {
+  box-sizing: border-box;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 236px minmax(0, 1fr);
+  align-items: start;
   gap: 20px;
+  max-width: 1720px;
+  margin: 0 auto;
   padding: 24px;
 }
-.layout .sidebar {
-  width: 224px;
-  background: #eddbb6;
-  background-image: none !important;
+
+/* ───── 메뉴 판 ───── */
+.sidebar {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 48px);
+  max-height: calc(100dvh - 48px);
+  padding: 22px 14px 18px;
   border: 6px solid transparent;
   border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
-  border-radius: 0;
-  background-clip: padding-box;
-  padding: 22px 16px;
-}
-.sidebar nav a {
-  min-height: 44px;
-  font-family: "Song Myung", serif;
-  font-size: 15px;
-}
-.sidebar nav a[aria-current="page"] {
-  background: #dfc599;
-  color: #613d15;
-}
-.sidebar nav a[aria-current="page"]::before {
-  background: #8a5519;
-}
-.sidebar > p,
-.sidebar > a {
-  font-family: inherit;
-}
-.layout .brand {
-  margin-bottom: 28px;
-}
-.layout .menuToggle {
-  display: none;
-}
-.layout .main {
-  padding: 26px 40px 32px;
-  background: #eee0bd;
-  background-image: none !important;
-  border: 8px solid transparent;
-  border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
-  border-radius: 0;
+  background: #efdfbd;
   background-clip: padding-box;
   box-shadow: 0 12px 36px #21180d55;
 }
-.layout .header {
-  margin-bottom: 4px;
-  padding-bottom: 18px;
-  border-bottom: 0;
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 18px;
 }
-.header h1 {
-  color: #613d15;
-  font-family: "Song Myung", serif;
-  font-size: 28px;
-  font-weight: 400;
-  letter-spacing: -0.02em;
+/* logo.png(1254px 정사각) 안에서 그림이 있는 772x561 영역만 잘라 --logo-w 폭으로 보인다 */
+.logo {
+  --logo-w: 148px;
+  display: block;
+  flex-shrink: 0;
+  width: var(--logo-w);
+  height: calc(var(--logo-w) * 561 / 772);
+  background: var(--logo-src) no-repeat;
+  background-size: calc(var(--logo-w) * 1254 / 772) auto;
+  background-position: calc(var(--logo-w) * -241 / 772) calc(var(--logo-w) * -331 / 772);
 }
-.header > div > span {
-  font-family: inherit;
-  font-size: 12px;
-  color: #80623d;
+.brandRole {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #7a5a2c;
+  font: 400 13px/16px "Song Myung", "MSG Admin Title", serif;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
 }
-.header > div > div > span {
-  font-family: inherit;
-  font-size: 12px;
+.brandRole::before,
+.brandRole::after {
+  width: 18px;
+  height: 1px;
+  background: #b99a66;
+  content: "";
 }
-.header > div > div > span:first-child {
-  border: 0;
-  padding: 0;
-  color: #79603c;
-}
-.header button {
-  min-height: 44px;
-  border: 0;
-  font-family: inherit;
+.menuToggle {
+  display: none;
 }
 
-.quickAction {
-  min-height: 62px;
-  width: 154px;
-  padding: 12px;
-  border: 5px solid transparent;
+/* 메뉴 항목: Figma대로 송명 15px, 선택된 항목은 금색 세로선과 옅은 칸 */
+.nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  padding: 14px 0 6px;
+  border-top: 1px dashed #c9ae7e;
+  overflow-y: auto;
+}
+.navLink {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 8px 14px 8px 18px;
+  color: #6a4f2c;
+  font: 16px/22px "Song Myung", "MSG Admin Title", serif;
+  text-decoration: none;
+}
+.navLink:hover {
+  background: #e7d2a8;
+  color: #4a3016;
+}
+.navLink[aria-current="page"] {
+  background: #e3c998;
+  color: #4a3016;
+}
+.navLink[aria-current="page"]::before {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: 0;
+  width: 3px;
+  background: #d38e25;
+  content: "";
+}
+.navGap {
+  height: 10px;
+  margin: 2px 14px;
+  border-bottom: 1px dashed #c9ae7e;
+}
+.participantLink {
+  display: block;
+  margin-top: 14px;
+  padding: 10px 14px 0;
+  border-top: 1px dashed #c9ae7e;
+  color: #7a5a2c;
+  font-size: 13px;
+  line-height: 20px;
+  text-decoration: underline;
+  text-decoration-color: #b99a66;
+  text-underline-offset: 4px;
+}
+.participantLink:hover {
+  color: #4a3016;
+}
+
+/* ───── 본문 판 ───── */
+.main {
+  min-width: 0;
+  min-height: calc(100vh - 48px);
+  min-height: calc(100dvh - 48px);
+  padding: 26px 36px 40px;
+  border: 8px solid transparent;
   border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
-  background: #e7cfa5;
+  background: #f3e7cb;
   background-clip: padding-box;
-  color: #613d15;
-  font: 16px/1.5 "Song Myung", serif;
+  box-shadow: 0 12px 36px #21180d55;
+}
+
+/* 머리글: 왼쪽 제목, 오른쪽에 시각과 관리자 이름 (Figma) 그 아래 화면 동작 버튼 */
+.header {
+  margin-bottom: 26px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #c9b086;
+}
+.headerRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+.headerRow h1 {
+  min-width: 0;
+  margin: 0;
+  color: #4a3016;
+  font: 400 30px/38px "Song Myung", "MSG Admin Title", serif;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
+}
+.session {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px 14px;
+  min-height: 38px;
+}
+.clock {
+  color: #b07416;
+  font: 500 13px/20px "Kode Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #4a3016;
+  font: 400 14px/20px "Song Myung", "MSG Admin Title", serif;
+}
+.userRole {
+  padding: 0 8px;
+  border: 1px solid #b99a66;
+  border-radius: 999px;
+  color: #7a5a2c;
+  font-size: 11px;
+  line-height: 18px;
+}
+.logout {
+  min-height: 32px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: #7a5a2c;
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  text-decoration-color: #b99a66;
+  text-underline-offset: 4px;
   cursor: pointer;
 }
-.quickAction:hover { background-color: #f4e0ba; }
-.quickAction:focus-visible { outline: 2px solid #75451f; outline-offset: 3px; }
-.quickAction[data-action="stop"], .quickAction[data-action="rollback"] { color: #8b3320; }
-.layout button:focus-visible, .layout a:focus-visible { outline: 2px solid #75451f; outline-offset: 2px; }
+.logout:hover {
+  color: #963b29;
+  text-decoration-color: currentColor;
+}
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  line-height: 20px;
+}
+.breadcrumb a {
+  color: #7a5a2c;
+  text-decoration: none;
+}
+.breadcrumb a::after {
+  margin-left: 6px;
+  color: #b49a70;
+  content: "/";
+}
+.breadcrumb a:hover {
+  color: #75412f;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: 14px;
+}
 
-@media (max-width: 1100px) {
-  .layout > div {
+.layout button:focus-visible,
+.layout a:focus-visible {
+  outline: 2px solid #75451f;
+  outline-offset: 2px;
+}
+
+@container admin-layout (max-width: 1100px) {
+  .shell {
+    grid-template-columns: 208px minmax(0, 1fr);
     gap: 16px;
     padding: 16px;
   }
-  .layout .sidebar {
-    width: 208px;
+  .sidebar {
+    top: 16px;
+    max-height: calc(100vh - 32px);
+    max-height: calc(100dvh - 32px);
   }
-  .layout .main {
-    padding: 24px;
+  .main {
+    min-height: calc(100vh - 32px);
+    min-height: calc(100dvh - 32px);
+    padding: 24px 24px 32px;
   }
 }
 
-@media (max-width: 767px) {
-  .layout > div {
+@container admin-layout (max-width: 767px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
     gap: 12px;
     padding: 12px;
   }
-  .layout .sidebar {
-    width: 100%;
-    padding: 10px 16px;
+  .sidebar {
+    position: static;
+    max-height: none;
+    padding: 8px 12px;
   }
-  .layout .brand {
-    justify-content: space-between;
-    margin: 0;
-  }
-  .brand img {
-    width: 32px;
-    height: 32px;
-  }
-  .brand > span {
-    flex: 1;
-  }
-  .layout .menuToggle {
-    display: block;
-    min-width: 44px;
-    min-height: 44px;
-    color: #71512b;
-    font-size: 14px;
-  }
-  .sidebar nav {
-    display: none;
-    padding: 12px 0 8px;
-  }
-  .sidebar[data-menu-open="true"] nav {
-    display: flex;
-  }
-  .sidebar > p,
-  .sidebar > a {
-    display: none;
-  }
-  .sidebar[data-menu-open="true"] > a {
-    display: block;
-    margin: 8px 12px 16px;
-    font-size: 13px;
-  }
-  .layout .main {
-    padding: 18px;
-    border-width: 6px;
-    border-radius: 0;
-  }
-  .layout .header {
-    gap: 14px;
-  }
-  .quickAction {
-    flex: 1 1 calc(50% - 12px);
-    width: auto;
-    min-width: 120px;
-  }
-  .header h1 {
-    font-size: 24px;
-  }
-  .header > div {
-    width: 100%;
+  .brand {
     flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    text-align: left;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 0;
   }
-  .header > div > span {
-    font-size: 11px;
+  .logo {
+    --logo-w: 72px;
   }
-  .header > div > div {
-    gap: 6px;
+  .brandRole {
+    flex: 1 1 4.5em;
+    min-width: 0;
+    font-size: 12px;
+    letter-spacing: 0.16em;
   }
-  .header > div > div > span:first-child {
+  .brandRole::before,
+  .brandRole::after {
     display: none;
+  }
+  .menuToggle {
+    display: grid;
+    place-items: center;
+    min-width: 56px;
+    min-height: 44px;
+    padding: 0 12px;
+    border: 1px solid #a78a5b;
+    border-radius: 2px;
+    background: #f6e8cc;
+    box-shadow: inset 0 0 0 2px #f6e8cc, inset 0 0 0 3px #d9c49a;
+    color: #5a3a19;
+    font: 400 14px/20px "Song Myung", "MSG Admin Title", serif;
+    cursor: pointer;
+  }
+  .nav,
+  .participantLink {
+    display: none;
+  }
+  .sidebar[data-menu-open="true"] .nav {
+    display: flex;
+    margin-top: 10px;
+    overflow: visible;
+  }
+  .sidebar[data-menu-open="true"] .participantLink {
+    display: block;
+    margin: 4px 0 8px;
+  }
+  .main {
+    min-height: 0;
+    padding: 20px 16px 28px;
+    border-width: 6px;
+  }
+  .header {
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+  }
+  .headerRow h1 {
+    flex-basis: 100%;
+    font-size: 25px;
+    line-height: 32px;
+  }
+  .session {
+    justify-content: flex-start;
+    min-height: 0;
+  }
+  .actions {
+    margin-top: 12px;
   }
 }
 
-@media (max-width: 380px) {
-  .layout > div {
+@container admin-layout (max-width: 380px) {
+  .shell {
     padding: 8px;
   }
-  .layout .main {
-    padding: 18px 14px;
-  }
-  .header > div {
-    flex-wrap: wrap;
+  .main {
+    padding: 18px 12px 24px;
   }
 }

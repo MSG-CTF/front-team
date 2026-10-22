@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { canRefund, mileageAttempt, paymentErrorMessage, validateCheckout, validateMileageAdjustment } from "./adminMileage.js";
+import { canRefund, formatMileageAmount, getMileageTypeLabel, mileageAttempt, paymentErrorMessage, validateCheckout, validateMileageAdjustment } from "./adminMileage.js";
 
 test("같은 마일리지 요청의 재시도는 키를 유지하고 내용이 달라지면 새 키를 쓴다", () => {
   let count = 0;
@@ -45,4 +45,14 @@ test("응답을 놓친 결제는 실패로 단정하지 않고 내역 확인을 
   assert.match(paymentErrorMessage(new Error("timeout")), /결제 내역/);
   assert.match(paymentErrorMessage({ response: { status: 500 } }), /확인하지 못했습니다/);
   assert.equal(paymentErrorMessage({ response: { status: 400, data: { message: "잔액이 부족합니다" } } }), "잔액이 부족합니다");
+});
+
+test("마일리지 내역은 유형 이름과 부호가 붙은 천 단위 금액으로 읽는다", () => {
+  assert.equal(getMileageTypeLabel("ADMIN_GRANT"), "관리자 지급");
+  assert.equal(getMileageTypeLabel("NEW_TYPE"), "NEW_TYPE");
+  assert.equal(getMileageTypeLabel(undefined), "-");
+  assert.equal(formatMileageAmount(1250), "+1,250");
+  assert.equal(formatMileageAmount(-300), "-300");
+  assert.equal(formatMileageAmount(0), "0");
+  assert.equal(formatMileageAmount(null), "-");
 });

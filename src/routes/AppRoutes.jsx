@@ -55,6 +55,7 @@ const AdminMileagePage = lazy(
 const AdminSettingsPage = lazy(
   () => import("../features/admin/pages/AdminSettingsPage.jsx"),
 );
+const AdminResourcesPage = lazy(() => import("../features/admin/pages/AdminResourcesPage.jsx"));
 const AdminLogsPage = lazy(
   () => import("../features/admin/pages/AdminLogsPage.jsx"),
 );
@@ -216,6 +217,7 @@ export default function AppRoutes() {
             </AdminRoute>
           }
         />
+        <Route path={ROUTES.adminResources} element={<AdminRoute><AdminResourcesPage /></AdminRoute>} />
         <Route
           path={ROUTES.adminAccounts}
           element={
