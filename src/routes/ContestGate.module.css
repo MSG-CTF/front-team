@@ -1,0 +1,99 @@
+/* 대회 시작 전 대기 화면: 가을 광장 사진 위에 어두운 막, 가운데 큰 남은 시간 */
+.screen {
+  position: relative;
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 24px 16px;
+  background: #21150d url("/assets/login/background-plaza.webp") center / cover fixed;
+  color: #f8ead0;
+  font-family: Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+.screen::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(24 14 6 / 55%), rgb(24 14 6 / 78%));
+  content: "";
+}
+.card {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: min(520px, 100%);
+  padding: 36px 28px 30px;
+  border-radius: 22px;
+  background: rgb(33 21 13 / 62%);
+  box-shadow: 0 0 0 1px rgb(248 234 208 / 14%), 0 30px 80px rgb(0 0 0 / 45%);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  text-align: center;
+}
+.eyebrow {
+  margin: 0;
+  color: #e8b06a;
+  font: 600 13px/18px "Inria Serif", ui-serif, serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.card h1 {
+  margin: 0;
+  font: 700 26px/34px Pretendard, sans-serif;
+  letter-spacing: -0.02em;
+}
+.countdown {
+  margin: 6px 0 0;
+  font: 700 clamp(44px, 12vw, 64px)/1.05 "Inria Serif", ui-serif, serif;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.when {
+  margin: 0;
+  color: rgb(248 234 208 / 82%);
+  font-size: 15px;
+  font-weight: 600;
+}
+.note {
+  max-width: 360px;
+  margin: 4px 0 0;
+  color: rgb(248 234 208 / 62%);
+  font-size: 13px;
+  line-height: 20px;
+  word-break: keep-all;
+}
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+.links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 19px;
+  background: rgb(248 234 208 / 12%);
+  color: #f8ead0;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+.links a:hover {
+  background: rgb(248 234 208 / 22%);
+}
+.links a:focus-visible {
+  outline: 2px solid #e8b06a;
+  outline-offset: 2px;
+}
+.checking {
+  display: grid;
+  min-height: 100vh;
+  min-height: 100dvh;
+  place-items: center;
+  background: #21150d;
+  color: #f8ead0;
+}

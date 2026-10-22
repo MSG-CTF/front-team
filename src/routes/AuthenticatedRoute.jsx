@@ -6,6 +6,7 @@ import { ROLE } from "../constants/enums.js";
 import { isSuccess } from "../utils/response.js";
 import { ROUTES } from "./routePaths.js";
 import usePageResources from "./usePageResources.js";
+import ContestGate from "./ContestGate.jsx";
 
 const AuthenticatedUser = createContext(null);
 
@@ -88,5 +89,7 @@ function SessionGate() {
 
 function AuthenticatedContent() {
   usePageResources();
-  return <Outlet />;
+  const user = useAuthenticatedUser();
+  // 대회 시작 전에는 참가자의 게임 화면을 대기 화면으로 바꾼다 관리자는 그대로 지나간다
+  return <ContestGate role={user?.role}><Outlet /></ContestGate>;
 }
