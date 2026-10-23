@@ -526,6 +526,7 @@ Bearer 인증 필요.
 | GET | `/admin/settings` | 대회 설정 조회 | **완료(main)** |
 | PATCH | `/admin/settings` | 대회 설정 변경(부분 수정, 대회 시작·종료 시각 포함) | **완료(main)** |
 | GET | `/admin/koth/challenges` | KoTH 문제 목록(관리자용, 구간 수집 상태와 저장소 연결 포함) | 프론트 요청, PR 대기 |
+| POST | `/admin/koth/challenges` | KoTH 문제 등록(직접 입력, 저장소 폴더), 내부 토큰 한 번 발급 | 프론트 요청, PR 대기 |
 | GET | `/admin/koth/challenges/{koth_challenge_id}` | KoTH 문제 상세와 누적 순위 | 프론트 요청, PR 대기 |
 | GET | `/admin/koth/challenges/{koth_challenge_id}/periods` | 15분 구간별 순위·문제 점수·환산 점수 | 프론트 요청, PR 대기 |
 | PATCH | `/admin/koth/challenges/{koth_challenge_id}` | KoTH 제목·지문·접속 주소·공개 순번·상태 수정 | 프론트 요청, PR 대기 |

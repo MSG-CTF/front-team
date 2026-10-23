@@ -14,12 +14,18 @@
 - 채점: poll_koth_scores 명령이 15분 구간마다 문제 서버 GET /internal/koth/scores 를 불러 period_rank 를 점수로 바꾼다
 - 구간(period_id)은 정각 기준 15분 칸이다 parse_period 가 분이 0, 15, 30, 45 가 아니면 거부한다
 - 실패하거나 반영 전인 구간은 poll_koth_scores --period-id 로 다시 부를 수 있다 명령은 ACTIVE 문제만 돈다
-- 관리자 편집은 Django 관리자(/admin/)에서만 된다 지문(description) 칸은 모델에 없다
+- 관리자 등록과 편집은 Django 관리자(/admin/)에서만 된다 지문(description) 칸은 모델에 없다
+- 문제 서버는 플랫폼의 /internal/koth/team_tokens/verify, /internal/teams 를 koth_challenge_id 와 X-Internal-Token 헤더로 부른다 플랫폼은 그 토큰의 sha256 만 inbound_internal_token_hash 에 둔다
 
 ## 화면 동작
 
 - 화면은 15분 구간을 틱이라고 부른다 문제를 연 시각이 든 칸이 1틱이고, 그 뒤 15분마다 2틱, 3틱으로 센다
 - 목록: 공개 순번 순서로 상태, 선두 팀과 점수, 득점 팀 수, 마지막 틱과 수집 상태, 저장소 연결 여부를 한 줄씩 보인다
+- 등록: 목록 위 직접 등록과 저장소에서 가져오기
+  - 동아리마다 문제는 하나라 문제가 없는 동아리만 고르거나 새 동아리 이름을 쓴다 새 문제는 공개 예정으로 만든다
+  - 저장소에서 가져오면 아직 연결하지 않은 koth-* 폴더를 골라 info.yaml 이름과 지문을 채우고, 채점 토큰 이름은 KOTH_폴더이름_TOKEN 으로 제안한다
+  - 같은 이름 문제가 저장소 미연결로 이미 있으면 새로 만들지 말고 그 문제의 저장소 연결 탭으로 보낸다
+  - 문제 서버에 넣을 내부 토큰 원문은 등록 직후 한 번만 보인다 상세에서 이어서 설정하면 문제 정보 탭부터 연다
 - 상세 탭
   - 틱 기록: 1틱부터 마지막 틱까지 상태 색으로 칠한 번호 칸을 한 줄로 보이고, 고른 틱의 순위, 문제 점수(metric_score), 환산 점수를 아래에 보인다 실패한 틱과 끝났는데 반영 전인 틱은 하나씩 또는 한 번에 다시 불러온다 100틱이 넘으면 이전 틱 쪽을 이어 붙인다
   - 누적 순위: GET /koth/leaderboard (구현 완료) 그대로, 위에 점수 환산 표를 둔다
@@ -82,6 +88,29 @@
 - repository 는 연결 전이면 null
 - 최신화: source_revision 은 플랫폼에 반영한 커밋, committed_at 은 그 커밋 시각, synced_at 은 플랫폼이 반영한 시각이다 latest_* 는 저장소 main 의 그 폴더 최신 커밋이다 화면은 둘이 다르면 탭 위와 목록에 새 커밋을 띄운다
 - updated_by 는 문제 정보를 마지막으로 저장한 관리자 이름이다 문제 정보 탭 아래에 마지막 저장 시각과 함께 보인다
+
+### POST /admin/koth/challenges
+
+```json
+{
+  "club_id": "uuid", "club_name": "새 동아리 이름 (club_id 대신)",
+  "title": "1~100자", "description": "지문", "open_group": 1,
+  "opened_at": "ISO | null", "closed_at": "ISO | null",
+  "challenge_url": "https://... | null", "score_api_url": "https://... | null", "score_api_token_env": "KOTH_JENGA_TOKEN | null",
+  "repository_slug": "koth-jenga | null", "reason": "1~500자 필수"
+}
+```
+
+- club_id 와 club_name 중 하나만 보낸다 KothChallenge 는 동아리마다 하나(uq_koth_challenge_club)라 club_id 는 문제가 없는 동아리만 받고, club_name 을 보내면 KothClub 을 같이 만든다
+- 새 문제의 status 는 SCHEDULED 다 칸 규칙은 PATCH 와 같다
+- repository_slug 를 보내면 PUT .../repository 처럼 그 폴더에 잇고 지금 main 커밋을 source_revision 으로 남긴다
+- inbound_internal_token_hash 가 필수 칸이라 서버가 내부 토큰을 만들고 해시만 저장한다 원문은 이 응답의 internal_token 으로 한 번만 준다
+- 응답은 201, 목록 항목과 같은 모양에 internal_token 을 더한다 운영 기록(AdminEvent)에 사유를 남긴다
+- 오류: 400 INVALID_REQUEST, 404 CLUB_NOT_FOUND, 409 KOTH_CLUB_HAS_CHALLENGE, 409 KOTH_CLUB_NAME_TAKEN, 404 REPOSITORY_FOLDER_NOT_FOUND, 409 REPOSITORY_ALREADY_LINKED
+
+![KoTH 문제 등록](images/admin/koth-create.jpg)
+
+![등록 직후 내부 토큰](images/admin/koth-token.jpg)
 
 ### GET /admin/koth/challenges/{koth_challenge_id}
 
@@ -238,5 +267,5 @@ prob/for_user 파일 수: card-battle-arena 없음, dependency-hell 23개, grand
 
 ## 확인 범위
 
-- 프론트 단위 테스트(utils/adminKoth.test.js)로 환산 규칙, 공동 순위, 바뀐 칸 계산, 폴더 추천을 확인했다
+- 프론트 단위 테스트(utils/adminKoth.test.js)로 환산 규칙, 공동 순위, 바뀐 칸 계산, 폴더 추천, 등록 요청 본문을 확인했다
 - 화면은 로컬 목업 API로 1366x768, 390x844 에서 확인했다 실제 백엔드와는 아직 연결해 보지 않았다
