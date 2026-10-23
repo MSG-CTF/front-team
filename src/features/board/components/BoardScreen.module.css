@@ -81,13 +81,12 @@
   .stage .leftPanel .panelToggleSection::after { inset: 4px; background-image: url("/assets/board/plates/plate-open-line.svg"); background-size: 100.44% 103%; background-position: center; }
   /* Figma 5:19 주사위판(333×146)을 너비 100%로 놓고 값은 시안 좌표를 퍼센트로 바꿔 겹친다 */
   .stage .leftPanelCard .diceStatus { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 333 / 146; padding: 0; display: block; }
-  .stage .leftPanelCard .diceStatusIcon { display: block; position: absolute; left: 7.4%; top: 52.7%; width: 3.7%; height: auto; transform: translateY(-50%); }
-  .stage .leftPanelCard .diceReadout { position: absolute; left: 15.1%; right: 4.5%; top: 52.7%; width: auto; transform: translateY(-50%); font-size: clamp(11px, 0.8cqw, 16px); }
+  .stage .leftPanelCard .diceStatusIcon { display: block; position: absolute; left: 7.4%; top: 57.5%; width: 3.7%; height: auto; transform: translateY(-50%); }
+  .stage .leftPanelCard .diceReadout { position: absolute; left: 15.1%; right: 4.5%; top: 57.5%; width: auto; transform: translateY(-50%); font-size: clamp(11px, 0.8cqw, 16px); }
   .stage .leftPanelCard .diceChallengeRow { position: absolute; left: auto; right: 4.5%; top: 10%; font-size: clamp(10px, 0.62cqw, 13px); }
   .stage .leftPanelCard .diceStatusMessage { position: absolute; left: 42%; right: 4.5%; top: 21%; width: auto; margin: 0; text-align: right; font-size: clamp(10px, 0.58cqw, 12px); line-height: 1.35; }
-  .stage .leftPanelCard .diceGauge { display: block; position: absolute; left: 7.4%; top: 59.4%; width: 88.1%; height: 8.4%; box-sizing: border-box; padding: 0.1cqw 0.14cqw; border-radius: 0.3cqw; }
+  .stage .leftPanelCard .diceGauge { display: block; position: absolute; left: 7.4%; top: 64.2%; width: 88.1%; height: 8.4%; box-sizing: border-box; padding: 0.1cqw 0.14cqw; border-radius: 0.3cqw; }
   .diceGauge span { display: block; height: 100%; min-width: 0; border-radius: 0.2cqw; background: linear-gradient(#fbbb35, #fbb934 38%, #d3861f); box-shadow: 0 0 0.3cqw #f4a8286b; transition: width 1s linear; }
-  .diceGauge[data-idle="true"] span { opacity: .45; box-shadow: none; }
   .stage .leftPanelCard .chancePanel {
     position: relative; inset: auto; width: auto; max-height: none; margin-top: 0.21cqw;
     padding: 0.73cqw 0.83cqw; display: flex; flex-direction: column; gap: 0.26cqw;
