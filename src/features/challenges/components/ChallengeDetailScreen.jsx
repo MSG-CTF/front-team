@@ -107,6 +107,7 @@ export default function ChallengeDetailScreen({
                         instance={instance}
                         otherInstance={otherInstance}
                         error={instanceError}
+                        pendingAction={pendingAction}
                       />
                       <InstanceControls
                         instance={instance}
