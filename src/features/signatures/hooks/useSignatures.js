@@ -16,6 +16,8 @@ import {
 
 export function useSignatures() {
   const [revision, setRevision] = useState(0);
+  // refresh 로 부른 차례는 보던 목록을 비우지 않고 뒤에서 다시 읽는다 (부스 메뉴판을 연 채 정답을 낸 뒤)
+  const quietRevision = useRef(-1);
   const [state, setState] = useState({
     status: "loading",
     data: [],
@@ -23,7 +25,8 @@ export function useSignatures() {
   });
   useEffect(() => {
     const controller = new AbortController();
-    setState({ status: "loading", data: [], error: "" });
+    const quiet = quietRevision.current === revision;
+    if (!quiet) setState({ status: "loading", data: [], error: "" });
     async function load() {
       try {
         const { data: envelope } = await getSignatures({
@@ -34,7 +37,8 @@ export function useSignatures() {
         if (!controller.signal.aborted)
           setState({ status: "success", data, error: "" });
       } catch (error) {
-        if (!controller.signal.aborted)
+        // 조용히 다시 읽다 실패하면 보던 목록을 그대로 둔다
+        if (!controller.signal.aborted && !quiet)
           setState({
             status: "error",
             data: [],
@@ -45,7 +49,12 @@ export function useSignatures() {
     load();
     return () => controller.abort();
   }, [revision]);
-  return { ...state, retry: () => setRevision((value) => value + 1) };
+  const retry = useCallback(() => setRevision((value) => value + 1), []);
+  const refresh = useCallback(() => setRevision((value) => {
+    quietRevision.current = value + 1;
+    return value + 1;
+  }), []);
+  return { ...state, retry, refresh };
 }
 
 export function useSignatureDetail(signatureId) {

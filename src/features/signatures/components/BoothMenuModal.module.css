@@ -23,14 +23,39 @@
 .description h4 { display: flex; align-items: center; gap: 9px; margin: 0 0 clamp(5px, 1.9cqw, 10px); font-size: clamp(10px, 2.5cqw, 13px); font-weight: 400; letter-spacing: .13em; flex-shrink: 0; }
 .description h4::before, .description h4::after { content: ""; height: 1px; background: #b48953; flex: 1; }
 .body { min-height: 0; font-size: clamp(13px, 3.7cqw, 16px); line-height: 1.7; text-align: center; white-space: pre-wrap; overflow-wrap: anywhere; }
-/* 메뉴판 아래 종이 단추: 지문이 길어도 늘 보이고 원본 그림을 가리지 않는다 */
-.solve { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 6px 26px; border: 1px solid #9d7441; border-radius: 2px; background: #f2dfbb; color: #632b13; font-family: "Booth Menu Title", serif; font-size: 19px; line-height: 1.2; text-align: center; text-decoration: none; box-shadow: 0 8px 22px #170b0760; }
-.solve:hover { background: #f8e9cc; }
-.solve:focus-visible { outline: 2px solid #ffe2af; outline-offset: 3px; }
+/* 한 부스의 메뉴가 여럿이면 MENU 자리에서 고른다 고른 메뉴만 밑줄 */
+.menuTabs { display: flex; justify-content: center; gap: clamp(12px, 5cqw, 22px); margin: 0 0 clamp(2px, 1cqw, 6px); }
+.menuTabs button { position: relative; min-height: 32px; padding: 2px 2px 6px; border: 0; background: none; color: #926438; font: inherit; font-size: clamp(12px, 3cqw, 15px); letter-spacing: .08em; cursor: pointer; }
+.menuTabs button:hover { color: #632b13; }
+.menuTabs button[aria-pressed="true"] { color: #54260f; }
+.menuTabs button[aria-pressed="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 2px; height: 1.5px; background: #9f6939; }
+.menuTabs button:focus-visible { outline: 2px solid #9b572b; outline-offset: 2px; }
+/* 메뉴판 아래 종이 띠에서 바로 플래그를 낸다 지문이 길어도 늘 보이고 원본 그림을 가리지 않는다 */
+.flag, .flagDone { width: 100%; padding: 12px; border: 1px solid #9d7441; border-radius: 2px; background: #f2dfbb; box-shadow: 0 8px 22px #170b0760; color: #61361e; font-family: "Booth Menu Body", serif; }
+.flag { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.flagRow { display: flex; gap: 8px; }
+/* 플래그는 0과 O, 1과 l 을 가려 읽게 고정폭 글꼴로 쓰고 iOS 확대를 막으려 16px 로 둔다 */
+.flagRow input { flex: 1 1 0; width: 0; min-width: 0; height: 44px; padding: 0 12px; border: 1px solid #b48953; border-radius: 2px; background: #fbf3e2; color: #3d1f0c; font: 16px "Kode Mono", ui-monospace, monospace; }
+.flagRow input::placeholder { color: #a8855c; opacity: 1; }
+.flagRow input[aria-invalid="true"] { border-color: #a1301b; }
+.flagRow input:disabled { opacity: .6; }
+.flagRow button { flex: none; min-width: 76px; height: 44px; padding: 0 16px; border: 1px solid #4e2410; border-radius: 2px; background: #632b13; color: #ffe9c4; font: 18px/1 "Booth Menu Title", serif; cursor: pointer; }
+.flagRow button:hover:not(:disabled) { background: #7a3518; }
+.flagRow button:disabled { opacity: .5; cursor: not-allowed; }
+.flagRow :is(input, button):focus-visible { outline: 2px solid #9b572b; outline-offset: 2px; }
+.flagFeedback { margin: 0; color: #7a4a26; font-size: 14px; line-height: 1.5; word-break: keep-all; }
+.flagFeedback[data-tone="error"] { color: #a1301b; }
+.flagFeedback[data-tone="success"] { color: #3f6a2a; }
+.flagNote { margin: 0; color: #8a6440; font-size: 12.5px; line-height: 1.5; word-break: keep-all; }
+.flagDone { display: grid; justify-items: center; gap: 2px; text-align: center; }
+.flagDone strong { color: #3f6a2a; font: 19px/1.3 "Booth Menu Title", serif; }
+.flagDone span { font-size: 13px; line-height: 1.5; word-break: keep-all; }
 .close { position: absolute; right: -9px; top: -9px; z-index: 2; width: 32px; height: 32px; border: 2px solid #c49a58; border-radius: 50%; background: #4e2c15; color: #ffe2af; font: 23px/1 serif; box-shadow: 0 2px 5px #26120870; }
 .close::after { content: ""; position: absolute; inset: -6px; }
 .close:focus-visible, .content:focus-visible { outline: 2px solid #9b572b; outline-offset: 3px; }
 .notice { margin: auto 0; text-align: center; line-height: 1.8; }
 .notice button { min-height: 44px; padding: 5px 15px; border: 1px solid #a16c39; background: #ead09d; color: inherit; font: inherit; }
+/* 큰 화면에서는 메뉴판을 키워 지문과 제출 띠를 읽기 쉽게 한다 */
+@media (min-width: 601px) and (min-height: 900px) { .dialog { width: min(360px, 100%); } }
 @media (max-width: 600px) { .dialog { width: min(390px, 100%); } }
 @media (max-height: 650px) { .dialog { width: min(350px, 100%); } }
