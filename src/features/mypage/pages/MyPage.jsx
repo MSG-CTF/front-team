@@ -65,8 +65,9 @@ export default function MyPage() {
   }, []);
 
   useEffect(() => {
+    // 확인 중 팀이 바뀌었다가 돌아와도 새 프로필로 발급 세션을 다시 연결한다
     qrSession.current.setTeam(qrTeamId);
-  }, [qrTeamId]);
+  }, [qrTeamId, apiState.profile]);
 
   useEffect(() => {
     if (qrState.status !== "success") return;
