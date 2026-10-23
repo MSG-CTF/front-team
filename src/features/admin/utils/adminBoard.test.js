@@ -31,15 +31,16 @@ test("칸 상태 변경과 말 이동은 칸 번호, 상태, 사유 1~500자를 
   assert.notEqual(validateBoardPositionMove({ position: "0", reason: "x" }), "");
 });
 
-test("이벤트 type 11종에 새 보드 조작 3종이 포함된다", () => {
+test("이벤트 필터에 보드 조작과 릴리스 전환이 중복 없이 포함된다", () => {
   const values = ADMIN_EVENT_TYPES.map((item) => item.value);
-  assert.equal(values.length, 11);
-  assert.equal(new Set(values).size, 11);
-  for (const value of ["DICE_ADJUSTED", "BOARD_POSITION_MOVED", "CELL_STATUS_CHANGED"]) assert.ok(values.includes(value));
+  assert.equal(values.length, 12);
+  assert.equal(new Set(values).size, 12);
+  for (const value of ["DICE_ADJUSTED", "BOARD_POSITION_MOVED", "CELL_STATUS_CHANGED", "CHALLENGE_RELEASE_ACTIVATED"]) assert.ok(values.includes(value));
+  assert.equal(getAdminEventTypeLabel("CHALLENGE_RELEASE_ACTIVATED"), "배포 버전 전환");
   assert.equal(getAdminEventTypeLabel("UNKNOWN_TYPE"), "UNKNOWN_TYPE");
 });
 
-test("PR 대기 이벤트 5종은 확정 11종과 겹치지 않고 라벨이 있다", () => {
+test("PR 대기 이벤트 5종은 확정 이벤트와 겹치지 않고 라벨이 있다", () => {
   const confirmed = new Set(ADMIN_EVENT_TYPES.map((item) => item.value));
   assert.equal(ADMIN_EVENT_TYPES_PENDING.length, 5);
   for (const item of ADMIN_EVENT_TYPES_PENDING) {

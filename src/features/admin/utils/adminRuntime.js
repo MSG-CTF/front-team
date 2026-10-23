@@ -1,3 +1,13 @@
+export function validateReleaseActivationReason(reason) {
+  if (reason == null) return "";
+  if (typeof reason !== "string") return "사유는 문자열로 입력해주세요";
+  const trimmed = reason.trim();
+  if (Array.from(trimmed).length > 500) return "사유는 500자 이하로 입력해주세요";
+  // Unicode 모드라 정상 이모지는 유지하고 단독 surrogate만 거절한다
+  if (/[\u0000\uD800-\uDFFF]/u.test(trimmed)) return "사유에 유효하지 않은 문자가 있습니다";
+  return "";
+}
+
 export function parseReleaseFile(text) {
   let parsed;
   try { parsed = JSON.parse(text); }

@@ -33,7 +33,7 @@ function EventMessage({ message }) {
 }
 
 // 로그/리소스 - README.md "8. 관리자 페이지 > 리소스/로그".
-// 이벤트 type 11종, severity 4종(INFO/WARNING/CRITICAL/MANUAL_REVIEW)은 백엔드 #81~#85 기준.
+// 릴리스 전환 사유와 처리자를 같은 행에서 확인한다
 export default function AdminLogsPage() {
   const [page, setPage] = useState(1);
   const [appliedType, setAppliedType] = useState("");
@@ -76,6 +76,7 @@ export default function AdminLogsPage() {
                     <th>심각도</th>
                     <th>메시지</th>
                     <th>팀 / 문제</th>
+                    <th>처리자</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -91,11 +92,12 @@ export default function AdminLogsPage() {
                         {/* 삭제된 팀은 team_id/team_name이 null이고 정보는 message에 남는다 */}
                         {[event.team_name, event.challenge_title].filter(Boolean).join(" / ") || "-"}
                       </td>
+                      <td className={`${ui.wrap} ${ui.muted}`}>{event.actor || "-"}</td>
                     </tr>
                   ))}
                   {eventRows.length === 0 && (
                     <tr className={ui.emptyRow}>
-                      <td colSpan={5} className={ui.empty}>이벤트 없음</td>
+                      <td colSpan={6} className={ui.empty}>이벤트 없음</td>
                     </tr>
                   )}
                 </tbody>
