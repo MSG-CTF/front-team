@@ -101,6 +101,8 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
   const tests = (data?.tests ?? []).filter((item) => item.release_id === release?.release_id);
   const latest = active?.release_id === release?.release_id ? active : tests[0];
   const otherActive = active && active.release_id !== release?.release_id;
+  // 테스트는 관리자마다 하나씩이라 진행 중인 테스트가 다른 문제 것일 수 있다
+  const elsewhere = Boolean(otherActive) && active.challenge_id !== challengeId;
   const endpoints = mapInstanceEndpoints(latest);
   const running = Boolean(latest && !latest.finished_at && RUNNING_STATES.includes(latest.status));
   const steps = deploymentTestSteps(latest);
@@ -130,14 +132,14 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
     {disabledReason && <p role="status" className={styles.testHint}>{disabledReason}</p>}
     {(error || loadError) && <p role="alert" className={styles.testError}>{error || loadError}</p>}
     {!data && !error && !loadError && <p role="status" className={styles.empty}>테스트 기록을 불러오는 중입니다</p>}
-    {/* 다른 버전 테스트가 돌고 있으면 그 테스트를 먼저 보이고, 이 버전의 지난 진행 단계는 숨긴다 */}
+    {/* 다른 버전이나 다른 문제의 테스트가 돌고 있으면 그 테스트를 먼저 보이고, 이 버전의 지난 진행 단계는 숨긴다 */}
     {otherActive && <div className={styles.confirmation}>
-      <p>버전 {active.version} 테스트가 진행 중입니다{active.created_at ? ` · ${elapsedLabel(active.created_at, now)} 경과` : ""}</p>
-      <p className={styles.helpText}>{deploymentTestStatus[active.status] ?? active.status} · 한 문제에 테스트는 하나씩 돌고, 끝나면 이 버전도 시험할 수 있습니다</p>
+      <p>{elsewhere ? <><strong>{active.challenge_title || "다른 문제"}</strong> 버전 {active.version}</> : `버전 ${active.version}`} 테스트가 진행 중입니다{active.created_at ? ` · ${elapsedLabel(active.created_at, now)} 경과` : ""}</p>
+      <p className={styles.helpText}>{elsewhere ? "다른 문제의 테스트입니다 · " : ""}{deploymentTestStatus[active.status] ?? active.status} · 테스트는 관리자마다 하나씩 돌고, 끝나면 이 버전도 시험할 수 있습니다</p>
       <div className={styles.formActions}>
         {active.can_stop && <button type="button" className={styles.button} disabled={busy}
           onClick={() => mutate(() => stopAdminDeploymentTest(active.challenge_id, active.test_id))}>진행 중인 테스트 종료</button>}
-        {onSelectRelease && <button type="button" className={styles.primary} disabled={busy} onClick={() => onSelectRelease(active.release_id)}>버전 {active.version} 테스트 보기</button>}
+        {onSelectRelease && !elsewhere && <button type="button" className={styles.primary} disabled={busy} onClick={() => onSelectRelease(active.release_id)}>버전 {active.version} 테스트 보기</button>}
       </div>
     </div>}
     {!otherActive && <>
