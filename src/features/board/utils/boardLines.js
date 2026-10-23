@@ -301,6 +301,16 @@ export function getBoardLineTileLabelPosition(cellIndexes) {
   return { cellIndex: best.cellIndex, x: best.x, y: best.y, width: best.width, height: best.height, rotation: best.rotation };
 }
 
+// 열린 문제 패널의 라인 독점 탭 숫자와 요약 칸에 쓴다
+// 지급 확인 응답이 없는 동안은 독점 수 대신 모든 문제를 푼 라인 수를 센다
+export function getBoardLineCounts(lines) {
+  const list = Array.isArray(lines) ? lines : [];
+  const payoutUnknown = list.some((line) => line.payoutStatus === "unknown");
+  const cleared = list.filter((line) => line.allProblemsCleared).length;
+  const completed = list.filter((line) => line.isCompleted).length;
+  return { total: list.length, cleared, completed, payoutUnknown, done: payoutUnknown ? cleared : completed };
+}
+
 export function getBoardLineStatus(line) {
   if (line.payoutStatus === "unknown" && line.allProblemsCleared) return "풀이 완료 / 지급 미확인";
   if (line.isCompleted) return "독점 완료";

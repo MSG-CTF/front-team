@@ -198,8 +198,12 @@ test("좌측 보드 UI는 타이머를 분리하고 열린 문제 패널을 열�
   const panel = readFileSync(new URL("./features/board/components/OpenChallengesSidePanel.jsx", import.meta.url), "utf8");
   // 데스크톱에서는 주사위 상태·찬스카드·열린 문제 버튼이 leftPanelCard 한 패널 안에 모인다
   assert.match(panel, /placement === "panel"/);
-  assert.match(panel, /top-\[22\.4%\]/);
   assert.match(screen, /className=\{styles\.leftPanelCard\}[\s\S]*<BoardDiceStatusPanel[\s\S]*<ChanceCardSummary[\s\S]*placement="panel"/);
+  // 통합 패널과 열린 문제 패널은 왼쪽 위 여백선에서 같은 폭으로 쌓이고, 열린 문제 패널은 아래 여백선까지 채운다
+  const css = readFileSync(new URL("./features/board/components/BoardScreen.module.css", import.meta.url), "utf8");
+  assert.match(css, /\.stage \.leftPanel \{[^}]*left: calc\(2\.5% - var\(--hud-extra-x\)\); top: var\(--hud-top\); width: var\(--left-width\)/);
+  assert.match(css, /\.stage \.leftPanel \{[^}]*height: calc\(100% \+ 2 \* var\(--hud-extra-y\) - 2 \* var\(--hud-margin-y\)\)/);
+  assert.match(css, /\.stage \.leftPanel \.openPanel \{[^}]*width: 100%;[^}]*flex: 1 1 auto/);
 });
 
 test("문제 후보가 0개면 재조회 안내를 띄우고 다음 칸으로 넘기지 않는다", () => {
@@ -814,67 +818,83 @@ test("기차 목적지 선택과 이동 중에는 독점 외곽선이 칸 클릭
   assert.match(source, /isInteractive=\{!isRolling && !rolling && !trainTravel\?\.journey && selectableCellIndexes == null\}/);
 });
 
-test("라인 점수 시안과 실제 지급값을 구분하고 0점과 미제공을 별도로 표시한다", () => {
+test("라인 독점 탭은 시안 배점과 실제 지급값을 구분하고 0점과 미제공을 따로 표시한다", () => {
   const make = (bonusScore) => prepareBoardLines([{ lineId: "a", label: "1번 라인", cellIndexes: [2,3], solvedCellIndexes: [2,3], isCompleted: true, rewardScore: 600, bonusScore }]);
-  const props = { selectedLineId: "a", onSelectLine: () => {} };
-  const preview = render("BoardLineSummary", { ...props, lines: make(500), isPreview: true });
+  const preview = render("BoardLineSummary", { lines: make(500), isPreview: true });
   assert.match(preview, /시안 배점 · 실제 총점 반영 없음/);
   assert.match(preview, /시안 배점 600 pts, 시안 획득 500 pts/);
-  assert.match(preview, /data-line-reward-score="a">600 pts/);
-  assert.match(preview, /data-line-earned-score="a" data-score-state="awarded">500 pts/);
-  const actual = render("BoardLineSummary", { ...props, lines: make(0) });
+  assert.match(preview, /data-line-reward-score="a">시안 배점 600 pts/);
+  assert.match(preview, /data-line-earned-score="a">시안 획득 500 pts/);
+  const actual = render("BoardLineSummary", { lines: make(0) });
   assert.match(actual, /독점 배점 600 pts, 획득 점수 0 pts/);
+  assert.match(actual, /data-line-earned-score="a">획득 0 pts/);
   assert.match(actual, /data-line-earned-total="true">0 pts/);
   assert.doesNotMatch(actual, /시안 배점|시안 획득/);
-  const missing = render("BoardLineSummary", { ...props, lines: make(null) });
-  assert.match(missing, /data-line-earned-score="a" data-score-state="pending">확인 중/);
-  assert.match(missing, /data-line-earned-total="true">확인 중/);
-  assert.match(preview, /<details[^>]*id="board-line-progress"/);
-  assert.doesNotMatch(preview, /<details[^>]*\sopen=""|라인 현황 닫기/);
+  const missing = render("BoardLineSummary", { lines: make(null) });
+  assert.match(missing, /독점 배점 600 pts, 획득 점수 확인 중/);
+  assert.doesNotMatch(missing, /data-line-earned-score=/);
+  assert.match(missing, /data-line-earned-total="true" data-pending="true">확인 중/);
+  assert.match(preview, /<div id="board-line-progress"/);
+  assert.doesNotMatch(preview, /<details|<summary|<button/);
 });
 
-test("라인 점수표는 해결 진행, 예정 배점, 획득 합계를 한 펼쳐보기에 담는다", () => {
+test("라인 독점 탭은 라인마다 대상 칸과 푼 칸, 상태를 보이고 합계를 요약한다", () => {
   const lines = prepareBoardLines([
     { lineId: "a", label: "긴이름이라도테두리밖으로나가지않아야하는첫번째라인", cellIndexes: [2,3], solvedCellIndexes: [2,3], isCompleted: true, rewardScore: 300, bonusScore: 200 },
     { lineId: "b", label: "2번 라인", cellIndexes: [4,5], solvedCellIndexes: [4], rewardScore: 150 },
   ]);
-  const html = render("BoardLineSummary", { lines, selectedLineId: "b", onSelectLine() {}, isOpen: true });
-  assert.match(html, /라인 점수 <span[^>]*><span>독점 1\/2/);
-  assert.match(html, /<span>라인<\/span><span>배점<\/span><span>획득<\/span>/);
-  assert.match(html, /data-line-earned-score="b" data-score-state="unearned">0 pts/);
+  const html = render("BoardLineSummary", { lines, selectedLineId: "b" });
+  assert.match(html, /<dt>독점한 라인<\/dt><dd>1<small>\/2<\/small><\/dd>/);
   assert.match(html, /data-line-reward-total="true">450 pts/);
   assert.match(html, /data-line-earned-total="true">200 pts/);
-  assert.match(html, /aria-pressed="true" aria-label="2번 라인, 1\/2 해결, 독점 배점 150 pts, 획득 점수 0 pts, 해당 칸 보기"/);
-  assert.match(html, /<details[^>]+open=""/);
+  assert.match(html, /data-line-row="b" data-selected="true"/);
+  assert.doesNotMatch(html, /data-line-row="a" data-selected/);
+  assert.match(html, /data-tone="won">독점 완료/);
+  assert.match(html, /data-tone="count">1\/2/);
+  assert.match(html, /칸 <span data-solved="true">4<\/span><span>5<\/span>/);
+  assert.match(html, /2번 라인, 1\/2 해결, 대상 칸 4, 5, 독점 배점 150 pts, 획득 점수 0 pts/);
+  assert.match(html, /data-line-reward-score="b">배점 150 pts/);
+  assert.doesNotMatch(html, /data-line-earned-score="b"/);
   assert.doesNotMatch(html, /<a |NaN|Infinity/);
   assert.equal(render("BoardLineSummary", { lines: [] }), "");
 });
 
-test("라인 완료 대기나 배점 미정은 숫자로 확정하지 않고 점수표에 남긴다", () => {
+test("라인 완료 대기, 배점 미정, 지급 미확인은 숫자로 확정하지 않고 상태로 남긴다", () => {
   const lines = prepareBoardLines([{ lineId: "a", label: "1번 라인", cellIndexes: [2,3], solvedCellIndexes: [2,3], rewardScore: null, bonusScore: 500 }]);
-  const html = render("BoardLineSummary", { lines, onSelectLine() {} });
-  assert.match(html, /완료 확인 중, 독점 배점 미정, 획득 점수 확인 중/);
-  assert.match(html, /data-line-reward-total="true">미정/);
-  assert.match(html, /data-line-earned-total="true">확인 중/);
-  assert.doesNotMatch(html, /500 pts|>0 pts</);
+  const html = render("BoardLineSummary", { lines });
+  assert.match(html, /1번 라인, 완료 확인 중, 대상 칸 2, 3, 독점 배점 미정, 획득 점수 확인 중/);
+  assert.match(html, /data-tone="wait">확인 중/);
+  assert.match(html, /data-line-earned-total="true" data-pending="true">확인 중/);
+  assert.doesNotMatch(html, /data-line-reward-total|data-line-reward-score|pts/);
   const unknown = render("BoardLineSummary", { lines: lines.map(line => ({ ...line, payoutStatus: "unknown", allProblemsCleared: true })) });
-  assert.match(unknown, /<span>풀이 완료 1\/1<\/span><span>지급 미확인<\/span>/);
+  assert.match(unknown, /<dt>풀이 완료 라인<\/dt><dd>1<small>\/1<\/small><\/dd>/);
+  assert.match(unknown, /data-pending="true">지급 미확인/);
+  assert.match(unknown, /data-tone="done">풀이 완료/);
+  assert.match(unknown, /운영진이 지급을 확인하면 독점 점수가 표시됩니다/);
   const root = css("features/board/components/BoardScreen.module.css");
-  const status = declarations(root, ".lineProgressStatus");
-  assert.ok(status.some(([key, value]) => key === "font" && value.startsWith("18px/")));
-  assert.ok(status.some(([key, value]) => key === "word-break" && value === "keep-all"));
-  assert.ok(status.some(([key, value]) => key === "flex-direction" && value === "column"));
-  assert.ok(!status.some(([key]) => key === "float" || key === "position"));
+  const name = Object.fromEntries(declarations(root, ".lineName"));
+  assert.equal(name["word-break"], "keep-all");
+  assert.equal(name["overflow-wrap"], "anywhere");
 });
 
-test("라인 점수표는 행과 합계의 열을 맞추고 좁은 데스크톱에서는 종이 폭을 확보한다", () => {
+test("라인 독점 탭은 문제 탭과 같은 줄 모양으로 번호 도장, 이름, 대상 칸, 진행을 보인다", () => {
+  const lines = prepareBoardLines([{ lineId: "line-1", lineNumber: 1, label: "1번 라인", cellIndexes: [2,3,4,5,6], solvedCellIndexes: [2,4], rewardScore: null }]);
+  const html = render("BoardLineSummary", { lines });
+  assert.match(html, /<span class="[^"]*">1<\/span><span class="[^"]*"><strong class="[^"]*">1번 라인<\/strong>/);
+  assert.match(html, /data-tone="count">2\/5/);
+  assert.doesNotMatch(html, /<svg|<image|data-gem-rail=/);
   const root = css("features/board/components/BoardScreen.module.css");
-  const columns = declarations(root, ".lineScoreColumns, .lineList li button, .lineScoreTotals");
-  assert.ok(columns.some(([property, value]) => property === "grid-template-columns" && value.includes("repeat(2, minmax(0, 1fr))")));
-  assert.ok(declarations(root, ".lineList li button").some(([property, value]) => property === "min-height" && parseInt(value) >= 44));
-  assert.ok(declarations(root, ".lineName").some(([property, value]) => property === "overflow-wrap" && value === "anywhere"));
-  assert.ok(declarations(root, ".lineScore, .lineScoreTotals > :not(:first-child)").some(([property, value]) => property === "font-variant-numeric" && value === "tabular-nums"));
-  assert.ok(root.nodes.some((node) => node.type === "atrule" && node.params === "(min-width: 1101px)" && node.toString().includes(".openPanel:has(.lineSummary[open])") && node.toString().includes("clamp(300px, 23cqw, 410px)")));
+  const seal = Object.fromEntries(declarations(root, ".lineSeal"));
+  const badge = Object.fromEntries(declarations(root, ".openRowNo"));
+  // 도장은 문제 번호 도장과 같은 크기와 글자로 같은 아이콘 열에 놓인다
+  assert.equal(seal.width, badge.width);
+  assert.equal(seal.font, badge.font);
+  assert.equal(Object.fromEntries(declarations(root, ".lineRow")).gap, "var(--open-gap)");
+  assert.equal(Object.fromEntries(declarations(root, '.lineCells span[data-solved="true"]')).color, "var(--gem-mid)");
+  assert.ok(declarations(root, ".lineStats dd").some(([property, value]) => property === "font-variant-numeric" && value.split(" ").includes("tabular-nums")));
+  const source = readFileSync(new URL("./features/board/components/BoardScreen.module.css", import.meta.url), "utf8");
+  assert.doesNotMatch(source, /:has\(\.lineSummary|--open-width: clamp|\.lineMap|\.lineSockets|openLantern/);
+  assert.match(source, /\.lineList > li\[data-selected="true"\]::before \{[^}]*inset: 0 -0\.45em[^}]*var\(--line-accent\)/);
 });
 
 test("모바일 열린 문제는 독립 포털과 내부 스크롤을 사용하고 보드 배경을 잠근다", () => {
@@ -972,21 +992,77 @@ test("특수칸 테두리는 소모 기록에 연결하고 버튼 재열기나 �
   assert.match(screen, /setDismissedRouletteToken\(null\)/);
 });
 
-test("라인 완성과 열린 문제는 기존 펼쳐보기 한 곳에 두고 중복 이동 버튼을 만들지 않는다", () => {
+test("문제 목록과 라인 독점은 한 패널의 두 탭으로 나눠 한 번에 하나만 보인다", () => {
   const summary = createElement(components.BoardLineSummary, {
     lines: prepareBoardLines([{ lineId: "a", label: "1번 라인", cellIndexes: [2], solvedCellIndexes: [], isCompleted: false }]),
   });
-  const html = render("OpenChallengesPanel", {
-    challenges: [{ challengeId: 7, title: "미니 암호", category: "CRYPTO", isSolved: false }], children: summary,
-  });
-  assert.match(html, /id="board-open-challenges-panel"/);
-  assert.match(html, /<details[^>]*id="board-line-progress"/);
-  assert.match(html, /01번 미니 암호 상세 보기/);
-  assert.doesNotMatch(html, /전체 문제 보기|open-challenges-view-all|board-line-panel/);
-  assert.equal((html.match(/<aside/g) || []).length, 1);
+  const props = { challenges: [{ challengeId: 7, title: "미니 암호", category: "CRYPTO", isSolved: false }], children: summary, lineCount: "0/1" };
+  const problems = render("OpenChallengesPanel", props);
+  assert.match(problems, /id="board-open-challenges-panel"/);
+  assert.match(problems, /role="tablist" aria-label="열린 문제 보기"/);
+  assert.match(problems, /role="tab" id="([^"]+)-problems" aria-selected="true" aria-controls="\1-panel" tabindex="0">문제 <span>1<\/span>/);
+  assert.match(problems, /role="tab" id="([^"]+)-lines" aria-selected="false" aria-controls="\1-panel" tabindex="-1">라인 독점 <span>0\/1<\/span>/);
+  assert.match(problems, /role="tabpanel" aria-labelledby="[^"]+-problems"/);
+  assert.match(problems, /01번 미니 암호 상세 보기/);
+  assert.doesNotMatch(problems, /board-line-progress/);
+  const lines = render("OpenChallengesPanel", { ...props, showLines: true });
+  assert.match(lines, /id="board-line-progress"/);
+  assert.match(lines, /role="tabpanel" aria-labelledby="[^"]+-lines"/);
+  assert.doesNotMatch(lines, /01번 미니 암호 상세 보기|role="search"/);
+  const plain = render("OpenChallengesPanel", { challenges: props.challenges });
+  assert.doesNotMatch(plain, /role="tablist"|role="tab"/);
+  assert.match(plain, /role="region" aria-label="열린 문제 목록 스크롤"/);
+  for (const html of [problems, lines, plain]) assert.equal((html.match(/<aside/g) || []).length, 1);
+  assert.doesNotMatch(problems, /전체 문제 보기|open-challenges-view-all|board-line-panel|<details/);
+  const panel = readFileSync(new URL("./features/board/components/OpenChallengesSidePanel.jsx", import.meta.url), "utf8");
+  assert.match(panel, /ArrowLeft: !linesVisible, ArrowRight: !linesVisible, Home: false, End: true/);
   const screen = readFileSync(new URL("./features/board/components/BoardScreen.jsx", import.meta.url), "utf8");
   assert.doesNotMatch(screen, /BoardLinePanel|lineToggle|onViewAllChallenges/);
   assert.match(screen, /<OpenChallengesSidePanel[\s\S]*<BoardLineSummary[\s\S]*<\/OpenChallengesSidePanel>/);
+  assert.match(screen, /showLines=\{isLineSummaryOpen\}/);
+  assert.match(screen, /linesTabRef=\{lineSummary\}/);
+});
+
+test("열린 문제 종이와 제목 줄은 데스크톱 패널과 휴대폰 시트가 같은 것을 쓴다", () => {
+  const source = readFileSync(new URL("./features/board/components/BoardScreen.module.css", import.meta.url), "utf8");
+  // 종이 테두리는 공통 규칙 한 곳에만 있고 화면마다 패널 폭(--open-width)만 정한다
+  assert.match(source, /\n\.openPanel \{[^}]*border-image: url\("\/assets\/board\/open-challenges-paper\.webp"\) 40 20 fill/);
+  // 같은 종이는 열린 문제 패널과 보드 위 이벤트 종이 창(paperSheet) 두 규칙만 쓴다
+  assert.equal((source.match(/open-challenges-paper\.webp/g) || []).length, 2);
+  assert.match(source, /\n\.paperSheet \{[^}]*border-image: url\("\/assets\/board\/open-challenges-paper\.webp"\) 40 20 fill/);
+  assert.doesNotMatch(source, /open-challenges-head|open-challenges-body|open-challenges-divider|mobileOpenTitle|openOrnament|panel-board\.webp/);
+  const root = css("features/board/components/BoardScreen.module.css");
+  assert.equal(Object.fromEntries(declarations(root, ".stage .openPanel"))["--open-width"], "min(calc(100vw - 24px), 520px)");
+  assert.equal(Object.fromEntries(declarations(root, ".mobileOpenOverlay .openPanel"))["--open-width"], "min(100cqw, 680px)");
+  assert.equal(Object.fromEntries(declarations(root, ".mobileOpenOverlay"))["container-type"], "inline-size");
+  const buffer = readFileSync(new URL("../public/assets/board/open-challenges-paper.webp", import.meta.url));
+  assert.equal(buffer.toString("ascii", 8, 12), "WEBP");
+  const html = render("OpenChallengesPanel", { challenges: [] });
+  assert.match(html, /<h2 class="[^"]*">열린 문제<\/h2><button type="button" aria-label="열린 문제 패널 닫기"/);
+  assert.doesNotMatch(html, /open-challenges-divider|open-challenges-leaf/);
+});
+
+test("열린 문제 패널은 패널 폭 하나로 글자와 간격이 함께 커지고 작아지며 MSG CTF 명판과 입력칸을 쓴다", () => {
+  const root = css("features/board/components/BoardScreen.module.css");
+  const panel = Object.fromEntries(declarations(root, ".stage .leftPanel .openPanel"));
+  assert.equal(panel["--open-width"], "var(--left-width)");
+  assert.equal(panel["font-size"], "max(12px, calc(var(--open-width) * 17 / 333))");
+  // 안쪽 크기는 px 고정이나 화면 폭(cqw) 대신 패널 글자 크기(em)를 따른다
+  for (const selector of [".openTitle", ".openTabs button", ".openSearch", ".openRow", ".openRowNo", ".lineSeal"]) {
+    const values = declarations(root, selector).filter(([property]) => /^(font|font-size|height|min-height|width)$/.test(property)).map(([, value]) => value);
+    assert.ok(values.length > 0, selector);
+    for (const value of values) assert.doesNotMatch(value, /cqw|clamp\(/, `${selector} ${value}`);
+    for (const [property, value] of declarations(root, selector)) if (/^(height|min-height)$/.test(property)) assert.match(value, /em$/, `${selector} ${property} ${value}`);
+    assert.ok(values.some((value) => /\d(\.\d+)?em\b/.test(value)), selector);
+  }
+  const tab = Object.fromEntries(declarations(root, ".openTabs button"));
+  assert.match(tab["border-image"], /panel-frame-outline\.png/);
+  const selected = Object.fromEntries(declarations(root, '.openTabs button[aria-selected="true"]'));
+  assert.equal(selected["border-image-source"], 'url("/assets/board/panel-frame.png")');
+  const search = Object.fromEntries(declarations(root, ".openSearch"));
+  assert.equal(search.background, "var(--open-field)");
+  const outline = readFileSync(new URL("../public/assets/board/panel-frame-outline.png", import.meta.url));
+  assert.equal(outline.toString("ascii", 1, 4), "PNG");
 });
 
 test("보드 목록은 얇은 스크롤을 유지하고 모바일 패널을 이중 스크롤로 만들지 않는다", () => {
@@ -1012,20 +1088,27 @@ test("보드 목록은 얇은 스크롤을 유지하고 모바일 패널을 이�
   assert.ok(highContrastFallback);
 });
 
-test("보드 펼쳐보기에서 검색과 상태 선택, 현재 인스턴스 진입을 제공한다", () => {
+test("보드 펼쳐보기에서 검색과 상태 선택을 제공하고 내 인스턴스는 그 문제 줄에 표시한다", () => {
   const challenges = [
     { challengeId: "one", title: "푼 문제", category: "WEB", clubName: "MJSEC", isSolved: true },
     { challengeId: "two", title: "진행할 문제", category: "PWN", clubName: "SWING", isSolved: false },
   ];
-  const html = render("OpenChallengesPanel", {
-    challenges, initialView: { query: "SWING", category: "PWN", status: "unsolved" },
-    instanceInfo: { instance: { challengeId: "two", status: "RUNNING" } },
-  });
+  const instanceInfo = { instance: { challengeId: "two", status: "RUNNING" } };
+  const html = render("OpenChallengesPanel", { challenges, initialView: { query: "SWING", category: "PWN", status: "unsolved" }, instanceInfo });
   assert.match(html, /role="search" aria-label="열린 문제 검색"/);
   assert.match(html, /value="SWING"/);
-  assert.match(html, /02번 진행할 문제 상세 보기/);
-  assert.doesNotMatch(html, /01번 푼 문제 상세 보기/);
-  assert.match(html, /내 인스턴스/);
+  assert.match(html, /02번 진행할 문제, 내 인스턴스 실행 중 상세 보기/);
+  assert.match(html, /data-tone="running"><i aria-hidden="true"><\/i>실행 중<\/span>/);
+  assert.doesNotMatch(html, /RUNNING/);
+  assert.doesNotMatch(html, /01번 푼 문제/);
+  assert.doesNotMatch(html, /내 인스턴스 <span/);
+  // 실행 중인 문제가 필터에 가려지면 목록 위에 바로가기를 따로 띄운다
+  const hidden = render("OpenChallengesPanel", { challenges, initialView: { status: "solved" }, instanceInfo });
+  assert.match(hidden, /내 인스턴스 <span[^>]*data-tone="running"><i aria-hidden="true"><\/i>실행 중<\/span>/);
+  const preparing = render("OpenChallengesPanel", { challenges, instanceInfo: { instance: { challengeId: "two", status: "PROVISIONING" } } });
+  assert.match(preparing, /data-tone="busy"><i aria-hidden="true"><\/i>준비 중<\/span>/);
+  assert.match(hidden, /<button type="button" title="진행할 문제">/);
+  assert.match(hidden, /01번 푼 문제, 해결함 상세 보기/);
 });
 
 test("목록 조회 중과 실패를 문제 없음으로 표시하지 않는다", () => {

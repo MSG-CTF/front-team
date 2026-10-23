@@ -8,8 +8,11 @@ import styles from "./BoardScreen.module.css";
 // 보드 화면 우상단의 원형 이동 버튼. 그림에 아이콘이 이미 그려져 있어 클릭 영역만 얹는다.
 // 로그아웃(nav-logout.png)은 시안이 없어 스코어보드 동전 틀에 금색 로그아웃 문양을 넣어 만들었다.
 // 로그아웃을 맨 오른쪽(기존 스코어보드 자리)에 두고 나머지 3개를 동전 간격(무대 5.47%)만큼
-// 왼쪽으로 옮겼다. 맨 오른쪽 동전의 보이는 오른쪽 끝(무대 94.29%)은 이전 스코어보드 자리와 같다.
+// 왼쪽으로 옮겼다. 줄 전체는 NAV_ALIGN 만큼 오른쪽으로 옮겨 로그아웃 동전의 보이는 오른쪽 끝을
+// KoTH 배너·동아리 부스 버튼과 같은 오른쪽 여백선(무대 97.5%)에 맞춘다.
+// 위 끝은 동전마다 그림 여백이 달라 top 을 따로 줄여 주사위판과 같은 위 여백선(무대 4.444%)에 맞춘다.
 const NAV_SHIFT = 5.47;
+const NAV_ALIGN = 3.18;
 const BUTTONS = [
   {
     key: "rules",
@@ -20,7 +23,7 @@ const BUTTONS = [
     mobileViewBox: "46 8 108 108",
     imageSize: [201, 134],
     // 원본 PNG가 두 원형 버튼보다 장식을 크게 채워 실제 보이는 크기를 따로 줄인다.
-    box: { left: 77.83 - NAV_SHIFT, top: 3.97, width: 7.46, height: 8.81 },
+    box: { left: 77.83 - NAV_SHIFT + NAV_ALIGN, top: 3.785, width: 7.46, height: 8.81 },
     hitArea: "left-[49.5%] top-[46%] w-[52%]",
   },
   {
@@ -32,7 +35,7 @@ const BUTTONS = [
     src: "/assets/board/nav-mypage.png?v=2",
     mobileViewBox: "78 29.5 100 100",
     imageSize: [257, 171],
-    box: { left: 82.09 - NAV_SHIFT, top: 2.54, width: 9.88, height: 11.68 },
+    box: { left: 82.09 - NAV_SHIFT + NAV_ALIGN, top: 2.262, width: 9.88, height: 11.68 },
     hitArea: "left-1/2 top-[48%] w-[39%]",
   },
   {
@@ -43,7 +46,7 @@ const BUTTONS = [
     src: "/assets/board/nav-scoreboard.png",
     mobileViewBox: "67 26 100 100",
     imageSize: [235, 157],
-    box: { left: 87.98 - NAV_SHIFT, top: 2.69, width: 9.04, height: 10.69 },
+    box: { left: 87.98 - NAV_SHIFT + NAV_ALIGN, top: 2.468, width: 9.04, height: 10.69 },
     hitArea: "left-1/2 top-[48%] w-[42%]",
   },
   {
@@ -54,7 +57,7 @@ const BUTTONS = [
     src: "/assets/board/nav-logout.png",
     mobileViewBox: "67 26 100 100",
     imageSize: [235, 157],
-    box: { left: 87.98, top: 2.69, width: 9.04, height: 10.69 },
+    box: { left: 87.98 + NAV_ALIGN, top: 2.468, width: 9.04, height: 10.69 },
     hitArea: "left-1/2 top-[48%] w-[42%]",
   },
 ];
@@ -108,7 +111,7 @@ export default function BoardNav() {
       {BUTTONS.map((button) => (
         <div
           key={button.key}
-          className="group absolute pointer-events-none"
+          className={`${styles.navCoin} group absolute pointer-events-none`}
           style={{ left: `${button.box.left}%`, top: `${button.box.top}%`, width: `${button.box.width}%`, height: `${button.box.height}%` }}
         >
           <img
@@ -126,11 +129,12 @@ export default function BoardNav() {
           />
         </div>
       ))}
-      {/* 열린 문제 목록 버튼과 같은 금테 명판. 오른쪽 끝은 KoTH 배너·로그아웃 동전과 한 선(right 3.65%) */}
+      {/* 열린 문제 목록 버튼과 같은 금테 명판. 오른쪽 끝은 KoTH 배너·로그아웃 동전과 같은 오른쪽 여백선,
+          아래 끝은 열린 문제 패널과 같은 아래 여백선에 둔다 */}
       <button
         type="button"
         onClick={() => navigate(ROUTES.signatures)}
-        className={`${styles.plateFrame} ${styles.plaqueButton} absolute bottom-[2%] right-[3.65%]`}
+        className={`${styles.plateFrame} ${styles.plaqueButton} ${styles.boothButton} absolute bottom-[4.4444%] right-[2.5%]`}
       >
         <span>동아리 부스 둘러보기</span>
         <span aria-hidden="true">→</span>

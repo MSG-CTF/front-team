@@ -59,17 +59,22 @@
     flex-direction: column;
     align-items: center;
     gap: 16px;
-    width: min(400px, calc(100vw - 24px));
+    --sheet-width: min(400px, calc(100vw - 24px));
+    width: var(--sheet-width);
     max-height: calc(100dvh - 32px);
     aspect-ratio: auto;
-    padding: 30px 24px 24px;
+    padding: 6px 16px 14px;
     overflow-y: auto;
     overscroll-behavior: contain;
-    background: #eed8ad url("/assets/challenge-detail/panel-board.webp") center / 100% 100% no-repeat;
+    /* 휴대폰에서는 열린 문제, 이벤트 창과 같은 종이(open-challenges-paper)를 9분할로 늘려 쓴다 */
+    border: solid transparent;
+    border-width: calc(var(--sheet-width) * 40 / 501) calc(var(--sheet-width) * 20 / 501);
+    border-image: url("/assets/board/open-challenges-paper.webp") 40 20 fill / calc(var(--sheet-width) * 40 / 501) calc(var(--sheet-width) * 20 / 501) stretch;
+    background: none;
   }
   .panelArtwork { display: none; }
   .title { position: static; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 14px 8px; white-space: normal; font: 400 clamp(22px, 7cqw, 28px)/1.15 "Alegreya", "Abyssinica SIL", serif; letter-spacing: 0.02em; text-align: center; }
-  .close { top: 4px; right: 4px; width: 44px; height: 44px; padding: 14px; }
+  .close { top: 0; right: 0; width: 44px; height: 44px; padding: 10px; }
   .wheelArea { position: relative; inset: auto; flex-shrink: 0; width: min(100%, 250px, max(140px, calc(100dvh - 374px))); margin: 4px 0 0; }
   .status { position: static; width: 100%; min-height: 44px; font-size: 14px; gap: 4px; }
   .reward, .resultStatus .reward { font-size: 30px; }

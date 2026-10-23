@@ -7,7 +7,7 @@ import useTrainWhistle from "../hooks/useTrainWhistle.js";
 import useMobileBoardBackdrop from "../hooks/useMobileBoardBackdrop.js";
 import useBoardTextLayout from "../hooks/useBoardTextLayout.js";
 import { preloadBoardTrain } from "./BoardTrain.jsx";
-import { prepareBoardLines } from "../utils/boardLines.js";
+import { getBoardLineCounts, prepareBoardLines } from "../utils/boardLines.js";
 import { normalizeBoardListView } from "../utils/boardChallengeList.js";
 import { getChallengeSelectionKey } from "../utils/challengeSelection.js";
 import { getAirportSelectableCellIndexes, isAirportSelectionMode } from "../utils/boardOverlays.js";
@@ -95,6 +95,7 @@ export default function BoardScreen({
   const lineSummary = useRef(null);
   const lines = useMemo(() => prepareBoardLines(lineProgress, boardDefinition?.cells), [lineProgress, boardDefinition?.cells]);
   const hasLines = lines.length > 0;
+  const lineCounts = getBoardLineCounts(lines);
   const activeLineId = lines.find((line) => line.lineId === selectedLineId)?.lineId ?? lines[0]?.lineId ?? null;
   const boardRegionId = useId();
   const boardViewport = useRef(null);
@@ -122,6 +123,7 @@ export default function BoardScreen({
   const closeOpenList = () => {
     setIsOpenListVisible(false);
     setIsLineSummaryOpen(false);
+    setSelectedLineId(null);
     const trigger = openListTrigger.current;
     if (trigger?.isConnected && typeof trigger.focus === "function") trigger.focus({ preventScroll: true });
     else {
@@ -363,10 +365,13 @@ export default function BoardScreen({
           instanceInfo={instanceInfo}
           onSelectChallenge={onOpenChallengeDetail}
           onClose={closeOpenList}
+          lineCount={`${lineCounts.done}/${lineCounts.total}`}
+          showLines={isLineSummaryOpen}
+          onShowLinesChange={setIsLineSummaryOpen}
+          linesTabRef={lineSummary}
         >
-          {hasLines && <BoardLineSummary lines={lines} selectedLineId={activeLineId}
-            onSelectLine={setSelectedLineId} isOpen={isLineSummaryOpen} onToggle={setIsLineSummaryOpen}
-            summaryRef={lineSummary} isPreview={lineProgressPreview} />}
+          {/* 보드에서 고른 라인만 강조한다 고르지 않았으면 아무 라인도 강조하지 않는다 */}
+          {hasLines && <BoardLineSummary lines={lines} selectedLineId={selectedLineId} isPreview={lineProgressPreview} />}
         </OpenChallengesSidePanel>
       )}
       </div>
