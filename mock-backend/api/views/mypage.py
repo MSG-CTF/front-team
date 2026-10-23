@@ -106,4 +106,6 @@ class QrTokenView(APIView):
         expires_at = timezone.now() + timezone.timedelta(minutes=5)
         PaymentToken.objects.create(token=token, team=team, expires_at=expires_at)
 
-        return success({"payment_token": token, "expires_at": expires_at})
+        return success(
+            {"team_id": str(team.pk), "payment_token": token, "expires_at": expires_at}
+        )
