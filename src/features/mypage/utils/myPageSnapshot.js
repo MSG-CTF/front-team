@@ -8,7 +8,22 @@ const SPECS = [
 ];
 const SCORE_KEYS = ["profile", "ranking", "memberRanking"];
 
+const NO_TEAM_CODE = "USER_HAS_NO_TEAM";
+
+function isNoTeam(result) {
+  return result?.status === "rejected" && result.reason?.response?.data?.code === NO_TEAM_CODE;
+}
+
+// 소속 팀이 없는 것은 오류가 아니다. 이전 팀의 점수를 남기지 않고 팀 없음으로 보여준다
+function noTeamSnapshot() {
+  const noTeam = { status: "noTeam", data: null, error: false };
+  const empty = { status: "empty", data: null, error: false };
+  return { profile: noTeam, mileageHistory: empty, solveHistory: empty, ranking: noTeam, memberRanking: noTeam };
+}
+
+
 export function updateMyPageSnapshot(current, results) {
+  if (isNoTeam(results[0])) return noTeamSnapshot();
   const next = Object.fromEntries(SPECS.map(([key, mapper], index) => [key, mapApiResource(results[index], mapper)]));
   const profile = next.profile.data, ranking = next.ranking.data;
   const unranked = profile?.isBanned && next.ranking.status === "empty" && next.memberRanking.status === "empty";

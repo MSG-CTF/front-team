@@ -62,3 +62,28 @@ test("밴 팀의 정상적인 순위 제외 응답은 이전 순위로 되돌리
   assert.equal(next.ranking.data, null);
   assert.equal(next.memberRanking.status, "empty");
 });
+
+const rejectedWith = (status, code) => ({ status: "rejected", reason: { response: { status, data: { code, message: "", data: null } } } });
+
+test("소속 팀이 없으면 오류가 아니라 팀 없음 상태로 바꾸고 이전 팀 점수를 남기지 않는다", () => {
+  const before = updateMyPageSnapshot(initial, responses(905, 1, 575));
+  const noTeam = rejectedWith(404, "USER_HAS_NO_TEAM");
+  const next = updateMyPageSnapshot(before, [noTeam, noTeam, noTeam, noTeam, noTeam]);
+  for (const key of ["profile", "ranking", "memberRanking"]) {
+    assert.equal(next[key].status, "noTeam");
+    assert.equal(next[key].data, null);
+    assert.equal(next[key].error, false);
+  }
+  for (const key of ["mileageHistory", "solveHistory"]) {
+    assert.equal(next[key].status, "empty");
+    assert.equal(next[key].error, false);
+  }
+});
+
+test("팀 없음이 아닌 404는 기존처럼 오류로 보고 이전 점수를 유지한다", () => {
+  const before = updateMyPageSnapshot(initial, responses(905, 1, 575));
+  const partial = responses(830, 2, 500); partial[0] = rejectedWith(404, "NOT_FOUND");
+  const next = updateMyPageSnapshot(before, partial);
+  assert.equal(next.profile.data.score, 905);
+  assert.equal(next.profile.error, true);
+});

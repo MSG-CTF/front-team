@@ -13,8 +13,9 @@ function profileText(state, field) {
   return state.status === "success" ? formatNumber(state.data[field]) : "-";
 }
 
-function statusMessage({ profileData, hasScore, scoreRefreshError, refreshError, logoutError }) {
+function statusMessage({ profileData, noTeam, hasScore, scoreRefreshError, refreshError, logoutError }) {
   if (logoutError) return { text: logoutError, alert: true };
+  if (noTeam) return { text: "소속된 팀이 없습니다 운영자에게 문의해주세요", alert: false };
   if (profileData.isBanned) return { text: "활동 정지: " + (profileData.banReason || "운영자에게 문의하세요"), alert: true };
   if (scoreRefreshError) return { text: hasScore
     ? "점수와 순위를 갱신하지 못했습니다 마지막으로 확인한 값을 표시합니다"
@@ -42,7 +43,7 @@ export default function MyPageScreen({
 }) {
   const navigate = useNavigate();
   const profileData = profile.status === "success" ? profile.data : {};
-  const status = statusMessage({ profileData, hasScore: profile.status === "success", scoreRefreshError, refreshError, logoutError });
+  const status = statusMessage({ profileData, noTeam: profile.status === "noTeam", hasScore: profile.status === "success", scoreRefreshError, refreshError, logoutError });
   return (
     <div className={styles.page}>
       <div className={styles.stage}>

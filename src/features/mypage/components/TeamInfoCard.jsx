@@ -54,6 +54,7 @@ function PersonalRank({ memberRanking }) {
       {memberRanking?.status === "loading" && <p className={styles.personalMessage} role="status">개인 순위를 불러오는 중</p>}
       {memberRanking?.status === "error" && <p className={styles.personalMessage} role="alert">개인 순위를 확인하지 못했습니다 새로고침으로 다시 확인해주세요</p>}
       {memberRanking?.status === "empty" && <p className={styles.personalMessage}>아직 집계된 개인 순위가 없습니다</p>}
+      {memberRanking?.status === "noTeam" && <p className={styles.personalMessage}>소속 팀이 없어 개인 순위가 없습니다</p>}
     </section>
   );
 }
@@ -69,6 +70,7 @@ export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQ
   let teamName = profile.data?.teamName || "-";
   if (profile.status === "loading") teamName = "LOADING";
   if (profile.status === "error") teamName = "UNAVAILABLE";
+  if (profile.status === "noTeam") teamName = "NO TEAM";
   const members = profile.status === "success" ? profile.data.members ?? [] : [];
   const foldedMembers = members.length - CARD_MEMBER_ROWS;
   return (
