@@ -11,9 +11,9 @@ import MyPageScreen from "../components/MyPageScreen.jsx";
 import { PREVIEW_MY_PAGE_DATA } from "../data/previewMyPageData.js";
 import { getQrRemainingSeconds } from "../utils/myPageData.js";
 import { updateMyPageSnapshot } from "../utils/myPageSnapshot.js";
+import { createTeamQrSession, getQrTeamId, QR_IDLE } from "../utils/teamQrSession.js";
 
 const LOADING = { status: "loading", data: null };
-const QR_IDLE = { status: "idle", paymentToken: "", expiresAt: "", remainingSeconds: null, error: "" };
 
 export default function MyPage() {
   const navigate = useNavigate();
@@ -22,17 +22,23 @@ export default function MyPage() {
   const mounted = useRef(false);
   const previewRef = useRef(isPreview);
   previewRef.current = isPreview;
-  const qrPending = useRef(false);
   const logoutPending = useRef(false);
   const [revision, setRevision] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [apiState, setApiState] = useState({ profile: LOADING, mileageHistory: LOADING, solveHistory: LOADING, ranking: LOADING, memberRanking: LOADING });
   const [qrState, setQrState] = useState(QR_IDLE);
+  const qrSession = useRef(null);
+  if (!qrSession.current) qrSession.current = createTeamQrSession({
+    getProfile: getMyProfile, issueQr: issueMyQrToken,
+    updateState: (state) => { if (mounted.current) setQrState(state); },
+    onMembershipChange: () => { if (mounted.current) setRevision((value) => value + 1); },
+  });
+  const qrTeamId = isPreview ? null : getQrTeamId(apiState.profile);
   const [logoutState, setLogoutState] = useState({ isSubmitting: false, error: "" });
 
   useEffect(() => {
     mounted.current = true;
-    return () => { mounted.current = false; };
+    return () => { mounted.current = false; qrSession.current.dispose(); };
   }, []);
 
   useEffect(() => {
@@ -53,39 +59,24 @@ export default function MyPage() {
     return () => { stopPolling(); active = false; controller.abort(); };
   }, [isPreview, revision]);
 
-  const requestQr = useCallback(async () => {
-    if (qrPending.current || previewRef.current || apiState.profile.data?.isBanned) return;
-    qrPending.current = true;
-    setQrState({ ...QR_IDLE, status: "loading" });
-    try {
-      const response = await issueMyQrToken({ timeout: 10000 });
-      if (!mounted.current || previewRef.current) return;
-      const envelope = response.data;
-      const paymentToken = envelope?.data?.payment_token;
-      const expiresAt = envelope?.data?.expires_at;
-      const remainingSeconds = getQrRemainingSeconds(expiresAt);
-      if (!isSuccess(envelope) || typeof paymentToken !== "string" || !paymentToken.trim() || remainingSeconds == null) {
-        setQrState({ ...QR_IDLE, status: "error", error: envelope?.message || "QR 발급 응답을 확인하지 못했습니다" });
-      } else {
-        setQrState({ ...QR_IDLE, status: remainingSeconds > 0 ? "success" : "expired",
-          paymentToken: remainingSeconds > 0 ? paymentToken : "", expiresAt, remainingSeconds });
-      }
-    } catch (error) {
-      if (mounted.current && !previewRef.current) setQrState({ ...QR_IDLE, status: "error", error: error?.response?.data?.message || "QR 발급 응답을 확인하지 못했습니다" });
-    } finally { qrPending.current = false; }
-  }, [apiState.profile.data?.isBanned]);
+  const requestQr = useCallback(() => {
+    if (!mounted.current || previewRef.current) return;
+    return qrSession.current.request();
+  }, []);
 
   useEffect(() => {
-    if (isPreview) setQrState(QR_IDLE);
-  }, [isPreview]);
+    qrSession.current.setTeam(qrTeamId);
+  }, [qrTeamId]);
 
   useEffect(() => {
     if (qrState.status !== "success") return;
     const timer = window.setInterval(() => {
       const remainingSeconds = getQrRemainingSeconds(qrState.expiresAt);
-      setQrState((current) => remainingSeconds > 0
-        ? { ...current, remainingSeconds }
-        : { ...QR_IDLE, status: "expired", remainingSeconds: 0 });
+      setQrState((current) => {
+        if (current.status !== "success" || current.expiresAt !== qrState.expiresAt) return current;
+        return remainingSeconds > 0 ? { ...current, remainingSeconds }
+          : { ...QR_IDLE, teamId: current.teamId, status: "expired", remainingSeconds: 0 };
+      });
     }, 1000);
     return () => window.clearInterval(timer);
   }, [qrState.expiresAt, qrState.status]);
@@ -119,7 +110,8 @@ export default function MyPage() {
   };
   return <MyPageScreen {...viewState}
     onLogout={handleLogout} isLoggingOut={logoutState.isSubmitting} logoutError={logoutState.error}
-    qrState={qrState} onIssueQr={requestQr} qrDisabled={isPreview || apiState.profile.data?.isBanned || apiState.profile.status !== "success"}
+    qrState={qrTeamId && qrState.teamId === qrTeamId && !refreshing ? qrState : QR_IDLE}
+    onIssueQr={requestQr} qrDisabled={!qrTeamId || refreshing}
     onRefresh={() => setRevision((value) => value + 1)} refreshing={refreshing}
     refreshError={!isPreview && Object.values(apiState).some((state) => state.error)}
     scoreRefreshError={!isPreview && [apiState.profile, apiState.ranking, apiState.memberRanking].some((state) => state.error)}

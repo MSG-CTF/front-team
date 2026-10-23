@@ -34,12 +34,35 @@ test("팀 정보·팀 순위·개인 순위 중 하나가 실패하면 점수 �
     assert.equal(recovered.memberRanking.error, false);
   }
 });
-test("총점이나 팀 식별자가 다르면 성공 응답도 섞지 않는다", () => {
+test("같은 팀에서 총점이나 순위가 어긋나면 이전 점수와 경고를 유지한다", () => {
   const before = updateMyPageSnapshot(initial, responses(905, 1, 575));
-  for (const change of [{ team_score: 705 }, { team_id: "other" }, { rank: 0 }]) {
+  for (const change of [{ team_score: 705 }, { rank: 0 }]) {
     const mixed = responses(830, 2, 500); Object.assign(mixed[3].value.data.data, change);
     assert.equal(updateMyPageSnapshot(before, mixed).profile.data.score, 905);
   }
+});
+
+test("서로 다른 팀의 성공 응답이 섞이면 이전 팀의 점수와 기록도 비운다", () => {
+  const before = updateMyPageSnapshot(initial, responses(905, 1, 575));
+  for (const index of [0, 3, 4]) {
+    const mixed = responses(830, 2, 500); mixed[index].value.data.data.team_id = "other";
+    const next = updateMyPageSnapshot(before, mixed);
+    for (const state of Object.values(next)) {
+      assert.equal(state.data, null);
+      assert.equal(state.error, true);
+    }
+  }
+});
+
+test("새 팀이 확인되면 실패한 순위나 기록을 이전 팀 값으로 채우지 않는다", () => {
+  const before = updateMyPageSnapshot(initial, responses(905, 1, 575));
+  const nextTeam = responses(830, 2, 500);
+  for (const index of [0, 3, 4]) nextTeam[index].value.data.data.team_id = "other";
+  nextTeam[4] = failed; nextTeam[2] = failed;
+  const next = updateMyPageSnapshot(before, nextTeam);
+  assert.equal(next.profile.data, null);
+  assert.equal(next.memberRanking.data, null);
+  assert.equal(next.solveHistory.data, null);
 });
 test("기록만 실패하면 점수 갱신은 진행하고 이전 기록과 경고를 유지한다", () => {
   const before = updateMyPageSnapshot(initial, responses(905, 1, 575));

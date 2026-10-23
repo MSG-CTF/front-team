@@ -1,5 +1,6 @@
 import { mapApiResource, keepPreviousResource, scoresMatch } from "../../../utils/resourceSnapshot.js";
 import { mapTeamProfile, mapMileageHistory, mapSolveHistory, mapMemberRanking } from "./myPageData.js";
+import { isSuccess } from "../../../utils/response.js";
 
 const SPECS = [
   ["profile", mapTeamProfile], ["mileageHistory", mapMileageHistory],
@@ -25,16 +26,26 @@ function noTeamSnapshot() {
 export function updateMyPageSnapshot(current, results) {
   if (isNoTeam(results[0])) return noTeamSnapshot();
   const next = Object.fromEntries(SPECS.map(([key, mapper], index) => [key, mapApiResource(results[index], mapper)]));
+  const teamIds = [0, 3, 4].flatMap((index) => {
+    const envelope = results[index]?.status === "fulfilled" ? results[index].value?.data : null;
+    const teamId = isSuccess(envelope) ? envelope.data?.team_id : null;
+    return typeof teamId === "string" && teamId ? [teamId] : [];
+  });
+  const emptyCurrent = () => Object.fromEntries(SPECS.map(([key]) => [key, { status: "error", data: null, error: true }]));
+  // 서로 다른 팀의 응답은 이전 팀 값으로 보완하지 않는다 다음 갱신에서 한 팀으로 확인한다
+  if (new Set(teamIds).size > 1) return emptyCurrent();
+  const previousTeamId = current.profile.data?.teamId;
+  const fallback = previousTeamId && teamIds.some((id) => id !== previousTeamId) ? emptyCurrent() : current;
   const profile = next.profile.data, ranking = next.ranking.data;
   const unranked = profile?.isBanned && next.ranking.status === "empty" && next.memberRanking.status === "empty";
   // 총점·순위·개인 점수는 같은 갱신 묶음으로 반영한다. 서로 다른 시점의 응답도 보류한다.
   if (SCORE_KEYS.some((key) => next[key].error) || (!unranked && (
       !scoresMatch(profile?.score, ranking?.team_score) || !Number.isInteger(ranking?.rank) || ranking.rank < 1 ||
       (profile?.teamId && ranking?.team_id && profile.teamId !== ranking.team_id)))) {
-    for (const key of SCORE_KEYS) next[key] = keepPreviousResource(current[key]);
+    for (const key of SCORE_KEYS) next[key] = keepPreviousResource(fallback[key]);
   }
   for (const key of ["mileageHistory", "solveHistory"]) {
-    if (next[key].error) next[key] = keepPreviousResource(current[key]);
+    if (next[key].error) next[key] = keepPreviousResource(fallback[key]);
   }
   return next;
 }

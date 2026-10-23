@@ -5,6 +5,7 @@ import styles from "./MyPageScene.module.css";
 
 function QrSlot({ qrState, onIssueQr, qrDisabled }) {
   const showQr =
+    !qrDisabled &&
     qrState.status === "success" &&
     Boolean(qrState.paymentToken) &&
     Boolean(qrState.expiresAt) &&
