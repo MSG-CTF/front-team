@@ -15,7 +15,9 @@ test("축제 원화와 클릭 오버레이는 모든 너비에서 같은 3:2 좌
   assert.equal((main.match(/club-festival-v1\.webp/g) || []).length, 1, "메인 화면의 중복 원화·확장 배경 없음");
   assert.doesNotMatch(main, /blur\(/);
   assert.doesNotMatch(css.match(/\.scene\s*\{[^}]*\}/)?.[0] || "", /scale\(/);
-  assert.match(css, /--art-height: clamp\(52vw, calc\(100dvh - 44px\), 74vw\)/);
+  assert.match(css, /--art-height: clamp\(52vw, 100dvh, 74vw\)/);
+  assert.match(css, /height: var\(--art-height\)/);
+  assert.doesNotMatch(css, /sceneFooter|100dvh - 44px|var\(--art-height\) \+ 44px/);
 });
 
 test("모바일은 원화를 확대·분할하지 않고 읽을 수 있는 부스 안내 목록을 제공한다", () => {
@@ -28,7 +30,7 @@ test("모바일은 원화를 확대·분할하지 않고 읽을 수 있는 부�
 
 test("1440부터 768까지 줄였다 늘려도 원화 크기는 연속적이고 역방향 확대가 없다", () => {
   const widths = [1440, 1366, 1280, 1100, 1024, 901, 900, 899, 800, 768];
-  const sceneWidth = (w, h) => Math.max(w, 1.5 * Math.min(h - 44, .74 * w));
+  const sceneWidth = (w, h) => Math.max(w, 1.5 * Math.min(h, .74 * w));
   for (const height of [700, 768, 800, 900]) {
     for (let i=1;i<widths.length;i++) {
       assert.ok(sceneWidth(widths[i], height) <= sceneWidth(widths[i-1], height));

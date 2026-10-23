@@ -32,6 +32,6 @@ export default function BoothMenuPreviewPage() {
     <SignatureFestivalScreen state={{ status: "success", data: problems, retry() {} }} onPreviewClub={show} />
     {!selected && <p className={styles.notice}>개발용 샘플 · 실제 API 요청 없음 · 여섯 부스를 클릭해 메뉴판을 확인하세요.</p>}
     {selected && <BoothMenuModal key={selected.clubId} club={selected}
-      challenge={selected.problems[0]} status="success" onClose={close} flagPreview />}
+      challenge={selected.problems[0]} status="success" onClose={close} />}
   </div>;
 }

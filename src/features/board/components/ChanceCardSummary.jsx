@@ -27,8 +27,6 @@ export default function ChanceCardSummary({
     setDestinationIndex(availableDestinations[0]?.cellIndex ?? "");
   }, [availableDestinations]);
 
-  if (cards.length === 0) return null;
-
   const useCard = (card) => {
     if (card.cardId === "card_move_offset") {
       onUseCard(card.cardId, { offset });
@@ -55,6 +53,9 @@ export default function ChanceCardSummary({
         <p className="my-[0.25cqw] text-[0.52cqw] text-[#ffd36b]">
           카드 한 장을 먼저 폐기해주세요
         </p>
+      )}
+      {cards.length === 0 && (
+        <p className="m-0 mt-[0.25cqw] text-[0.56cqw] opacity-60">찬스카드 없음</p>
       )}
       <ul className="m-0 mt-[0.25cqw] list-none space-y-[0.32cqw] p-0">
         {cards.map((card) => {

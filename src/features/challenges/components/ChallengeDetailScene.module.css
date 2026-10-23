@@ -216,6 +216,9 @@
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
+.descriptionDigits {
+  font-family: "Detail Pretendard", sans-serif;
+}
 .descriptionBody p {
   margin: 0 0 1em;
 }

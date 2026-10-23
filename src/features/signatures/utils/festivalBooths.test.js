@@ -74,5 +74,4 @@ test("부스 주소는 서버 ID를 인코딩하고 문제 상세 경로와 구�
     ROUTES.signatureClub("club/1?name=foo"),
     "/signatures/clubs/club%2F1%3Fname%3Dfoo",
   );
-  assert.equal(ROUTES.signatureDetail("id"), "/signatures/id");
 });

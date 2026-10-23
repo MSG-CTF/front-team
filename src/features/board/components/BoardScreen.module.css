@@ -60,7 +60,8 @@
 /* 풍경은 FixedAspectStage의 배경 한 장으로 화면 전체를 채운다
    원판과 조작 패널은 기존 1920×1080 무대에서 같은 비율로 축소한다 */
 @media (min-width: 1101px) {
-  /* Figma 753:300 좌상단 통합 패널. 주사위 상태·보유 찬스카드·열린 문제 버튼을 한 프레임에 모으고
+  /* Figma 3:2 좌상단: 주사위 상태·보유 찬스카드·열린 문제 버튼은 각자 플레이트 하나씩이고
+     너비 349(1920 기준)로 아래로 쌓는다. 간격은 주사위→찬스카드 4, 찬스카드→열린 문제 7.
      열린 문제 목록(양피지)은 그 아래에 같은 폭으로 이어 붙인다.
      화면 바깥 여백선은 가로 2.5%, 세로 4.444%(1920x1080 에서 둘 다 48px)로 네 변을 맞춘다
      16:9 보다 세로로 길거나 가로로 긴 화면에서는 보드만 가운데 무대에 두고, 고정 UI 는 남는 폭(--hud-extra-x)과
@@ -74,40 +75,47 @@
     --dice-panel-width: max(19.69cqw, 240px);
     --left-width: max(18.2cqw, 240px);
   }
-  /* 왼쪽 열은 통합 패널과 열린 문제 패널을 같은 폭으로 쌓아 왼쪽 위 여백선과 아래 여백선에 닿는다
+  /* 왼쪽 열은 세 플레이트와 열린 문제 패널을 같은 폭으로 쌓아 왼쪽 위 여백선과 아래 여백선에 닿는다
      열 자체는 비어 있는 곳의 보드 클릭을 막지 않게 하고 안의 패널만 누른다 */
   .stage .leftPanel {
     position: absolute; z-index: 40; left: calc(2.5% - var(--hud-extra-x)); top: var(--hud-top); width: var(--left-width);
     height: calc(100% + 2 * var(--hud-extra-y) - 2 * var(--hud-margin-y));
-    display: flex; flex-direction: column; gap: var(--hud-gap); pointer-events: none;
+    display: flex; flex-direction: column; pointer-events: none;
   }
   .stage .leftPanel > * { pointer-events: auto; }
-  .stage .leftPanelCard {
-    flex: none; display: flex; flex-direction: column; overflow: hidden;
-    padding-block: 0.3cqw; border: max(1.5px, 0.1cqw) solid #b88d55; border-radius: 0.42cqw;
-    background: #2a190df0; box-shadow: 0 0.2cqw 0.62cqw #00000073;
-  }
-  .stage .leftPanelCard .diceStatus {
-    position: relative; inset: auto; width: auto; height: auto; aspect-ratio: auto; padding: 0.52cqw 0.83cqw;
-    display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.3cqw 0.5cqw;
-  }
-  .stage .leftPanelCard .diceStatus > :not(.diceReadout, .diceChallengeRow, .diceStatusMessage) { display: none; }
-  .stage .leftPanelCard .diceReadout { position: static; width: auto; grid-column: 1; grid-row: 1; font-size: clamp(12px, 0.73cqw, 15px); }
-  .stage .leftPanelCard .diceChallengeRow { position: static; grid-column: 2; grid-row: 1; font-size: clamp(11px, 0.66cqw, 14px); }
-  .stage .leftPanelCard .diceStatusMessage { position: static; width: auto; margin: 0; grid-column: 1 / -1; grid-row: 2; font-size: clamp(11px, 0.63cqw, 13px); line-height: 1.4; }
+  .stage .leftPanel :is(.diceStatus, .chancePanel, .panelToggleSection) { flex: none; }
+  .stage .leftPanelCard { display: contents; }
+  /* 플레이트: 바깥 장식 SVG(그림자 포함)와 안쪽 선을 가상 요소로 얹는다 */
+  .stage .leftPanel :is(.chancePanel, .panelToggleSection) { position: relative; isolation: isolate; box-sizing: border-box; border: 0; border-image: none; background: none; box-shadow: none; filter: none; overflow: visible; }
+  .stage .leftPanel :is(.chancePanel, .panelToggleSection)::before,
+  .stage .leftPanel :is(.chancePanel, .panelToggleSection)::after { content: ""; position: absolute; z-index: -1; pointer-events: none; background-repeat: no-repeat; background-size: 100% 100%; }
+  .stage .leftPanel .chancePanel::before { inset: -4.42% -2.87% -13.27% -2.87%; background-image: url("/assets/board/plates/plate-chance.svg"); }
+  .stage .leftPanel .chancePanel::after { inset: 4px; background-image: url("/assets/board/plates/plate-chance-line.svg"); background-size: 100.44% 101.42%; background-position: center; }
+  .stage .leftPanel .panelToggleSection::before { inset: -8.62% -2.87% -25.86% -2.87%; background-image: url("/assets/board/plates/plate-open.svg"); }
+  .stage .leftPanel .panelToggleSection::after { inset: 4px; background-image: url("/assets/board/plates/plate-open-line.svg"); background-size: 100.44% 103%; background-position: center; }
+  /* Figma 5:19 주사위판(333×146)을 너비 100%로 놓고 값은 시안 좌표를 퍼센트로 바꿔 겹친다 */
+  .stage .leftPanelCard .diceStatus { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 333 / 146; padding: 0; display: block; }
+  .stage .leftPanelCard .diceStatusIcon { display: block; position: absolute; left: 7.4%; top: 52.7%; width: 3.7%; height: auto; transform: translateY(-50%); }
+  .stage .leftPanelCard .diceReadout { position: absolute; left: 15.1%; right: 4.5%; top: 52.7%; width: auto; transform: translateY(-50%); font-size: clamp(11px, 0.8cqw, 16px); }
+  .stage .leftPanelCard .diceChallengeRow { position: absolute; left: auto; right: 4.5%; top: 22%; font-size: clamp(10px, 0.62cqw, 13px); }
+  .stage .leftPanelCard .diceStatusMessage { position: absolute; left: 42%; right: 4.5%; top: 34%; width: auto; margin: 0; text-align: right; font-size: clamp(10px, 0.58cqw, 12px); line-height: 1.35; }
+  .stage .leftPanelCard .diceGauge { display: block; position: absolute; left: 7.4%; top: 59.4%; width: 88.1%; height: 8.4%; box-sizing: border-box; padding: 0.1cqw 0.14cqw; border-radius: 0.3cqw; }
+  .diceGauge span { display: block; height: 100%; min-width: 0; border-radius: 0.2cqw; background: linear-gradient(#fbbb35, #fbb934 38%, #d3861f); box-shadow: 0 0 0.3cqw #f4a8286b; transition: width 1s linear; }
+  .diceGauge[data-idle="true"] span { opacity: .45; box-shadow: none; }
   .stage .leftPanelCard .chancePanel {
-    position: static; inset: auto; width: auto; max-height: calc(var(--board-scene-height) * 0.34);
-    padding: 0.52cqw 0.83cqw; border: 0; border-image: none; border-top: 1px solid #6f4929; filter: none;
+    position: relative; inset: auto; width: auto; max-height: none; margin-top: 0.21cqw;
+    padding: 0.73cqw 0.83cqw; display: flex; flex-direction: column; gap: 0.26cqw;
   }
   .stage .leftPanelCard .chancePanel[data-obscured="true"] { display: none; }
-  .stage .chancePanel h2 { font-size: clamp(14px, 0.8cqw, 18px); }
-  .stage .chancePanel :is(li, p, span, select, button) { font-size: clamp(12px, 0.65cqw, 15px); line-height: 1.5; }
+  .stage .chancePanel h2 { margin: 0; font-size: clamp(14px, 0.8cqw, 18px); }
+  .stage .chancePanel ul { margin: 0; }
+  .stage .chancePanel :is(li, p, span, select, button) { font-size: clamp(12px, 0.62cqw, 15px); line-height: 1.5; }
   .stage .chancePanel :is(select, button) { min-height: 28px; }
-  .stage .leftPanelCard .chancePanel li { padding: 0.36cqw 0.52cqw; }
-  .stage .panelToggleSection { display: block; padding: 0.42cqw 0.52cqw 0.3cqw; border-top: 1px solid #6f4929; }
+  .stage .leftPanelCard .chancePanel li { padding: 0.31cqw; }
+  .stage .panelToggleSection { display: block; margin-top: 0.36cqw; padding: 0; }
   .stage .panelToggle {
-    display: flex; width: 100%; min-height: 44px; padding: 0.62cqw 0.73cqw; gap: 0.47cqw;
-    border: 1px solid #b88d55; border-radius: 0.31cqw; background: #8a623659; font-size: clamp(14px, 0.99cqw, 22px);
+    display: flex; align-items: center; width: 100%; min-height: 3.02cqw; padding: 0.89cqw 1.3cqw; gap: 0.47cqw;
+    border: 0; background: none; font-size: clamp(14px, 1.09cqw, 22px);
   }
   .stage .openToggle { display: none; }
   /* 열린 문제 패널은 통합 패널 아래 남은 높이를 아래 여백선까지 채운다
@@ -115,7 +123,7 @@
      화면이 커지고 작아져도 구성이 그대로다 아주 좁은 화면에서만 12px 아래로 내려가지 않게 막는다 */
   .stage .leftPanel .openPanel {
     --open-width: var(--left-width);
-    position: relative; inset: auto; width: 100%; height: auto; flex: 1 1 auto; min-height: 0;
+    position: relative; inset: auto; width: 100%; height: auto; flex: 1 1 auto; min-height: 0; margin-top: var(--hud-gap);
     display: flex; flex-direction: column;
     font-size: max(12px, calc(var(--open-width) * 17 / 333));
   }
@@ -128,7 +136,7 @@
   .stage .airportConfirm { position: absolute; left: 37.1%; top: 39%; z-index: 40; width: 22%; }
   .stage :is(.eventPanel, .airportConfirm) { font-size: max(12px, calc(var(--left-width) * 17 / 333)); }
   /* 오른쪽 열: 배너 그림(339x627)의 보이는 오른쪽 끝(84.37%)을 97.5% 여백선에, 보이는 위 끝(1.44%)을 열린 문제 패널 위선에 맞춘다
-     열린 문제 패널 위선은 통합 패널(찬스카드 목록을 뺀 높이, BoardScreen 이 --left-card-height 로 알림) 아래 간격만큼이다
+     열린 문제 패널 위선은 주사위판과 열린 문제 버튼 플레이트(찬스카드 목록을 뺀 높이, BoardScreen 이 --left-card-height 로 알림) 아래 간격만큼이다
      라운드 단추는 시안의 배너 기준 자리(가로 +3.28%, 세로 +41.67%)를 그대로 따라간다 */
   .stage { --koth-top: calc(var(--hud-top) + var(--left-card-height, 7.4cqw) + var(--hud-gap)); }
   .stage .kothBanner { left: calc(97.5% - 17.66% * 0.8437 + var(--hud-extra-x)); top: calc(var(--koth-top) - 58.06% * 0.0144); }
@@ -607,6 +615,7 @@ label.sheetChoice { align-items: flex-start; cursor: pointer; }
 }
 
 .mobileDiceIcon { display: none; }
+.diceGauge, .diceStatusIcon { display: none; }
 @media (max-width: 1100px) {
   .mobileMenuItems .mobileNavIcon { width: 32px; height: 32px; }
   .mobileNav .mobileMenuItems .mobileNavPrimary { flex-direction: row; gap: 8px; }
@@ -629,7 +638,7 @@ label.sheetChoice { align-items: flex-start; cursor: pointer; }
 .diceStatus > .dicePanelArtwork { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 @media (max-width: 1100px) {
   .diceStatus > svg { display: block; }
-  .diceStatus > .dicePanelArtwork { display: none; }
+  .diceStatus > .dicePanelArtwork, .diceStatus > .diceStatusIcon { display: none; }
   .mobileNav a.mobileNavPrimary { min-width: 44px; }
   .stage { container-name: board-stage; }
 }

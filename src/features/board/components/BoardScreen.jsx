@@ -103,21 +103,26 @@ export default function BoardScreen({
   const leftPanelCard = useRef(null);
   useMobileBoardBackdrop(frameRef, boardViewport);
   useBoardTextLayout(frameRef);
-  // 데스크톱 통합 패널에서 찬스카드 목록을 뺀 높이를 무대에 알린다
-  // KoTH 배너 위 끝을 열린 문제 패널 위선(통합 패널 아래 + 간격)에 맞추는 데 쓴다
+  // 데스크톱 왼쪽 열에서 주사위판과 열린 문제 버튼 플레이트까지의 높이(찬스카드 목록 제외)를 무대에 알린다
+  // KoTH 배너 위 끝을 열린 문제 패널 위선(이 높이 + 간격)에 맞추는 데 쓴다 휴대폰에서는 열이 없어 재지 않는다
   useEffect(() => {
     const frame = frameRef.current;
     const card = leftPanelCard.current;
     if (!frame || !card || typeof ResizeObserver === "undefined") return undefined;
+    const dice = card.querySelector(`.${styles.diceStatus}`);
+    const toggle = card.querySelector(`.${styles.panelToggleSection}`);
+    if (!dice || !toggle) return undefined;
     const update = () => {
-      const height = card.getBoundingClientRect().height;
-      if (!height) return;
-      const chance = card.querySelector(`.${styles.chancePanel}`);
-      const chanceHeight = chance?.getClientRects().length ? chance.getBoundingClientRect().height : 0;
-      frame.style.setProperty("--left-card-height", `${height - chanceHeight}px`);
+      if (getComputedStyle(card.parentElement).display !== "flex") return;
+      const diceHeight = dice.getBoundingClientRect().height;
+      const toggleHeight = toggle.getBoundingClientRect().height;
+      if (!diceHeight || !toggleHeight) return;
+      const toggleGap = parseFloat(getComputedStyle(toggle).marginTop) || 0;
+      frame.style.setProperty("--left-card-height", `${diceHeight + toggleGap + toggleHeight}px`);
     };
     const observer = new ResizeObserver(update);
-    observer.observe(card);
+    observer.observe(dice);
+    observer.observe(toggle);
     update();
     return () => {
       observer.disconnect();

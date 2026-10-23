@@ -25,12 +25,12 @@
 }
 .festivalLayout {
   /* 52~74vw로 부스 안전 영역을 보존한다. 극단적으로 낮은 화면은
-     부스를 자르는 대신 페이지 스크롤을 허용한다. 하단 44px는 안내/새로고침 영역이다. */
-  --art-height: clamp(52vw, calc(100dvh - 44px), 74vw);
+     부스를 자르는 대신 페이지 스크롤을 허용한다. */
+  --art-height: clamp(52vw, 100dvh, 74vw);
   position: relative;
   container-type: inline-size;
   width: 100%;
-  height: calc(var(--art-height) + 44px);
+  height: var(--art-height);
   margin-inline: auto;
   isolation: isolate;
 }
@@ -366,20 +366,6 @@
 .unavailable .boothCaption {
   opacity: 0.65;
 }
-.sceneFooter {
-  position: absolute;
-  inset: auto 3% 0;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px 20px;
-  color: #f4dfbd;
-  font-size: clamp(12px, 1.05cqw, 16px);
-  text-shadow: 0 2px 4px #160c08;
-}
-.sceneFooter button,
 .sceneNotice button {
   min-height: 44px;
   padding: 8px;
@@ -390,10 +376,6 @@
   text-decoration: underline;
   text-underline-offset: 6px;
   cursor: pointer;
-}
-.sceneFooter button:disabled {
-  opacity: 0.55;
-  cursor: wait;
 }
 .sceneNotice {
   position: absolute;
@@ -603,15 +585,6 @@
   }
   .scene .brandName { font-size: 1.6cqw; }
   .scene .boothCaption { display: none; }
-  .sceneFooter {
-    position: static;
-    padding-inline: 12px;
-    font-size: 12px;
-    gap: 4px;
-  }
-  .sceneFooter button {
-    margin-left: auto;
-  }
   .sceneNotice {
     position: relative;
     top: auto;

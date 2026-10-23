@@ -1,6 +1,6 @@
 // Run with playwright-cli run-code --filename on an authenticated /challenges page (local fixtures or a real session).
 // This script only reads the UI. It measures the visible edges of the board HUD, draws them, and checks
-// that each group shares one line: left column (unified top-left panel and the open challenges panel),
+// that each group shares one line: left column (dice, chance and open-list plates and the open challenges panel),
 // right column, top margin line, the shared top of the open panel and the KoTH banner, and bottom margin line.
 // Images keep transparent margins, so ART holds the alpha >= 40 bounds of each PNG as fractions.
 // qaOutput selects the screenshot folder; qaSizes defaults to 1920x1080,1366x768,1280x1024,2560x1080.
@@ -16,7 +16,9 @@ async page => {
     'banner-koth-event.png': { w: 339, h: 627, l: 0.1534, t: 0.0144, r: 0.8437, b: 0.9841 },
   };
   const SUBJECTS = [
-    { key: 'card', name: '통합 패널', css: "[class*='_leftPanelCard_']" },
+    { key: 'dice', name: '주사위판', css: "[class*='_leftPanel_'] [class*='_diceStatus_']" },
+    { key: 'chance', name: '찬스카드', css: "[class*='_leftPanel_'] [class*='_chancePanel_']" },
+    { key: 'toggle', name: '목록 버튼', css: "[class*='_panelToggleSection_']" },
     { key: 'open', name: '열린 문제', css: '#board-open-challenges-panel' },
     { key: 'rules', name: '규칙', css: "img[src*='nav-rules']", art: 'nav-rules.png', fit: 'contain' },
     { key: 'mypage', name: '마이', css: "img[src*='nav-mypage']", art: 'nav-mypage.png', fit: 'contain' },
@@ -26,10 +28,10 @@ async page => {
     { key: 'booth', name: '부스 버튼', text: '동아리 부스 둘러보기' },
   ];
   const RULES = [
-    ['왼쪽 열 왼쪽 끝', 'x', ['card.l', 'open.l']],
-    ['왼쪽 열 오른쪽 끝', 'x', ['card.r', 'open.r']],
+    ['왼쪽 열 왼쪽 끝', 'x', ['dice.l', 'chance.l', 'toggle.l', 'open.l']],
+    ['왼쪽 열 오른쪽 끝', 'x', ['dice.r', 'chance.r', 'toggle.r', 'open.r']],
     ['오른쪽 열 오른쪽 끝', 'x', ['logout.r', 'banner.r', 'booth.r']],
-    ['위 여백선', 'y', ['card.t', 'rules.t', 'mypage.t', 'score.t', 'logout.t']],
+    ['위 여백선', 'y', ['dice.t', 'rules.t', 'mypage.t', 'score.t', 'logout.t']],
     ['두 열 위선', 'y', ['open.t', 'banner.t']],
     ['아래 여백선', 'y', ['open.b', 'booth.b']],
   ];
