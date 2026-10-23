@@ -52,9 +52,18 @@ export function createTeamQrSession({ getProfile, issueQr, updateState, onMember
       if (!await verifyTeam()) return;
       const response = await issueQr(config);
       if (!current()) return;
+      const envelope = response.data;
+      if (isSuccess(envelope)) {
+        const issuedTeamId = envelope.data?.team_id;
+        if (typeof issuedTeamId !== "string" || !issuedTeamId.trim()) {
+          publish({ ...QR_IDLE, status: "error", error: "QR의 소속 팀을 확인하지 못했습니다" });
+          return;
+        }
+        // 전후 조회가 같은 팀이어도 중간에 다른 팀에서 발급됐을 수 있다
+        if (issuedTeamId !== ticket.teamId) { changed(); return; }
+      }
       // 발급 도중 팀이 바뀌면 서버의 정상 응답도 이전 팀 QR일 수 있다
       if (!await verifyTeam()) return;
-      const envelope = response.data;
       const paymentToken = envelope?.data?.payment_token;
       const expiresAt = envelope?.data?.expires_at;
       const left = remainingSeconds(expiresAt);

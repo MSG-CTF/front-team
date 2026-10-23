@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createTeamQrSession, getQrTeamId } from "./teamQrSession.js";
 
 const ok = (data) => ({ data: { code: "SUCCESS", data } });
-const token = (value) => ok({ payment_token: value, expires_at: "2099-01-01T00:00:00Z" });
+const token = (value, team_id = "A") => ok({ team_id, payment_token: value, expires_at: "2099-01-01T00:00:00Z" });
 function deferred() {
   let resolve, reject;
   const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
@@ -60,7 +60,7 @@ test("이전 팀의 늦은 응답과 finally가 새 팀의 발급을 덮거나 �
   a.resolve(token("old-A")); await old;
   await f.session.request();
   assert.equal(calls, 2);
-  b.resolve(token("fresh-B")); await next;
+  b.resolve(token("fresh-B", "B")); await next;
   assert.equal(f.states.at(-1).teamId, "B");
   assert.equal(f.states.at(-1).paymentToken, "fresh-B");
 });
@@ -110,6 +110,22 @@ test("화면 종료 후 늦은 응답은 상태를 갱신하지 않는다", asyn
   response.resolve(token("late")); await request;
   assert.equal(f.states.length, count);
 });
+
+test("발급 전후 팀이 같아도 중간에 다른 팀에서 발급된 QR은 버린다", async () => {
+  const f = fixture({ issueQr: async () => token("issued-for-B", "B") });
+  await f.session.request();
+  assert.equal(f.changes(), 1);
+  assert.equal(f.states.some((state) => state.status === "success"), false);
+});
+
+for (const owner of [{}, { teamId: "A" }]) {
+  test(`발급 팀을 snake_case로 확인할 수 없는 QR은 표시하지 않는다 ${JSON.stringify(owner)}`, async () => {
+    const f = fixture({ issueQr: async () => ok({ ...owner, payment_token: "unknown-owner", expires_at: "2099-01-01T00:00:00Z" }) });
+    await f.session.request();
+    assert.equal(f.states.at(-1).status, "error");
+    assert.equal(f.states.at(-1).paymentToken, "");
+  });
+}
 
 test("팀 없음·밴·이전 값 경고 상태는 QR 발급 대상으로 쓰지 않는다", () => {
   const profile = { status: "success", data: { teamId: "A" } };
