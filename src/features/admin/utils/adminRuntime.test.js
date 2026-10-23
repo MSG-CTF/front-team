@@ -88,3 +88,16 @@ test("버전 출처는 파생 여부와 수집 기록으로 가르고 GitHub 최
   assert.equal(describeRelease(releases[0], releases).isLatestGithub, true);
   assert.equal(describeRelease(releases[0], releases).newerGithub, null);
 });
+
+test("저장소 env 로 채운 버전은 반영 커밋과 파일을 보이고 못 채운 값이 있으면 사용을 막는다", async () => {
+  const { repositoryEnvStatus } = await import("./adminRuntime.js");
+  assert.equal(repositoryEnvStatus({ repository_env: null }), null);
+  const filled = repositoryEnvStatus({ repository_env: { revision: "1a82c92ffffffffffffffffffffffffffffffff0", files: ["env/web.env"], missing: [] } });
+  assert.deepEqual([filled.revision, filled.files, filled.blocked], ["1a82c92", ["env/web.env"], false]);
+  const blocked = repositoryEnvStatus({ repository_env: { revision: "a".repeat(40), files: ["env/web.env", "env/api.env"], missing: [
+    { container: "web", name: "FLAG", reason: "flag_mismatch" },
+    { container: "api", name: null, reason: "invalid", message: "env/api.env:3 환경변수 형식을 확인해주세요" },
+  ] } });
+  assert.equal(blocked.blocked, true);
+  assert.deepEqual(blocked.missing.map((item) => item.label), ["web · FLAG 채점 플래그와 다름", "api env/api.env:3 환경변수 형식을 확인해주세요"]);
+});

@@ -8,7 +8,7 @@ import { isSuccess } from "../../../utils/response.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import { RECENT_LIMIT, latestFirst } from "../utils/adminLists.js";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { buildDerivedSettings, describeRelease, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret } from "../utils/adminRuntime.js";
+import { buildDerivedSettings, describeRelease, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, repositoryEnvStatus, validateRuntimeSecret } from "../utils/adminRuntime.js";
 import AdminDialog from "./AdminDialog.jsx";
 import AdminEnvironmentFileImporter from "./AdminEnvironmentFileImporter.jsx";
 import AdminRepositoryEnvironmentImporter from "./AdminRepositoryEnvironmentImporter.jsx";
@@ -120,6 +120,8 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const currentRelease = releases.find((release) => release.is_current) ?? null;
   const selectedInfo = selected ? describeRelease(selected, releases) : null;
   const newerGithub = currentRelease ? describeRelease(currentRelease, releases).newerGithub : null;
+  const repoEnv = repositoryEnvStatus(selected);
+  const newerEnv = repositoryEnvStatus(newerGithub);
   // 버전 기록은 네 줄씩 쪽을 나눠 버전이 쌓여도 아래 칸을 밀어내지 않는다 처음에는 고른 버전이 든 쪽을 연다
   const [versionPage, setVersionPage] = useState(null);
   const versionRows = [...releases].sort((a, b) => b.version - a.version);
@@ -244,13 +246,18 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
           </select>}
           <IconButton icon="refresh" label="새로고침" onClick={runtime.retry} disabled={busy || loading} />
           {selected && !selected.is_current && <button type="button" className={styles.primary}
-            disabled={busy || !selected.is_deployable || loading || selected.containers.some((container) => container.secret_bindings?.some((binding) => binding.status === "missing"))}
+            disabled={busy || !selected.is_deployable || loading || repoEnv?.blocked || selected.containers.some((container) => container.secret_bindings?.some((binding) => binding.status === "missing"))}
             onClick={() => setConfirming(true)}>이 버전 사용</button>}
         </div>
       </section>
       {newerGithub && selected?.release_id === currentRelease.release_id && <div className={styles.newerNotice}>
-        <span><strong>GitHub에 새 발행본이 있습니다</strong> 버전 {newerGithub.version} · 발행 #{newerGithub.registry_revision} · {formatAdminTime(newerGithub.created_at, { seconds: false })} 등록</span>
+        <span><strong>GitHub에 새 발행본이 있습니다</strong> 버전 {newerGithub.version} · 발행 #{newerGithub.registry_revision} · {formatAdminTime(newerGithub.created_at, { seconds: false })} 등록{newerEnv ? (newerEnv.blocked ? " · 환경변수 채울 값 있음" : " · 저장소 환경변수 반영") : ""}</span>
         <button type="button" className={BUTTON} disabled={busy} onClick={() => { pickRelease(newerGithub.release_id); setPanel("test"); }}>새 버전 시험하기</button>
+      </div>}
+      {/* 저장소 env 에서 못 채운 값이 있으면 사용 전환이 막히니 이유와 채우는 길을 바로 보인다 */}
+      {selected && !selected.is_current && repoEnv?.blocked && <div className={styles.newerNotice} data-tone="warn">
+        <span><strong>아직 사용할 수 없는 버전입니다</strong> 저장소 env에서 채우지 못한 값이 있습니다 · {repoEnv.missing.map((item) => item.label).join(" · ")}</span>
+        <button type="button" className={BUTTON} disabled={busy} onClick={() => { setPanel("environment"); setEnvironmentMethod("repository"); }}>환경변수 채우기</button>
       </div>}
       {confirming && selected && <div className={styles.confirmation}>
         <p className={styles.dialogLead}>새 인스턴스부터 버전 {selected.version}의 이미지와 파일 연결을 사용합니다 실행 중인 인스턴스와 초기화에는 생성 당시 버전이 유지됩니다</p>
@@ -409,6 +416,10 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
             </div>
             <AdminBadge tone={selected.is_current ? "good" : "neutral"}>{selected.is_current ? "새 인스턴스에 적용 중" : "아직 적용 전"}</AdminBadge>
           </div>
+          {repoEnv && <p className={styles.callout} data-tone={repoEnv.blocked ? "warn" : undefined}>
+            GitHub 커밋 <span className={styles.mono}>{repoEnv.revision}</span>의 {repoEnv.files.join(", ")} 값을 등록할 때 넣었습니다
+            {repoEnv.blocked ? ` 채우지 못한 값은 ${repoEnv.missing.map((item) => item.label).join(" · ")} · 아래 저장소 값 가져오기나 직접 수정으로 넣으면 새 버전이 생깁니다` : ""}
+          </p>}
           <div className={styles.group}>
             {selected.containers.map((container) => <details key={container.name} className={styles.groupRow}>
               <summary><strong className={styles.mono}>{container.name}</strong>
@@ -432,7 +443,8 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
           </div>
           <p className={styles.groupNote}>{selected.is_current
             ? "실행 중인 인스턴스는 생성 당시 설정을 유지합니다"
-            : "이 버전을 적용하려면 위의 ‘이 버전 사용’을 눌러주세요"}</p>
+            : repoEnv?.blocked ? "못 채운 값을 넣은 새 버전을 만든 뒤 그 버전을 사용해주세요"
+              : "이 버전을 적용하려면 위의 ‘이 버전 사용’을 눌러주세요"}</p>
           <h4 className={styles.groupTitle}>새 설정 버전 만들기</h4>
           <div className={styles.methodCards} role="group" aria-label="환경변수 수정 방법">
             {[{ id: "manual", label: "직접 수정", hint: "이름과 값을 한 줄씩 고칩니다", icon: "edit", tone: "blue" },
@@ -447,6 +459,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
           {environmentMethod && <p className={styles.groupNote}>저장하면 새 버전이 생깁니다 위의 ‘이 버전 사용’을 눌러야 새 인스턴스에 적용됩니다</p>}
           {environmentMethod === "repository" && <div>
             <AdminRepositoryEnvironmentImporter key={selected.release_id} challengeId={challenge.challenge_id} release={selected}
+              initialContainer={repoEnv?.missing.find((item) => item.container)?.container}
               secrets={storedSecrets} busy={busy} onSave={(body) => saveRepositoryEnvironment(selected.release_id, body)}/>
           </div>}
           {environmentMethod === "file" && <div>

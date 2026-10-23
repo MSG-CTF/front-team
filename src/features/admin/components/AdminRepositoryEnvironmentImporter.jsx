@@ -4,8 +4,9 @@ import { isSuccess } from "../../../utils/response.js";
 import { repositoryEnvironmentRequest, repositoryEnvironmentRows } from "../utils/adminRepositoryEnvironment.js";
 import styles from "./AdminWorkspace.module.css";
 
-export default function AdminRepositoryEnvironmentImporter({ challengeId, release, secrets, busy, onSave }) {
-  const [container, setContainer] = useState(release.containers[0].name);
+export default function AdminRepositoryEnvironmentImporter({ challengeId, release, secrets, busy, onSave, initialContainer }) {
+  // 못 채운 값이 있는 컨테이너에서 넘어오면 그 컨테이너부터 연다
+  const [container, setContainer] = useState(release.containers.some((item) => item.name === initialContainer) ? initialContainer : release.containers[0].name);
   const [source, setSource] = useState(null);
   const [rows, setRows] = useState([]);
   const [review, setReview] = useState(null);

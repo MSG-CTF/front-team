@@ -992,6 +992,7 @@ dl.group dd.mono { font-size: 12.5px; }
 .testPassed span { flex: 1 1 260px; }
 .newerNotice { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; margin: 0 0 16px; padding: 12px 16px; border-radius: var(--radius-lg); background: var(--blue-tint); color: var(--blue-text); font-size: 13px; line-height: 19px; }
 .newerNotice strong { margin-right: 6px; }
+.newerNotice[data-tone="warn"] { background: var(--orange-tint); color: var(--orange-text); }
 @keyframes testFlow { to { background-position: -200% 0; } }
 @keyframes testSpin { to { transform: rotate(360deg); } }
 @keyframes testPulse { 0% { box-shadow: 0 0 0 0 rgb(194 79 23 / 40%); } 70% { box-shadow: 0 0 0 9px rgb(194 79 23 / 0%); } 100% { box-shadow: 0 0 0 0 rgb(194 79 23 / 0%); } }

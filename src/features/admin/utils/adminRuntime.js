@@ -99,6 +99,21 @@ export function latestGithubRelease(releases = []) {
     .sort((a, b) => b.registry_revision - a.registry_revision || b.version - a.version)[0] ?? null;
 }
 
+// GitHub 발행본은 등록할 때 같은 커밋의 env/<컨테이너>.env 를 넣는다 백엔드 repository_env {revision, files, missing}
+// missing 이 남은 버전은 백엔드가 사용 전환을 거절하니 화면도 막고 채울 항목을 보인다
+const REPOSITORY_ENV_REASONS = { no_value: "값 없음", flag_mismatch: "채점 플래그와 다름", invalid: "형식 확인 필요" };
+
+export function repositoryEnvStatus(release) {
+  const record = release?.repository_env;
+  if (!record) return null;
+  const missing = (record.missing ?? []).map((item) => ({
+    ...item,
+    label: item.name ? `${item.container} · ${item.name} ${REPOSITORY_ENV_REASONS[item.reason] ?? "확인 필요"}`
+      : `${item.container} ${item.message || REPOSITORY_ENV_REASONS[item.reason] || "확인 필요"}`,
+  }));
+  return { revision: String(record.revision ?? "").slice(0, 7), files: record.files ?? [], missing, blocked: missing.length > 0 };
+}
+
 export function describeRelease(release, releases = []) {
   const origin = releaseOrigin(release);
   const base = release?.derived_from_release_id ? releases.find((item) => item.release_id === release.derived_from_release_id) : null;
