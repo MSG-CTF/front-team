@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   buildKothPatch, groupKothFiles, kothAwards, repositoryFreshness, kothEditForm, kothListFromClubs, kothSummary, numberTicks, periodRange, periodRows, retryablePeriod,
   kothFileWarnings, statusGoesBack, suggestRepository, tickLabel, tickNumber, validateKothEdit,
+  NEW_KOTH_CLUB, applyKothFolder, buildKothCreate, freeKothClubs, kothCreateForm, kothFolderTwin, validateKothCreate,
 } from "./adminKoth.js";
 
 const row = (team, rank, extra = {}) => ({ team_id: team, team_name: team, period_rank: rank, metric_score: 100 - rank, ...extra });
@@ -129,4 +130,45 @@ test("저장소 최신화는 반영한 커밋과 main 최신 커밋이 다를 �
   assert.equal(repositoryFreshness({ source_revision: "1a82c92", latest_revision: "9d4f3e1" }).behind, true);
   assert.equal(repositoryFreshness({ source_revision: "1a82c92", latest_revision: "1a82c92f00" }).behind, false);
   assert.equal(repositoryFreshness({ source_revision: "1a82c92" }).behind, false);
+});
+
+test("등록은 문제가 없는 동아리만 고르고 새 동아리는 이름으로 보낸다", () => {
+  const clubs = [{ club_id: "c1", name: "MJSEC", challenges: [{ koth_challenge_id: "k1" }] }, { club_id: "c2", name: "NULLPTR", challenges: [] }];
+  assert.deepEqual(freeKothClubs(clubs).map((club) => club.club_id), ["c2"]);
+  const base = { ...kothCreateForm(), title: "STACK", open_group: "3", reason: "새 KoTH 문제 등록" };
+  assert.equal(validateKothCreate(base), "동아리를 고르세요");
+  assert.equal(validateKothCreate({ ...base, club_id: NEW_KOTH_CLUB }), "새 동아리 이름은 1~100자로 입력하세요");
+  assert.equal(validateKothCreate({ ...base, club_id: "c2" }), "");
+  const created = buildKothCreate({ ...base, club_id: NEW_KOTH_CLUB, club_name: " Sec:Zero " });
+  assert.equal(created.club_name, "Sec:Zero");
+  assert.equal(created.club_id, undefined);
+  const body = buildKothCreate({ ...base, club_id: "c2", opened_at: "2026-11-08T14:00" });
+  assert.equal(body.club_id, "c2");
+  assert.equal(body.open_group, 3);
+  assert.equal(body.opened_at, "2026-11-08T05:00:00Z");
+  assert.equal(body.closed_at, null);
+  assert.equal(body.challenge_url, null);
+  assert.equal(body.repository_slug, null);
+});
+
+test("저장소 폴더를 고르면 info.yaml 이름과 지문, 토큰 이름 제안을 채운다", () => {
+  const folder = { slug: "koth-pixel-smuggler", title: "PIXEL SMUGGLER", description: "지문" };
+  const filled = applyKothFolder(kothCreateForm(), folder);
+  assert.equal(filled.repository_slug, "koth-pixel-smuggler");
+  assert.equal(filled.title, "PIXEL SMUGGLER");
+  assert.equal(filled.description, "지문");
+  assert.equal(filled.score_api_token_env, "KOTH_PIXEL_SMUGGLER_TOKEN");
+  assert.equal(applyKothFolder({ ...kothCreateForm(), score_api_token_env: "MY_TOKEN" }, folder).score_api_token_env, "MY_TOKEN");
+  assert.equal(applyKothFolder(filled, null).repository_slug, "");
+});
+
+test("저장소 미연결로 이미 있는 같은 문제를 고르면 그 문제를 알려준다", () => {
+  const challenges = [
+    { koth_challenge_id: "k6", title: "Dependency Hell", repository: null },
+    { koth_challenge_id: "k4", title: "PIXEL SMUGGLER", repository: { slug: "koth-pixel-smuggler" } },
+  ];
+  assert.equal(kothFolderTwin({ slug: "koth-dependency-hell", title: "DEPENDENCY HELL" }, challenges).koth_challenge_id, "k6");
+  assert.equal(kothFolderTwin({ slug: "koth-pixel-smuggler", title: "PIXEL SMUGGLER" }, challenges), null);
+  assert.equal(kothFolderTwin({ slug: "koth-jenga", title: "JENGA" }, challenges), null);
+  assert.equal(kothFolderTwin(null, challenges), null);
 });

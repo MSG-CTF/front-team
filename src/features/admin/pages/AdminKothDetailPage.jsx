@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router-dom";
 import { getAdminKothChallenge } from "../../../api/admin.js";
 import { getKothLeaderboard } from "../../../api/koth.js";
 import { ROUTES } from "../../../routes/routePaths.js";
@@ -47,7 +47,9 @@ export default function AdminKothDetailPage() {
   const { kothChallengeId } = useParams();
   const detail = useAdminResource((config) => loadKothDetail(kothChallengeId, config), [kothChallengeId], "KoTH 문제를 불러오지 못했습니다");
   const leaderboard = useAdminResource((config) => getKothLeaderboard(kothChallengeId, config), [kothChallengeId], "누적 순위를 불러오지 못했습니다");
-  const [tab, setTab] = useState("periods");
+  // 등록 창에서 넘어오면 넘겨받은 탭(문제 정보, 저장소 연결)부터 연다
+  const location = useLocation();
+  const [tab, setTab] = useState(() => TABS.some((item) => item.id === location.state?.tab) ? location.state.tab : "periods");
   const [draft, setDraft] = useState(null);
   const challenge = detail.data;
   const limited = Boolean(challenge?.limited);

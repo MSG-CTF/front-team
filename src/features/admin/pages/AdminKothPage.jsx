@@ -1,9 +1,11 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getAdminKothChallenges } from "../../../api/admin.js";
 import { getKothClubs } from "../../../api/koth.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
+import AdminKothCreateDialog from "../components/AdminKothCreateDialog.jsx";
 import { Glyph } from "../components/AdminGlyph.jsx";
 import { IconButton, StatStrip, StatTile } from "../components/AdminWidgets.jsx";
 import useAdminResource from "../hooks/useAdminResource.js";
@@ -36,9 +38,16 @@ export default function AdminKothPage() {
   const challenges = list.data?.challenges ?? [];
   const limited = Boolean(list.data?.limited);
   const summary = kothSummary(challenges);
-  const open = (challenge) => navigate(ROUTES.adminKothDetail(challenge.koth_challenge_id));
+  // tab 을 넘기면 상세를 그 탭부터 연다
+  const open = (challenge, tab) => navigate(ROUTES.adminKothDetail(challenge.koth_challenge_id), tab ? { state: { tab } } : undefined);
+  // 제오파디 문제처럼 직접 쓰거나 저장소 koth 폴더에서 채워 등록한다
+  const [creating, setCreating] = useState(null);
 
-  return <AdminLayout title="KoTH 문제" actions={<IconButton icon="refresh" label="새로고침" onClick={list.retry} disabled={list.status === "loading"} />}>
+  return <AdminLayout title="KoTH 문제" actions={<>
+    <IconButton icon="refresh" label="새로고침" onClick={list.retry} disabled={list.status === "loading"} />
+    <button type="button" className={ui.button} onClick={() => setCreating("manual")}>직접 등록</button>
+    <button type="button" className={ui.primary} onClick={() => setCreating("repository")}>저장소에서 가져오기</button>
+  </>}>
     <AdminStatusMessage status={list.status} error={list.error} onRetry={list.retry} hasData={Boolean(list.data)} />
     {limited && <p className={ui.callout}>{LIMITED_NOTICE}</p>}
     {list.data && <div className={ui.stack}>
@@ -95,5 +104,8 @@ export default function AdminKothPage() {
         </div>
       </section>
     </div>}
+    {creating && <AdminKothCreateDialog key={creating} source={creating} challenges={challenges} limited={limited} onClose={() => setCreating(null)}
+      onCreated={list.reload} onOpen={(challenge) => { setCreating(null); open(challenge, "edit"); }}
+      onLink={(challenge) => { setCreating(null); open(challenge, "repository"); }} />}
   </AdminLayout>;
 }

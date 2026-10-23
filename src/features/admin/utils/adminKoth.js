@@ -186,6 +186,51 @@ export function validateKothEdit(form) {
   return "";
 }
 
+// 등록: 편집과 같은 칸에 동아리와 저장소 폴더를 더한다 동아리마다 문제는 하나고 새 문제는 공개 예정으로 만든다
+export const NEW_KOTH_CLUB = "new";
+
+export function kothCreateForm() {
+  return { ...kothEditForm(null), club_id: "", club_name: "", repository_slug: "" };
+}
+
+// 이미 KoTH 문제가 있는 동아리는 고를 수 없다
+export function freeKothClubs(clubs = []) {
+  return (clubs ?? []).filter((club) => !club.challenges?.length);
+}
+
+// 저장소 폴더를 고르면 info.yaml 이름과 지문을 채우고, 비어 있는 토큰 이름은 폴더 이름으로 제안한다
+export function applyKothFolder(form, folder) {
+  if (!folder) return { ...form, repository_slug: "" };
+  const tokenEnv = `KOTH_${folder.slug.replace(/^koth-/, "").toUpperCase().replace(/[^A-Z0-9]+/g, "_")}_TOKEN`;
+  return { ...form, repository_slug: folder.slug, title: folder.title ?? form.title, description: folder.description ?? form.description,
+    score_api_token_env: form.score_api_token_env || tokenEnv };
+}
+
+export function validateKothCreate(form) {
+  if (form.club_id === NEW_KOTH_CLUB) {
+    const name = form.club_name.trim();
+    if (!name || Array.from(name).length > 100) return "새 동아리 이름은 1~100자로 입력하세요";
+  } else if (!form.club_id) return "동아리를 고르세요";
+  return validateKothEdit(form);
+}
+
+export function buildKothCreate(form) {
+  const optional = (value) => value.trim() || null;
+  return {
+    ...(form.club_id === NEW_KOTH_CLUB ? { club_name: form.club_name.trim() } : { club_id: form.club_id }),
+    title: form.title.trim(), description: form.description, open_group: Number(form.open_group),
+    opened_at: isoFromKstInput(form.opened_at), closed_at: isoFromKstInput(form.closed_at),
+    challenge_url: optional(form.challenge_url), score_api_url: optional(form.score_api_url), score_api_token_env: optional(form.score_api_token_env),
+    repository_slug: form.repository_slug || null, reason: form.reason.trim(),
+  };
+}
+
+// 같은 문제가 저장소 미연결로 이미 있으면 새로 만들지 말고 그 문제에 폴더를 잇게 한다 이름은 상세의 연결 제안과 같은 규칙으로 맞춘다
+export function kothFolderTwin(folder, challenges = []) {
+  if (!folder) return null;
+  return (challenges ?? []).find((challenge) => !challenge.repository && suggestRepository(challenge, [folder])) ?? null;
+}
+
 // 상태를 뒤로 돌리면(종료 → 진행, 진행 → 예정) 확인 문구를 따로 보인다
 export function statusGoesBack(from, to) {
   return KOTH_STATUS_ORDER.indexOf(to) < KOTH_STATUS_ORDER.indexOf(from);

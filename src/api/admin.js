@@ -360,6 +360,12 @@ export function getAdminKothChallenges(config) {
   return apiClient.get("/admin/koth/challenges", config);
 }
 
+// KoTH 문제 등록: 동아리마다 문제 하나, 새 문제는 공개 예정으로 만든다
+// 문제 서버가 X-Internal-Token 으로 보낼 내부 토큰 원문은 이 응답의 internal_token 으로 한 번만 받는다
+export function createAdminKothChallenge(body) {
+  return apiClient.post("/admin/koth/challenges", body, MUTATION_CONFIG);
+}
+
 export function getAdminKothChallenge(kothChallengeId, config) {
   return apiClient.get(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}`, config);
 }

@@ -145,6 +145,14 @@
 .filesSave > p { margin: 0; color: var(--label-2); font-size: 13px; line-height: 20px; }
 .filesMeta { margin: 0; color: var(--label-3); font-size: 12px; line-height: 16px; }
 
+/* ───── 등록 ───── */
+.createRow { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: end; }
+.createTitle { display: grid; grid-template-columns: minmax(0, 1fr) 120px; gap: 16px; align-items: start; }
+.tokenRow { display: flex; align-items: center; gap: 8px; }
+.picker > .twin { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0; }
+.picker > .twin > span { flex: 1 1 260px; word-break: keep-all; }
+.token { flex: 1; min-width: 0; padding: 10px 12px; border-radius: var(--radius-lg); background: var(--surface-sunken); box-shadow: inset 0 0 0 0.5px var(--hairline); color: var(--label); user-select: all; }
+
 /* ───── 좁은 화면 ───── */
 @container admin-layout (max-width: 900px) {
   .connection { grid-template-columns: minmax(0, 1fr); }
@@ -155,6 +163,7 @@
   .editorTop > :last-child { grid-column: 1 / -1; }
 }
 @container admin-layout (max-width: 767px) {
+  .createRow, .createTitle { grid-template-columns: minmax(0, 1fr); }
   .tabsBar > [role="tablist"] { width: 100%; }
   .tabsBar > [role="tablist"] button { padding: 0 4px; }
   /* 틱 결과와 누적 순위는 네 칸뿐이라 폰에서도 가로 스크롤 없이 화면 폭에 맞춘다 */
