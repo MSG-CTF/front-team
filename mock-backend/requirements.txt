@@ -8,7 +8,7 @@
 # 자세한 사용법은 mock-backend/README.md 참고.
 
 Django==6.1
-djangorestframework==3.18.0
+djangorestframework==3.18.3
 djangorestframework-simplejwt==5.5.1
 django-cors-headers==4.9.0
 python-dotenv==1.2.3
