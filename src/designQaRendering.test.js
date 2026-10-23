@@ -204,6 +204,10 @@ test("좌측 보드 UI는 타이머를 분리하고 열린 문제 패널을 열�
   assert.match(css, /\.stage \.leftPanel \{[^}]*left: calc\(2\.5% - var\(--hud-extra-x\)\); top: var\(--hud-top\); width: var\(--left-width\)/);
   assert.match(css, /\.stage \.leftPanel \{[^}]*height: calc\(100% \+ 2 \* var\(--hud-extra-y\) - 2 \* var\(--hud-margin-y\)\)/);
   assert.match(css, /\.stage \.leftPanel \.openPanel \{[^}]*width: 100%;[^}]*flex: 1 1 auto/);
+  // KoTH 배너 위 끝은 통합 패널(찬스카드 목록을 뺀 높이) 아래 간격, 곧 열린 문제 패널 위선에 놓인다
+  assert.match(screen, /frame\.style\.setProperty\("--left-card-height"/);
+  assert.match(css, /--koth-top: calc\(var\(--hud-top\) \+ var\(--left-card-height, [^)]+\) \+ var\(--hud-gap\)\)/);
+  assert.match(css, /\.stage \.kothBanner \{[^}]*top: calc\(var\(--koth-top\)/);
 });
 
 test("문제 후보가 0개면 재조회 안내를 띄우고 다음 칸으로 넘기지 않는다", () => {

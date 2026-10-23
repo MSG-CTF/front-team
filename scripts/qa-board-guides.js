@@ -1,6 +1,7 @@
 // Run with playwright-cli run-code --filename on an authenticated /challenges page (local fixtures or a real session).
 // This script only reads the UI. It measures the visible edges of the board HUD, draws them, and checks
-// that each group shares one line: left column, right column, top margin line and bottom margin line.
+// that each group shares one line: left column (unified top-left panel and the open challenges panel),
+// right column, top margin line, the shared top of the open panel and the KoTH banner, and bottom margin line.
 // Images keep transparent margins, so ART holds the alpha >= 40 bounds of each PNG as fractions.
 // qaOutput selects the screenshot folder; qaSizes defaults to 1920x1080,1366x768,1280x1024,2560x1080.
 async page => {
@@ -8,7 +9,6 @@ async page => {
   const output = url.searchParams.get('qaOutput') || 'output/playwright/board-guides';
   const sizes = (url.searchParams.get('qaSizes') || '1920x1080,1366x768,1280x1024,2560x1080').split(',').map(size => size.split('x').map(Number));
   const ART = {
-    'panel-dice-status.png': { w: 378, h: 223, l: 22 / 378, t: 40 / 223, r: 355 / 378, b: 152 / 223 },
     'nav-rules.png': { w: 201, h: 134, l: 0.2388, t: 0.0746, r: 0.7562, b: 0.8507 },
     'nav-mypage.png': { w: 257, h: 171, l: 0.3113, t: 0.1871, r: 0.6848, b: 0.7427 },
     'nav-scoreboard.png': { w: 235, h: 157, l: 0.2936, t: 0.1847, r: 0.7021, b: 0.7834 },
@@ -16,8 +16,7 @@ async page => {
     'banner-koth-event.png': { w: 339, h: 627, l: 0.1534, t: 0.0144, r: 0.8437, b: 0.9841 },
   };
   const SUBJECTS = [
-    { key: 'dice', name: '주사위판', css: "[class*='diceStatus'] svg[class*='dicePanelArtwork']", art: 'panel-dice-status.png', fit: 'fill' },
-    { key: 'toggle', name: '목록 버튼', css: "[aria-controls='board-open-challenges-panel']" },
+    { key: 'card', name: '통합 패널', css: "[class*='_leftPanelCard_']" },
     { key: 'open', name: '열린 문제', css: '#board-open-challenges-panel' },
     { key: 'rules', name: '규칙', css: "img[src*='nav-rules']", art: 'nav-rules.png', fit: 'contain' },
     { key: 'mypage', name: '마이', css: "img[src*='nav-mypage']", art: 'nav-mypage.png', fit: 'contain' },
@@ -27,10 +26,11 @@ async page => {
     { key: 'booth', name: '부스 버튼', text: '동아리 부스 둘러보기' },
   ];
   const RULES = [
-    ['왼쪽 열 왼쪽 끝', 'x', ['dice.l', 'toggle.l', 'open.l']],
-    ['왼쪽 열 오른쪽 끝', 'x', ['dice.r', 'toggle.r', 'open.r']],
+    ['왼쪽 열 왼쪽 끝', 'x', ['card.l', 'open.l']],
+    ['왼쪽 열 오른쪽 끝', 'x', ['card.r', 'open.r']],
     ['오른쪽 열 오른쪽 끝', 'x', ['logout.r', 'banner.r', 'booth.r']],
-    ['위 여백선', 'y', ['dice.t', 'rules.t', 'mypage.t', 'score.t', 'logout.t']],
+    ['위 여백선', 'y', ['card.t', 'rules.t', 'mypage.t', 'score.t', 'logout.t']],
+    ['두 열 위선', 'y', ['open.t', 'banner.t']],
     ['아래 여백선', 'y', ['open.b', 'booth.b']],
   ];
   const results = [];

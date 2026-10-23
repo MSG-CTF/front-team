@@ -127,9 +127,10 @@
   .stage .eventPanel { position: absolute; left: 34.6%; top: 36%; z-index: 30; width: 27%; max-height: 46%; overflow-y: auto; overscroll-behavior: contain; }
   .stage .airportConfirm { position: absolute; left: 37.1%; top: 39%; z-index: 40; width: 22%; }
   .stage :is(.eventPanel, .airportConfirm) { font-size: max(12px, calc(var(--left-width) * 17 / 333)); }
-  /* 오른쪽 열: 배너 그림(339x627)의 보이는 오른쪽 끝(84.37%)을 97.5% 여백선에 맞추고 보이는 위 끝(1.44%)은 --koth-top 에 둔다
+  /* 오른쪽 열: 배너 그림(339x627)의 보이는 오른쪽 끝(84.37%)을 97.5% 여백선에, 보이는 위 끝(1.44%)을 열린 문제 패널 위선에 맞춘다
+     열린 문제 패널 위선은 통합 패널(찬스카드 목록을 뺀 높이, BoardScreen 이 --left-card-height 로 알림) 아래 간격만큼이다
      라운드 단추는 시안의 배너 기준 자리(가로 +3.28%, 세로 +41.67%)를 그대로 따라간다 */
-  .stage { --koth-top: calc(var(--hud-top) + var(--dice-panel-width) * 112 / 378 + var(--hud-gap) + max(44px, 3.12cqw) + var(--hud-gap)); }
+  .stage { --koth-top: calc(var(--hud-top) + var(--left-card-height, 7.4cqw) + var(--hud-gap)); }
   .stage .kothBanner { left: calc(97.5% - 17.66% * 0.8437 + var(--hud-extra-x)); top: calc(var(--koth-top) - 58.06% * 0.0144); }
   .stage .kothRound { left: calc(97.5% - 17.66% * 0.8437 + 3.28% + var(--hud-extra-x)); top: calc(var(--koth-top) - 58.06% * 0.0144 + 41.67%); }
   .frame {

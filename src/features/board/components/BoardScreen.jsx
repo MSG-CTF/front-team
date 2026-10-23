@@ -100,8 +100,30 @@ export default function BoardScreen({
   const boardRegionId = useId();
   const boardViewport = useRef(null);
   const frameRef = useRef(null);
+  const leftPanelCard = useRef(null);
   useMobileBoardBackdrop(frameRef, boardViewport);
   useBoardTextLayout(frameRef);
+  // 데스크톱 통합 패널에서 찬스카드 목록을 뺀 높이를 무대에 알린다
+  // KoTH 배너 위 끝을 열린 문제 패널 위선(통합 패널 아래 + 간격)에 맞추는 데 쓴다
+  useEffect(() => {
+    const frame = frameRef.current;
+    const card = leftPanelCard.current;
+    if (!frame || !card || typeof ResizeObserver === "undefined") return undefined;
+    const update = () => {
+      const height = card.getBoundingClientRect().height;
+      if (!height) return;
+      const chance = card.querySelector(`.${styles.chancePanel}`);
+      const chanceHeight = chance?.getClientRects().length ? chance.getBoundingClientRect().height : 0;
+      frame.style.setProperty("--left-card-height", `${height - chanceHeight}px`);
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(card);
+    update();
+    return () => {
+      observer.disconnect();
+      frame.style.removeProperty("--left-card-height");
+    };
+  }, []);
   const trainTravel = useTrainTravel();
   const trainWhistle = useTrainWhistle();
   const followTrain = (pose) => {
@@ -320,7 +342,7 @@ export default function BoardScreen({
       {/* 데스크톱에서는 주사위 상태·찬스카드·열린 문제 버튼을 한 패널에 모은다.
           모바일에서는 display: contents라 각 요소가 기존 흐름 그대로 놓인다. */}
       <div className={styles.leftPanel}>
-      <div className={styles.leftPanelCard}>
+      <div className={styles.leftPanelCard} ref={leftPanelCard}>
       <BoardDiceStatusPanel
         rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
         maxRolls={diceStatus?.maxDiceRolls ?? myBoard?.maxDiceRolls ?? 3}
