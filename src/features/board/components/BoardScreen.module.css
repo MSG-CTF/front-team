@@ -68,7 +68,8 @@
      x 50 · 너비 349(1920 기준)에서 아래로 쌓는다. 간격은 주사위→찬스카드 4, 찬스카드→열린 문제 7.
      열린 문제 목록(양피지)은 그 아래에 이어 붙인다. */
   .stage { --dice-panel-width: max(19.69cqw, 240px); }
-  .stage .leftPanel { position: absolute; z-index: 40; left: 2.6%; top: 1.8%; width: max(18.2%, 240px); display: flex; flex-direction: column; }
+  /* top 4.67% = 우상단 원형 버튼(로그아웃 등)의 보이는 윗끝 50.4px(1080 기준)과 같은 선 */
+  .stage .leftPanel { position: absolute; z-index: 40; left: 2.6%; top: 4.67%; width: max(18.2%, 240px); display: flex; flex-direction: column; }
   .stage .leftPanelCard { display: contents; }
   /* 플레이트: 바깥 장식 SVG(그림자 포함)와 안쪽 선을 가상 요소로 얹는다 */
   .stage .leftPanel :is(.chancePanel, .panelToggleSection) { position: relative; isolation: isolate; box-sizing: border-box; border: 0; border-image: none; background: none; box-shadow: none; filter: none; overflow: visible; }
@@ -82,8 +83,8 @@
   .stage .leftPanelCard .diceStatus { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 333 / 146; padding: 0; display: block; }
   .stage .leftPanelCard .diceStatusIcon { display: block; position: absolute; left: 7.4%; top: 52.7%; width: 3.7%; height: auto; transform: translateY(-50%); }
   .stage .leftPanelCard .diceReadout { position: absolute; left: 15.1%; right: 4.5%; top: 52.7%; width: auto; transform: translateY(-50%); font-size: clamp(11px, 0.8cqw, 16px); }
-  .stage .leftPanelCard .diceChallengeRow { position: absolute; left: auto; right: 4.5%; top: 22%; font-size: clamp(10px, 0.62cqw, 13px); }
-  .stage .leftPanelCard .diceStatusMessage { position: absolute; left: 42%; right: 4.5%; top: 34%; width: auto; margin: 0; text-align: right; font-size: clamp(10px, 0.58cqw, 12px); line-height: 1.35; }
+  .stage .leftPanelCard .diceChallengeRow { position: absolute; left: auto; right: 4.5%; top: 10%; font-size: clamp(10px, 0.62cqw, 13px); }
+  .stage .leftPanelCard .diceStatusMessage { position: absolute; left: 42%; right: 4.5%; top: 21%; width: auto; margin: 0; text-align: right; font-size: clamp(10px, 0.58cqw, 12px); line-height: 1.35; }
   .stage .leftPanelCard .diceGauge { display: block; position: absolute; left: 7.4%; top: 59.4%; width: 88.1%; height: 8.4%; box-sizing: border-box; padding: 0.1cqw 0.14cqw; border-radius: 0.3cqw; }
   .diceGauge span { display: block; height: 100%; min-width: 0; border-radius: 0.2cqw; background: linear-gradient(#fbbb35, #fbb934 38%, #d3861f); box-shadow: 0 0 0.3cqw #f4a8286b; transition: width 1s linear; }
   .diceGauge[data-idle="true"] span { opacity: .45; box-shadow: none; }
