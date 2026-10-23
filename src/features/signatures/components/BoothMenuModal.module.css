@@ -12,12 +12,14 @@
 .school { margin: 5px 0 0; font-size: clamp(12px, 2.8cqw, 14px); }
 .header::after { content: ""; display: block; width: 70%; height: 1px; margin: clamp(6px, 2.3cqw, 12px) auto; background: linear-gradient(90deg, transparent, #9f6939, transparent); }
 .heading { text-align: center; flex-shrink: 0; }
-/* 한 부스의 메뉴가 여럿이면 MENU 자리에서 고른다 고른 메뉴만 밑줄 */
-.menuTabs { display: flex; justify-content: center; gap: clamp(12px, 5cqw, 22px); margin: 0 0 clamp(2px, 1cqw, 6px); }
-.menuTabs button { position: relative; min-height: 32px; padding: 2px 2px 6px; border: 0; background: none; color: #926438; font: inherit; font-size: clamp(12px, 3cqw, 15px); letter-spacing: .08em; cursor: pointer; }
+/* 한 부스의 메뉴가 여럿이면 MENU 자리에서 고른다 고른 메뉴만 밑줄
+   줄 높이는 MENU 줄과 비슷하게 두어 설명이 더 가려지지 않게 하고, 누르는 자리는 ::before 로 넓힌다 */
+.menuTabs { display: flex; justify-content: center; gap: clamp(16px, 5cqw, 22px); margin: 0 0 clamp(4px, 1.5cqw, 8px); }
+.menuTabs button { position: relative; padding: 0 2px 2px; border: 0; background: none; color: #926438; font: inherit; font-size: clamp(12px, 3cqw, 15px); line-height: 1.2; letter-spacing: .08em; cursor: pointer; }
+.menuTabs button::before { content: ""; position: absolute; inset: -6px -7px; }
 .menuTabs button:hover { color: #632b13; }
 .menuTabs button[aria-pressed="true"] { color: #54260f; }
-.menuTabs button[aria-pressed="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 2px; height: 1.5px; background: #9f6939; }
+.menuTabs button[aria-pressed="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; background: #9f6939; }
 .menuTabs button:focus-visible { outline: 2px solid #9b572b; outline-offset: 2px; }
 .kicker { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 0 clamp(4px, 1.5cqw, 8px); color: #926438; font-size: clamp(10px, 2.5cqw, 13px); letter-spacing: .22em; }
 .kicker::before, .kicker::after { content: ""; width: 20%; height: 1px; background: #b48953; }
