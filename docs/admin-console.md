@@ -24,6 +24,12 @@
 
 ![다른 문제 배포 테스트](images/admin/deploy-test-other.jpg)
 
+GitHub 발행본은 등록할 때 같은 커밋의 env/컨테이너명.env 값이 같이 들어간다 못 채운 값이 있으면 그 버전은 이 버전 사용을 막고 이유와 환경변수 채우기 단추를 보인다
+
+![저장소 env를 못 채운 새 발행본](images/admin/deploy-repo-env.jpg)
+
+![못 채운 값 채우기](images/admin/deploy-repo-env-panel.jpg)
+
 ## KoTH
 
 틱마다 받은 순위와 환산 점수, 누적 순위, 문제 정보, 참가자 파일, 저장소 연결을 한 화면에서 다룬다 실패한 틱은 다시 불러오고, 저장소 main 에 새 커밋이 있으면 탭 위에 표시한다 요청 계약은 [admin-koth.md](admin-koth.md)

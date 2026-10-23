@@ -514,7 +514,7 @@ Bearer 인증 필요.
 | GET | `/admin/challenges/{challenge_id}/submissions` | 문제별 제출 기록(오답, 잠김 포함) | 프론트 요청, PR 대기 |
 | POST | /admin/challenges/{challenge_id}/releases | 문제 릴리스 등록 | 백엔드 #101 연동 |
 | GET | /admin/challenges/{challenge_id}/releases | 릴리스와 비밀값 연결 조회 | 백엔드 #101 연동 |
-| POST | /admin/challenges/{challenge_id}/releases/{release_id}/activate | 현재 릴리스 전환 | 백엔드 #101 연동 |
+| POST | /admin/challenges/{challenge_id}/releases/{release_id}/activate | 현재 릴리스 전환 (저장소 env 못 채운 버전은 400 RELEASE_ENV_INCOMPLETE) | 백엔드 #101 연동, 백엔드 PR 대기 |
 | GET | /admin/challenges/{challenge_id}/runtime-secrets | 비밀값 이름과 버전 조회 | 백엔드 #101 연동 |
 | POST | /admin/challenges/{challenge_id}/runtime-secrets | 비밀값 새 버전 저장 | 백엔드 #101 연동 |
 | GET | `/admin/resources` | 계정/노드별 리소스 상태 | PR #85 리뷰 중 |
