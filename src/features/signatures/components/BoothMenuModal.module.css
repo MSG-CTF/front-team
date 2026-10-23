@@ -1,7 +1,8 @@
 @font-face { font-family: "Booth Menu Body"; src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2") format("woff2"); font-display: swap; }
 @font-face { font-family: "Booth Menu Title"; src: url("/assets/intro/fonts/chungju-kimsaeng/ChungjuKimSaeng.woff2") format("woff2"); font-display: swap; }
 .overlay { position: fixed; inset: 0; z-index: 100; display: flex; overflow-y: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); background: rgb(30 16 6 / 42%); backdrop-filter: blur(2px); }
-.menu { position: relative; flex: none; margin: auto; width: min(300px, 100%); aspect-ratio: 3 / 4; container-type: inline-size; color: #61361e; border: 1px solid #9d7441; border-radius: 2px; background: #f2dfbb url("/assets/signatures/booth-menu-paper-v1.webp") center / 100% 100% no-repeat; box-shadow: 0 16px 45px #170b0770; font-family: "Booth Menu Body", serif; }
+.dialog { flex: none; display: flex; flex-direction: column; align-items: center; gap: 14px; margin: auto; width: min(300px, 100%); }
+.menu { position: relative; width: 100%; aspect-ratio: 3 / 4; container-type: inline-size; color: #61361e; border: 1px solid #9d7441; border-radius: 2px; background: #f2dfbb url("/assets/signatures/booth-menu-paper-v1.webp") center / 100% 100% no-repeat; box-shadow: 0 16px 45px #170b0770; font-family: "Booth Menu Body", serif; }
 /* 긴 제목과 설명은 원본 풍경 장식 위의 영역 안에서 함께 스크롤한다 */
 .content { position: absolute; inset: 5% 10% 27%; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #ad8049 transparent; }
 .header { text-align: center; flex-shrink: 0; }
@@ -22,10 +23,14 @@
 .description h4 { display: flex; align-items: center; gap: 9px; margin: 0 0 clamp(5px, 1.9cqw, 10px); font-size: clamp(10px, 2.5cqw, 13px); font-weight: 400; letter-spacing: .13em; flex-shrink: 0; }
 .description h4::before, .description h4::after { content: ""; height: 1px; background: #b48953; flex: 1; }
 .body { min-height: 0; font-size: clamp(13px, 3.7cqw, 16px); line-height: 1.7; text-align: center; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* 메뉴판 아래 종이 단추: 지문이 길어도 늘 보이고 원본 그림을 가리지 않는다 */
+.solve { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 6px 26px; border: 1px solid #9d7441; border-radius: 2px; background: #f2dfbb; color: #632b13; font-family: "Booth Menu Title", serif; font-size: 19px; line-height: 1.2; text-align: center; text-decoration: none; box-shadow: 0 8px 22px #170b0760; }
+.solve:hover { background: #f8e9cc; }
+.solve:focus-visible { outline: 2px solid #ffe2af; outline-offset: 3px; }
 .close { position: absolute; right: -9px; top: -9px; z-index: 2; width: 32px; height: 32px; border: 2px solid #c49a58; border-radius: 50%; background: #4e2c15; color: #ffe2af; font: 23px/1 serif; box-shadow: 0 2px 5px #26120870; }
 .close::after { content: ""; position: absolute; inset: -6px; }
 .close:focus-visible, .content:focus-visible { outline: 2px solid #9b572b; outline-offset: 3px; }
 .notice { margin: auto 0; text-align: center; line-height: 1.8; }
 .notice button { min-height: 44px; padding: 5px 15px; border: 1px solid #a16c39; background: #ead09d; color: inherit; font: inherit; }
-@media (max-width: 600px) { .menu { width: min(390px, 100%); } }
-@media (max-height: 650px) { .menu { width: min(350px, 100%); } }
+@media (max-width: 600px) { .dialog { width: min(390px, 100%); } }
+@media (max-height: 650px) { .dialog { width: min(350px, 100%); } }

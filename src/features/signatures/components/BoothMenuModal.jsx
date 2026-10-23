@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef } from "react";
 import { createPortal } from "react-dom";
+import { Link } from "react-router-dom";
 import styles from "./BoothMenuModal.module.css";
 
-export default function BoothMenuModal({ club, challenge, status, error, onRetry, onClose }) {
+export default function BoothMenuModal({ club, challenge, status, error, onRetry, onClose, solveTo }) {
   const titleId = useId();
   const panel = useRef(null);
   useEffect(() => {
@@ -13,7 +14,7 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
     const key = (event) => {
       if (event.key === "Escape") onClose();
       if (event.key !== "Tab") return;
-      const nodes = [...panel.current.querySelectorAll('button:not(:disabled),[tabindex="0"]')];
+      const nodes = [...panel.current.querySelectorAll('button:not(:disabled),a[href],[tabindex="0"]')];
       const first = nodes[0], last = nodes.at(-1);
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
@@ -22,27 +23,31 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
     return () => { document.body.style.overflow = overflow; document.removeEventListener("keydown", key); if (previous?.isConnected) previous.focus(); };
   }, [onClose]);
   const content = <div className={styles.overlay} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
-    <section ref={panel} className={styles.menu} role="dialog" aria-modal="true" aria-labelledby={titleId}>
-      <button type="button" className={styles.close} onClick={onClose} aria-label="부스 안내 닫기">×</button>
-      <div className={styles.content} role="region" aria-label="부스 안내 내용" tabIndex={0}>
-        <header className={styles.header}>
-          <p className={styles.brand}>MSG CTF</p>
-          <p className={styles.festival}>CLUB FESTIVAL</p>
-          <h2 id={titleId}>{club?.name || "동아리 부스"}</h2>
-          {club?.university && <p className={styles.school}>{club.university}</p>}
-        </header>
-        {status === "loading" && <p className={styles.notice} role="status">문제 안내를 불러오는 중입니다</p>}
-        {status === "error" && <div className={styles.notice} role="alert"><p>{error}</p><button type="button" onClick={onRetry}>다시 확인</button></div>}
-        {status === "empty" && <p className={styles.notice}>공개된 문제가 없습니다</p>}
-        {status === "success" && challenge && <>
-          <div className={styles.heading}><p className={styles.kicker}>MENU</p><h3>{challenge.title}</h3></div>
-          <div className={styles.score} aria-label={`포인트 ${challenge.score}`}><span aria-hidden="true">❧</span><strong>{challenge.score.toLocaleString("ko-KR")}</strong><span>포인트</span></div>
-          <section className={styles.description} aria-label="문제 소개">
-            <h4>DESCRIPTION</h4>
-            <div className={styles.body}>{challenge.description || "등록된 설명이 없습니다"}</div>
-          </section>
-        </>}
+    <section ref={panel} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+      <div className={styles.menu}>
+        <button type="button" className={styles.close} onClick={onClose} aria-label="부스 안내 닫기">×</button>
+        <div className={styles.content} role="region" aria-label="부스 안내 내용" tabIndex={0}>
+          <header className={styles.header}>
+            <p className={styles.brand}>MSG CTF</p>
+            <p className={styles.festival}>CLUB FESTIVAL</p>
+            <h2 id={titleId}>{club?.name || "동아리 부스"}</h2>
+            {club?.university && <p className={styles.school}>{club.university}</p>}
+          </header>
+          {status === "loading" && <p className={styles.notice} role="status">문제 안내를 불러오는 중입니다</p>}
+          {status === "error" && <div className={styles.notice} role="alert"><p>{error}</p><button type="button" onClick={onRetry}>다시 확인</button></div>}
+          {status === "empty" && <p className={styles.notice}>공개된 문제가 없습니다</p>}
+          {status === "success" && challenge && <>
+            <div className={styles.heading}><p className={styles.kicker}>MENU</p><h3>{challenge.title}</h3></div>
+            <div className={styles.score} aria-label={`포인트 ${challenge.score}`}><span aria-hidden="true">❧</span><strong>{challenge.score.toLocaleString("ko-KR")}</strong><span>포인트</span></div>
+            <section className={styles.description} aria-label="문제 소개">
+              <h4>DESCRIPTION</h4>
+              <div className={styles.body}>{challenge.description || "등록된 설명이 없습니다"}</div>
+            </section>
+          </>}
+        </div>
       </div>
+      {/* 메뉴판은 소개만 하고 플래그는 상세 풀이 페이지에서 낸다 단추는 지문 길이와 상관없이 보이게 메뉴판 아래에 둔다 */}
+      {status === "success" && challenge && solveTo && <Link to={solveTo} className={styles.solve}>{challenge.is_solved ? "풀이 완료 · 문제 다시 보기" : "플래그 제출하기"}</Link>}
     </section>
   </div>;
   return typeof document === "undefined" ? content : createPortal(content, document.body);

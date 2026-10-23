@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import usePageResources from "../../../routes/usePageResources.js";
+import { ROUTES } from "../../../routes/routePaths.js";
 import { SignatureFestivalScreen } from "../pages/SignaturesPage.jsx";
 import BoothMenuModal from "../components/BoothMenuModal.jsx";
 import { FESTIVAL_CLUBS } from "../utils/festivalBooths.js";
@@ -32,6 +33,6 @@ export default function BoothMenuPreviewPage() {
     <SignatureFestivalScreen state={{ status: "success", data: problems, retry() {} }} onPreviewClub={show} />
     {!selected && <p className={styles.notice}>개발용 샘플 · 실제 API 요청 없음 · 여섯 부스를 클릭해 메뉴판을 확인하세요.</p>}
     {selected && <BoothMenuModal key={selected.clubId} club={selected}
-      challenge={selected.problems[0]} status="success" onClose={close} />}
+      challenge={selected.problems[0]} status="success" onClose={close} solveTo={ROUTES.signatureDetail(selected.problems[0].signature_id)} />}
   </div>;
 }
