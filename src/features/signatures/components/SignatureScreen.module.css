@@ -76,3 +76,160 @@
   font-size: 12px;
   line-height: 1.8;
 }
+
+/* ───────── 부스 문제 상세: Figma 95:360 문제 상세 장면에 얹는 시그니처 전용 규칙 ───────── */
+.pageLocation {
+  display: block;
+  margin: 0 0 10px;
+  color: #f1dfbd;
+  font-family: var(--label);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-align: right;
+}
+.titleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  min-width: 0;
+}
+.titleDivider {
+  display: none;
+}
+.metricUnit {
+  font-family: var(--sans);
+  font-size: 0.4em;
+  letter-spacing: 0.04em;
+}
+.signaturePage .detailClub {
+  margin-bottom: 8px;
+  color: var(--brown-soft);
+  font-family: var(--label);
+}
+.signaturePage .rewardNote {
+  margin: 0;
+  padding: 0 0 0 14px;
+  border: 0;
+  border-left: 3px solid #b99a66;
+  color: var(--brown-soft);
+  font-size: 14px;
+  line-height: 1.8;
+  word-break: keep-all;
+}
+.signaturePage .solvedAt {
+  margin: 14px 0 0;
+  padding: 0;
+  border: 0;
+  color: #52603d;
+  font-size: 13px;
+}
+
+@media (min-width: 1101px) and (min-height: 620px) {
+  .signaturePage .titleDivider {
+    display: block;
+  }
+  .pageLocation {
+    position: absolute;
+    z-index: 2;
+    left: calc(var(--u) * 1560);
+    top: calc(var(--u) * 62);
+    width: calc(var(--u) * 226);
+    margin: 0;
+    color: #f1dfbd;
+    font-size: max(10px, calc(var(--u) * 18));
+    text-shadow: 0 1px 3px #000a;
+  }
+  /* 헤더: 로고 · 부스 이름 | 제목을 한 줄에 둔다 */
+  .signaturePage .titleRow {
+    position: absolute;
+    left: calc(var(--u) * 29);
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: calc(var(--u) * 22);
+    width: calc(var(--u) * 1230);
+  }
+  .signaturePage .detailClub {
+    flex: none;
+    flex-wrap: nowrap;
+    gap: calc(var(--u) * 16);
+    margin: 0;
+  }
+  .signaturePage .clubMark {
+    width: calc(var(--u) * 76);
+    height: calc(var(--u) * 76);
+    padding: calc(var(--u) * 10);
+  }
+  .signaturePage .clubMark[data-kind="wordmark"] {
+    width: calc(var(--u) * 150);
+    padding-inline: calc(var(--u) * 14);
+  }
+  .signaturePage .clubName {
+    font: inherit;
+    color: inherit;
+  }
+  .signaturePage .titleDivider {
+    flex: none;
+    width: calc(var(--u) * 2);
+    height: calc(var(--u) * 56);
+    background: #b99a66;
+  }
+  .signaturePage .titleRow h1 {
+    position: static;
+    flex: 0 1 auto;
+    min-width: 0;
+    width: auto;
+    font-size: calc(var(--u) * 58);
+    line-height: calc(var(--u) * 60);
+  }
+  .signaturePage .signatureStamp {
+    flex: none;
+    width: calc(var(--u) * 64);
+    margin-left: calc(var(--u) * 4);
+  }
+  .signaturePage .metricUnit {
+    font-size: calc(var(--u) * 20);
+  }
+
+  /* 설명: 그림에 그려진 ATTACHMENTS 구역은 부스 문제에 없어 같은 종이 질감으로 덮는다 */
+  .signatureDescription::before {
+    content: "";
+    position: absolute;
+    left: calc(var(--u) * 14);
+    right: calc(var(--u) * 14);
+    top: calc(var(--u) * 378);
+    height: calc(var(--u) * 228);
+    background: url("/assets/challenge-detail/panel-description-base.png")
+      calc(var(--u) * -14) calc(var(--u) * -110) / calc(var(--u) * 1000) calc(var(--u) * 630) no-repeat;
+    pointer-events: none;
+  }
+  .signaturePage .signatureBody {
+    z-index: 1;
+    height: calc(var(--u) * 480);
+  }
+  .signaturePage .solvedAt {
+    position: absolute;
+    left: calc(var(--u) * 46);
+    top: calc(var(--u) * 572);
+    margin: 0;
+    font-size: max(10px, calc(var(--u) * 15));
+  }
+
+  /* 오른쪽 열: 인스턴스가 없어 플래그 제출을 위로 올리고 보상 안내를 그 아래에 둔다 */
+  .signaturePage form {
+    top: calc(var(--u) * 333);
+  }
+  .signaturePage .rewardNote {
+    position: absolute;
+    left: calc(var(--u) * 1156);
+    top: calc(var(--u) * 585);
+    width: calc(var(--u) * 620);
+    padding-left: calc(var(--u) * 16);
+    border-left-width: calc(var(--u) * 3);
+    font-size: max(11px, calc(var(--u) * 18));
+    line-height: calc(var(--u) * 32);
+  }
+}

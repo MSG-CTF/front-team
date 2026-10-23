@@ -1,13 +1,21 @@
 import styles from "./ChallengeDetailScene.module.css";
 import ChallengeAttachment from "./ChallengeAttachment.jsx";
 
+function renderDescriptionDigits(text) {
+  return text.split(/([0-9]+)/g).map((part, index) =>
+    /^[0-9]+$/.test(part) ? (
+      <span key={index} className={styles.descriptionDigits}>{part}</span>
+    ) : part,
+  );
+}
+
 function renderDescription(paragraph) {
   return paragraph.split(/(https:\/\/[^\s<>"']+)/g).map((part, index) =>
     part.startsWith("https://") ? (
       <a key={index} href={part} target="_blank" rel="noopener noreferrer">
-        {part}
+        {renderDescriptionDigits(part)}
       </a>
-    ) : part,
+    ) : renderDescriptionDigits(part),
   );
 }
 

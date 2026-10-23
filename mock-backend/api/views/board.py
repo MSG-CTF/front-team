@@ -1,4 +1,5 @@
 import random
+import uuid
 
 from django.utils import timezone
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -92,6 +93,31 @@ class DiceStatusView(APIView):
                 "quarantine_released_at": None,
             }
         )
+
+
+class DiceRequestView(APIView):
+    """POST /board/dice/request(README 2절) - 굴림용 request_key 발급. 목서버는 미확인 키를 저장하지 않는다."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        team = require_team(request)
+        require_not_banned(team)
+        require_team_leader(request)
+        require_empty_body(request)
+        return success({"request_key": f"dice-roll-request-{uuid.uuid4()}"})
+
+
+class DiceRequestAckView(APIView):
+    """POST /board/dice/request/ack - 굴림 결과 확인 완료. 목서버는 저장할 상태가 없어 그대로 성공시킨다."""
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        team = require_team(request)
+        require_not_banned(team)
+        require_team_leader(request)
+        return success({})
 
 
 class DiceRollView(APIView):

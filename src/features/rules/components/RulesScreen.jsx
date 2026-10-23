@@ -17,7 +17,7 @@ export default function RulesScreen({ rules, onNavigateMain }) {
         />
 
         <img
-          src="/assets/rules/msg-ctf-logo.png"
+          src="/assets/rules/msg-ctf-logo.webp"
           alt="MSG CTF"
           className={styles.logo}
         />

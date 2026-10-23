@@ -29,6 +29,8 @@ export default function DiceStatusPanel({
   blockedMessage,
   resetInSeconds,
   challengeRemainingSeconds,
+  // 다음 주사위 충전까지 남은 시간 비율(0~1). 없으면 막대는 가득 찬 채 흐리게 둔다
+  progress = null,
 }) {
   const rechargeVisible = rollsLeft < maxRolls && resetInSeconds != null;
   const statusLabel =
@@ -46,12 +48,18 @@ export default function DiceStatusPanel({
     >
       <PanelTexture />
       <img src="/assets/board/dice.png" className={styles.mobileDiceIcon} alt="" aria-hidden="true" />
-      <svg viewBox="0 0 378 223" className={styles.dicePanelArtwork} aria-hidden="true" focusable="false">
-        <image href="/assets/board/panel-dice-status.png" width="378" height="223" />
-        <svg x="46" y="96" width="295" height="45" viewBox="145 60 170 25" preserveAspectRatio="xMidYMid slice">
-          <image href="/assets/board/panel-dice-status.png" width="378" height="223" />
-        </svg>
+      {/* Figma 5:19 주사위판. 숫자와 게이지 채움을 지운 원본 조각이라 실제 값은 아래에서 겹쳐 그린다 */}
+      <svg viewBox="0 0 333 146" className={styles.dicePanelArtwork} aria-hidden="true" focusable="false">
+        <image href="/assets/board/panel-dice-status-v2.png" width="333" height="146" />
       </svg>
+      <svg viewBox="0 0 16 16" className={styles.diceStatusIcon} aria-hidden="true" focusable="false">
+        <rect x="1.5" y="1.5" width="13" height="13" rx="3" fill="#f3e6c8" />
+        {[[5, 5], [11, 5], [5, 11], [11, 11], [8, 8]].map(([x, y]) => <circle key={`${x}-${y}`} cx={x} cy={y} r="1.15" fill="#4a2e17" />)}
+      </svg>
+      <div className={styles.diceGauge} role="progressbar" aria-label="주사위 충전 진행"
+        aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round((progress ?? 1) * 100)} data-idle={progress == null}>
+        <span style={{ width: `${Math.round(Math.min(1, Math.max(0, progress ?? 1)) * 100)}%` }} />
+      </div>
 
       <div className={`${styles.diceReadout} absolute left-[12.5%] top-[45%] z-10 w-[77%] font-inria-serif text-[#f8ead0]`}>
         <div className={styles.diceCountRow}>

@@ -29,7 +29,7 @@ export function validateBoardPositionMove({ position, reason }) {
   return "";
 }
 
-// GET /admin/events type 11종. 뒤 세 개(DICE_ADJUSTED 이후)가 #81~#85에서 새로 추가됐다.
+// 관리자 이벤트 필터에 릴리스 활성화 감사 로그를 포함한다
 export const ADMIN_EVENT_TYPES = [
   { value: "TEAM_BANNED", label: "팀 밴" },
   { value: "TEAM_UNBANNED", label: "팀 밴 해제" },
@@ -42,6 +42,7 @@ export const ADMIN_EVENT_TYPES = [
   { value: "DICE_ADJUSTED", label: "주사위 지급/회수" },
   { value: "BOARD_POSITION_MOVED", label: "말 위치 이동" },
   { value: "CELL_STATUS_CHANGED", label: "칸 상태 변경" },
+  { value: "CHALLENGE_RELEASE_ACTIVATED", label: "배포 버전 전환" },
 ];
 
 // Notion 명세(2026-09-24): 아래 5종은 백엔드 PR 대기 중. 머지 전 필터로 보내면 400이므로

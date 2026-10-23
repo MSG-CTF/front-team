@@ -8,23 +8,15 @@ import styles from "./BoardScreen.module.css";
 
 const OFFSET_OPTIONS = [-3, -2, -1, 1, 2, 3];
 
+// 보드 위 이벤트 창은 열린 문제 패널과 같은 종이, 제목, 닫기 그림, 명판 단추를 쓴다
 function PanelShell({ title, children, onClose, inline = false }) {
   return (
-    <section
-      className={`${styles.eventPanel} absolute left-[33%] top-[36%] z-30 max-h-[43%] w-[31%] overflow-auto rounded-[1.1cqw] border-[0.16cqw] border-[#8a5728] bg-[#f2d7a7]/95 px-[1.2cqw] py-[0.9cqw] font-inria-serif text-[#3e2818] shadow-[0_0.5cqw_1.5cqw_rgba(40,19,4,0.35)]`}
-      aria-label={title}
-      data-inline={inline || undefined}
-    >
-      <div className="flex items-center justify-between gap-[1cqw]">
-        <h2 className="m-0 text-[1.1cqw] font-bold">{title}</h2>
+    <section className={`${styles.eventPanel} ${styles.paperSheet}`} aria-label={title} data-inline={inline || undefined}>
+      <div className={styles.sheetHeader}>
+        <h2 className={styles.sheetTitle}>{title}</h2>
         {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="border-0 bg-transparent p-0 text-[1.2cqw] text-[#5d3820]"
-            aria-label="팝업 닫기"
-          >
-            ×
+          <button type="button" onClick={onClose} className={styles.sheetClose} aria-label="팝업 닫기">
+            <img src="/assets/board/icon-close-round.png" alt="" aria-hidden="true" />
           </button>
         )}
       </div>
@@ -33,16 +25,20 @@ function PanelShell({ title, children, onClose, inline = false }) {
   );
 }
 
-function ActionButton({ children, disabled, onClick }) {
+// 고른 쪽을 바로 실행하는 단추는 나무 명판, 다른 쪽은 같은 모양의 금테 명판
+function ActionButton({ children, disabled, onClick, quiet = false }) {
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className="rounded-[0.3cqw] border border-[#70411e] bg-[#75451f] px-[0.7cqw] py-[0.38cqw] text-[0.7cqw] font-bold text-[#fff2cf] disabled:cursor-not-allowed disabled:opacity-60"
-    >
+    <button type="button" disabled={disabled} onClick={onClick} className={styles.plaqueAction} data-tone={quiet ? "quiet" : undefined}>
       {children}
     </button>
+  );
+}
+
+function OffsetSelect({ value, disabled, onChange }) {
+  return (
+    <select aria-label="추가 이동 칸 수" value={value} disabled={disabled} onChange={(event) => onChange(Number(event.target.value))} className={styles.sheetSelect}>
+      {OFFSET_OPTIONS.map((option) => <option key={option} value={option}>{option > 0 ? `+${option}` : option}칸</option>)}
+    </select>
   );
 }
 
@@ -57,51 +53,27 @@ function PendingRollActions({
 
   return (
     <PanelShell title="주사위 결과 확인">
-      <p className="my-[0.55cqw] text-[0.76cqw]">
+      <p className={styles.sheetText}>
         {pendingRoll
           ? `${pendingRoll.diceA} + ${pendingRoll.diceB} = ${pendingRoll.rolledNumber}, ${pendingRoll.currentPosition}번 칸으로 이동합니다`
           : "보류 중인 주사위 이동 결과가 있습니다"}
       </p>
-      <div className="grid gap-[0.35cqw]">
-        <ActionButton disabled={isMutating} onClick={onConfirmDice}>
-          일반 이동 확정
-        </ActionButton>
-        {postRollCards.map((card) => (
-          <div
-            key={card.cardId}
-            className={`${styles.eventCardRow} flex items-center gap-[0.35cqw] rounded border border-[#b1814f] bg-[#fff2cf]/70 p-[0.3cqw]`}
-          >
-            <span className="min-w-0 flex-1 truncate text-[0.66cqw]">
-              {card.name || card.cardId}
-            </span>
-            {card.cardId === "card_move_offset" && (
-              <select
-                aria-label="추가 이동 칸 수"
-                value={offset}
-                disabled={isMutating}
-                onChange={(event) => setOffset(Number(event.target.value))}
-                className="rounded border border-[#9a6539] bg-[#fff2cf] px-[0.2cqw] py-[0.18cqw] text-[0.62cqw]"
-              >
-                {OFFSET_OPTIONS.map((value) => (
-                  <option key={value} value={value}>
-                    {value > 0 ? `+${value}` : value}칸
-                  </option>
-                ))}
-              </select>
-            )}
-            <ActionButton
-              disabled={isMutating}
-              onClick={() =>
-                onUseChanceCard(
-                  card.cardId,
-                  card.cardId === "card_move_offset" ? { offset } : undefined,
-                )
-              }
-            >
-              카드 사용
-            </ActionButton>
-          </div>
-        ))}
+      {postRollCards.length > 0 && (
+        <ul className={styles.sheetChoices}>
+          {postRollCards.map((card) => (
+            <li key={card.cardId} className={`${styles.eventCardRow} ${styles.sheetChoice}`}>
+              <span className={styles.sheetChoiceText}><strong>{card.name || card.cardId}</strong></span>
+              {card.cardId === "card_move_offset" && <OffsetSelect value={offset} disabled={isMutating} onChange={setOffset} />}
+              <ActionButton quiet disabled={isMutating}
+                onClick={() => onUseChanceCard(card.cardId, card.cardId === "card_move_offset" ? { offset } : undefined)}>
+                카드 사용
+              </ActionButton>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className={styles.sheetActions}>
+        <ActionButton disabled={isMutating} onClick={onConfirmDice}>일반 이동 확정</ActionButton>
       </div>
     </PanelShell>
   );
@@ -110,22 +82,10 @@ function PendingRollActions({
 function ChanceChoice({ choice, isMutating, onConfirmChance }) {
   return (
     <PanelShell title="주사위 결과 선택">
-      <p className="my-[0.45cqw] text-[0.72cqw]">
-        두 결과 중 이동에 사용할 숫자를 선택해주세요
-      </p>
-      <div className="grid grid-cols-2 gap-[0.45cqw]">
-        <ActionButton
-          disabled={isMutating}
-          onClick={() => onConfirmChance("FIRST")}
-        >
-          첫 번째 {choice.firstNumber}
-        </ActionButton>
-        <ActionButton
-          disabled={isMutating}
-          onClick={() => onConfirmChance("SECOND")}
-        >
-          두 번째 {choice.secondNumber}
-        </ActionButton>
+      <p className={styles.sheetText}>두 결과 중 이동에 사용할 숫자를 선택해주세요</p>
+      <div className={styles.sheetActions} data-columns="2">
+        <ActionButton disabled={isMutating} onClick={() => onConfirmChance("FIRST")}>첫 번째 {choice.firstNumber}</ActionButton>
+        <ActionButton disabled={isMutating} onClick={() => onConfirmChance("SECOND")}>두 번째 {choice.secondNumber}</ActionButton>
       </div>
     </PanelShell>
   );
@@ -140,37 +100,21 @@ function DiscardChanceCard({ cards, isMutating, onDiscardChance }) {
 
   return (
     <PanelShell title="찬스카드 폐기">
-      <p className="my-[0.45cqw] text-[0.72cqw]">
-        보유 한도를 초과했습니다
-        <br />
-        다른 행동 전에 한 장을 선택해 폐기해주세요
-      </p>
-      <div className="grid gap-[0.3cqw]">
+      <p className={styles.sheetText}>보유 한도를 초과했습니다 다른 행동 전에 한 장을 선택해 폐기해주세요</p>
+      <div className={styles.sheetChoices} role="radiogroup" aria-label="버릴 찬스카드">
         {cards.map((card) => (
-          <label
-            key={card.cardId}
-            className={`${styles.eventCardRow} flex cursor-pointer items-start gap-[0.35cqw] rounded border border-[#a97949] bg-[#fff2cf]/70 p-[0.35cqw] text-[0.65cqw]`}
-          >
-            <input
-              type="radio"
-              name="discard-card"
-              value={card.cardId}
-              checked={cardId === card.cardId}
-              disabled={isMutating}
-              onChange={() => setCardId(card.cardId)}
-            />
-            <span>
-              <strong className="block">{card.name || card.cardId}</strong>
-              <span>{card.description}</span>
+          <label key={card.cardId} className={`${styles.eventCardRow} ${styles.sheetChoice}`} data-checked={cardId === card.cardId || undefined}>
+            <input type="radio" name="discard-card" value={card.cardId} checked={cardId === card.cardId} disabled={isMutating}
+              onChange={() => setCardId(card.cardId)} />
+            <span className={styles.sheetChoiceText}>
+              <strong>{card.name || card.cardId}</strong>
+              {card.description && <span>{card.description}</span>}
             </span>
           </label>
         ))}
-        <ActionButton
-          disabled={isMutating || !cardId}
-          onClick={() => onDiscardChance(cardId)}
-        >
-          선택한 카드 폐기
-        </ActionButton>
+      </div>
+      <div className={styles.sheetActions}>
+        <ActionButton disabled={isMutating || !cardId} onClick={() => onDiscardChance(cardId)}>선택한 카드 폐기</ActionButton>
       </div>
     </PanelShell>
   );
@@ -180,9 +124,7 @@ function ChanceDrawEvent({ event, isMutating, onRetry, onClose }) {
   if (event.status === "loading") {
     return (
       <PanelShell title="황금열쇠">
-        <p className="my-[0.55cqw] text-[0.72cqw]">
-          찬스카드를 뽑고 있습니다
-        </p>
+        <p className={styles.sheetText} role="status">찬스카드를 뽑고 있습니다</p>
       </PanelShell>
     );
   }
@@ -190,15 +132,10 @@ function ChanceDrawEvent({ event, isMutating, onRetry, onClose }) {
   if (event.status === "error") {
     return (
       <PanelShell title="황금열쇠" onClose={onClose}>
-        <p className="my-[0.55cqw] text-[0.72cqw]">
-          {event.error.message}
-        </p>
-        <ActionButton
-          disabled={isMutating}
-          onClick={() => onRetry(event.token)}
-        >
-          다시 시도
-        </ActionButton>
+        <p className={styles.sheetText} role="alert">{event.error.message}</p>
+        <div className={styles.sheetActions}>
+          <ActionButton disabled={isMutating} onClick={() => onRetry(event.token)}>다시 시도</ActionButton>
+        </div>
       </PanelShell>
     );
   }
@@ -320,13 +257,15 @@ export default function BoardEventPanel({
   if (isChallengeSelectionEmpty({ myBoard, currentCell, blockedReason })) {
     return (
       <PanelShell title="선택할 수 있는 문제가 없어요">
-        <p className="my-[0.55cqw] text-[0.76cqw]" role="status">
+        <p className={styles.sheetText} role="status">
           현재 이 칸에서 선택할 수 있는 공개 문제가 없어요<br />
           운영진에 문의하고 잠시 후 다시 조회해주세요
         </p>
-        <ActionButton disabled={isLoading || isMutating} onClick={onReload}>
-          {isLoading ? "불러오는 중" : "문제 다시 불러오기"}
-        </ActionButton>
+        <div className={styles.sheetActions}>
+          <ActionButton disabled={isLoading || isMutating} onClick={onReload}>
+            {isLoading ? "불러오는 중" : "문제 다시 불러오기"}
+          </ActionButton>
+        </div>
       </PanelShell>
     );
   }
@@ -344,7 +283,7 @@ export default function BoardEventPanel({
       : BLOCKED_REASON_MESSAGES.TIMER_RUNNING;
     return (
       <PanelShell title={myBoard.boardCompleted ? "보드 완료" : "진행 중인 문제"} inline>
-        <p className="my-[0.45cqw] text-[0.72cqw]">{message}</p>
+        <p className={styles.sheetText}>{message}</p>
       </PanelShell>
     );
   }

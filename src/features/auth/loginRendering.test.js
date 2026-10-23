@@ -27,11 +27,11 @@ test("로그인은 원래 로고와 프레임, 입력 아이콘과 장식 버튼
   const html = render();
   assert.match(html, /<main/);
   assert.match(html, /<h1 id="login-title"[^>]*>로그인<\/h1>/);
-  assert.match(html, /src="\/assets\/login\/logo-cutout.png"/);
+  assert.match(html, /src="\/assets\/login\/logo-cutout.webp"/);
   assert.match(html, /width="1254" height="1254"/);
   assert.match(html, /fetchPriority="high"/i);
   assert.match(html, /href="\/#top"/);
-  assert.match(html, /src="\/assets\/login\/login-button-cutout.png"/);
+  assert.match(html, /src="\/assets\/login\/login-button-cutout.webp"/);
   assert.equal((html.match(/href="\/assets\/login\/login-card-plate.webp"/g) || []).length, 15);
   assert.equal((html.match(/data-login-artwork="frame"/g) || []).length, 1);
   assert.equal((html.match(/data-login-artwork="field"/g) || []).length, 2);
@@ -53,7 +53,7 @@ test("계정 확인과 로그인 요청 중에는 같은 틀을 유지하면서 
     assert.match(html, /for="login-password"/);
     assert.match(html, /autoComplete="current-password"/i);
   }
-  assert.match(render({ checkingSession: true }), /src="\/assets\/login\/login-button-cutout.png"/);
+  assert.match(render({ checkingSession: true }), /src="\/assets\/login\/login-button-cutout.webp"/);
   assert.match(render({ checkingSession: true }), /role="status">로그인 상태를 확인하고 있어요<\/p>/);
   assert.match(render({ submitting: true }), /role="status">로그인 중<\/p>/);
 });
@@ -105,8 +105,8 @@ test("원래 로그인 장식과 글꼴을 재사용하되 큰 PNG 배경과 외
     desktop: "public/assets/intro/hero-plaza.webp",
     mobile: "public/assets/intro/hero-plaza-mobile.webp",
     plate: "public/assets/login/login-card-plate.webp",
-    logo: "public/assets/login/logo-cutout.png",
-    button: "public/assets/login/login-button-cutout.png",
+    logo: "public/assets/login/logo-cutout.webp",
+    button: "public/assets/login/login-button-cutout.webp",
     englishFont: "public/assets/intro/fonts/IMFeENrm28P.ttf",
     font: "public/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2",
   };

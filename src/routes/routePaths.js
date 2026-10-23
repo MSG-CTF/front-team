@@ -9,7 +9,6 @@ export const ROUTES = {
   openChallenges: "/challenges",
   signatures: "/signatures",
   signatureClub: (clubId) => `/signatures/clubs/${encodeURIComponent(clubId)}`,
-  signatureDetail: (signatureId) => `/signatures/${encodeURIComponent(signatureId)}`,
   leaderboard: "/leaderboard",
   koth: "/koth",
   mypage: "/mypage",

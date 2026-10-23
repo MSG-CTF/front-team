@@ -10,7 +10,7 @@
   font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   background:
     linear-gradient(#20170e45, #20170e70),
-    url("/assets/challenge-detail/bg-1920x1080.png") center / cover fixed;
+    url("/assets/challenge-detail/bg-1920x1080.webp") center / cover fixed;
 }
 .page *,
 .page *::before,

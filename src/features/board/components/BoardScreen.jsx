@@ -7,7 +7,7 @@ import useTrainWhistle from "../hooks/useTrainWhistle.js";
 import useMobileBoardBackdrop from "../hooks/useMobileBoardBackdrop.js";
 import useBoardTextLayout from "../hooks/useBoardTextLayout.js";
 import { preloadBoardTrain } from "./BoardTrain.jsx";
-import { prepareBoardLines } from "../utils/boardLines.js";
+import { getBoardLineCounts, prepareBoardLines } from "../utils/boardLines.js";
 import { normalizeBoardListView } from "../utils/boardChallengeList.js";
 import { getChallengeSelectionKey } from "../utils/challengeSelection.js";
 import { getAirportSelectableCellIndexes, isAirportSelectionMode } from "../utils/boardOverlays.js";
@@ -91,15 +91,44 @@ export default function BoardScreen({
   const [dismissedRouletteToken, setDismissedRouletteToken] = useState(null);
   const openListTrigger = useRef(null);
   const openListToggle = useRef(null);
+  const panelListToggle = useRef(null);
   const lineSummary = useRef(null);
   const lines = useMemo(() => prepareBoardLines(lineProgress, boardDefinition?.cells), [lineProgress, boardDefinition?.cells]);
   const hasLines = lines.length > 0;
+  const lineCounts = getBoardLineCounts(lines);
   const activeLineId = lines.find((line) => line.lineId === selectedLineId)?.lineId ?? lines[0]?.lineId ?? null;
   const boardRegionId = useId();
   const boardViewport = useRef(null);
   const frameRef = useRef(null);
+  const leftPanelCard = useRef(null);
   useMobileBoardBackdrop(frameRef, boardViewport);
   useBoardTextLayout(frameRef);
+  // 데스크톱 왼쪽 열에서 주사위판과 열린 문제 버튼 플레이트까지의 높이(찬스카드 목록 제외)를 무대에 알린다
+  // KoTH 배너 위 끝을 열린 문제 패널 위선(이 높이 + 간격)에 맞추는 데 쓴다 휴대폰에서는 열이 없어 재지 않는다
+  useEffect(() => {
+    const frame = frameRef.current;
+    const card = leftPanelCard.current;
+    if (!frame || !card || typeof ResizeObserver === "undefined") return undefined;
+    const dice = card.querySelector(`.${styles.diceStatus}`);
+    const toggle = card.querySelector(`.${styles.panelToggleSection}`);
+    if (!dice || !toggle) return undefined;
+    const update = () => {
+      if (getComputedStyle(card.parentElement).display !== "flex") return;
+      const diceHeight = dice.getBoundingClientRect().height;
+      const toggleHeight = toggle.getBoundingClientRect().height;
+      if (!diceHeight || !toggleHeight) return;
+      const toggleGap = parseFloat(getComputedStyle(toggle).marginTop) || 0;
+      frame.style.setProperty("--left-card-height", `${diceHeight + toggleGap + toggleHeight}px`);
+    };
+    const observer = new ResizeObserver(update);
+    observer.observe(dice);
+    observer.observe(toggle);
+    update();
+    return () => {
+      observer.disconnect();
+      frame.style.removeProperty("--left-card-height");
+    };
+  }, []);
   const trainTravel = useTrainTravel();
   const trainWhistle = useTrainWhistle();
   const followTrain = (pose) => {
@@ -121,9 +150,21 @@ export default function BoardScreen({
   const closeOpenList = () => {
     setIsOpenListVisible(false);
     setIsLineSummaryOpen(false);
+    setSelectedLineId(null);
     const trigger = openListTrigger.current;
     if (trigger?.isConnected && typeof trigger.focus === "function") trigger.focus({ preventScroll: true });
-    else openListToggle.current?.focus({ preventScroll: true });
+    else {
+      // 데스크톱 패널 버튼과 모바일 도구줄 버튼 중 화면에 보이는 쪽으로 초점을 돌린다
+      const visibleToggle = panelListToggle.current?.offsetParent ? panelListToggle.current : openListToggle.current;
+      visibleToggle?.focus({ preventScroll: true });
+    }
+  };
+  const toggleOpenList = () => {
+    if (isOpenListVisible) closeOpenList();
+    else {
+      openListTrigger.current = document.activeElement;
+      setIsOpenListVisible(true);
+    }
   };
 
   useEffect(() => {
@@ -224,15 +265,6 @@ export default function BoardScreen({
 
   return (
     <FixedAspectStage frameRef={frameRef} backdropSrc="/assets/board/bg-1920x1080-display.webp" frameClassName={styles.frame} className={styles.stage}>
-      <BoardDiceStatusPanel
-        rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
-        maxRolls={diceStatus?.maxDiceRolls ?? myBoard?.maxDiceRolls ?? 3}
-        canRoll={canRoll}
-        blockedMessage={blockedMessage}
-        diceStatus={diceStatus}
-        activeChallenge={myBoard?.activeChallenge}
-      />
-
       <BoardNav />
 
       <div className={styles.desktopOnly}><KothEventBanner /></div>
@@ -243,13 +275,7 @@ export default function BoardScreen({
             buttonRef={openListToggle}
             isOpen={isOpenListVisible}
             count={openedChallenges.length}
-            onToggle={() => {
-              if (isOpenListVisible) closeOpenList();
-              else {
-                openListTrigger.current = document.activeElement;
-                setIsOpenListVisible(true);
-              }
-            }}
+            onToggle={toggleOpenList}
           />
           <div className={styles.boardControls}>
             <p className={styles.boardHint}>{isBoardZoomed ? "좌우로 이동" : "전체 보드"}</p>
@@ -318,6 +344,19 @@ export default function BoardScreen({
         </div>
       </div>
 
+      {/* 데스크톱에서는 주사위 상태·찬스카드·열린 문제 버튼을 한 패널에 모은다.
+          모바일에서는 display: contents라 각 요소가 기존 흐름 그대로 놓인다. */}
+      <div className={styles.leftPanel}>
+      <div className={styles.leftPanelCard} ref={leftPanelCard}>
+      <BoardDiceStatusPanel
+        rollsLeft={diceStatus?.diceRollsLeft ?? myBoard?.diceRollsLeft ?? 0}
+        maxRolls={diceStatus?.maxDiceRolls ?? myBoard?.maxDiceRolls ?? 3}
+        canRoll={canRoll}
+        blockedMessage={blockedMessage}
+        diceStatus={diceStatus}
+        activeChallenge={myBoard?.activeChallenge}
+      />
+
       <ChanceCardSummary
         cards={ownedChanceCards}
         isObscured={isOpenListVisible}
@@ -331,6 +370,17 @@ export default function BoardScreen({
         onUseCard={onUseChanceCard}
       />
 
+      <div className={styles.panelToggleSection}>
+        <OpenChallengesToggle
+          placement="panel"
+          buttonRef={panelListToggle}
+          isOpen={isOpenListVisible}
+          count={openedChallenges.length}
+          onToggle={toggleOpenList}
+        />
+      </div>
+      </div>
+
       {isOpenListVisible && (
         <OpenChallengesSidePanel
           challenges={openedChallenges}
@@ -342,12 +392,16 @@ export default function BoardScreen({
           instanceInfo={instanceInfo}
           onSelectChallenge={onOpenChallengeDetail}
           onClose={closeOpenList}
+          lineCount={`${lineCounts.done}/${lineCounts.total}`}
+          showLines={isLineSummaryOpen}
+          onShowLinesChange={setIsLineSummaryOpen}
+          linesTabRef={lineSummary}
         >
-          {hasLines && <BoardLineSummary lines={lines} selectedLineId={activeLineId}
-            onSelectLine={setSelectedLineId} isOpen={isLineSummaryOpen} onToggle={setIsLineSummaryOpen}
-            summaryRef={lineSummary} isPreview={lineProgressPreview} />}
+          {/* 보드에서 고른 라인만 강조한다 고르지 않았으면 아무 라인도 강조하지 않는다 */}
+          {hasLines && <BoardLineSummary lines={lines} selectedLineId={selectedLineId} isPreview={lineProgressPreview} />}
         </OpenChallengesSidePanel>
       )}
+      </div>
 
       {trainTravel.journey && <p className="sr-only" role="status">선택한 {trainTravel.journey.cells.at(-1)}번 칸으로 기차 이동 중</p>}
       {isAirportSelecting && !trainTravel.journey && (

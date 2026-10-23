@@ -1,10 +1,16 @@
 @font-face { font-family: "Booth Menu Body"; src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2") format("woff2"); font-display: swap; }
 @font-face { font-family: "Booth Menu Title"; src: url("/assets/intro/fonts/chungju-kimsaeng/ChungjuKimSaeng.woff2") format("woff2"); font-display: swap; }
-.overlay { position: fixed; inset: 0; z-index: 100; display: flex; overflow-y: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); background: rgb(30 16 6 / 42%); backdrop-filter: blur(2px); }
-.dialog { flex: none; display: flex; flex-direction: column; align-items: center; gap: 14px; margin: auto; width: min(300px, 100%); }
-.menu { position: relative; width: 100%; aspect-ratio: 3 / 4; container-type: inline-size; color: #61361e; border: 1px solid #9d7441; border-radius: 2px; background: #f2dfbb url("/assets/signatures/booth-menu-paper-v1.webp") center / 100% 100% no-repeat; box-shadow: 0 16px 45px #170b0770; font-family: "Booth Menu Body", serif; }
-/* 긴 제목과 설명은 원본 풍경 장식 위의 영역 안에서 함께 스크롤한다 */
-.content { position: absolute; inset: 5% 10% 27%; min-height: 0; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #ad8049 transparent; }
+.overlay { position: fixed; inset: 0; z-index: 100; display: flex; overflow-y: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); background: rgb(30 16 6 / 42%); backdrop-filter: blur(2px); container-type: size; }
+/* 위 자리는 3:4 메뉴판과 제출 칸(--below)이 화면 가운데 오도록 정해 두고 메뉴판은 아래로만 늘어난다
+   그래서 메뉴를 바꾸거나 불러오는 동안, 정답을 낸 뒤에도 메뉴판과 메뉴 단추가 제자리에 있다 */
+.dialog { --menu-w: min(300px, 100cqw); --below: 0px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 14px; width: var(--menu-w); margin: max(0px, calc((100cqh - var(--menu-w) * 4 / 3 - var(--below)) / 2)) auto auto; }
+.dialog[data-submit] { --below: 112px; }
+.menu { position: relative; isolation: isolate; display: flex; flex-direction: column; width: 100%; min-height: calc(var(--menu-w) * 4 / 3); container-type: inline-size; color: #61361e; border: 1px solid #9d7441; border-radius: 2px; background: #f2dfbb; box-shadow: 0 16px 45px #170b0770; font-family: "Booth Menu Body", serif; }
+/* 종이 그림은 위 장식(원본 0에서 740px)과 아래 풍경(900px 아래)을 원래 비율로 두고 그 사이 빈 종이 띠만 늘인다 */
+.menu::before { content: ""; position: absolute; inset: 0; z-index: -1; border: 0 solid transparent; border-image: url("/assets/signatures/booth-menu-paper-v1.webp") 740 0 548 fill / calc(100cqw * 740 / 1086) 0 calc(100cqw * 548 / 1086) stretch; pointer-events: none; }
+/* 제목과 설명은 풍경 위 영역에 둔다 설명이 길면 메뉴판이 화면 안에서 아래로 늘어나고 그래도 넘치면 그 안에서 스크롤한다
+   최대 높이는 위 자리에서 제출 칸까지 화면 아래 여백에 닿는 값이다 */
+.content { flex: 1 1 auto; margin: 6.6667% 10% 36%; min-height: 0; max-height: max(90.67cqw, calc(50cqh + 24cqw - var(--below) / 2 - 2px)); display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #ad8049 transparent; }
 .header { text-align: center; flex-shrink: 0; }
 .brand { margin: 0; font-size: clamp(10px, 2.5cqw, 13px); letter-spacing: .2em; }
 .festival { margin: 2px 0 clamp(6px, 2.3cqw, 12px); font-size: clamp(12px, 4cqw, 21px); letter-spacing: .08em; line-height: 1.15; }
@@ -12,6 +18,15 @@
 .school { margin: 5px 0 0; font-size: clamp(12px, 2.8cqw, 14px); }
 .header::after { content: ""; display: block; width: 70%; height: 1px; margin: clamp(6px, 2.3cqw, 12px) auto; background: linear-gradient(90deg, transparent, #9f6939, transparent); }
 .heading { text-align: center; flex-shrink: 0; }
+/* 한 부스의 메뉴가 여럿이면 MENU 자리에서 고른다 고른 메뉴만 밑줄
+   줄 높이는 MENU 줄과 비슷하게 두어 설명이 더 가려지지 않게 하고, 누르는 자리는 ::before 로 넓힌다 */
+.menuTabs { display: flex; justify-content: center; gap: clamp(16px, 5cqw, 22px); margin: 0 0 clamp(4px, 1.5cqw, 8px); }
+.menuTabs button { position: relative; padding: 0 2px 2px; border: 0; background: none; color: #926438; font: inherit; font-size: clamp(12px, 3cqw, 15px); line-height: 1.2; letter-spacing: .08em; cursor: pointer; }
+.menuTabs button::before { content: ""; position: absolute; inset: -6px -7px; }
+.menuTabs button:hover { color: #632b13; }
+.menuTabs button[aria-pressed="true"] { color: #54260f; }
+.menuTabs button[aria-pressed="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; background: #9f6939; }
+.menuTabs button:focus-visible { outline: 2px solid #9b572b; outline-offset: 2px; }
 .kicker { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 0 0 clamp(4px, 1.5cqw, 8px); color: #926438; font-size: clamp(10px, 2.5cqw, 13px); letter-spacing: .22em; }
 .kicker::before, .kicker::after { content: ""; width: 20%; height: 1px; background: #b48953; }
 .heading h3 { margin: 0; font-family: "Booth Menu Title", serif; font-size: clamp(20px, 6.8cqw, 36px); line-height: 1.2; word-break: keep-all; overflow-wrap: anywhere; color: #54260f; }
@@ -23,14 +38,22 @@
 .description h4 { display: flex; align-items: center; gap: 9px; margin: 0 0 clamp(5px, 1.9cqw, 10px); font-size: clamp(10px, 2.5cqw, 13px); font-weight: 400; letter-spacing: .13em; flex-shrink: 0; }
 .description h4::before, .description h4::after { content: ""; height: 1px; background: #b48953; flex: 1; }
 .body { min-height: 0; font-size: clamp(13px, 3.7cqw, 16px); line-height: 1.7; text-align: center; white-space: pre-wrap; overflow-wrap: anywhere; }
-/* 메뉴판 아래 종이 단추: 지문이 길어도 늘 보이고 원본 그림을 가리지 않는다 */
-.solve { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 6px 26px; border: 1px solid #9d7441; border-radius: 2px; background: #f2dfbb; color: #632b13; font-family: "Booth Menu Title", serif; font-size: 19px; line-height: 1.2; text-align: center; text-decoration: none; box-shadow: 0 8px 22px #170b0760; }
-.solve:hover { background: #f8e9cc; }
-.solve:focus-visible { outline: 2px solid #ffe2af; outline-offset: 3px; }
+/* 메뉴판 아래 종이 제출 칸: 지문이 길어도 늘 보이고 원본 그림을 가리지 않는다 */
+.submit { display: flex; flex-direction: column; gap: 6px; width: 100%; padding: 10px 12px; border: 1px solid #9d7441; border-radius: 2px; background: #f2dfbb; color: #632b13; box-shadow: 0 8px 22px #170b0760; font-family: "Booth Menu Body", serif; }
+.submit label { font-family: "Booth Menu Title", serif; font-size: 17px; }
+.row { display: flex; gap: 6px; }
+.row input { flex: 1; min-width: 0; min-height: 44px; padding: 0 10px; border: 1px solid #a16c39; border-radius: 2px; background: #fbf1da; color: inherit; font: inherit; font-size: 16px; }
+.row button { min-height: 44px; min-width: 64px; padding: 0 14px; border: 1px solid #4e2c15; border-radius: 2px; background: #4e2c15; color: #ffe2af; font-family: "Booth Menu Title", serif; font-size: 17px; }
+.row button:disabled { opacity: .55; }
+.row input:focus-visible, .row button:focus-visible { outline: 2px solid #9b572b; outline-offset: 2px; }
+.submit p { margin: 0; font-size: 14px; line-height: 1.5; text-align: center; }
+.solved { font-family: "Booth Menu Title", serif; font-size: 19px !important; }
+.error { color: #a52a16; }
+.ok { color: #3f6a22; }
 .close { position: absolute; right: -9px; top: -9px; z-index: 2; width: 32px; height: 32px; border: 2px solid #c49a58; border-radius: 50%; background: #4e2c15; color: #ffe2af; font: 23px/1 serif; box-shadow: 0 2px 5px #26120870; }
 .close::after { content: ""; position: absolute; inset: -6px; }
 .close:focus-visible, .content:focus-visible { outline: 2px solid #9b572b; outline-offset: 3px; }
 .notice { margin: auto 0; text-align: center; line-height: 1.8; }
 .notice button { min-height: 44px; padding: 5px 15px; border: 1px solid #a16c39; background: #ead09d; color: inherit; font: inherit; }
-@media (max-width: 600px) { .dialog { width: min(390px, 100%); } }
-@media (max-height: 650px) { .dialog { width: min(350px, 100%); } }
+@media (max-width: 600px) { .dialog { --menu-w: min(390px, 100cqw); } }
+@media (max-height: 650px) { .dialog { --menu-w: min(350px, 100cqw); } }

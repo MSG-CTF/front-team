@@ -94,6 +94,14 @@ test("알려지지 않은 동아리는 깨진 이미지 대신 이름으로 표�
   assert.match(html, /brandName[^>]*>추가 동아리/);
 });
 
+test("축제장 하단 안내와 새로고침 바는 렌더링하지 않고 오류 재조회는 유지한다", () => {
+  for (const status of ["loading", "success", "error"]) {
+    const html = render([], status);
+    assert.doesNotMatch(html, /<footer|보드 개방과 관계없이 참여할 수 있어요|새로고침|sceneFooter/);
+    if (status === "error") assert.match(html, /다시 불러오기/);
+  }
+});
+
 test("모바일 부스 안내도 같은 실제 데이터와 입장 링크를 사용하며 일러스트를 추가하지 않는다", () => {
   const html = render(FESTIVAL_CLUBS.map((club) => ({
     signature_id: `problem-${club.key}`, club_id: club.key, club_name: club.name, is_solved: false,

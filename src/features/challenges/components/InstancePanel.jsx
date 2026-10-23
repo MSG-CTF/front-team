@@ -9,6 +9,60 @@ import { getInstanceFailureNotice } from "../utils/instanceFailureNotice.js";
 import styles from "./ChallengeDetailScene.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
 
+// 생성은 요청 접수 > 서버 배정 > 환경 준비 순서로 상태가 바뀐다 지금 칸에서 돌고, 지난 칸은 체크한다
+const CREATE_STEPS = [
+  { label: "요청 접수", status: INSTANCE_STATUS.REQUESTED },
+  { label: "서버 배정", status: INSTANCE_STATUS.SCHEDULING },
+  { label: "환경 준비", status: INSTANCE_STATUS.PROVISIONING },
+];
+const BUSY_LABEL = {
+  [INSTANCE_STATUS.RESTARTING]: "다시 시작하는 중",
+  [INSTANCE_STATUS.RESETTING]: "초기화하는 중",
+};
+
+// 인스턴스 응답에 생성 시각이 없어 기다리기 시작한 순간부터 센다 기다림이 끝나면 다음 기다림은 0초부터 다시 센다
+function useWaitingSeconds(waitingKey) {
+  const [start, setStart] = useState(null);
+  const [now, setNow] = useState(() => Date.now());
+  if (waitingKey && start?.key !== waitingKey) setStart({ key: waitingKey, at: Date.now() });
+  if (!waitingKey && start) setStart(null);
+  useEffect(() => {
+    if (!waitingKey) return undefined;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [waitingKey]);
+  if (!waitingKey || start?.key !== waitingKey) return 0;
+  return Math.max(0, Math.floor((now - start.at) / 1000));
+}
+
+function formatElapsed(seconds) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+function WaitingProgress({ step, busyLabel, seconds }) {
+  return (
+    <div className={styles.waiting} role="status">
+      {busyLabel ? (
+        <p className={styles.waitingBusy}><i aria-hidden="true" />{busyLabel}</p>
+      ) : (
+        <ol className={styles.createSteps} aria-label="인스턴스 준비 단계">
+          {CREATE_STEPS.map((item, index) => {
+            const state = index < step ? "done" : index === step ? "active" : "todo";
+            return (
+              <li key={item.status} data-state={state}>
+                <i aria-hidden="true" />
+                <span>{item.label}</span>
+                <span className={styles.srOnly}>{state === "done" ? " 완료" : state === "active" ? " 진행 중" : " 대기"}</span>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+      <p className={styles.waitingElapsed}>{formatElapsed(seconds)} 경과</p>
+    </div>
+  );
+}
+
 function Endpoint({ endpoint, compact }) {
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
@@ -81,13 +135,22 @@ function Endpoint({ endpoint, compact }) {
   );
 }
 
-export default function InstancePanel({ instance, otherInstance, error }) {
+export default function InstancePanel({ instance, otherInstance, error, pendingAction }) {
   const status = instance?.status ?? null;
+  // 생성 단추를 누른 직후부터 RUNNING 이 될 때까지, 재시작·초기화가 끝날 때까지 기다리는 화면을 보인다
+  const statusStep = error ? -1 : CREATE_STEPS.findIndex((item) => item.status === status);
+  const createStep = statusStep >= 0 ? statusStep : !error && pendingAction === "create" ? 0 : null;
+  const busyLabel = error || createStep != null ? null : BUSY_LABEL[status] ?? null;
+  const waitingKey = createStep != null ? "create" : busyLabel ? `busy:${status}` : null;
+  const waitingSeconds = useWaitingSeconds(waitingKey);
   const running = !error && status === INSTANCE_STATUS.RUNNING;
   const failure = error ? null : getInstanceFailureNotice(instance);
   const ended = status === INSTANCE_STATUS.STOPPED || status === INSTANCE_STATUS.CLEANED;
+  const requesting = statusStep < 0 && createStep === 0;
   const statusLabel = error
     ? "조회 실패"
+    : requesting
+      ? INSTANCE_STATUS_LABEL[INSTANCE_STATUS.REQUESTED]
     : failure
       ? "실행 실패"
     : status === "RUNNING"
@@ -128,6 +191,8 @@ export default function InstancePanel({ instance, otherInstance, error }) {
       : "문제 환경을 생성해주세요";
   const hint = error
     ? "다시 조회한 뒤 인스턴스를 조작할 수 있습니다"
+    : waitingKey
+      ? "준비가 끝나면 접속 주소와 남은 시간이 바로 표시됩니다"
     : failure
       ? failure.message
     : ended
@@ -157,7 +222,7 @@ export default function InstancePanel({ instance, otherInstance, error }) {
             <span className={styles.srOnly}>{statusLabel}</span>
           </span>
         ) : (
-          <span className={styles.statusBadge} role="status">
+          <span className={styles.statusBadge} role="status" data-waiting={waitingKey ? "true" : undefined}>
             <i aria-hidden="true" />
             {statusLabel}
           </span>
@@ -185,6 +250,8 @@ export default function InstancePanel({ instance, otherInstance, error }) {
               </div>
             </div>
           )
+        ) : waitingKey ? (
+          <WaitingProgress step={createStep ?? 0} busyLabel={busyLabel} seconds={waitingSeconds} />
         ) : (
           <div className={styles.endpointRow}>
             <div className={`${styles.endpointBox} ${styles.endpointBoxEmpty}`}>
@@ -212,6 +279,7 @@ export default function InstancePanel({ instance, otherInstance, error }) {
       </p>
       <div
         className={styles.ttlTrack}
+        data-waiting={waitingKey ? "true" : undefined}
         role="progressbar"
         aria-label="남은 시간 비율"
         aria-valuemin={0}

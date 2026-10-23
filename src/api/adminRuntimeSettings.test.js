@@ -22,6 +22,7 @@ test("admin runtime settings use the selected challenge and preserve cancellatio
     await activateChallengeRelease("challenge-a", "release-a");
     const settings = { containers: [{ name: "web", env: { APP_MODE: "ctf" }, secret_env: { FLAG: "flag" } }] };
     await deriveChallengeRelease("challenge-a", "release-a", settings);
+    await activateChallengeRelease("challenge-a", "release-b", { reason: "접속 오류로 복구" });
     assert.equal(requests[0].url, "/admin/challenges/challenge-a/releases");
     assert.equal(requests[1].url, "/admin/challenges/challenge-b/runtime-secrets");
     assert.equal(requests[0].signal, signal);
@@ -31,6 +32,8 @@ test("admin runtime settings use the selected challenge and preserve cancellatio
     assert.deepEqual(JSON.parse(requests[4].data), {});
     assert.equal(requests[5].url, "/admin/challenges/challenge-a/releases/release-a/derive");
     assert.deepEqual(JSON.parse(requests[5].data), settings);
+    assert.equal(requests[6].url, "/admin/challenges/challenge-a/releases/release-b/activate");
+    assert.deepEqual(JSON.parse(requests[6].data), { reason: "접속 오류로 복구" });
     for (const request of requests.slice(2)) assert.equal(request.timeout, 15000);
   } finally {
     apiClient.defaults.adapter = originalAdapter;

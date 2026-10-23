@@ -639,7 +639,7 @@
     padding: 0;
     border: 0;
     border-radius: 0;
-    background: url("/assets/mypage/team-info-card-blank.png") center / 100% 100% no-repeat;
+    background: url("/assets/mypage/team-info-card-blank.webp") center / 100% 100% no-repeat;
   }
   .teamCard .bakedLabel:first-child {
     position: absolute;
@@ -898,11 +898,11 @@
   }
   .mileageHistory {
     top: calc(var(--u) * 387);
-    background: url("/assets/mypage/mileage-history-panel.png") center / 100% 100% no-repeat;
+    background: url("/assets/mypage/mileage-history-panel.webp") center / 100% 100% no-repeat;
   }
   .solveHistory {
     top: calc(var(--u) * 695);
-    background: url("/assets/mypage/solve-history-panel.png") center / 100% 100% no-repeat;
+    background: url("/assets/mypage/solve-history-panel.webp") center / 100% 100% no-repeat;
   }
   .historyScroll {
     position: absolute;

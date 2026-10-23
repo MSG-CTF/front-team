@@ -131,20 +131,6 @@ export function SignatureFestivalScreen({ state, onPreviewClub }) {
             </ul>
           </div>
         </div>
-        <footer className={styles.sceneFooter}>
-          <span>
-            {state.status === "loading"
-              ? "부스 소식을 불러오는 중"
-              : "보드 개방과 관계없이 참여할 수 있어요"}
-          </span>
-          <button
-            type="button"
-            onClick={state.retry}
-            disabled={state.status === "loading"}
-          >
-            새로고침
-          </button>
-        </footer>
       </div>
       <ul className={styles.mobileBoothList} aria-label="동아리 부스 안내 및 입장">
         {booths.map((club) => (

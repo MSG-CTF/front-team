@@ -82,9 +82,6 @@ const IntroGuidePage = lazy(
 const SignaturesPage = lazy(
   () => import("../features/signatures/pages/SignaturesPage.jsx"),
 );
-const SignatureDetailPage = lazy(
-  () => import("../features/signatures/pages/SignatureDetailPage.jsx"),
-);
 const SignatureClubPage = lazy(
   () => import("../features/signatures/pages/SignatureClubPage.jsx"),
 );
@@ -140,14 +137,6 @@ export default function AppRoutes() {
           element={
             <Suspense fallback={<p role="status">동아리 부스를 불러오는 중</p>}>
               <SignatureClubPage />
-            </Suspense>
-          }
-        />
-        <Route
-          path="/signatures/:signatureId"
-          element={
-            <Suspense fallback={<p role="status">부스 문제를 불러오는 중</p>}>
-              <SignatureDetailPage />
             </Suspense>
           }
         />

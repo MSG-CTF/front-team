@@ -4,9 +4,9 @@ import { MotionControl, useMotion } from "./MotionProvider.jsx";
 
 const POSES = ["ready", "throw", "land"];
 const POSE_IMAGES = {
-  ready: "/assets/intro/mascot-dice-ready-v3.png",
-  throw: "/assets/intro/mascot-dice-throw-v3.png",
-  land: "/assets/intro/mascot-dice-land-v4.png",
+  ready: "/assets/intro/mascot-dice-ready-v3.webp",
+  throw: "/assets/intro/mascot-dice-throw-v3.webp",
+  land: "/assets/intro/mascot-dice-land-v4.webp",
 };
 const HOLD_MS = [1600, 850, 2200];
 

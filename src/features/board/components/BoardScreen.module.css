@@ -1,4 +1,5 @@
-.desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene { display: contents; }
+.desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene, .leftPanel, .leftPanelCard { display: contents; }
+.panelToggleSection { display: none; }
 .mobileNav, .boardControls, .boardHint, .sceneBackdrop, .mobileCellInfo { display: none; }
 .frame {
   --board-label-font: "Song Myung", "Batang", serif;
@@ -7,10 +8,8 @@
 }
 /* 명판의 제목은 기존 명조체, 작은 안내와 수치는 같은 로컬 한글 글꼴로 표시한다. */
 .diceReadout, .diceChallengeRow { font-family: var(--board-label-font); font-weight: 400; font-synthesis: none; }
-.diceStatusMessage, .chancePanel, .eventPanel, .loading, .empty, .error { font-family: var(--board-body-font); }
-.chancePanel h2, .eventPanel h2 { font-family: var(--board-label-font); font-weight: 400; }
-/* 폐기 카드의 13px 라디오를 글자 크기에 따라 달라지는 이름 첫 줄 가운데에 맞춘다 */
-.eventCardRow input[type="radio"] { flex: none; width: 13px; height: 13px; margin: calc((1lh - 13px) / 2) 0 0; }
+.diceStatusMessage, .chancePanel, .loading, .empty, .error { font-family: var(--board-body-font); }
+.chancePanel h2 { font-family: var(--board-label-font); font-weight: 400; }
 .diceReadout strong, .diceChallengeRow strong { font-family: var(--board-body-font); font-weight: 600; }
 .track { position: absolute; left: calc(448 / 1920 * 100%); top: calc(289 / 1080 * 100%); width: calc(951 / 1920 * 100%); aspect-ratio: 1772 / 1330; }
 /* 오른쪽 끝을 문제 제한 줄(right 10%)과 같은 90% 선에 맞춘다 */
@@ -21,13 +20,11 @@
 .diceChallengeRow strong { font-variant-numeric: tabular-nums; }
 .diceStatusMessage { top: 55%; left: 12.5%; width: 77.5%; font-size: clamp(11px, 0.58cqw, 12px); line-height: 1.2; }
 .diceStatusFull { display: none; }
-.airportTitleRow { position: relative; display: flex; align-items: center; justify-content: center; min-height: 36px; }
 .airportConfirm .trainSoundButton {
-  position: absolute; right: -4px; display: grid; place-items: center;
-  width: 44px; min-height: 44px; padding: 10px;
-  border: 0; border-radius: 50%; background: transparent; color: #72502e; cursor: pointer;
+  flex: none; display: grid; place-items: center; width: 2.6em; height: 2.6em; margin-right: -0.6em; padding: 0.55em;
+  border: 0; border-radius: 50%; background: transparent; color: #72502e; cursor: pointer; font-size: inherit;
 }
-.trainSoundButton svg { width: 22px; height: 22px; }
+.trainSoundButton svg { width: 100%; height: 100%; }
 .trainSoundButton:hover { background: #8a5a2b16; }
 .trainSoundButton:focus-visible { outline: 2px solid #79532b; outline-offset: 1px; }
 /* 1211×1299 이미지의 불투명 윤곽: x208..1075, y48..1202
@@ -44,29 +41,106 @@
   user-select: none;
   transition: left var(--piece-transition, 150ms) linear, top var(--piece-transition, 150ms) linear;
 }
+/* 한 칸 이동할 때 곡선으로 뛰어올랐다 착지한다. transform은 위치 보정에 쓰여 개별 translate 속성을 쓴다 */
+.boardPieceHopA { animation: boardPieceHopA var(--piece-transition, 150ms) linear; }
+.boardPieceHopB { animation: boardPieceHopB var(--piece-transition, 150ms) linear; }
+@keyframes boardPieceHopA {
+  0% { translate: 0 0; animation-timing-function: ease-out; }
+  50% { translate: 0 -38%; animation-timing-function: ease-in; }
+  100% { translate: 0 0; }
+}
+@keyframes boardPieceHopB {
+  0% { translate: 0 0; animation-timing-function: ease-out; }
+  50% { translate: 0 -38%; animation-timing-function: ease-in; }
+  100% { translate: 0 0; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .boardPiece { transition: none; }
+  .boardPiece { transition: none; animation: none; }
 }
 /* 풍경은 FixedAspectStage의 배경 한 장으로 화면 전체를 채운다
    원판과 조작 패널은 기존 1920×1080 무대에서 같은 비율로 축소한다 */
 @media (min-width: 1101px) {
-  /* 원래 가로 명판의 비율과 장식은 유지하고 글자가 들어갈 최소 크기만 확보한다. */
+  /* Figma 3:2 좌상단: 주사위 상태·보유 찬스카드·열린 문제 버튼은 각자 플레이트 하나씩이고
+     너비 349(1920 기준)로 아래로 쌓는다. 간격은 주사위→찬스카드 4, 찬스카드→열린 문제 7.
+     열린 문제 목록(양피지)은 그 아래에 같은 폭으로 이어 붙인다.
+     화면 바깥 여백선은 가로 2.5%, 세로 4.444%(1920x1080 에서 둘 다 48px)로 네 변을 맞춘다
+     16:9 보다 세로로 길거나 가로로 긴 화면에서는 보드만 가운데 무대에 두고, 고정 UI 는 남는 폭(--hud-extra-x)과
+     높이(--hud-extra-y)만큼 바깥으로 밀어 실제 화면 모서리의 여백선에 붙인다 */
   .stage {
+    --hud-extra-x: calc((100vw - var(--board-scene-width)) / 2);
+    --hud-extra-y: calc((100vh - var(--board-scene-height)) / 2);
+    --hud-margin-y: 4.4444%;
+    --hud-top: calc(var(--hud-margin-y) - var(--hud-extra-y));
+    --hud-gap: max(12px, 0.8333cqw);
     --dice-panel-width: max(19.69cqw, 240px);
-    --dice-panel-left: min(1.35%, calc(448 / 1920 * 100% - var(--dice-panel-width) * 355 / 378 - 12px));
-    --dice-art-left: calc(var(--dice-panel-left) + var(--dice-panel-width) * 23 / 378);
-    --dice-art-width: calc(var(--dice-panel-width) * 332 / 378);
-    --dice-toggle-top: max(17%, calc(var(--dice-panel-width) * 151 / 378 + 8px));
-    --open-toggle-height: max(44px, 3.12cqw);
-    --dice-following-top: max(22.4%, calc(var(--dice-toggle-top) + var(--open-toggle-height) + 10px));
+    --left-width: max(18.2cqw, 240px);
   }
-  .stage .diceStatus { left: var(--dice-panel-left); width: var(--dice-panel-width); height: auto; aspect-ratio: 378 / 223; }
-  .stage .openToggle { left: var(--dice-art-left); top: var(--dice-toggle-top); width: var(--dice-art-width); height: var(--open-toggle-height); }
-  .stage .chancePanel { left: var(--dice-art-left); top: var(--dice-following-top); width: var(--dice-art-width); }
-  .stage .chancePanel h2 { font-size: clamp(14px, 0.8cqw, 18px); }
-  .stage .chancePanel :is(li, p, span, select, button) { font-size: clamp(12px, 0.65cqw, 15px); line-height: 1.5; }
+  /* 왼쪽 열은 세 플레이트와 열린 문제 패널을 같은 폭으로 쌓아 왼쪽 위 여백선과 아래 여백선에 닿는다
+     열 자체는 비어 있는 곳의 보드 클릭을 막지 않게 하고 안의 패널만 누른다 */
+  .stage .leftPanel {
+    position: absolute; z-index: 40; left: calc(2.5% - var(--hud-extra-x)); top: var(--hud-top); width: var(--left-width);
+    height: calc(100% + 2 * var(--hud-extra-y) - 2 * var(--hud-margin-y));
+    display: flex; flex-direction: column; pointer-events: none;
+  }
+  .stage .leftPanel > * { pointer-events: auto; }
+  .stage .leftPanel :is(.diceStatus, .chancePanel, .panelToggleSection) { flex: none; }
+  .stage .leftPanelCard { display: contents; }
+  /* 플레이트: 바깥 장식 SVG(그림자 포함)와 안쪽 선을 가상 요소로 얹는다 */
+  .stage .leftPanel :is(.chancePanel, .panelToggleSection) { position: relative; isolation: isolate; box-sizing: border-box; border: 0; border-image: none; background: none; box-shadow: none; filter: none; overflow: visible; }
+  .stage .leftPanel :is(.chancePanel, .panelToggleSection)::before,
+  .stage .leftPanel :is(.chancePanel, .panelToggleSection)::after { content: ""; position: absolute; z-index: -1; pointer-events: none; background-repeat: no-repeat; background-size: 100% 100%; }
+  .stage .leftPanel .chancePanel::before { inset: -4.42% -2.87% -13.27% -2.87%; background-image: url("/assets/board/plates/plate-chance.svg"); }
+  .stage .leftPanel .chancePanel::after { inset: 4px; background-image: url("/assets/board/plates/plate-chance-line.svg"); background-size: 100.44% 101.42%; background-position: center; }
+  .stage .leftPanel .panelToggleSection::before { inset: -8.62% -2.87% -25.86% -2.87%; background-image: url("/assets/board/plates/plate-open.svg"); }
+  .stage .leftPanel .panelToggleSection::after { inset: 4px; background-image: url("/assets/board/plates/plate-open-line.svg"); background-size: 100.44% 103%; background-position: center; }
+  /* Figma 5:19 주사위판(333×146)을 너비 100%로 놓고 값은 시안 좌표를 퍼센트로 바꿔 겹친다 */
+  .stage .leftPanelCard .diceStatus { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 333 / 146; padding: 0; display: block; }
+  .stage .leftPanelCard .diceStatusIcon { display: block; position: absolute; left: 7.4%; top: 52.7%; width: 3.7%; height: auto; transform: translateY(-50%); }
+  .stage .leftPanelCard .diceReadout { position: absolute; left: 15.1%; right: 4.5%; top: 52.7%; width: auto; transform: translateY(-50%); font-size: clamp(11px, 0.8cqw, 16px); }
+  .stage .leftPanelCard .diceChallengeRow { position: absolute; left: auto; right: 4.5%; top: 22%; font-size: clamp(10px, 0.62cqw, 13px); }
+  .stage .leftPanelCard .diceStatusMessage { position: absolute; left: 42%; right: 4.5%; top: 34%; width: auto; margin: 0; text-align: right; font-size: clamp(10px, 0.58cqw, 12px); line-height: 1.35; }
+  .stage .leftPanelCard .diceGauge { display: block; position: absolute; left: 7.4%; top: 59.4%; width: 88.1%; height: 8.4%; box-sizing: border-box; padding: 0.1cqw 0.14cqw; border-radius: 0.3cqw; }
+  .diceGauge span { display: block; height: 100%; min-width: 0; border-radius: 0.2cqw; background: linear-gradient(#fbbb35, #fbb934 38%, #d3861f); box-shadow: 0 0 0.3cqw #f4a8286b; transition: width 1s linear; }
+  .diceGauge[data-idle="true"] span { opacity: .45; box-shadow: none; }
+  .stage .leftPanelCard .chancePanel {
+    position: relative; inset: auto; width: auto; max-height: none; margin-top: 0.21cqw;
+    padding: 0.73cqw 0.83cqw; display: flex; flex-direction: column; gap: 0.26cqw;
+  }
+  .stage .leftPanelCard .chancePanel[data-obscured="true"] { display: none; }
+  .stage .chancePanel h2 { margin: 0; font-size: clamp(14px, 0.8cqw, 18px); }
+  .stage .chancePanel ul { margin: 0; }
+  .stage .chancePanel :is(li, p, span, select, button) { font-size: clamp(12px, 0.62cqw, 15px); line-height: 1.5; }
   .stage .chancePanel :is(select, button) { min-height: 28px; }
-  .stage .openPanel { left: calc(var(--dice-art-left) - 0.78cqw); top: var(--dice-following-top); width: calc(var(--dice-panel-width) * 284 / 378); height: min(69.54%, calc(92% - var(--dice-following-top))); }
+  .stage .leftPanelCard .chancePanel li { padding: 0.31cqw; }
+  .stage .panelToggleSection { display: block; margin-top: 0.36cqw; padding: 0; }
+  .stage .panelToggle {
+    display: flex; align-items: center; width: 100%; min-height: 3.02cqw; padding: 0.89cqw 1.3cqw; gap: 0.47cqw;
+    border: 0; background: none; font-size: clamp(14px, 1.09cqw, 22px);
+  }
+  .stage .openToggle { display: none; }
+  /* 열린 문제 패널은 통합 패널 아래 남은 높이를 아래 여백선까지 채운다
+     종이와 안쪽 모양은 휴대폰 시트와 같고, 데스크톱은 패널 폭에 비례하는 기준 글자 하나로
+     화면이 커지고 작아져도 구성이 그대로다 아주 좁은 화면에서만 12px 아래로 내려가지 않게 막는다 */
+  .stage .leftPanel .openPanel {
+    --open-width: var(--left-width);
+    position: relative; inset: auto; width: 100%; height: auto; flex: 1 1 auto; min-height: 0; margin-top: var(--hud-gap);
+    display: flex; flex-direction: column;
+    font-size: max(12px, calc(var(--open-width) * 17 / 333));
+  }
+  .stage .openPanelBody { flex: 1 1 auto; min-height: 0; }
+  /* 오른쪽 위 동전과 오른쪽 아래 부스 버튼도 같은 모서리로 민다 */
+  .stage .navCoin { translate: var(--hud-extra-x) calc(-1 * var(--hud-extra-y)); }
+  .stage .boothButton { translate: var(--hud-extra-x) var(--hud-extra-y); }
+  /* 보드 위 이벤트 창과 기차여행 확인 창은 원판 가운데(48.1%)에 둔다 */
+  .stage .eventPanel { position: absolute; left: 34.6%; top: 36%; z-index: 30; width: 27%; max-height: 46%; overflow-y: auto; overscroll-behavior: contain; }
+  .stage .airportConfirm { position: absolute; left: 37.1%; top: 39%; z-index: 40; width: 22%; }
+  .stage :is(.eventPanel, .airportConfirm) { font-size: max(12px, calc(var(--left-width) * 17 / 333)); }
+  /* 오른쪽 열: 배너 그림(339x627)의 보이는 오른쪽 끝(84.37%)을 97.5% 여백선에, 보이는 위 끝(1.44%)을 열린 문제 패널 위선에 맞춘다
+     열린 문제 패널 위선은 주사위판과 열린 문제 버튼 플레이트(찬스카드 목록을 뺀 높이, BoardScreen 이 --left-card-height 로 알림) 아래 간격만큼이다
+     라운드 단추는 시안의 배너 기준 자리(가로 +3.28%, 세로 +41.67%)를 그대로 따라간다 */
+  .stage { --koth-top: calc(var(--hud-top) + var(--left-card-height, 7.4cqw) + var(--hud-gap)); }
+  .stage .kothBanner { left: calc(97.5% - 17.66% * 0.8437 + var(--hud-extra-x)); top: calc(var(--koth-top) - 58.06% * 0.0144); }
+  .stage .kothRound { left: calc(97.5% - 17.66% * 0.8437 + 3.28% + var(--hud-extra-x)); top: calc(var(--koth-top) - 58.06% * 0.0144 + 41.67%); }
   .frame {
     /* WebKit 리사이즈 중 스크롤바가 사라져도 무대와 배경의 기준 크기를 유지한다. */
     width: 100vw;
@@ -102,9 +176,6 @@
     transform: translate(-50%, -50%);
   }
 }
-/* 열린 문제 패널 제목은 데스크톱에선 패널 이미지에 그려져 있어 스크린리더에만 노출 */
-.mobileOpenTitle { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
 /* 주사위판(panel-dice-status.png)에서 테두리만 떼어 낸 panel-frame.png(333x112, 모서리 14px)를
    9분할로 늘려 쓴다. 주사위판·열린 문제 버튼·보유 찬스카드가 같은 금테 이미지를 공유한다 */
 .plateFrame {
@@ -148,7 +219,9 @@
 .cellTargetOutline { fill: #f6d493; fill-opacity: 0; stroke: #efd39d; stroke-width: 3px; opacity: 0; transition: opacity 120ms ease, fill-opacity 120ms ease; }
 .boardCellButton[data-selection-state="available"] { z-index: 13; }
 .boardCellButton[data-selection-state="selected"], .boardCellButton:focus-visible { z-index: 14; }
-.boardCellButton[data-selection-state="available"] .cellTargetOutline { opacity: 0.8; fill-opacity: 0.045; }
+/* 기차여행으로 갈 수 있는 칸은 금테 안쪽을 밝게 두르고 천천히 숨 쉬게 해 어디를 누를 수 있는지 보인다 */
+.boardCellButton[data-selection-state="available"] .cellTargetOutline { opacity: 1; fill: #fffaea; fill-opacity: 0.42; stroke: #ffd56a; stroke-width: 8px; animation: cell-target-breathe 2.4s ease-in-out infinite; }
+@keyframes cell-target-breathe { 50% { fill-opacity: 0.14; stroke-opacity: 0.55; } }
 .boardCellButton[data-selection-state="selected"] .cellTargetOutline,
 .boardCellButton[data-selection-state="available"]:hover .cellTargetOutline,
 .boardCellButton:focus-visible .cellTargetOutline { opacity: 1; fill-opacity: 0.14; stroke: #fff0bc; stroke-width: 5px; }
@@ -171,6 +244,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .cellTargetOutline { transition: none; }
+  .boardCellButton[data-selection-state="available"] .cellTargetOutline { animation: none; }
   .startRewardVisual { animation: none; }
 }
 /* 보드 화면에서만 문서와 내부 스크롤을 같은 재질로 맞춘다 */
@@ -180,19 +254,9 @@
   scrollbar-width: thin;
   scrollbar-color: var(--board-scroll-thumb) transparent;
 }
-.openPaperGap, .openPaperDivider { position: absolute; inset: 0; pointer-events: none; clip-path: polygon(0 22.6%, 100% 22.6%, 100% 26.3%, 0 26.3%); }
-.openPaperGap img, .openPaperDivider img { width: 100%; height: 100%; object-fit: fill; }
-.openPaperGap img { transform: translateY(-4%); }
-.openPaperDivider img { clip-path: polygon(0 22.6%, 100% 22.6%, 100% 25.3%, 0 25.3%); transform: translateY(6px); }
 .openPanelBody {
   --board-scroll-thumb: #967345;
   --board-scroll-hover: #70502c;
-  position: absolute;
-  left: 11%;
-  top: 28%;
-  width: 78%;
-  height: 63.41%;
-  padding-inline-end: 8px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -230,76 +294,178 @@
   :global(html):has(.frame)::-webkit-scrollbar-track,
   :is(.openPanelBody, .boardViewport)::-webkit-scrollbar-track { background: Canvas; }
 }
-.openChallengeList li button { min-height: 44px; }
-.openChallengeList li button > span:first-child { width: 20px; height: 22px; }
-.openChallengeList li button > span:first-child > span { font-size: 10px; }
-.openChallengeList li strong { font-size: clamp(12px, 0.78cqw, 15px); }
-.openChallengeList li strong + span { font-size: clamp(11px, 0.65cqw, 13px); }
-.openChallengeList li button > img { width: 12px; height: 16px; }
-.openFilters { margin: 0 0 12px; color: #654522; font: 12px/1.5 "Pretendard", sans-serif; }
-.openSearch { display: flex; align-items: center; gap: 5px; min-height: 44px; border-bottom: 1px solid #9c754875; }
-.openSearch svg { width: 15px; height: 15px; flex-shrink: 0; }
-.openSearch input { width: 100%; min-width: 0; min-height: 44px; padding: 4px 0; border: 0; border-radius: 0; background: transparent; color: #372413; font: inherit; }
-.openSearch input::placeholder { color: #806341; opacity: 1; }
-.openFilterRow { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 4px; }
-.openFilterRow label { min-width: 0; }
-.openFilterRow select { width: 100%; min-width: 0; min-height: 44px; padding: 2px 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: 11px "Pretendard", sans-serif; }
-.openCounts { display: flex; justify-content: space-between; gap: 4px; margin: 0; padding-bottom: 6px; border-bottom: 1px solid #9c754875; font-size: 11px; }
-.openCounts span { color: #816645; }
-.openInstance { margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid #9c75483d; color: #654522; font: 11px/1.5 "Pretendard", sans-serif; }
-.openInstance > span { display: block; }
-.openInstance button, .openInstance strong { display: block; width: 100%; min-width: 0; margin-top: 4px; border: 0; background: none; color: #482d12; font: 600 12px/1.5 "Pretendard", sans-serif; overflow-wrap: anywhere; text-align: left; }
-.openInstance button { min-height: 44px; cursor: pointer; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.openNotice { margin: 10px 0; color: #795b38; font: 12px/1.6 "Pretendard", sans-serif; word-break: keep-all; }
+/* 열린 문제 패널: 제목 줄 > 탭 > 검색 > 목록 데스크톱 패널과 휴대폰 시트가 같은 모양을 쓰고 기준 글자 크기만 다르다
+   종이(open-challenges-paper 501x1226)는 위아래 40px, 좌우 20px 테두리를 9분할로 늘린다 --open-width 는 패널 폭이다
+   글꼴은 제목과 탭만 Song Myung, 나머지는 모두 Pretendard 크기는 모두 기준 글자(em)를 따른다
+   세로 끝선: 탭, 검색 줄, 풀이 상태, 번호 도장은 왼쪽 끝선에, 닫기, 화살표, 진행은 오른쪽 끝선에 닿고
+   문제 제목과 라인 이름은 같은 글 열(도장 폭 + 간격)에서 시작한다 */
+.openPanel {
+  --open-pad: calc(var(--open-width) * 0.045);
+  --open-ink: #2e1d0d; --open-brown: #5a3a17; --open-soft: #74512c; --open-faint: #a58a66; --open-line: #9a774a;
+  --open-rule: #8446183d; --open-gold: #9a5b14; --open-field: #f1dcb2;
+  --open-icon: 1.764em; --open-gap: 0.75em;
+  border: solid transparent;
+  border-width: calc(var(--open-width) * 40 / 501) calc(var(--open-width) * 20 / 501);
+  border-image: url("/assets/board/open-challenges-paper.webp") 40 20 fill / calc(var(--open-width) * 40 / 501) calc(var(--open-width) * 20 / 501) stretch;
+  color: var(--open-brown); font-family: "Pretendard", sans-serif;
+}
+.openPanelHeader, .openTabs, .openFilters { margin-inline: var(--open-pad); }
+/* 스크롤바 6px 자리를 오른쪽 여백에서 빼 목록 글자 양끝을 탭, 검색 줄과 맞춘다 */
+.openPanelBody { padding: 0 calc(var(--open-pad) - 6px) 0.4em var(--open-pad); }
+.openPanelHeader { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 0.75em; }
+.openTitle { margin: 0; color: #4a2a10; font: 400 1.5em/1.3 "Song Myung", serif; letter-spacing: 0.02em; }
+/* 닫기는 누르는 자리를 넉넉히 두고 아이콘 오른쪽 끝을 오른쪽 끝선에 맞춘다 */
+.openPanel .openClose { flex: none; width: 2.75em; height: 2.75em; margin-right: -0.7em; padding: 0.7em; font-size: inherit; }
+.openPanel .openClose:focus-visible { border-radius: 50%; outline: 2px solid #825725; outline-offset: -0.45em; }
+/* 고른 탭은 열린 문제 목록 버튼과 같은 나무 명판, 안 고른 탭은 같은 모양의 금테만 둔다 */
+.openTabs { flex: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45em; margin-top: 0.5em; }
+.openTabs button {
+  display: flex; align-items: center; justify-content: center; gap: 0.4em; min-width: 0; height: 2.6em; padding: 0 0.35em 0.08em;
+  border: 0.42em solid transparent; border-image: url("/assets/board/panel-frame-outline.png") 14 fill / 0.42em stretch;
+  background: none; color: var(--open-soft); font: 400 1.06em/1 "Song Myung", serif; white-space: nowrap; cursor: pointer;
+}
+.openTabs button span { font: 600 0.84em/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
+.openTabs button:hover { color: var(--open-ink); }
+.openTabs button[aria-selected="true"] { border-image-source: url("/assets/board/panel-frame.png"); color: #ecd9b4; filter: drop-shadow(0 0.1em 0.18em #3a200b4d); }
+.openTabs button[aria-selected="true"] span { color: #e0b066; }
+.openFilters { flex: none; display: grid; gap: 0.3em; margin-block: 0.75em 0.1em; font-size: 0.9em; }
+.openSearchRow { display: flex; align-items: center; gap: 0.45em; }
+.openSearch { flex: 1 1 0; display: flex; align-items: center; gap: 0.45em; min-width: 0; height: 2.75em; padding: 0 0.7em; border: 1px solid var(--open-line); border-radius: 0.38em; background: var(--open-field); color: var(--open-soft); }
+.openSearch:focus-within { border-color: var(--open-brown); box-shadow: 0 0 0 1px var(--open-brown); }
+.openSearch svg { flex: none; width: 1.05em; height: 1.05em; }
+.openSearch input { width: 100%; min-width: 0; height: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--open-ink); font: inherit; outline: none; }
+.openSearch input::placeholder { color: #94744a; opacity: 1; }
+.openCategory { flex: 0 1 auto; min-width: 0; max-width: 48%; }
+/* 기본 화살표는 브라우저마다 글자와 붙어 보여 직접 그린다 */
+.openCategory select { width: 100%; min-width: 0; height: 2.75em; padding: 0 1.8em 0 0.7em; border: 1px solid var(--open-line); border-radius: 0.38em; color: var(--open-brown); font: 500 1em "Pretendard", sans-serif; text-overflow: ellipsis; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  background: var(--open-field) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%23654522' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 0.65em center / 0.8em no-repeat; }
+/* 풀이 상태는 글자와 밑줄로 고른다 */
+.openStatusTabs { display: flex; align-items: center; gap: 1.2em; padding: 0; }
+.openStatusTabs button { position: relative; min-width: 0; padding: 0.6em 0 0.65em; border: 0; background: none; color: var(--open-soft); font: 500 1em/1.2 "Pretendard", sans-serif; white-space: nowrap; cursor: pointer; }
+.openStatusTabs button span { margin-left: 0.2em; font-variant-numeric: tabular-nums; }
+.openStatusTabs button:hover { color: var(--open-ink); }
+.openStatusTabs button[aria-pressed="true"] { color: var(--open-ink); font-weight: 700; }
+.openStatusTabs button[aria-pressed="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0.2em; height: 2px; border-radius: 1px; background: var(--open-brown); }
+.openChallengeList { margin: 0; padding: 0; list-style: none; }
+.openChallengeList > li + li { border-top: 1px solid var(--open-rule); }
+.openRow { position: relative; isolation: isolate; display: flex; align-items: center; gap: var(--open-gap); width: 100%; min-height: 3.6em; padding: 0.6em 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+/* 바탕은 양옆으로 조금 넓혀 그려 번호 도장과 화살표가 끝선에 그대로 닿게 한다 */
+.openRow::before { content: ""; position: absolute; inset: 0 -0.45em; z-index: -1; border-radius: 0.35em; transition: background-color 120ms ease; }
+.openRow:hover::before { background: #f8ecd2a6; }
+.openPanel .openRow:focus-visible { outline: none; }
+.openRow:focus-visible::before { background: #f8ecd2a6; box-shadow: inset 0 0 0 2px #825725; }
+/* 번호 도장은 Figma 배지의 적갈색 단색 원, 푼 문제는 옅은 초록 원에 체크로 물러나게 한다 */
+.openRowNo { flex: none; display: grid; place-items: center; width: 2.45em; height: 2.45em; border-radius: 50%; background: #871f13; color: #fff6e6; font: 700 0.72em/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
+.openRowNo svg { width: 1.5em; height: 1.5em; }
+.openChallengeList li[data-solved="true"] .openRowNo { background: #dde5c4; color: #557636; }
+.openRowText { flex: 1 1 auto; min-width: 0; }
+/* 긴 제목은 낱말 단위로 두 줄까지 보이고 그 뒤만 줄인다 */
+.openRowText strong { display: -webkit-box; overflow: hidden; color: var(--open-ink); font-size: 1em; font-weight: 600; line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.openChallengeList li[data-solved="true"] .openRowText strong { color: #6a5136; font-weight: 500; }
+.openRowMeta { display: flex; align-items: center; gap: 0.6em; min-width: 0; margin-top: 0.2em; color: var(--open-soft); font: 500 0.82em/1.3 "Pretendard", sans-serif; letter-spacing: 0.02em; white-space: nowrap; }
+.openRowMeta > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.openRowChevron { flex: none; width: 0.56em; height: 1em; color: #9a774a; }
+.openGroupLabel { margin: 1em 0 0.2em; color: var(--open-faint); font: 600 0.8em/1.3 "Pretendard", sans-serif; letter-spacing: 0.02em; }
+.openChallengeList > li + li:has(> .openGroupLabel) { border-top: 0; }
+/* 내 인스턴스: 작은 점과 상태 글자 실행 중이면 초록, 아니면 갈색 */
+.openLive { display: inline-flex; flex: none; align-items: center; gap: 0.4em; color: var(--open-soft); font: 600 1em/1 "Pretendard", sans-serif; letter-spacing: 0; white-space: nowrap; }
+.openLive i { flex: none; width: 0.46em; height: 0.46em; border-radius: 50%; background: currentColor; }
+.openLive[data-tone="running"] { color: #4f7a35; }
+.openLive[data-tone="running"] i { box-shadow: 0 0 0 0.2em #4f7a3524; }
+.openInstance { display: grid; gap: 0.35em; margin: 0.6em 0 0.5em; padding: 0.6em 0.75em; border: 1px solid var(--open-line); border-radius: 0.38em; background: #f3dfb866; }
+.openInstanceHead { display: flex; align-items: center; justify-content: space-between; gap: 0.6em; min-width: 0; color: var(--open-soft); font: 600 0.82em/1.2 "Pretendard", sans-serif; }
+.openInstance button, .openInstance strong { display: flex; align-items: center; gap: 0.4em; width: 100%; min-width: 0; padding: 0; border: 0; background: none; color: var(--open-ink); font: 600 1em/1.4 "Pretendard", sans-serif; text-align: left; }
+.openInstance button { min-height: 2em; cursor: pointer; }
+.openInstance button > span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.openInstance button:hover > span { text-decoration: underline; text-underline-offset: 3px; }
+.openNotice { margin: 0.7em 0; color: #74512c; font-size: 0.86em; line-height: 1.6; word-break: keep-all; }
+.openNotice button { display: block; min-height: 2.75em; padding: 0.2em 0; border: 0; background: none; color: #654018; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 /* 좁은 패널에서 "니다." 같은 음절만 다음 줄로 떨어지지 않게 낱말 단위로 줄을 바꾼다 */
-.openEmpty { word-break: keep-all; }
-.openNotice button { display: block; min-height: 44px; padding: 4px 0; border: 0; background: none; color: #654018; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
-.openPanelBody :is(input, select, button):focus-visible, .openPanelBody:focus-visible { outline: 2px solid #825725; outline-offset: -2px; }
-.openPanel .openClose { width: 44px; height: 44px; padding: 12px; }
-.openPanel .openClose:focus-visible { border-radius: 50%; outline: 2px solid #825725; outline-offset: -8px; }
-.lineSummary { margin-bottom: 12px; border-bottom: 1px solid #9c754875; color: #513717; font: clamp(16px, 1.05cqw, 18px)/1.5 "Song Myung", serif; }
-.lineSummary > summary { min-height: 44px; padding: 8px 0 12px; cursor: pointer; }
-.lineSummary > summary::marker { color: #805726; }
-/* 1920에서는 요약 제목과 같은 18px, 제목이 16px로 줄어드는 화면에서는 제목보다 커지지 않는다 */
-.lineProgressStatus { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; color: #795c39; font: 18px/1.35 "Song Myung", serif; font-size: min(1em, 18px); word-break: keep-all; overflow-wrap: normal; }
-.lineProgressStatus > span { display: block; }
-.lineList { list-style: none; padding: 0; margin: 0; }
-.lineList li + li { border-top: 1px solid #9c75483d; }
-.lineScoreColumns, .lineList li button, .lineScoreTotals { display: grid; grid-template-columns: minmax(0, 1.1fr) repeat(2, minmax(0, 1fr)); align-items: center; gap: 6px; }
-/* 표의 글자도 요약·상세와 같은 왼쪽·오른쪽 끝을 쓴다 */
-.lineScoreColumns { padding: 4px 0 8px; border-bottom: 1px solid #9c754875; color: #795c39; font-size: 0.88em; }
-.lineScoreColumns span:not(:first-child) { text-align: right; }
-.lineList li button { width: 100%; min-height: 52px; padding: 8px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.lineList li button[aria-pressed="true"] { background: #d0ad7240; }
-/* 라인 이름과 상태는 낱말 단위로 줄을 바꾸고 한 낱말이 칸보다 길 때만 어디서든 끊는다 */
-.lineName { min-width: 0; word-break: keep-all; overflow-wrap: anywhere; }
-.lineName > span { display: block; }
-.lineName small { display: block; margin-top: 2px; font-size: 0.78em; font-weight: 400; color: #795c39; }
-.lineScore, .lineScoreTotals > :not(:first-child) { min-width: 0; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
-.lineScore[data-score-state="unearned"], .lineScore[data-score-state="pending"] { color: #795c39; font-size: 0.9em; }
-.lineScoreTotals { margin-bottom: 4px; padding: 8px 0; border-bottom: 1px solid #9c754875; }
-.lineScoreTotals strong { color: #6a3e13; font-weight: 700; }
-.lineSummary .completedLineRow { color: #78501c; font-weight: 700; }
-.lineSummary :is(button, summary):focus-visible { outline: 2px solid #825725; outline-offset: -2px; }
-.lineDetail { margin-top: 16px; padding-top: 14px; border-top: 1px solid #9c754875; }
-.lineDetail h3 { margin: 0 0 4px; font-size: 1.1em; font-weight: 400; overflow-wrap: anywhere; }
-.lineDetail p { margin: 4px 0; }
-.lineScoreDetail { margin: 10px 0 14px; font-variant-numeric: tabular-nums; }
-.lineScoreDetail > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-top: 6px; }
-.lineScoreDetail dt { flex-shrink: 0; color: #795c39; }
-.lineScoreDetail dd { min-width: 0; margin: 0; text-align: right; overflow-wrap: anywhere; }
-.lineCellNumbers { color: #795c39; font-size: 0.9em; overflow-wrap: anywhere; }
-.linePreviewNote { margin: 12px 0; color: #795c39; font-size: 0.9em; line-height: 1.6; word-break: keep-all; }
-
-/* 라인 점수를 펼친 동안만 종이를 넓혀 배점과 획득점수를 같은 행에서 읽는다 */
-@media (min-width: 1101px) {
-  .stage .openPanel:has(.lineSummary[open]) { width: clamp(300px, 23cqw, 410px); }
+.openEmpty { padding: 1.2em 0.3em 0; color: var(--open-brown); font-size: 0.9em; line-height: 1.7; text-align: center; word-break: keep-all; }
+.openPanel :is(select, button):focus-visible, .openPanelBody:focus-visible { outline: 2px solid #825725; outline-offset: -2px; }
+.openTabs button:focus-visible { outline-offset: 0.12em; }
+/* 경기 화면의 종이 창: 보드 위 이벤트 창과 기차여행 확인이 열린 문제 패널과 같은 종이, 제목, 닫기 그림, 명판 단추를 쓴다
+   종이 테두리 두께는 열린 문제 패널과 같게 두고(--sheet-frame), 글자와 간격은 기준 글자(em)를 따른다 */
+.paperSheet {
+  --sheet-frame: var(--left-width, 300px);
+  --sheet-ink: #2e1d0d; --sheet-brown: #5a3a17; --sheet-soft: #74512c; --sheet-faint: #a58a66; --sheet-line: #9a774a; --sheet-rule: #8446183d; --sheet-field: #f1dcb2;
+  border: solid transparent; border-radius: 0;
+  border-width: calc(var(--sheet-frame) * 40 / 501) calc(var(--sheet-frame) * 20 / 501);
+  border-image: url("/assets/board/open-challenges-paper.webp") 40 20 fill / calc(var(--sheet-frame) * 40 / 501) calc(var(--sheet-frame) * 20 / 501) stretch;
+  padding: 0.1em 0.9em 0.85em;
+  background: none; box-shadow: none; color: var(--sheet-brown); font-family: "Pretendard", sans-serif;
+  filter: drop-shadow(0 0.4em 1em #2813044d);
 }
-
-@media (min-width: 1101px) and (max-width: 1500px) {
-  .openFilterRow { grid-template-columns: minmax(0, 1fr); }
-  .openFilterRow select { font-size: 12px; }
+.sheetHeader { display: flex; align-items: center; justify-content: space-between; gap: 0.75em; min-height: 2.4em; }
+.sheetTitle { margin: 0; color: #4a2a10; font: 400 1.4em/1.3 "Song Myung", serif; letter-spacing: 0.02em; }
+.sheetClose { flex: none; width: 2.6em; height: 2.6em; margin-right: -0.65em; padding: 0.65em; border: 0; background: none; cursor: pointer; font-size: inherit; }
+.sheetClose img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.sheetText { margin: 0.5em 0 0; color: var(--sheet-soft); font-size: 0.92em; line-height: 1.6; word-break: keep-all; }
+.sheetText[data-tone="alert"] { color: #9a2f17; font-weight: 600; }
+.sheetActions { display: grid; gap: 0.45em; margin-top: 0.85em; }
+.sheetActions[data-columns="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* 고른 쪽을 실행하는 단추는 열린 문제 목록 버튼과 같은 나무 명판, 다른 쪽은 금테 명판 */
+.plaqueAction {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4em; min-width: 0; height: 2.6em; padding: 0 0.9em 0.08em;
+  border: 0.42em solid transparent; border-image: url("/assets/board/panel-frame.png") 14 fill / 0.42em stretch;
+  background: none; color: #ecd9b4; font: 400 1.04em/1 "Song Myung", serif; white-space: nowrap; cursor: pointer;
+  filter: drop-shadow(0 0.1em 0.18em #3a200b4d);
 }
+.plaqueAction[data-tone="quiet"] { border-image-source: url("/assets/board/panel-frame-outline.png"); color: var(--sheet-soft); filter: none; }
+.plaqueAction:hover:not(:disabled) { color: #fff3dc; }
+.plaqueAction[data-tone="quiet"]:hover:not(:disabled) { color: var(--sheet-ink); }
+.plaqueAction:disabled { opacity: 0.5; cursor: not-allowed; }
+.paperSheet :is(button, select, input):focus-visible { outline: 2px solid #825725; outline-offset: 0.1em; }
+.sheetSelect { min-width: 0; height: 2.6em; padding: 0 1.8em 0 0.7em; border: 1px solid var(--sheet-line); border-radius: 0.38em; color: var(--sheet-brown); font: 500 0.92em "Pretendard", sans-serif; cursor: pointer;
+  appearance: none; -webkit-appearance: none;
+  background: var(--sheet-field) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%23654522' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") right 0.65em center / 0.8em no-repeat; }
+/* 카드 줄: 구분선만 두고, 고르기 동그라미는 종이 색에 맞춰 직접 그린다 */
+.sheetChoices { display: grid; margin: 0.55em 0 0; padding: 0; list-style: none; }
+.sheetChoice { display: flex; align-items: center; gap: 0.7em; padding: 0.65em 0; border-top: 1px solid var(--sheet-rule); }
+.sheetChoice:first-child { border-top: 0; }
+label.sheetChoice { align-items: flex-start; cursor: pointer; }
+.sheetChoice input[type="radio"] { flex: none; width: 1.15em; height: 1.15em; margin: 0.12em 0 0; border: 1.5px solid var(--sheet-line); border-radius: 50%; background: var(--sheet-field); appearance: none; -webkit-appearance: none; cursor: pointer; }
+.sheetChoice input[type="radio"]:checked { border-color: var(--sheet-brown); background: radial-gradient(circle, var(--sheet-brown) 0 0.28em, var(--sheet-field) 0.31em); }
+.sheetChoiceText { flex: 1 1 auto; min-width: 0; }
+.sheetChoiceText strong { display: block; color: var(--sheet-ink); font-size: 1em; font-weight: 600; line-height: 1.4; }
+.sheetChoiceText span { display: block; margin-top: 0.15em; color: var(--sheet-soft); font-size: 0.86em; line-height: 1.55; word-break: keep-all; }
+.sheetChoice .plaqueAction { flex: none; height: 2.3em; font-size: 0.94em; }
+.airportQuestion { margin: 0.45em 0 0; color: var(--sheet-ink); font-size: 1em; line-height: 1.5; word-break: keep-all; }
+.airportQuestion strong { color: #7a2420; font-weight: 700; }
+/* 라인 독점 탭: 위에 요약 두 칸, 아래 줄은 문제 탭과 같은 모양(번호 도장, 이름, 대상 칸, 진행)
+   도장은 문제 번호 도장과 같은 크기와 열에 두고 색만 보드 독점 띠의 보석색을 쓴다 */
+.lineSummary { padding-top: 0.8em; color: var(--open-brown); }
+.lineStats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; padding: 0 0 0.8em; border-bottom: 1px solid #b99a66; }
+.lineStats > div { min-width: 0; }
+.lineStats > div + div { padding-left: 0.9em; border-left: 1px solid #b99a66; }
+.lineStats dt { color: var(--open-soft); font: 600 0.8em/1.3 "Pretendard", sans-serif; }
+.lineStats dd { margin: 0.25em 0 0; color: var(--open-gold); font: 700 1.5em/1.15 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.lineStats dd small { margin-left: 0.05em; color: var(--open-soft); font-size: 0.66em; font-weight: 600; }
+.lineStats dd[data-pending="true"] { padding-top: 0.3em; color: var(--open-brown); font: 600 0.95em/1.3 "Pretendard", sans-serif; word-break: keep-all; }
+.lineCaption, .linePreviewNote { margin: 0.6em 0 0; color: var(--open-soft); font-size: 0.8em; line-height: 1.6; word-break: keep-all; font-variant-numeric: tabular-nums; }
+.lineCaption span { color: var(--open-gold); font-weight: 700; }
+.lineList { margin: 0.2em 0 0; padding: 0; list-style: none; }
+/* 구분선은 배경 한 줄로 그리고, 보드에서 고른 라인은 바탕만 양옆으로 넓혀 글자 끝선은 그대로 둔다 */
+.lineList > li { position: relative; isolation: isolate; }
+.lineList > li + li { background: linear-gradient(var(--open-rule), var(--open-rule)) top / 100% 1px no-repeat; }
+.lineList > li[data-selected="true"]::before { content: ""; position: absolute; inset: 0 -0.45em; z-index: -1; border-radius: 0.35em; background: #f8ecd2c7; box-shadow: inset 3px 0 0 var(--line-accent); }
+.lineRow { display: flex; align-items: center; gap: var(--open-gap); min-height: 3.6em; padding: 0.6em 0; }
+.lineSeal { flex: none; display: grid; place-items: center; width: 2.45em; height: 2.45em; border-radius: 50%; background: var(--gem-mid); color: #fff6e6; font: 700 0.72em/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
+.lineText { flex: 1 1 auto; min-width: 0; }
+/* 라인 이름은 문제 제목과 같은 글자, 대상 칸은 분야 자리에 쓰고 푼 칸만 보석색으로 진하게 */
+.lineName { display: block; min-width: 0; color: var(--open-ink); font-size: 1em; font-weight: 600; line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere; }
+.lineCells { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.5em; margin-top: 0.2em; color: var(--open-soft); font: 500 0.82em/1.3 "Pretendard", sans-serif; }
+.lineCells span { color: var(--open-faint); font-variant-numeric: tabular-nums; }
+.lineCells span[data-solved="true"] { color: var(--gem-mid); font-weight: 700; }
+.lineScores { display: flex; flex-wrap: wrap; gap: 0.15em 0.9em; margin-top: 0.25em; color: var(--open-soft); font: 500 0.82em/1.4 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
+/* 상태 태그는 문제 상세의 OPEN, MEDIUM 태그처럼 각진 칸으로 둔다 */
+.lineBadge { flex: none; padding: 0.38em 0.6em 0.34em; border: 1px solid transparent; border-radius: 0.2em; font: 600 0.76em/1 "Pretendard", sans-serif; letter-spacing: 0.02em; white-space: nowrap; }
+.lineBadge[data-tone="count"] { padding: 0; border: 0; color: var(--open-soft); font: 600 0.88em/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
+.lineBadge[data-tone="won"] { border-color: #6e5228; background: #8a6a3a; color: #fbf0d8; }
+.lineBadge[data-tone="done"] { border-color: #5d7d3d; background: #e9cd9f; color: #4b6a2f; }
+.lineBadge[data-tone="wait"] { border-color: var(--open-line); color: var(--open-soft); }
+.lineNote { margin: 0.7em 0 0.2em; color: var(--open-soft); font-size: 0.8em; line-height: 1.6; word-break: keep-all; }
 
 @media (max-width: 1100px) {
   :global(html):has(.frame) { scrollbar-gutter: stable; }
@@ -374,7 +540,10 @@
   .stage .track { inset: auto; left: 0; top: calc(169 / 960 * 100%); width: 100%; }
   .boardViewport[data-zoomed="true"] { overflow-x: auto; overscroll-behavior-x: contain; }
   .boardViewport[data-zoomed="true"] .boardScene { width: max(150%, 620px); margin-inline: 0; }
-  .lineSummary { font-size: 15px; }
+  /* 종이 창은 데스크톱과 같은 모양이고 기준 글자만 16px 로 둔다 손가락으로 누르는 단추는 48px */
+  .stage :is(.eventPanel, .airportConfirm) { font-size: 16px; }
+  .paperSheet .plaqueAction, .paperSheet .sheetSelect { height: 48px; }
+  .paperSheet .sheetSelect { font-size: 16px; }
   .stage .chancePanel { position: relative; inset: auto; width: auto; max-height: none; margin: 16px 12px 0; padding: 16px; }
   .chancePanel h2 { font-size: 18px; margin-bottom: 12px; }
   .chancePanel :is(li, p, span, select, button) { font-size: 14px; line-height: 1.6; }
@@ -383,12 +552,11 @@
   .stage .eventPanel {
     position: fixed;
     inset: auto 12px 16px;
-    width: min(calc(100% - 24px), 620px);
+    z-index: 45;
+    width: min(calc(100% - 24px), 520px);
     max-height: 80dvh;
     margin-inline: auto;
-    padding: 20px;
-    border-width: 2px;
-    background: #f2d7a7;
+    overflow-y: auto;
     overscroll-behavior: contain;
   }
   .stage .eventPanel[data-inline="true"] {
@@ -398,17 +566,6 @@
     max-height: none;
     margin: 16px auto 0;
   }
-  .eventPanel h2 { font-size: 20px; }
-  .eventPanel > div:first-child { margin-bottom: 12px; }
-  .eventPanel :is(p, li, span, label, button) { font-size: 14px; line-height: 1.6; }
-  .eventPanel p { margin-block: 12px; }
-  /* 라디오는 줄 전체가 누르는 영역이라 44px 높이를 주지 않고 카드 이름 줄에 맞춘다 */
-  .eventPanel button, .eventPanel select, .eventPanel input:not([type="radio"]) { min-height: 44px; padding: 8px 12px; }
-  .eventPanel select, .eventPanel input { font-size: 16px; }
-  /* 카드 줄은 데스크톱 cqw 여백(약 1px)을 쓰지 않고 다른 카드 목록처럼 안쪽 여백을 둔다 */
-  .eventPanel .eventCardRow { gap: 10px; padding: 8px 12px; }
-  /* 카드 이름 첫 줄(14px × 1.6) 가운데에 16px 라디오를 맞춘다 */
-  .eventPanel .eventCardRow input[type="radio"] { flex: none; width: 16px; height: 16px; margin: 3.2px 0 0; }
   .stage .loading { position: fixed; font-size: 16px; padding: 24px; }
   .stage .empty { position: relative; inset: auto; width: 100%; padding: 16px; font-size: 16px; }
   .stage .error { position: fixed; inset: 12px 12px auto; width: auto; padding: 12px; gap: 12px; font-size: 14px; flex-wrap: wrap; }
@@ -418,39 +575,17 @@
   .stage .openToggle svg { width: 18px; height: 18px; }
   .stage .openToggle:focus-visible { outline-width: 2px; outline-offset: 3px; }
   .openToggleCount { min-width: 20px; height: 20px; padding-inline: 5px; font-size: 12px; }
+  /* 휴대폰은 같은 패널을 시트로 띄운다 모양은 데스크톱과 같고 기준 글자만 16px 로 고정한다 */
   .stage .openPanel {
-    position: fixed;
-    inset: auto 12px 16px;
-    z-index: 45;
-    width: min(calc(100% - 24px), 520px);
-    height: auto;
-    max-height: 80dvh;
-    display: flex;
-    flex-direction: column;
-    margin-inline: auto;
-    padding: 20px;
-    overflow: hidden;
-    border: 8px solid transparent;
-    border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
-    background: #eddbb6;
-    background-clip: padding-box;
+    --open-width: min(calc(100vw - 24px), 520px);
+    position: fixed; inset: auto 12px 16px; z-index: 45;
+    width: var(--open-width); height: auto; max-height: 80dvh;
+    display: flex; flex-direction: column; margin-inline: auto; overflow: hidden;
   }
-  .openPanel > img, .openPaperGap, .openPaperDivider { display: none; }
-  .openPanel .mobileOpenTitle { position: static; flex-shrink: 0; width: auto; height: auto; overflow: visible; clip: auto; margin: 0 48px 12px 0; font: 24px/1.4 "Song Myung", serif; color: #613d15; }
+  .openPanel { font-size: 16px; }
   .openPanel .openPanelBody { position: static; flex: 0 1 auto; min-height: 0; width: auto; height: auto; max-height: 60dvh; }
-  .openPanel .openClose { top: 8px; left: auto; right: 8px; width: 44px; height: 44px; padding: 4px; transform: none; }
-  .openChallengeList li button { height: auto; min-height: 56px; gap: 12px; padding: 8px 0; }
-  .openChallengeList li button > span:first-child { width: 28px; height: 30px; }
-  .openChallengeList li button > span:first-child > span { font-size: 12px; }
-  .openChallengeList li strong { font-size: 15px; }
-  .openChallengeList li strong + span { font-size: 13px; }
-  .openChallengeList li button > img { width: 18px; height: 22px; }
-  .openPanel .openEmpty { padding-top: 16px; font-size: 14px; }
-  .openFilters, .openNotice, .openInstance { font-size: 14px; }
-  .openSearch input, .openFilterRow select { font-size: 16px; }
-  .openCounts, .openInstance button, .openInstance strong { font-size: 14px; }
-  .openCounts span { color: #684316; }
-  .openFilterRow { gap: 14px; }
+  /* 입력 글자는 16px 로 두어 iOS 확대를 막는다 */
+  .openSearch input, .openCategory select { font-size: 16px; }
 
   /* 포털은 보드의 transform/container와 분리해 화면 전체를 사용한다. */
   .mobileOpenOverlay {
@@ -458,37 +593,29 @@
     display: flex; justify-content: center; align-items: stretch;
     padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
     background: #1c100bd9; overscroll-behavior: none;
+    container-type: inline-size;
   }
   .mobileOpenOverlay .openPanel {
-    position: relative; inset: auto; width: min(100%, 680px); height: 100%; max-height: none; min-width: 0;
-    display: flex; flex-direction: column; margin: 0; padding: 12px; overflow: hidden;
-    border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
-    background: #eddbb6; background-clip: padding-box; color: #613d15;
+    --open-width: min(100cqw, 680px);
+    position: relative; inset: auto; width: var(--open-width); height: 100%; max-height: none; min-width: 0;
+    display: flex; flex-direction: column; margin: 0; overflow: hidden;
   }
-  .mobileOpenOverlay .openPanelHeader { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-shrink: 0; padding-bottom: 10px; border-bottom: 1px solid #9c754875; }
-  .mobileOpenOverlay .mobileOpenTitle { margin: 0; white-space: normal; font-size: 24px; }
-  .mobileOpenOverlay .openClose { position: static; flex: 0 0 44px; width: 44px; height: 44px; min-height: 44px; padding: 4px; transform: none; }
-  .mobileOpenOverlay .openPanelBody { position: static; width: 100%; height: auto; max-height: none; flex: 1 1 auto; min-height: 0; padding: 8px 6px 12px 0; overflow-x: hidden; overflow-y: auto; }
-  .mobileOpenOverlay .lineSummary { font-size: 18px; margin-bottom: 10px; }
-  .mobileOpenOverlay .lineProgressStatus { flex-direction: row; flex-wrap: wrap; gap: 4px 12px; font-size: 14px; }
-  .mobileOpenOverlay .lineProgressStatus > span { white-space: nowrap; }
-  .mobileOpenOverlay .openFilterRow { gap: 8px; }
-  .mobileOpenOverlay .openFilters { margin-bottom: 8px; }
-  .mobileOpenOverlay .openChallengeList li strong { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; line-height: 1.5; }
-  .mobileOpenOverlay .openChallengeList li button { min-height: 64px; gap: 8px; }
-  .mobileOpenOverlay .openSearch { gap: 8px; }
+  .mobileOpenOverlay .openPanelBody { position: static; width: auto; height: auto; max-height: none; flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; }
+
+  /* 손가락 기기는 스크롤바 자리를 비우지 않아 목록 오른쪽 끝을 탭, 검색 줄과 같은 선에 둔다 */
+  @media (pointer: coarse) {
+    .mobileOpenOverlay .openPanelBody { padding-right: var(--open-pad); scrollbar-width: none; }
+    .mobileOpenOverlay .openPanelBody::-webkit-scrollbar { display: none; }
+  }
 
   /* 목적지 안내는 메뉴를 덮지 않고 주사위 상태 바로 아래에 둔다 확인창만 하단 시트로 연다 */
   .stage .airportHint { position: static; inset: auto; order: -1; z-index: auto; margin: 8px 12px 4px; white-space: normal; text-align: left; font-size: 16px; letter-spacing: 1px; line-height: 1.5; padding: 0; background: none; border: 0; translate: none; }
-  .stage .airportConfirm { position: fixed; inset: auto 12px 16px; z-index: 45; width: min(calc(100% - 24px), 520px); margin-inline: auto; padding: 20px; }
-  .airportConfirm h2 { font-size: 20px; }
-  .airportConfirm :is(p, button) { font-size: 14px; line-height: 1.6; }
-  .airportConfirm strong { font-size: 18px; }
-  .airportConfirm button { min-height: 44px; padding: 8px 16px; }
+  .stage .airportConfirm { position: fixed; inset: auto 12px 16px; z-index: 45; width: min(calc(100% - 24px), 520px); margin-inline: auto; }
 
 }
 
 .mobileDiceIcon { display: none; }
+.diceGauge, .diceStatusIcon { display: none; }
 @media (max-width: 1100px) {
   .mobileMenuItems .mobileNavIcon { width: 32px; height: 32px; }
   .mobileNav .mobileMenuItems .mobileNavPrimary { flex-direction: row; gap: 8px; }
@@ -511,7 +638,7 @@
 .diceStatus > .dicePanelArtwork { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 @media (max-width: 1100px) {
   .diceStatus > svg { display: block; }
-  .diceStatus > .dicePanelArtwork { display: none; }
+  .diceStatus > .dicePanelArtwork, .diceStatus > .diceStatusIcon { display: none; }
   .mobileNav a.mobileNavPrimary { min-width: 44px; }
   .stage { container-name: board-stage; }
 }
@@ -550,4 +677,47 @@
   .frame[data-board-text-layout] .boardTools { flex-direction: column; align-items: stretch; }
   .frame[data-board-text-layout] .openToggle { width: 100%; justify-content: center; padding-inline: 8px; word-break: keep-all; }
   .frame[data-board-text-layout] .boardControls { justify-content: center; }
+}
+
+/* 로그인 후 첫 주사위 굴림 안내: 주사위 위치에 겹친 원형 레이어가 숨 쉬듯 깜빡이며 튄다 */
+.diceIntro {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.diceIntroCircle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 62%;
+  aspect-ratio: 1;
+  margin: -31% 0 0 -31%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff0c4aa 0%, #f0b04a66 60%, #f0b04a22 100%);
+  box-shadow: 0 0 24px #f0b04a88;
+  animation: diceIntroPulse 1.4s ease-in-out infinite;
+}
+.diceIntroText {
+  position: relative;
+  color: #fff;
+  font-size: clamp(13px, 1.6vw, 22px);
+  font-weight: 700;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px #000c, 0 0 10px #000a;
+  animation: diceIntroBounce 1.4s ease-in-out infinite;
+}
+@keyframes diceIntroPulse {
+  0%, 100% { opacity: 0.25; transform: translateY(0) scale(0.92); }
+  50% { opacity: 1; transform: translateY(-8%) scale(1.06); }
+}
+@keyframes diceIntroBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .diceIntroCircle, .diceIntroText { animation: none; opacity: 0.85; }
 }

@@ -8,7 +8,7 @@ import { isSuccess } from "../../../utils/response.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import { RECENT_LIMIT, latestFirst } from "../utils/adminLists.js";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { buildDerivedSettings, describeRelease, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, repositoryEnvStatus, validateRuntimeSecret } from "../utils/adminRuntime.js";
+import { buildDerivedSettings, describeRelease, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, repositoryEnvStatus, validateRuntimeSecret, validateReleaseActivationReason } from "../utils/adminRuntime.js";
 import AdminDialog from "./AdminDialog.jsx";
 import AdminEnvironmentFileImporter from "./AdminEnvironmentFileImporter.jsx";
 import AdminRepositoryEnvironmentImporter from "./AdminRepositoryEnvironmentImporter.jsx";
@@ -18,6 +18,7 @@ import { AdminBadge, AdminStatusMessage } from "./AdminLayout.jsx";
 import { AppIcon, Glyph } from "./AdminGlyph.jsx";
 import { IconButton, StatStrip, StatTile } from "./AdminWidgets.jsx";
 import { AdminMiniPager } from "./AdminPagination.jsx";
+import { AdminReasonField } from "./AdminFormParts.jsx";
 
 const BUTTON = styles.button;
 const INPUT = styles.input;
@@ -103,6 +104,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const busy = saving || testBusy;
   useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
   const [confirming, setConfirming] = useState(false);
+  const [activationReason, setActivationReason] = useState("");
   const pending = useRef(false);
   const fileSequence = useRef(0);
   const fileInput = useRef(null);
@@ -118,6 +120,8 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const releases = orderReleasesByPublication(runtime.data?.releases ?? []);
   const selected = releases.find((release) => release.release_id === releaseId) ?? releases.find((release) => release.is_current) ?? releases[0];
   const currentRelease = releases.find((release) => release.is_current) ?? null;
+  const isRollback = Boolean(currentRelease && selected && selected.version < currentRelease.version);
+  const activationReasonError = validateReleaseActivationReason(activationReason);
   const selectedInfo = selected ? describeRelease(selected, releases) : null;
   const newerGithub = currentRelease ? describeRelease(currentRelease, releases).newerGithub : null;
   const repoEnv = repositoryEnvStatus(selected);
@@ -129,7 +133,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const selectedIndex = versionRows.findIndex((release) => release.release_id === selected?.release_id);
   const shownVersionPage = Math.min(versionPage ?? (selectedIndex >= 0 ? Math.floor(selectedIndex / VERSION_PAGE) + 1 : 1), versionPageCount);
   const shownVersions = versionRows.slice((shownVersionPage - 1) * VERSION_PAGE, shownVersionPage * VERSION_PAGE);
-  const pickRelease = (id) => { setReleaseId(id); setVersionPage(null); setConfirming(false); setShowFlagBindings(false); setEnvironmentMethod(null); };
+  const pickRelease = (id) => { setReleaseId(id); setVersionPage(null); setConfirming(false); setActivationReason(""); setShowFlagBindings(false); setEnvironmentMethod(null); };
   const validationError = validateRuntimeSecret(name.trim(), value);
   const loading = runtime.status === "loading";
   const storedSecrets = runtime.data?.secrets ?? [];
@@ -157,6 +161,17 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       setError(requestError?.response?.data?.message || requestError.message || "요청을 처리하지 못했습니다");
       return false;
     } finally { pending.current = false; setBusy(false); }
+  }
+
+  async function activateRelease(event) {
+    event.preventDefault();
+    if (busy || pending.current || !selected || selected.is_current || activationReasonError) return;
+    const reason = activationReason.trim();
+    const saved = await mutate(
+      () => activateChallengeRelease(challenge.challenge_id, selected.release_id, reason ? { reason } : {}),
+      isRollback ? "이전 버전으로 되돌렸습니다" : "새 인스턴스에 적용할 설정을 변경했습니다",
+    );
+    if (saved) setActivationReason("");
   }
 
   async function saveSecret(event) {
@@ -247,7 +262,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
           <IconButton icon="refresh" label="새로고침" onClick={runtime.retry} disabled={busy || loading} />
           {selected && !selected.is_current && <button type="button" className={styles.primary}
             disabled={busy || !selected.is_deployable || loading || repoEnv?.blocked || selected.containers.some((container) => container.secret_bindings?.some((binding) => binding.status === "missing"))}
-            onClick={() => setConfirming(true)}>이 버전 사용</button>}
+            onClick={() => { setActivationReason(""); setError(""); setConfirming(true); }}>이 버전 사용</button>}
         </div>
       </section>
       {newerGithub && selected?.release_id === currentRelease.release_id && <div className={styles.newerNotice}>
@@ -259,13 +274,21 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
         <span><strong>아직 사용할 수 없는 버전입니다</strong> 저장소 env에서 채우지 못한 값이 있습니다 · {repoEnv.missing.map((item) => item.label).join(" · ")}</span>
         <button type="button" className={BUTTON} disabled={busy} onClick={() => { setPanel("environment"); setEnvironmentMethod("repository"); }}>환경변수 채우기</button>
       </div>}
-      {confirming && selected && <div className={styles.confirmation}>
+      {confirming && selected && !selected.is_current && <form className={`${styles.confirmation} ${styles.releaseConfirmation}`} aria-label="배포 버전 전환 확인" onSubmit={activateRelease}>
+        <h4 className={styles.groupTitle}>{isRollback ? "이전 버전으로 되돌리기" : "배포 버전 전환"}</h4>
+        <p className={styles.dialogLead}>현재 사용 중: <strong>{currentRelease ? `버전 ${currentRelease.version}` : "없음"}</strong> → <strong>버전 {selected.version}</strong></p>
         <p className={styles.dialogLead}>새 인스턴스부터 버전 {selected.version}의 이미지와 파일 연결을 사용합니다 실행 중인 인스턴스와 초기화에는 생성 당시 버전이 유지됩니다</p>
         <p className={styles.dialogLead}>참가자 파일: {fileLabel}</p>
-        <button type="button" className={styles.primary} disabled={busy || loading}
-          onClick={() => mutate(() => activateChallengeRelease(challenge.challenge_id, selected.release_id), "새 인스턴스에 적용할 설정을 변경했습니다")}>이 버전 사용 확인</button>
-        <button type="button" className={BUTTON} disabled={busy} onClick={() => setConfirming(false)}>취소</button>
-      </div>}
+        <AdminReasonField label="전환 사유" note="선택" value={activationReason} onChange={setActivationReason} multiline maxLength={null}
+          disabled={busy} placeholder={isRollback ? "예: 새 버전 접속 오류로 이전 버전 복구" : "예: 검수한 새 이미지 적용"}
+          hint={`${Array.from(activationReason.trim()).length}/500자 · 처리자와 함께 감사 로그에 남습니다`}/>
+        {activationReasonError && <p role="alert" className={styles.errorText}>{activationReasonError}</p>}
+        <div className={styles.formActions}>
+          <button type="button" className={BUTTON} disabled={busy} onClick={() => { setConfirming(false); setActivationReason(""); }}>취소</button>
+          <button type="submit" className={styles.primary} disabled={busy || loading || Boolean(activationReasonError)}>
+            {busy ? "처리 중…" : isRollback ? "이전 버전으로 되돌리기" : "이 버전 사용 확인"}</button>
+        </div>
+      </form>}
       <div className={styles.deployLayout}>
       <AdminTabs idPrefix="runtime-settings" label="배포 설정 메뉴" variant="sidebar" value={panel} onChange={setPanel} disabled={busy}
         items={[

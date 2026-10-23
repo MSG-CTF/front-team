@@ -41,7 +41,7 @@ export default function LoginScreen({
           <LoginFrameArtwork />
           <h1 id="login-title" className={styles.srOnly}>로그인</h1>
           <img
-            src={`${ASSET_BASE}logo-cutout.png`}
+            src={`${ASSET_BASE}logo-cutout.webp`}
             alt="MSG CTF"
             width="1254"
             height="1254"
@@ -94,7 +94,7 @@ export default function LoginScreen({
               className={styles.loginButton}
             >
               <img
-                src={`${ASSET_BASE}login-button-cutout.png`}
+                src={`${ASSET_BASE}login-button-cutout.webp`}
                 alt=""
                 aria-hidden="true"
                 width="1710"

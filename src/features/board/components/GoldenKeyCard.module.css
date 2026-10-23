@@ -14,9 +14,11 @@
   padding: max(24px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom));
   background: rgb(30 17 7 / 16%);
 }
+/* 카드와 확인 명판을 한 줄로 세운다 */
+.dialog { display: grid; justify-items: center; gap: 16px; }
 .card {
   position: relative;
-  width: min(230px, 78vw, calc((100dvh - 64px) * .597));
+  width: min(230px, 78vw, calc((100dvh - 140px) * .597));
   aspect-ratio: .597;
   container-type: inline-size;
   color: #3d2513;
@@ -31,9 +33,15 @@
 .ribbon { top: 11.66%; left: 15%; width: 70%; color: #fff0c4; font-size: 6.1cqw; font-weight: 700; line-height: 1.3; text-shadow: 0 1px 2px #291308; }
 .title { top: 25.8%; left: 12%; width: 76%; height: 9%; display: grid; align-content: center; font-size: 6cqw; line-height: 1.35; word-break: keep-all; overflow-wrap: anywhere; }
 .description { top: 70.5%; left: 13%; width: 74%; max-height: 17.5%; overflow-y: auto; font-size: max(12px, 4.5cqw); line-height: 1.35; word-break: keep-all; overflow-wrap: anywhere; white-space: pre-wrap; }
-.close { position: absolute; top: -8px; right: -8px; width: 32px; height: 32px; border: 2px solid #c69544; border-radius: 50%; background: #513116; color: #ffe2a3; font: 22px/1 serif; cursor: pointer; }
-.close::after { content: ""; position: absolute; inset: -6px; }
-@media (max-width: 800px) { .card { width: min(260px, 76vw, calc((100dvh - 64px) * .597)); } }
-.close:focus-visible { outline: 3px solid #fff0c4; outline-offset: 3px; }
+/* 닫기는 열린 문제 패널, 룰렛과 같은 닫기 그림 누르는 자리는 44px */
+.close { position: absolute; top: -12px; right: -12px; width: 44px; height: 44px; padding: 7px; border: 0; border-radius: 50%; background: none; cursor: pointer; }
+.close img { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* 확인은 열린 문제 목록 버튼과 같은 나무 명판 */
+.confirm { width: min(100%, 220px); height: 50px; padding: 0 24px 2px; border: 7px solid transparent; border-image: url("/assets/board/panel-frame.png") 14 fill / 7px stretch; background: none; color: #ecd9b4; font: 400 20px/1 "Song Myung", serif; letter-spacing: 0.08em; cursor: pointer; filter: drop-shadow(0 6px 12px rgb(24 12 3 / 45%)); }
+.confirm:hover { color: #fff3dc; }
+.close:focus-visible, .confirm:focus-visible { outline: 3px solid #fff0c4; outline-offset: 3px; }
+/* 큰 화면에서는 카드를 키워 글자를 읽기 쉽게 한다 */
+@media (min-width: 1101px) and (min-height: 760px) { .card { width: min(290px, calc((100dvh - 150px) * .597)); } }
+@media (max-width: 800px) { .card { width: min(260px, 76vw, calc((100dvh - 140px) * .597)); } }
 @media (prefers-reduced-motion: no-preference) { .card { animation: arrive 180ms ease-out; } }
 @keyframes arrive { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }

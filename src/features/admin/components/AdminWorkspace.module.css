@@ -476,6 +476,8 @@
 .versionBar .select { max-width: 320px; }
 .versionBar > :last-child { margin-left: auto; }
 .confirmation { margin: 0 0 16px; padding: 14px 16px; border-radius: var(--radius-lg); background: var(--yellow-tint); }
+.releaseConfirmation { display: grid; gap: 12px; }
+.releaseConfirmation :is(.dialogLead, .groupTitle) { margin: 0; }
 .confirmation > button + button { margin-left: 8px; }
 .containerCard { margin-bottom: 14px; overflow: hidden; border: 1px solid var(--separator); border-radius: var(--radius-lg); }
 .containerHeader { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 16px; background: var(--surface-sunken); }
@@ -739,12 +741,14 @@
   :is(.logStack, .teamStack, .signatureStack, .challengeStack, .instanceStack, .teamHistoryStack, .historyStack) .table td { display: block; width: auto; min-width: 0; max-width: none; padding: 0; border: 0; text-align: left; white-space: normal; }
   :is(.logStack, .teamStack, .signatureStack, .challengeStack, .instanceStack, .teamHistoryStack, .historyStack) tr.emptyRow { display: block; }
   :is(.logStack, .teamStack, .signatureStack, .challengeStack, .instanceStack, .teamHistoryStack, .historyStack) tr.emptyRow td { text-align: center; }
-  .logStack tr { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "time type severity" "message message message" "target target target"; }
+  .logStack tr { grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "time type severity" "message message message" "target target target" "actor actor actor"; }
   .logStack td:nth-child(1) { grid-area: time; }
   .logStack td:nth-child(2) { grid-area: type; font-size: 13px; }
   .logStack td:nth-child(3) { grid-area: severity; }
   .logStack td:nth-child(4) { grid-area: message; }
   .logStack td:nth-child(5) { grid-area: target; color: var(--label-2); font-size: 13px; }
+  .logStack td:nth-child(6) { grid-area: actor; color: var(--label-2); font-size: 13px; }
+  .logStack td:nth-child(6)::before { content: "처리자 "; color: var(--label-3); }
   .teamStack tr { grid-template-columns: auto auto auto minmax(0, 1fr); grid-template-areas: "name name name status" "score mileage members action"; }
   .teamStack td:nth-child(1) { grid-area: name; }
   .teamStack td:nth-child(2) { grid-area: score; }

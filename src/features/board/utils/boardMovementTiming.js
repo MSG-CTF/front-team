@@ -1,5 +1,5 @@
-export const BOARD_MOVEMENT_STEP_MS = 180;
-export const BOARD_PIECE_TRANSITION_MS = 150;
+export const BOARD_MOVEMENT_STEP_MS = 215;
+export const BOARD_PIECE_TRANSITION_MS = 180;
 export const START_CROSSING_SPEED = 1.75;
 
 export function crossesBoardStart(previousPosition, movementPath) {

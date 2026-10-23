@@ -1,4 +1,6 @@
+import { useState } from "react";
 import BackButton from "./BackButton.jsx";
+import FlagResultModal from "./FlagResultModal.jsx";
 import ChallengeHeaderPanel from "./ChallengeHeaderPanel.jsx";
 import ChallengeDescriptionPanel from "./ChallengeDescriptionPanel.jsx";
 import InstancePanel from "./InstancePanel.jsx";
@@ -39,7 +41,8 @@ export default function ChallengeDetailScreen({
   readOnly = false,
   downloadFile,
 }) {
-  const showBonus = submission.remainingSeconds != null && !submission.blocked;
+  const [dismissedFeedback, setDismissedFeedback] = useState(null);
+  const showBonus =submission.remainingSeconds != null && !submission.blocked;
   const showInstance = challenge?.requiresInstance || instance != null;
   const showDock =
     challenge &&
@@ -48,7 +51,6 @@ export default function ChallengeDetailScreen({
     (refreshError ||
       instanceError ||
       instanceFeedback ||
-      flagFeedback ||
       retrySeconds > 0 ||
       showBonus);
   return (
@@ -105,6 +107,7 @@ export default function ChallengeDetailScreen({
                         instance={instance}
                         otherInstance={otherInstance}
                         error={instanceError}
+                        pendingAction={pendingAction}
                       />
                       <InstanceControls
                         instance={instance}
@@ -168,11 +171,6 @@ export default function ChallengeDetailScreen({
                     </div>
                   )}
                   <RequestFeedback feedback={instanceFeedback} />
-                  <RequestFeedback
-                    id="flag-feedback"
-                    feedback={flagFeedback}
-                    rewards
-                  />
                   {retrySeconds > 0 && (
                     <p id="flag-retry" className={styles.retryNotice}>
                       <strong>{retrySeconds}초</strong> 후 다시 제출할 수
@@ -202,6 +200,12 @@ export default function ChallengeDetailScreen({
           )}
         </main>
       </div>
+      {flagFeedback && flagFeedback !== dismissedFeedback && (
+        <FlagResultModal
+          feedback={flagFeedback}
+          onClose={() => setDismissedFeedback(flagFeedback)}
+        />
+      )}
       {!readOnly && confirmation && (
         <InstanceActionDialog
           returnFocusTo={confirmation.trigger}

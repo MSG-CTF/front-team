@@ -1,6 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildDerivedSettings, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret } from "./adminRuntime.js";
+import { buildDerivedSettings, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret, validateReleaseActivationReason } from "./adminRuntime.js";
+
+test("activation reasons are optional and count Unicode characters like the backend", () => {
+  for (const value of [undefined, null, "", "  ", "검수 완료", "  " + "한".repeat(499) + "🚀  ", "🚀".repeat(500)]) {
+    assert.equal(validateReleaseActivationReason(value), "");
+  }
+  for (const value of ["한".repeat(501), "🚀".repeat(501), 1, false]) {
+    assert.notEqual(validateReleaseActivationReason(value), "");
+  }
+});
+
+test("activation reasons reject NUL and lone surrogates without rejecting valid emoji", () => {
+  for (const value of ["x\u0000y", "\ud800", "\udfff", "복구\udbff사유"]) {
+    assert.notEqual(validateReleaseActivationReason(value), "");
+  }
+  assert.equal(validateReleaseActivationReason("검수 🚀 완료"), "");
+});
 
 test("historical CI artifacts appear after newer publications even when registered later", () => {
   const releases = [

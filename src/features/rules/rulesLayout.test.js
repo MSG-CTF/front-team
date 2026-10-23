@@ -14,6 +14,6 @@ test("룰북은 메인 배경 한 장 위에 모서리 마커 없는 누끼 보�
   assert.match(css, /\.page\s*\{[^}]*background-plaza\.webp/);
   // 가로줄이 그려진 원래 패널 대신 줄을 지운 패널
   assert.doesNotMatch(panel, /rules-panel\.png/);
-  assert.match(panel, /rules-panel-clean\.png/);
+  assert.match(panel, /rules-panel-clean\.webp/);
   assert.match(css, /\.rulesList\s*\{[^}]*overflow-y: auto/);
 });

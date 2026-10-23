@@ -12,6 +12,9 @@ import BoardStartReward from "./BoardStartReward.jsx";
 import { DiceErrorBoundary, DiceFallback } from "./DiceFallback.jsx";
 import styles from "./BoardScreen.module.css";
 
+// LoginPage가 로그인 성공 때 켜고, 첫 주사위 굴림에서 끈다
+const DICE_INTRO_KEY = "board.diceIntroPending";
+
 const Dice3D = lazy(() => import("./Dice3D.jsx"));
 
 // Figma node 309:78 "BoardGrid"(951x714) + 104:458 "주사위" + 100:454 "람쥐".
@@ -68,6 +71,9 @@ export default function BoardTrack({
   const rollingRef = useRef(false);
   const [rolling, setRolling] = useState(false);
   const [diceReady, setDiceReady] = useState(false);
+  const [showIntro, setShowIntro] = useState(() => {
+    try { return sessionStorage.getItem(DICE_INTRO_KEY) === "1"; } catch { return false; }
+  });
   const visitedCellIndexes = useMemo(() => cells
     .filter((cell) => getBoardCellVisitState(cell.cellIndex, consumedCellIndexes, cellStatesByIndex, cell.type).isVisited)
     .map((cell) => cell.cellIndex), [cells, consumedCellIndexes, cellStatesByIndex]);
@@ -79,6 +85,8 @@ export default function BoardTrack({
     if ((!canRoll && !diceAnimationTest) || !diceReady || rollingRef.current) return;
     rollingRef.current = true;
     setRolling(true);
+    try { sessionStorage.removeItem(DICE_INTRO_KEY); } catch { /* 저장 불가 시 현재 화면에서만 숨김 */ }
+    setShowIntro(false);
     try {
       if (diceAnimationTest) {
         const diceA = Math.floor(Math.random() * 6) + 1;
@@ -129,6 +137,12 @@ export default function BoardTrack({
             <Dice3D ref={diceRef} onReady={() => setDiceReady(true)} />
           </Suspense>
         </DiceErrorBoundary>
+        {showIntro && canRoll && diceReady && !isRolling && !rolling && (
+          <span aria-hidden="true" className={styles.diceIntro}>
+            <span className={styles.diceIntroCircle} />
+            <span className={styles.diceIntroText}>주사위를 눌러 시작하세요!</span>
+          </span>
+        )}
         <span className="sr-only">주사위 굴리기</span>
       </button>
 
