@@ -34,7 +34,7 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
     return () => { document.body.style.overflow = overflow; document.removeEventListener("keydown", key); if (previous?.isConnected) previous.focus(); };
   }, [onClose, initialFocus]);
   const content = <div className={styles.overlay} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
-    <section ref={panel} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby={titleId}>
+    <section ref={panel} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby={titleId} data-submit={submission ? "true" : undefined}>
       <div className={styles.menu}>
         <button type="button" className={styles.close} onClick={onClose} aria-label="부스 안내 닫기">×</button>
         <div className={styles.content} role="region" aria-label="부스 안내 내용" tabIndex={0}>
