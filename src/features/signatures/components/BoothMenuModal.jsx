@@ -4,8 +4,10 @@ import FlagResultModal from "../../challenges/components/FlagResultModal.jsx";
 import styles from "./BoothMenuModal.module.css";
 
 // submission: useSignatureDetail 결과. 없으면(미리보기) 제출 칸을 그리지 않는다
-export default function BoothMenuModal({ club, challenge, status, error, onRetry, onClose, submission }) {
+// problems, selectedId, onSelect: 한 부스에 문제가 여럿이면 메뉴 단추로 고른다
+export default function BoothMenuModal({ club, challenge, status, error, onRetry, onClose, submission, problems, selectedId, onSelect, initialFocus = "close" }) {
   const titleId = useId();
+  const hasMenus = problems?.length > 1 && Boolean(onSelect);
   const flagId = useId();
   const panel = useRef(null);
   // 정답·오답은 문제 상세와 같은 중앙 모달로 알린다. 닫은 피드백은 다시 띄우지 않는다
@@ -17,7 +19,9 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
     const previous = document.activeElement;
     const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    panel.current?.querySelector("button")?.focus();
+    // 부스 안에서 다른 메뉴로 바꾸면 고른 메뉴 단추에 초점을 둔다
+    const menu = initialFocus === "menu" ? panel.current?.querySelector("[data-menu-tab][aria-pressed='true']") : null;
+    (menu ?? panel.current?.querySelector("button"))?.focus();
     const key = (event) => {
       if (event.key === "Escape" && !resultOpen.current) onClose();
       if (event.key !== "Tab") return;
@@ -28,7 +32,7 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
     };
     document.addEventListener("keydown", key);
     return () => { document.body.style.overflow = overflow; document.removeEventListener("keydown", key); if (previous?.isConnected) previous.focus(); };
-  }, [onClose]);
+  }, [onClose, initialFocus]);
   const content = <div className={styles.overlay} onClick={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section ref={panel} className={styles.dialog} role="dialog" aria-modal="true" aria-labelledby={titleId}>
       <div className={styles.menu}>
@@ -40,11 +44,23 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
             <h2 id={titleId}>{club?.name || "동아리 부스"}</h2>
             {club?.university && <p className={styles.school}>{club.university}</p>}
           </header>
+          {/* 메뉴 단추는 다른 메뉴를 불러오는 동안에도 자리를 지킨다 */}
+          {hasMenus && (
+            <div className={styles.menuTabs} role="group" aria-label="부스 문제 고르기">
+              {problems.map((problem, index) => (
+                <button key={problem.signature_id} type="button" data-menu-tab aria-pressed={problem.signature_id === selectedId}
+                  onClick={() => onSelect(problem.signature_id)}>
+                  {`메뉴 ${index + 1}`}{problem.is_solved && <span aria-hidden="true"> ✓</span>}
+                  <span className="sr-only">{` ${problem.title}${problem.is_solved ? ", 풀이 완료" : ""}`}</span>
+                </button>
+              ))}
+            </div>
+          )}
           {status === "loading" && <p className={styles.notice} role="status">문제 안내를 불러오는 중입니다</p>}
           {status === "error" && <div className={styles.notice} role="alert"><p>{error}</p><button type="button" onClick={onRetry}>다시 확인</button></div>}
           {status === "empty" && <p className={styles.notice}>공개된 문제가 없습니다</p>}
           {status === "success" && challenge && <>
-            <div className={styles.heading}><p className={styles.kicker}>MENU</p><h3>{challenge.title}</h3></div>
+            <div className={styles.heading}>{!hasMenus && <p className={styles.kicker}>MENU</p>}<h3>{challenge.title}</h3></div>
             <div className={styles.score} aria-label={`포인트 ${challenge.score}`}><span aria-hidden="true">❧</span><strong>{challenge.score.toLocaleString("ko-KR")}</strong><span>포인트</span></div>
             <section className={styles.description} aria-label="문제 소개">
               <h4>DESCRIPTION</h4>

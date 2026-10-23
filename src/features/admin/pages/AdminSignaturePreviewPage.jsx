@@ -26,8 +26,10 @@ export default function AdminSignaturePreviewPage() {
   const problems = useMemo(() => all.filter((entry) => entry.is_published || entry.signature_id === signatureId).map(toParticipant), [all, signatureId]);
   const clubs = useMemo(() => groupSignatureClubs(problems), [problems]);
   const [openClubId, setOpenClubId] = useState(undefined);
+  const [pickedId, setPickedId] = useState(signatureId);
   const clubId = openClubId === undefined ? target?.club_id : openClubId;
   const club = clubs.find((entry) => entry.clubId === clubId);
+  const challenge = club?.problems.find((entry) => entry.signature_id === pickedId) ?? club?.problems[0];
   const close = useCallback(() => setOpenClubId(null), []);
   const status = resource.status === "success" ? "success" : resource.status === "loading" ? "loading" : "error";
 
@@ -42,8 +44,9 @@ export default function AdminSignaturePreviewPage() {
       if (event.target.closest("a")) { event.preventDefault(); event.stopPropagation(); }
     }}>
       <SignatureFestivalScreen state={{ status, data: problems, error: resource.error, retry: resource.retry }}
-        onPreviewClub={(next) => setOpenClubId(next.clubId)} />
+        onPreviewClub={(next) => { setOpenClubId(next.clubId); setPickedId(null); }} />
     </div>
-    {club && <BoothMenuModal key={club.clubId} club={club} challenge={club.problems[0]} status="success" onClose={close} />}
+    {club && challenge && <BoothMenuModal key={club.clubId} club={club} challenge={challenge} status="success" onClose={close}
+      problems={club.problems} selectedId={challenge.signature_id} onSelect={setPickedId} />}
   </>;
 }

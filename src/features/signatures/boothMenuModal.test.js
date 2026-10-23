@@ -39,3 +39,24 @@ test("부스 메뉴는 제출 정보가 있을 때만 플래그 입력칸을 그
     assert.doesNotMatch(solved, /<input/);
   } finally { await server.close(); }
 });
+test("문제가 여럿인 부스는 메뉴 단추로 고르고 못 푼 문제부터 열며 정답이면 축제장 목록을 다시 읽는다", async () => {
+  const source = readFileSync(new URL("./pages/SignatureClubPage.jsx", import.meta.url), "utf8");
+  assert.match(source, /club\?\.problems\.find\(problem => !problem\.is_solved\)/);
+  assert.match(source, /refresh\(\)/);
+  assert.match(source, /problems=\{club\.problems\} selectedId=\{signatureId\} onSelect=\{onSelect\}/);
+  const hook = readFileSync(new URL("./hooks/useSignatures.js", import.meta.url), "utf8");
+  assert.match(hook, /if \(!quiet\) setState\(\{ status: "loading", data: \[\], error: "" \}\)/);
+  const server = await createServer({ server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom" });
+  try {
+    const { default: Modal } = await server.ssrLoadModule("/src/features/signatures/components/BoothMenuModal.jsx");
+    const problems = [{ signature_id: "a", title: "첫 메뉴", is_solved: true }, { signature_id: "b", title: "둘째 메뉴", is_solved: false }];
+    const base = { club: { name: "동아리", problems }, status: "success", onClose() {}, challenge: { title: "둘째 메뉴", score: 150, description: "설명" } };
+    const html = renderToStaticMarkup(createElement(Modal, { ...base, problems, selectedId: "b", onSelect() {} }));
+    assert.match(html, /data-menu-tab="true" aria-pressed="false">메뉴 1<span aria-hidden="true"> ✓<\/span>/);
+    assert.match(html, /data-menu-tab="true" aria-pressed="true">메뉴 2<span class="sr-only"> 둘째 메뉴<\/span>/);
+    assert.doesNotMatch(html, />MENU</);
+    const single = renderToStaticMarkup(createElement(Modal, { ...base, problems: [problems[1]], selectedId: "b", onSelect() {} }));
+    assert.match(single, />MENU</);
+    assert.doesNotMatch(single, /data-menu-tab/);
+  } finally { await server.close(); }
+});
