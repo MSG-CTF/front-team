@@ -94,13 +94,13 @@ function AttentionInstances({ instances, onChanged, className = "" }) {
         <span className={intro.who}><strong>{instance.team_name || "-"}</strong><span>{instance.challenge_title || "-"}</span></span>
         <span className={intro.why}><AdminBadge tone={why.kind === "failed" ? "bad" : "warn"}>{why.label}</AdminBadge><span>{why.age}</span></span>
         {canForceStop(instance)
-          ? <button type="button" className={`${ui.button} ${ui.small} ${ui.danger}`} disabled={busy || Boolean(busyId)} onClick={() => setConfirm(instance)}>종료</button>
-          : <Link to={`${ROUTES.adminChallenges}?tab=instances&status=FAILED`} className={`${ui.button} ${ui.small}`}>보기</Link>}
+          ? <button type="button" className={`${ui.button} ${ui.small} ${ui.danger}`} disabled={busy || Boolean(busyId)} onClick={() => setConfirm(instance)}>{instance.status === "CLEANUP_PENDING" ? "강제 정리" : "종료"}</button>
+          : <Link to={`${ROUTES.adminChallenges}?tab=instances&status=${encodeURIComponent(instance.status)}`} className={`${ui.button} ${ui.small}`}>보기</Link>}
       </li>;
     })}</ul>}
     {confirm && <Modal title="인스턴스 강제 종료" onClose={() => setConfirm(null)} busy={Boolean(busyId)}>
       <p className={ui.dialogLead}><strong>{confirm.team_name}</strong> · {confirm.challenge_title}</p>
-      <p className={ui.callout} data-tone="bad">참가자의 현재 접속이 끊기고 인스턴스가 정리됩니다</p>
+      <p className={ui.callout} data-tone="bad">{confirm.status === "CLEANUP_PENDING" ? "생성 실패가 확인된 오래된 요청만 처리합니다 실행 자원이 남아 있는지는 별도로 확인해주세요" : "참가자의 현재 접속이 끊기고 인스턴스가 정리됩니다"}</p>
       <div className={ui.formActions}>
         <button type="button" onClick={() => setConfirm(null)} disabled={Boolean(busyId)} className={ui.button}>취소</button>
         <button type="button" onClick={() => stop(confirm)} disabled={Boolean(busyId)} className={ui.dangerSolid}>종료 실행</button>

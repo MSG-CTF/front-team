@@ -72,7 +72,7 @@ function InstancesSection({ initialStatus = "" }) {
       if (!isSuccess(response.data)) throw new Error(response.data?.message || "요청이 처리되지 않았습니다");
       setConfirmation(null);
       const refreshed = await instances.reload();
-      setNotice(refreshed ? "요청이 접수되었습니다 상태가 자동으로 갱신됩니다" : "요청은 접수됐지만 최신 상태를 조회하지 못했습니다");
+      setNotice(refreshed ? (response.data?.message || "요청이 접수되었습니다 상태가 자동으로 갱신됩니다") : "요청은 접수됐지만 최신 상태를 조회하지 못했습니다");
     } catch (error) { setNotice(error?.response?.data?.message || error.message || "요청이 처리되지 않았습니다"); }
     finally { pending.current = false; setBusy(false); }
   }
@@ -93,7 +93,7 @@ function InstancesSection({ initialStatus = "" }) {
           <td className={styles.time}>{formatAdminTime(instance.expires_at)}</td>
           <td>{canForceStop(instance) ? <div className={styles.rowActions}>
             {instance.status === "RUNNING" && <button type="button" className={`${BUTTON} ${styles.small}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "reset" }); }}>강제 재시작</button>}
-            <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "stop" }); }}>강제 종료</button>
+            <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "stop" }); }}>{instance.status === "CLEANUP_PENDING" ? "강제 정리" : "강제 종료"}</button>
           </div> : <span className={styles.muted}>-</span>}</td>
         </tr>)}</tbody>
       </table>
@@ -103,7 +103,7 @@ function InstancesSection({ initialStatus = "" }) {
     {confirmation && <AdminDialog title={confirmation.kind === "reset" ? "인스턴스 강제 재시작" : "인스턴스 강제 종료"} onClose={() => setConfirmation(null)} busy={busy}>
       <p className={styles.dialogLead}><strong>{confirmation.instance.team_name}</strong> · {confirmation.instance.challenge_title}</p>
       <p className={`${styles.mono} ${styles.dialogId}`}>{confirmation.instance.instance_id}</p>
-      <p className={styles.callout} data-tone="bad">선택한 인스턴스의 현재 접속이 종료됩니다</p>
+      <p className={styles.callout} data-tone="bad">{confirmation.instance.status === "CLEANUP_PENDING" ? "생성 실패가 확인된 오래된 요청만 처리합니다 실행 자원이 남아 있는지는 별도로 확인해주세요" : "선택한 인스턴스의 현재 접속이 종료됩니다"}</p>
       {notice && <p role="alert" className={styles.errorText}>{notice}</p>}
       <div className={styles.formActions}>
         <button type="button" onClick={() => setConfirmation(null)} disabled={busy} className={BUTTON}>취소</button>
