@@ -133,7 +133,7 @@ export default function BoardTrack({
         className="absolute left-[28%] top-[31%] z-20 w-[44%] h-[32%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95 disabled:cursor-not-allowed disabled:brightness-90"
       >
         <DiceErrorBoundary fallback={<DiceFallback ref={diceRef} onReady={() => setDiceReady(true)} />}>
-          <Suspense fallback={<img src="/assets/board/dice.png" alt="" className="absolute left-[15.91%] top-1/4 w-[68.18%] h-1/2 object-contain" />}>
+          <Suspense fallback={<img src="/assets/board/dice.webp" alt="" className="absolute left-[15.91%] top-1/4 w-[68.18%] h-1/2 object-contain" />}>
             <Dice3D ref={diceRef} onReady={() => setDiceReady(true)} />
           </Suspense>
         </DiceErrorBoundary>

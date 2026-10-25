@@ -7,7 +7,7 @@ import DiceCanvas from "./DiceCanvas.jsx";
 
 const DicePair = forwardRef(function DicePair({ onReady, reducedMotion }, ref) {
   // 현재 모델에는 Draco·Meshopt 압축이 없어 추가 디코더나 전체 도우미 묶음이 필요 없다
-  const { scene } = useLoader(GLTFLoader, "/models/dice.glb");
+  const { scene } = useLoader(GLTFLoader, "/models/dice-display.glb");
   const dice = useMemo(() => DICE_STARTS.map((start, index) => {
     const object = scene.clone(true);
     const rest = restingDie(index);

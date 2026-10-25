@@ -9,9 +9,7 @@
   overflow: hidden;
   background: #674326 url("/assets/login/background-plaza.webp") center / cover;
 }
-@media (max-width: 1100px) and (max-aspect-ratio: 9/10) {
-  .page { background-image: url("/assets/login/background-plaza-portrait.webp"); }
-}
+/* 세로 화면도 원본의 중앙을 같은 높이로 맞춘다 무손실 크롭본보다 원본 전송량이 작다 */
 
 .stage {
   position: absolute;
@@ -144,7 +142,7 @@
     padding: 24px 20px;
     transform: none;
     border: 8px solid transparent;
-    border-image: url("/assets/challenge-detail/panel-board.webp") 32 stretch;
+    border-image: url("/assets/rules/paper-frame.webp") 32 stretch;
     background: #eedfbd;
     background-clip: padding-box;
   }
@@ -197,8 +195,7 @@
 @media (max-width: 1100px) {
   .page { isolation: isolate; background: none; }
   .page::before { content: ""; position: fixed; inset: 0; z-index: -1; background: #674326 url("/assets/login/background-plaza.webp") center / cover; pointer-events: none; }
-  .stage { isolation: isolate; border-image: url("/assets/challenge-detail/panel-board.webp") 32 / 8px stretch; background: none; }
+  .stage { isolation: isolate; border-image: url("/assets/rules/paper-frame.webp") 32 / 8px stretch; background: none; }
   .rulesList { gap: 20px; }
   .rulesList > * + * { padding-top: 20px; border-top: 1px solid #9d784e70; }
 }
-@media (max-width: 1100px) and (max-aspect-ratio: 9/10) { .page::before { background-image: url("/assets/login/background-plaza-portrait.webp"); } }

@@ -145,7 +145,7 @@ test("원격 실행 칸은 데스크톱에서 인스턴스 판과 단추 줄 자
   assert.match(css, /\.runControls \{\s*position: absolute;\s*left: calc\(var\(--u\) \* 1146\);\s*top: calc\(var\(--u\) \* 653\);\s*width: calc\(var\(--u\) \* 640\);\s*height: calc\(var\(--u\) \* 62\);/);
   assert.match(css, /background: url\("\/assets\/challenge-detail\/panel-run-base\.png"\)/);
   // 단추 판은 양 끝 장식을 늘이지 않고 가운데만 늘인다
-  assert.match(css, /border-image: url\("\/assets\/challenge-detail\/button-instance-extend-blank\.png"\) 0 46 fill \/ 0 40px \/ 0 stretch;/);
+  assert.match(css, /border-image: url\("\/assets\/challenge-detail\/button-instance-extend-blank\.webp"\) 0 46 fill \/ 0 40px \/ 0 stretch;/);
   assert.match(css, /\.runRow \{\s*display: contents;\s*\}/);
   assert.match(css, /^\.runEn \{\s*display: none;\s*\}/m);
   assert.match(css, /\.instancePanel, \.runPanel \{ isolation: isolate;/);

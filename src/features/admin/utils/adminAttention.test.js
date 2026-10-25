@@ -31,7 +31,7 @@ test("원인과 경과 시간을 사람이 읽는 말로 바꾼다", () => {
 });
 
 test("실패는 상태로 따로 물어 받은 줄이 일부여도 total_count로 센다", () => {
-  assert.deepEqual(ATTENTION_QUERIES.map((query) => query.status), ["FAILED", "REQUESTED", "SCHEDULING", "PROVISIONING"]);
+  assert.deepEqual(ATTENTION_QUERIES.map((query) => query.status), ["FAILED", "REQUESTED", "SCHEDULING", "PROVISIONING", "STOPPING", "CLEANUP_PENDING"]);
   const failedRows = Array.from({ length: 20 }, (_, index) => ({ instance_id: `f${index}`, status: "FAILED", created_at: at(index) }));
   const summary = summarizeAttention([
     { status: "FAILED", instances: failedRows, total_count: 57 },
@@ -72,7 +72,26 @@ test("준비 단계 줄이 다 오지 않았거나 서버가 상태 조건을 �
 });
 
 test("종료는 아직 끝나지 않은 인스턴스에만 보인다", () => {
-  assert.equal(canForceStop({ status: "PROVISIONING" }), true);
+  assert.equal(canForceStop({ status: "PROVISIONING" }), false);
+  assert.equal(canForceStop({ status: "CLEANUP_PENDING" }), true);
   assert.equal(canForceStop({ status: "RUNNING" }), true);
   for (const status of ["FAILED", "STOPPED", "EXPIRED", "CLEANED"]) assert.equal(canForceStop({ status }), false);
+});
+
+test("정리 대기는 바로 표시하고 종료 지연은 최근 상태 변경 시각으로 판단한다", () => {
+  const rows = [
+    { instance_id: "cleanup", status: "CLEANUP_PENDING", created_at: at(50), updated_at: at(0) },
+    { instance_id: "recent-stop", status: "STOPPING", created_at: at(180), updated_at: at(1) },
+    { instance_id: "stuck-stop", status: "STOPPING", created_at: at(90), updated_at: at(5) },
+    { instance_id: "unknown-age", status: "STOPPING", created_at: at(90) },
+  ];
+  assert.deepEqual(selectAttentionInstances(rows, now).map((r) => r.instance_id), ["stuck-stop", "cleanup"]);
+  assert.deepEqual(describeAttention(rows[0], now), { kind: "stuck", label: "정리 대기 · 운영자 확인 필요", age: "방금" });
+  assert.deepEqual(describeAttention(rows[2], now), { kind: "stuck", label: "종료 지연", age: "5분 경과" });
+  const summary = summarizeAttention([
+    { status: "CLEANUP_PENDING", instances: [rows[0]], total_count: 1 },
+    { status: "STOPPING", instances: rows.slice(1), total_count: 3 },
+  ], now);
+  assert.equal(summary.count, 2);
+  assert.equal(summary.partial, false);
 });

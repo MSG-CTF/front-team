@@ -90,3 +90,38 @@ test("화면을 떠나면 계산 중인 Promise와 타이머를 정리한다", a
   worker.onmessage({ data: { id, failed: true } });
   assert.equal(await client.compute(poses(), { diceA: 2, diceB: 3 }), null);
 });
+
+test("첫 굴림 전과 모션 줄이기에서는 worker를 만들지 않고 실제 굴림에서 한 번만 만든다", async () => {
+  let created = 0;
+  const worker = { postMessage() {}, terminate() {} };
+  const client = createDiceMotionClient({
+    createWorker() { created += 1; return worker; },
+    setTimer() { return 1; }, clearTimer() {},
+  });
+  assert.equal(created, 0);
+  assertFaces(await client.compute(poses(), { diceA: 1, diceB: 6 }, true), { diceA: 1, diceB: 6 });
+  assert.equal(created, 0);
+  const first = client.compute(poses(), { diceA: 2, diceB: 5 });
+  const second = client.compute(poses(), { diceA: 3, diceB: 4 });
+  assert.equal(created, 1);
+  client.dispose();
+  assert.equal(await first, null);
+  assert.equal(await second, null);
+  assert.equal(await client.compute(poses(), { diceA: 3, diceB: 4 }), null);
+  assert.equal(created, 1);
+});
+
+test("굴리기 전에 화면을 떠나거나 worker 시작이 실패하면 다시 생성하지 않는다", async () => {
+  let created = 0;
+  const createWorker = () => { created += 1; throw new Error("worker unavailable"); };
+  const unopened = createDiceMotionClient({ createWorker });
+  unopened.dispose();
+  assert.equal(await unopened.compute(poses(), { diceA: 1, diceB: 2 }), null);
+  assert.equal(created, 0);
+  const failed = createDiceMotionClient({ createWorker });
+  for (let i = 0; i < 2; i++) {
+    assertFaces(await failed.compute(poses(), { diceA: 4, diceB: 2 }), { diceA: 4, diceB: 2 });
+  }
+  assert.equal(created, 1);
+  failed.dispose();
+});

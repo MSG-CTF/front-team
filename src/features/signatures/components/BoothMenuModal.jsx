@@ -10,6 +10,26 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
   const hasMenus = problems?.length > 1 && Boolean(onSelect);
   const flagId = useId();
   const panel = useRef(null);
+  // WebKit의 확대된 컨테이너 단위 대신 실제 CSS 작업 폭을 쓴다
+  // 그림 비율과 글자 크기, 고정된 위 자리를 같은 폭/높이로 계산한다
+  useEffect(() => {
+    const dialog = panel.current;
+    const overlay = dialog?.parentElement;
+    if (!overlay) return undefined;
+    const measure = (entries = []) => {
+      const outer = getComputedStyle(overlay);
+      const box = entries.find(entry => entry.target === overlay)?.contentRect;
+      const width = box?.width ?? overlay.clientWidth - parseFloat(outer.paddingLeft) - parseFloat(outer.paddingRight);
+      const height = box?.height ?? overlay.clientHeight - parseFloat(outer.paddingTop) - parseFloat(outer.paddingBottom);
+      const limit = parseFloat(getComputedStyle(dialog).getPropertyValue("--menu-max"));
+      dialog.style.setProperty("--menu-w", `${Math.max(0, Math.min(limit, width))}px`);
+      dialog.style.setProperty("--booth-view-height", `${Math.max(0, height)}px`);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(overlay);
+    return () => observer.disconnect();
+  }, []);
   // 정답·오답은 문제 상세와 같은 중앙 모달로 알린다. 닫은 피드백은 다시 띄우지 않는다
   const [dismissed, setDismissed] = useState(null);
   const result = submission?.feedback && submission.feedback !== dismissed ? submission.feedback : null;

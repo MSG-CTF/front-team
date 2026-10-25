@@ -12,7 +12,7 @@ import { AppIcon, Glyph } from "./AdminGlyph.jsx";
 const BASE_URL = import.meta.env.BASE_URL;
 // login/logo@2x.webp는 배경이 투명하지 않아 양피지 위에서 흰 사각형처럼 튄다
 // rules/msg-ctf-logo.png를 알파 채널로 누끼 딴 admin 전용 사본을 쓴다
-const LOGO_SRC = `${BASE_URL}assets/admin/logo.png`;
+const LOGO_SRC = `${BASE_URL}assets/admin/logo.webp`;
 
 // 메뉴는 당일에 쓰는 화면과 전날까지 끝내는 화면으로 나눈다 메뉴 이름과 화면 제목은 같은 말을 쓴다
 const NAV_GROUPS = [

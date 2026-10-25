@@ -109,7 +109,7 @@
   gap: 6px;
   padding: 0 8px 14px;
 }
-/* logo.png(1254px 정사각) 안에서 그림이 있는 772x561 영역만 잘라 --logo-w 폭으로 보인다 */
+/* logo.webp(1254px 정사각) 안에서 그림이 있는 772x561 영역만 잘라 --logo-w 폭으로 보인다 */
 .logo {
   --logo-w: 118px;
   display: block;
@@ -389,6 +389,7 @@
   }
   .brand {
     flex-direction: row;
+    flex-wrap: wrap;
     gap: 10px;
     padding: 0;
   }
@@ -462,6 +463,8 @@
 @media (max-height: 820px) {
   .header { padding-top: 12px; padding-bottom: 10px; }
   .heading h1 { font-size: 22px; line-height: 28px; }
-  .brand { padding-bottom: 8px; }
-  .logo { --logo-w: 104px; }
+  @container admin-layout (min-width: 768px) {
+    .brand { padding-bottom: 8px; }
+    .logo { --logo-w: 104px; }
+  }
 }

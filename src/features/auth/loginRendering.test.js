@@ -107,8 +107,8 @@ test("원래 로그인 장식과 글꼴을 재사용하되 큰 PNG 배경과 외
     plate: "public/assets/login/login-card-plate.webp",
     logo: "public/assets/login/logo-cutout.webp",
     button: "public/assets/login/login-button-cutout.webp",
-    englishFont: "public/assets/intro/fonts/IMFeENrm28P.ttf",
-    font: "public/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2",
+    englishFont: "public/assets/intro/fonts/IMFeENrm28P.woff2",
+    font: "public/assets/fonts/ui/login-common.woff2",
   };
   const bytes = Object.fromEntries(Object.entries(assets).map(([name, path]) => {
     const url = new URL(path, root);

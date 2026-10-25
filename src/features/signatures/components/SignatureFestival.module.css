@@ -1,12 +1,12 @@
 @font-face {
   font-family: "Festival Display";
-  src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
+  src: url("/assets/intro/fonts/IMFeENrm28P.woff2") format("woff2");
   font-display: swap;
 }
 @font-face {
   font-family: "Booth Lettering";
-  src: url("/assets/leaderboard/fonts/libre-baskerville-400.ttf")
-    format("truetype");
+  src: url("/assets/leaderboard/fonts/libre-baskerville-400.woff2")
+    format("woff2");
   font-display: swap;
 }
 .festivalPage {
@@ -51,8 +51,15 @@
   width: max(100cqw, 150cqh);
   aspect-ratio: 3 / 2;
   isolation: isolate;
-  background: url("/assets/signatures/club-festival-v1.webp") center / 100% 100%
-    no-repeat;
+}
+.sceneArtwork {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
 }
 .scene::before {
   content: "";
@@ -693,7 +700,7 @@
 
 @media (max-width: 600px), (max-aspect-ratio: 5/4) {
   .mobileBoothList { gap: 10px; padding: 0; border: 0; background: none; }
-  .mobileBooth { position: relative; isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; background: #2c1c11; background-clip: padding-box; }
+  .mobileBooth { position: relative; isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.webp") 24 / 8px stretch; background: #2c1c11; background-clip: padding-box; }
   .mobileBooth + .mobileBooth { border-top: 8px solid transparent; }
   .mobileBoothLink { min-height: 90px; padding: 10px; }
   .mobileBoothLink .brandName { font-size: 17px; color: #ffe0a5; }

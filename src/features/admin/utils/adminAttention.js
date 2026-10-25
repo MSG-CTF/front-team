@@ -1,13 +1,13 @@
 // 대시보드 "실패·지연 인스턴스" 줄의 규칙
 // 실패한 인스턴스는 모두, 준비 단계(REQUESTED/SCHEDULING/PROVISIONING)에 STUCK_MINUTES 넘게 머문 인스턴스도 올린다
-// 종료 중(STOPPING)은 스케줄러가 정리하는 중이라 올리지 않는다
+// 정리 대기는 바로 표시하고, 종료 중은 상태 변경 후 5분이 지나면 표시한다
 export const STUCK_MINUTES = 5;
 const PENDING = ["REQUESTED", "SCHEDULING", "PROVISIONING"];
 
 // 첫 쪽만 읽으면 실패가 뒤쪽으로 밀려 덜 세므로 상태마다 따로 묻는다
 // 실패는 total_count로 세고 줄은 최근 20개만 받는다 준비 단계는 상태마다 서버 상한인 100개를 받아 오래 머문 것을 고른다
 // 실패를 먼저 묻는다 같은 인스턴스가 두 상태로 겹쳐 오면 먼저 받은 실패 쪽을 남긴다
-export const ATTENTION_QUERIES = [{ status: "FAILED", size: 20 }, ...PENDING.map((status) => ({ status, size: 100 }))];
+export const ATTENTION_QUERIES = [{ status: "FAILED", size: 20 }, ...[...PENDING, "STOPPING", "CLEANUP_PENDING"].map((status) => ({ status, size: 100 }))];
 
 const ERROR_LABELS = {
   RUNTIME_CREATE_FAILED: "컨테이너 생성 실패",
@@ -27,6 +27,9 @@ export function formatAge(createdAt, now = Date.now()) {
 }
 
 export function describeAttention(instance, now = Date.now()) {
+  if (["STOPPING", "CLEANUP_PENDING"].includes(instance.status)) {
+    return { kind: "stuck", label: instance.status === "CLEANUP_PENDING" ? "정리 대기 · 운영자 확인 필요" : "종료 지연", age: formatAge(instance.updated_at ?? instance.created_at, now) };
+  }
   if (instance.status === "FAILED") {
     return { kind: "failed", label: ERROR_LABELS[instance.error_code] ?? (instance.error_code || "실패"), age: formatAge(instance.created_at, now) };
   }
@@ -38,6 +41,11 @@ export function selectAttentionInstances(instances, now = Date.now()) {
   const rows = Array.isArray(instances) ? instances : [];
   return rows.filter((instance) => {
     if (instance.status === "FAILED") return true;
+    if (instance.status === "CLEANUP_PENDING") return true;
+    if (instance.status === "STOPPING") {
+      const timestamp = Date.parse(instance.updated_at);
+      return Number.isFinite(timestamp) && now - timestamp >= STUCK_MINUTES * 60000;
+    }
     if (!PENDING.includes(instance.status)) return false;
     const timestamp = Date.parse(instance.created_at);
     return Number.isFinite(timestamp) && now - timestamp >= STUCK_MINUTES * 60000;
@@ -73,5 +81,5 @@ export function summarizeAttention(pages, now = Date.now()) {
 
 // 재시작은 실행 중인 인스턴스만 받으므로(409 INSTANCE_NOT_RESTARTABLE) 여기서는 종료만 바로 할 수 있다
 export function canForceStop(instance) {
-  return !["STOPPED", "STOPPING", "FAILED", "EXPIRED", "CLEANED"].includes(instance.status);
+  return ["RUNNING", "CLEANUP_PENDING"].includes(instance.status);
 }

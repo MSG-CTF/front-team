@@ -8,6 +8,7 @@ export function createDiceMotionClient({
   clearTimer = timer => window.clearTimeout(timer),
 } = {}) {
   let worker;
+  let workerFailed = false;
   let nextId = 0;
   let disposed = false;
   const pending = new Map();
@@ -19,27 +20,34 @@ export function createDiceMotionClient({
     request.resolve(motions);
   };
   const failWorker = () => {
+    workerFailed = true;
     worker?.terminate();
     worker = null;
     for (const [id, request] of pending) finish(id, immediateDiceResult(request.current, request.result));
   };
-  try {
-    worker = createWorker();
-    worker.onmessage = ({ data }) => {
-      const request = pending.get(data.id);
-      if (!request) return;
-      try {
-        if (data.failed) throw new Error("주사위 계산 실패");
-        finish(data.id, unpackDiceMotions(data.motions));
-      } catch { failWorker(); }
-    };
-    worker.onerror = event => { event.preventDefault?.(); failWorker(); };
-    worker.onmessageerror = failWorker;
-  } catch { worker = null; }
+  const ensureWorker = () => {
+    if (worker || workerFailed) return;
+    try {
+      worker = createWorker();
+      worker.onmessage = ({ data }) => {
+        const request = pending.get(data.id);
+        if (!request) return;
+        try {
+          if (data.failed) throw new Error("주사위 계산 실패");
+          finish(data.id, unpackDiceMotions(data.motions));
+        } catch { failWorker(); }
+      };
+      worker.onerror = event => { event.preventDefault?.(); failWorker(); };
+      worker.onmessageerror = failWorker;
+    } catch { failWorker(); }
+  };
   return {
     compute(current, result, reducedMotion = false) {
       if (disposed) return Promise.resolve(null);
-      if (reducedMotion || !worker) return Promise.resolve(immediateDiceResult(current, result));
+      if (reducedMotion) return Promise.resolve(immediateDiceResult(current, result));
+      // 보드를 보기만 할 때는 물리 엔진과 별도 스레드를 시작하지 않는다
+      ensureWorker();
+      if (!worker) return Promise.resolve(immediateDiceResult(current, result));
       const id = ++nextId;
       return new Promise(resolve => {
         const timer = setTimer(failWorker, timeout);

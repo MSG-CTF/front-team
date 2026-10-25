@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
-import { ensureGameFonts, preloadIntroResources, isIntroPath, GAME_FONT_STYLESHEETS } from "./pageResources.js";
+import { ensureGameFonts, preloadIntroResources, preloadGameArtwork, isIntroPath, GAME_FONT_STYLESHEETS } from "./pageResources.js";
 
 function mockDocument() {
   const links = new Map();
@@ -69,4 +69,33 @@ test("상세 안내에는 첫 화면 배경을 미리 읽지 않고 게임에는
   const game = mockDocument();
   preloadIntroResources(game, "/login");
   assert.equal(game.links.size, 0);
+});
+
+test("화면 이동을 준비할 때 선택한 그림만 한 번 받고 API나 다른 화면은 미리 읽지 않는다", () => {
+  const document = mockDocument();
+  for (const path of ["/", "/login", "/board", "/admin", "/signatures-other"]) preloadGameArtwork(document, path);
+  assert.equal(document.links.size, 0);
+  preloadGameArtwork(document, "/rules");
+  preloadGameArtwork(document, "/rules/");
+  assert.equal(document.links.size, 1);
+  const link = [...document.links.values()][0].attributes;
+  assert.equal(link.href, "/assets/login/background-plaza.webp");
+  assert.equal(link.as, "image");
+  assert.ok(existsSync(new URL(`../../public${link.href}`, import.meta.url)));
+});
+
+test("부스의 미리 읽기와 화면 이미지는 같은 해상도 후보를 쓴다", () => {
+  const document = mockDocument();
+  document.defaultView = { matchMedia: () => ({ matches: true }) };
+  preloadGameArtwork(document, "/signatures");
+  preloadGameArtwork(document, "/signatures/clubs/club-1");
+  assert.equal(document.links.size, 1);
+  const link = [...document.links.values()][0].attributes;
+  const page = readFileSync(new URL("../features/signatures/pages/SignaturesPage.jsx", import.meta.url), "utf8");
+  assert.ok(page.includes(`srcSet="${link.imagesrcset}"`));
+  assert.ok(page.includes(`sizes="${link.imagesizes}"`));
+  assert.equal(link.type, "image/avif");
+  document.defaultView.matchMedia = () => ({ matches: false });
+  preloadGameArtwork(document, "/signatures");
+  assert.equal([...document.links.values()].at(-1).attributes.href, "/assets/signatures/club-festival-v1.webp");
 });

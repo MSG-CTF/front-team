@@ -13,7 +13,7 @@ export default function MainNavigationButton() {
       onClick={() => navigate(ROUTES.board)}
     >
       <img
-        src="/assets/koth/main-navigation-button.png"
+        src="/assets/koth/main-navigation-button.webp"
         alt=""
         aria-hidden="true"
         className={styles.layerImage}

@@ -11,35 +11,43 @@ function getErrorMessage(error, fallbackMessage) {
 
 export function useKothData() {
   const [revision, setRevision] = useState(0);
-  const [state, setState] = useState({ status: "loading", clubsData: null, progressData: null, error: "", clubsStale: false });
+  const [state, setState] = useState({ status: "loading", clubsData: null, progressData: null, progressError: "", clubsStale: false });
   const authenticated = Boolean(localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY));
   useEffect(() => {
     const controller = new AbortController();
     const config = { signal: controller.signal, timeout: 10000 };
     let active = true;
-    async function load() {
-      const [clubsResult, progressResult] = await Promise.allSettled([
-        getKothClubs(config),
-        authenticated ? getMyKothProgress(config) : Promise.resolve(null),
-      ]);
+    async function loadClubs() {
+      let clubs;
+      try { clubs = (await getKothClubs(config)).data; } catch { /* 이전 목록은 갱신 실패 상태로 남긴다 */ }
       if (!active) return;
-      const clubs = clubsResult.status === "fulfilled" ? clubsResult.value?.data : null;
-      const progress = progressResult.status === "fulfilled" ? progressResult.value?.data : null;
       const clubsOk = isSuccess(clubs) && validateKothClubs(clubs.data);
-      const progressOk = isSuccess(progress) && Array.isArray(progress.data?.challenges);
       setState((current) => ({
+        ...current,
         status: clubsOk || current.clubsData ? "success" : "error",
         clubsData: clubsOk ? clubs.data : current.clubsData,
-        progressData: progressOk ? progress.data : null,
         clubsStale: !clubsOk,
-        error: !clubsOk ? "KOTH 목록을 갱신하지 못했습니다"
-          : authenticated && !progressOk ? "내 팀 점수를 갱신하지 못했습니다" : "",
       }));
     }
+    async function loadProgress() {
+      if (!authenticated) return;
+      let progress;
+      try { progress = (await getMyKothProgress(config)).data; } catch { /* 점수 오류는 목록 이용을 막지 않는다 */ }
+      if (!active) return;
+      const progressOk = isSuccess(progress) && Array.isArray(progress.data?.challenges);
+      setState((current) => ({
+        ...current,
+        progressData: progressOk ? progress.data : null,
+        progressError: progressOk ? "" : "내 팀 점수를 갱신하지 못했습니다",
+      }));
+    }
+    // 응답은 도착하는 대로 반영하되 다음 폴링은 두 요청이 끝난 뒤에 시작한다
+    const load = () => Promise.allSettled([loadClubs(), loadProgress()]);
     const stopPolling = startVisiblePolling(load);
     return () => { stopPolling(); active = false; controller.abort(); };
   }, [revision, authenticated]);
-  return { ...state, authenticated, retry: () => setRevision((value) => value + 1) };
+  return { ...state, error: state.clubsStale ? "KOTH 목록을 갱신하지 못했습니다" : state.progressError,
+    authenticated, retry: () => setRevision((value) => value + 1) };
 }
 
 export function useKothLeaderboard(challengeId, authenticated) {
