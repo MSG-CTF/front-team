@@ -719,13 +719,13 @@ test("라인 데이터가 없으면 표시하지 않고 풀이 진행과 완료�
   assert.equal((html.match(/data-solved="true"/g) || []).length, 7);
   assert.equal((html.match(/data-line-cell=/g) || []).length, 10);
   assert.equal((html.match(/data-line-accent=/g) || []).length, 1);
-  assert.equal((html.match(/<clipPath /g) || []).length, 2); // 보석 면과 구역 경계, 칸별 clip 아님
+  assert.equal((html.match(/<clipPath /g) || []).length, 9); // 보석 면과 구역 경계 2개, 푼 칸 면 7개
   assert.equal((html.match(/data-rail-boundary=/g) || []).length, 1);
-  assert.equal((html.match(/data-line-outline=/g) || []).length, 0);
-  assert.doesNotMatch(html, /data-line-outline="8"/);
+  assert.equal((html.match(/data-line-outline=/g) || []).length, 7);
+  assert.match(html, /data-line-outline="8"/);
   assert.doesNotMatch(html, /data-line-outline="4"/);
-  assert.equal((html.match(/data-outline-state="solved"/g) || []).length, 0);
-  assert.equal((html.match(/vector-effect="non-scaling-stroke"/g) || []).length, 0);
+  assert.equal((html.match(/data-outline-state="solved"/g) || []).length, 7);
+  assert.equal((html.match(/vector-effect="non-scaling-stroke"/g) || []).length, 7);
   assert.match(html, /data-line-segment="8,9,10,11,12"/);
   assert.doesNotMatch(html, /<image|line-complete-crest-v1/);
   assert.doesNotMatch(html, /data-line-badge=|data-line-region-caption=|data-line-finish=|data-outline-state="claimed"|<text|lineClaimFlash|lineSweep|lineRail|lineClaimRibbon|lineCellBand|lineSolveMark|lineCellSelected/);
@@ -743,7 +743,8 @@ test("방문하거나 일부 문제만 푼 라인에는 배점이나 점수 표�
   ]);
   const html = render("BoardLineOverlay", { lines });
   assert.doesNotMatch(html, /data-line-region=|data-line-region-score=|data-line-anchor-cell=|data-line-tile-plate=|150 pts|200 pts|미정/);
-  assert.equal((html.match(/data-line-outline=/g) || []).length, 0);
+  // 방문만 한 칸은 테두리 없이 두고 푼 칸에만 테두리를 그린다
+  assert.deepEqual([...html.matchAll(/data-line-outline="(\d+)"/g)].map((match) => match[1]), ["2", "3"]);
   assert.doesNotMatch(html, /data-line-outline="8"|data-line-badge=|line-complete-crest-v1/);
   assert.doesNotMatch(html, /<rect|<foreignObject|>\+ 150 pts/);
   assert.match(html, /2번 라인, 0\/5 해결/);
@@ -758,7 +759,8 @@ test("독점 완료 외곽선은 점수 유무와 별개이며 보드에 명패�
   assert.match(completed, /data-line-accent="a" role="button" tabindex="0"/);
   assert.match(completed, /data-line-segment="2,3,4,5,6"/);
   assert.match(completed, /lineAccentHitArea/);
-  assert.doesNotMatch(completed, /<text|<image|<ellipse|data-line-badge=|data-line-region=|150 pts|200 pts|data-line-outline=/);
+  assert.doesNotMatch(completed, /<text|<image|<ellipse|data-line-badge=|data-line-region=|150 pts|200 pts/);
+  assert.equal((completed.match(/data-outline-state="solved"/g) || []).length, 5);
   const pending = render("BoardLineOverlay", { lines: create(false, 150) });
   assert.match(pending, /완료 확인 중/);
   assert.doesNotMatch(pending, /data-line-accent=|data-line-region=|data-line-badge=|150 pts|200 pts/);
@@ -782,7 +784,8 @@ test("기존 6개 예시 라인 중 0개, 1개, 떨어진 2개, 전체 완료일
     const meshCount = completed.reduce((count, index) => count + ([2,3,4].includes(index) ? 2 : 1), 0);
     assert.equal((html.match(/data-line-segment=/g) || []).length, meshCount);
     assert.equal((html.match(/data-solved="true"/g) || []).length, 30);
-    assert.doesNotMatch(html, /data-line-outline=|<text|data-line-badge=/);
+    assert.equal((html.match(/data-line-outline=/g) || []).length, 30);
+    assert.doesNotMatch(html, /<text|data-line-badge=/);
     for (const index of completed) assert.ok(html.includes(`data-line-accent="preview-line-${index + 1}"`));
     const colors = [...html.matchAll(/style="--line-accent:(#[0-9a-f]+)"/g)].map(match => match[1]);
     assert.deepEqual(colors, ["#8e3e48", "#355677", "#3a6955", "#67477c", "#376f77", "#98502f"]);
@@ -926,7 +929,7 @@ test("칸별 독점 border 없이 마지막 문제 정답과 완료 확정 후�
     const lines = prepareBoardLines([{ lineId: "a", label: "첫 라인", cellIndexes: indexes,
       consumedCellIndexes: indexes, solvedCellIndexes: indexes.slice(0, solvedCount), isCompleted: true, rewardScore: 200, bonusScore: 150 }]);
     const html = render("BoardLineOverlay", { lines });
-    assert.equal((html.match(/data-line-outline=/g) || []).length, 0);
+    assert.equal((html.match(/data-line-outline=/g) || []).length, solvedCount);
     assert.equal((html.match(/data-solved="true"/g) || []).length, solvedCount);
     assert.equal((html.match(/data-line-accent=/g) || []).length, solvedCount === indexes.length ? 1 : 0);
     assert.doesNotMatch(html, /data-line-badge=|data-line-finish=|data-line-region-score=|data-outline-state="claimed"/);
@@ -950,8 +953,8 @@ test("라인 계약이 없어도 푼 칸 테두리는 렌더링하고 가짜 라
   assert.doesNotMatch(html, /data-line-id=|data-line-badge=|data-line-finish=|독점 완료/);
   const lines = prepareBoardLines([{ lineId: "a", label: "첫 라인", cellIndexes: [2,3], solvedCellIndexes: [2], isCompleted: false }]);
   const grouped = render("BoardLineOverlay", { lines, solvedCellIndexes: [2,8] });
-  assert.equal((grouped.match(/data-line-outline="2"/g) || []).length, 0);
-  assert.equal((grouped.match(/data-solved-cell=/g) || []).length, 1);
+  assert.equal((grouped.match(/data-line-outline="2"/g) || []).length, 1);
+  assert.equal((grouped.match(/data-solved-cell=/g) || []).length, 2);
   const track = readFileSync(new URL("./features/board/components/BoardTrack.jsx", import.meta.url), "utf8");
   assert.match(track, /getBoardSolvedCellIndexes\(cells, cellStatesByIndex\)/);
   assert.match(track, /<BoardLineOverlay[^>]*solvedCellIndexes=\{solvedCellIndexes\}/);

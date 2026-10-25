@@ -1,5 +1,19 @@
 # 팀별 보드 라인 완성 시안
 
+## 푼 칸 테두리 복원 (2026-10-25)
+
+- 67099e2에서 라인에 속한 칸의 풀이 테두리를 뺀 뒤로 문제 칸이 모두 라인에 속해 푼 칸과 방문만 한 칸이 같은 어두운 면으로 보였음
+- CLEARED 문제 칸은 라인 소속과 상관없이 기존 단독 풀이 칸과 같은 #a8c8ae 테두리를 칸 면 안쪽에 그림
+- 라인 보석색 테두리도 비교했지만 루비와 앰버는 구리색 금테에 묻혀 한 색으로 통일
+- 독점 보석 rail은 그대로 테두리 위에 그리며 소모된 CHANCE / ROULETTE 윤곽은 변경 없음
+
+| 화면 | 수정 전 | 수정 후 |
+| --- | --- | --- |
+| 1920x1080 | <img src="images/game/solved-outline-1920-before.jpg" width="400"> | <img src="images/game/solved-outline-1920-after.jpg" width="400"> |
+| 390x844 | <img src="images/game/solved-outline-390-before.jpg" width="400"> | <img src="images/game/solved-outline-390-after.jpg" width="400"> |
+
+![/dev/line-rail-preview 전체 완료](images/game/solved-outline-rails.jpg)
+
 ## 현재 구현: 6색 보석 장식 rail (2026-10-05)
 
 - 후속 재질 조정: 전체 rail을 금테 쪽으로 3px 밀착시키고 밝은 안쪽 core, 동일 계열의 2.4px 약한 bloom, 금테 인접 변의 1.1px 미세 반사광 추가
