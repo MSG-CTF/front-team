@@ -14,7 +14,7 @@ export default function AdminChallengePreviewPage() {
   const challenge = preview.data ? mapChallengeDetail(preview.data) : null;
   return <>
     <aside className={`${styles.workspace} ${styles.previewNotice}`} aria-label="관리자 미리보기">
-      <div><strong>참가자 화면 미리보기</strong><span>저장된 내용 기준 · 정답 제출과 인스턴스 실행은 비활성화됩니다</span></div>
+      <div><strong>참가자 화면 미리보기</strong><span>저장된 내용 기준 · 정답 제출, 인스턴스, 원격 실행은 비활성화됩니다</span></div>
       {preview.data && <span>{preview.data.is_published ? "공개" : "비공개"}{preview.data.release_version ? ` · 배포 v${preview.data.release_version}` : " · 배포 버전 없음"}</span>}
       <button type="button" className={styles.button} onClick={() => navigate("/admin/challenges")}>문제 관리로</button>
     </aside>

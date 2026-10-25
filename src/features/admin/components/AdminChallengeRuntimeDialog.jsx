@@ -250,8 +250,10 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
             <p className={styles.versionMeta}>{[selected.created_at && `등록 ${formatAdminTime(selected.created_at, { seconds: false })}`,
               selected.registry_revision > 0 && `발행 #${selected.registry_revision}`, selected.runtime_type, selected.architecture].filter(Boolean).map((part) => <span key={part}>{part}</span>)}</p>
           </> : <>
-            <div className={styles.versionTitle}><h3>실행 이미지 없음</h3></div>
-            <p>파일만 제공하는 문제이거나 아직 이미지를 등록하지 않았습니다</p>
+            <div className={styles.versionTitle}><h3>{challenge.remote_run ? "원격 실행 문제" : "실행 이미지 없음"}</h3></div>
+            <p>{challenge.remote_run
+              ? "참가자가 낸 실행 파일을 검증 VM에서 돌리는 문제라 실행 이미지가 없습니다 설정과 실행 기록은 원격 실행 탭에서 봅니다"
+              : "파일만 제공하는 문제이거나 아직 이미지를 등록하지 않았습니다"}</p>
           </>}
         </div>
         <div className={styles.versionTools}>
@@ -407,11 +409,13 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
           </div>
         </> : <div className={styles.emptyState}>
           <AppIcon name="version" tone="gray" size={44} />
-          <strong>실행 이미지가 없습니다</strong>
-          <p>파일만 제공하는 문제는 수집된 ZIP을 확인하고, 실행 환경이 필요하면 이미지를 등록해주세요</p>
+          <strong>{challenge.remote_run ? "원격 실행 문제는 실행 이미지를 쓰지 않습니다" : "실행 이미지가 없습니다"}</strong>
+          <p>{challenge.remote_run
+            ? "참가자 파일만 여기서 확인하고, 검증 VM 설정은 원격 실행 탭에서 바꿔주세요"
+            : "파일만 제공하는 문제는 수집된 ZIP을 확인하고, 실행 환경이 필요하면 이미지를 등록해주세요"}</p>
           <div className={styles.emptyActions}>
             <button type="button" className={BUTTON} onClick={() => setPanel("files")}>참가자 파일 보기</button>
-            <button type="button" className={styles.primary} onClick={() => setPanel("image")}>이미지 등록</button>
+            {!challenge.remote_run && <button type="button" className={styles.primary} onClick={() => setPanel("image")}>이미지 등록</button>}
           </div>
         </div>}
       </section>

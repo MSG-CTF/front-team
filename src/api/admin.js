@@ -54,6 +54,20 @@ export function getAdminChallengeSubmissions(challengeId, { result, teamId, page
   });
 }
 
+// [프론트 요청, 백엔드 대기] 원격 실행 기록: 실행 파일을 내서 검증 VM에서 돌린 기록을 모든 팀에 걸쳐 본다
+//  summary: total, teams, timed_out, crashed, failed / runs[]: run_id, team_id, team_name, user{nickname}, run_number,
+//  status, counted, file_name, file_size, payload_sha256, created_at, finished_at, duration_ms, exit_code, stdout, stderr, message
+export function getAdminRemoteRuns(challengeId, { status, page = 1, size = 20 } = {}, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/remote_runs`, {
+    ...config, params: { status, page, size },
+  });
+}
+
+// [프론트 요청, 백엔드 대기] 원격 실행 설정: environment, accept[], executable, max_file_bytes, timeout_seconds, max_attempts
+export function updateAdminRemoteRun(challengeId, settings) {
+  return apiClient.patch(`/admin/challenges/${encodeURIComponent(challengeId)}/remote_run`, settings, MUTATION_CONFIG);
+}
+
 export function updateAdminChallenge(challengeId, changes) {
   return apiClient.patch(`/admin/challenges/${encodeURIComponent(challengeId)}`, changes, MUTATION_CONFIG);
 }

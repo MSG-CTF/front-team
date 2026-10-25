@@ -6,6 +6,7 @@ import AdminChallengeSettingsDialog from "./AdminChallengeSettingsDialog.jsx";
 import AdminChallengeRuntimeDialog from "./AdminChallengeRuntimeDialog.jsx";
 import AdminChallengeSolvesPanel from "./AdminChallengeSolvesPanel.jsx";
 import AdminChallengeSubmissionsPanel from "./AdminChallengeSubmissionsPanel.jsx";
+import AdminRemoteRunPanel from "./AdminRemoteRunPanel.jsx";
 import { AdminBadge } from "./AdminLayout.jsx";
 import { Glyph } from "./AdminGlyph.jsx";
 import styles from "./AdminWorkspace.module.css";
@@ -16,9 +17,12 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
   const [title, setTitle] = useState(challenge.title);
   const [problemBusy, setProblemBusy] = useState(false);
   const [deploymentBusy, setDeploymentBusy] = useState(false);
+  const [remoteBusy, setRemoteBusy] = useState(false);
+  // 실행 파일을 내서 검증 VM에서 돌리는 문제는 원격 실행 탭에서 설정과 실행 기록을 본다
+  const remote = Boolean(challenge.remote_run);
   // 기본 정보의 파일 카드에서 배포 설정의 참가자 파일 칸으로 바로 넘긴다
   const [deploymentFocus, setDeploymentFocus] = useState(null);
-  const busy = problemBusy || deploymentBusy;
+  const busy = problemBusy || deploymentBusy || remoteBusy;
 
   function selectSection(next) {
     if (busy) return;
@@ -42,6 +46,7 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
       items={[
         { id: "problem", label: "기본 정보" },
         { id: "deployment", label: "배포 설정" },
+        ...(remote ? [{ id: "remote", label: "원격 실행" }] : []),
         { id: "solves", label: "풀이 기록" },
         { id: "submissions", label: "제출 기록" },
       ]}/>
@@ -53,6 +58,9 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
       {opened.has("deployment") && <AdminChallengeRuntimeDialog challenge={challenge} initialReleaseId={initialReleaseId} embedded active={section === "deployment"}
         focusPanel={deploymentFocus} onBusyChange={setDeploymentBusy} onChanged={onChanged}/>}
     </section>
+    {remote && <section role="tabpanel" id="challenge-workspace-panel-remote" aria-labelledby="challenge-workspace-tab-remote" hidden={section !== "remote"} className={styles.panel}>
+      {opened.has("remote") && <AdminRemoteRunPanel challenge={challenge} onBusyChange={setRemoteBusy} onChanged={onChanged}/>}
+    </section>}
     <section role="tabpanel" id="challenge-workspace-panel-solves" aria-labelledby="challenge-workspace-tab-solves" hidden={section !== "solves"} className={styles.panel}>
       {opened.has("solves") && <AdminChallengeSolvesPanel challengeId={challenge.challenge_id} currentScore={challenge.score}/>}
     </section>

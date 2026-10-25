@@ -21,13 +21,21 @@ import { AdminReasonField, AdminSwitch } from "../components/AdminFormParts.jsx"
 import { REASON_PRESETS } from "../utils/adminReasons.js";
 import styles from "../components/AdminWorkspace.module.css";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
+import { remoteRunSummary } from "../utils/adminRemoteRun.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 
 const BUTTON = styles.button;
 const SELECT = styles.select;
 
 // 배포 상태 칸: 버전 알약(초록 점이면 참가자에게 나가는 중), 새 발행본 대기 꼬리표, 실행 환경 한 줄
-function DeploymentSummary({ deployment }) {
+// 원격 실행 문제는 이미지 대신 검증 VM 환경과 받는 파일 제한을 보인다
+function DeploymentSummary({ deployment, remoteRun }) {
+  const remote = !deployment && remoteRunSummary(remoteRun);
+  if (remote) return <span className={styles.deployCell}>
+    <span className={styles.deployTop}><span className={styles.deployPill} data-state="remote"><i aria-hidden="true" />원격 실행</span></span>
+    <span className={styles.deployMeta}>{remote.environment}</span>
+    <span className={styles.deployMeta}>{remote.rules}</span>
+  </span>;
   if (!deployment) return <span className={styles.deployCell}>
     <span className={styles.deployTop}><span className={styles.deployPill} data-state="none">파일만</span></span>
     <span className={styles.deployMeta}>실행 환경 없이 파일만 제공</span>
@@ -178,7 +186,7 @@ export default function AdminChallengesPage() {
               onChange={() => { setSelected(challenge); setReason(""); setNotice(""); }} />
             <span data-on={challenge.is_published || undefined}>{challenge.is_published ? "공개" : "비공개"}</span>
           </span></td>
-          <td className={styles.deploymentCell}><DeploymentSummary deployment={challenge.deployment}/></td>
+          <td className={styles.deploymentCell}><DeploymentSummary deployment={challenge.deployment} remoteRun={challenge.remote_run}/></td>
           <td><div className={styles.rowActions}><button type="button" className={BUTTON} disabled={busy} aria-label={challenge.title + " 설정"} onClick={() => setEditing({ challenge, section: "problem" })}>설정 열기</button><Link className={styles.fileLink} to={`/admin/challenges/${challenge.challenge_id}/preview`} target="_blank" rel="noreferrer" aria-label={`${challenge.title} 미리보기`}>미리보기 ↗</Link></div></td>
         </tr>)}</tbody>
       </table>

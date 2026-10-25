@@ -1045,6 +1045,8 @@ dl.group dd.mono { font-size: 12.5px; }
 .deployState { color: var(--label-2); font-size: 12.5px; font-weight: 600; }
 .deployNew { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 11px; background: var(--orange-tint); color: var(--orange-text); font-size: 12px; font-weight: 700; }
 .deployMeta { color: var(--label-3); font-size: 12px; line-height: 16px; }
+.deployPill[data-state="remote"] { background: var(--blue-tint); color: var(--blue-text); }
+.deployPill[data-state="remote"] i { background: var(--blue-text); }
 /* 기본 정보: 지문 아래 참가자 첨부파일 카드 이름과 크기, 수집 시각, 받기가 한 줄에 선다 */
 .basicFiles { grid-area: files; min-width: 0; }
 .fileCard { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "head actions" "body actions"; align-items: center; gap: 4px 16px; padding: 14px 16px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
@@ -1061,4 +1063,28 @@ dl.group dd.mono { font-size: 12.5px; }
   .primaryTabs { display: grid; grid-auto-columns: minmax(0, 1fr); grid-auto-flow: column; width: 100%; overflow: visible; }
   .primaryTabs:has(> :nth-child(5)) { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row; }
   .primaryTabs button { padding: 0 6px; font-size: 13px; white-space: nowrap; }
+}
+
+/* ───────── 원격 실행 탭: 설정 카드 한 장과 실행 기록 ───────── */
+.remotePanel { display: grid; gap: 20px; }
+.remoteCard { display: grid; gap: 12px; padding: 18px 20px; }
+.remoteHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; }
+.remoteHead .helpText { margin-top: 6px; }
+.remoteTitle { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; color: var(--label); font-size: 15px; font-weight: 600; line-height: 22px; }
+.remoteForm { display: grid; gap: 12px; }
+.remoteFields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px 16px; }
+.remoteWide { grid-column: span 2; }
+.remoteSwitch { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 12px 10px 14px; border-radius: var(--radius-md); background: var(--surface-sunken); color: var(--label); font-size: 13px; }
+.remoteSwitch span { display: grid; gap: 2px; }
+.remoteSwitch strong { font-weight: 600; }
+.remoteSwitch small { color: var(--label-3); font-size: 12px; line-height: 16px; }
+.remoteActions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+.remoteForm .basicFooter { margin-top: 4px; }
+.remoteOutput { display: grid; gap: 8px; }
+.remoteOutputLabel { margin: 6px 0 0; color: var(--label-2); font-size: 12px; font-weight: 600; }
+.remoteCode { max-height: min(48dvh, 420px); margin: 0; padding: 12px 14px; overflow: auto; border: 1px solid var(--separator); border-radius: var(--radius-md); background: var(--surface-sunken); color: var(--label); font: 12.5px/1.6 var(--font-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+.remoteCodeErr { color: var(--red-text); }
+@media (max-width: 720px) {
+  .remoteFields { grid-template-columns: minmax(0, 1fr); }
+  .remoteWide { grid-column: auto; }
 }
