@@ -71,8 +71,12 @@ HTTPServer(('0.0.0.0',8000),Handler).serve_forever()
             data=body.encode() if body is not None else None
             req=urllib.request.Request(base+path,data=data,headers={'Host':'qa.msgctf.invalid',
                 'X-Forwarded-Proto':'https','Authorization':'Bearer qa-fixture','Content-Type':'application/json'})
-            with urllib.request.urlopen(req,timeout=2) as response:
-                return json.loads(response.read())
+            try:
+                with urllib.request.urlopen(req,timeout=2) as response:
+                    return json.loads(response.read())
+            except urllib.error.HTTPError as error:
+                error.add_note('Proxy request path: '+path)
+                raise
 
         def wait_for(marker):
             deadline=time.monotonic()+18
@@ -99,6 +103,7 @@ HTTPServer(('0.0.0.0',8000),Handler).serve_forever()
                ('/internal/v1/runtime-secrets/resolve','{"references":[]}'),
                ('/internal/v1/koth_environments/12345678-1234-1234-1234-123456789abc',None),
                ('/internal/v1/koth_environments/12345678-1234-1234-1234-123456789abc/status','{"state":"APPLIED"}'),
+               ('/internal/v1/koth_environments/12345678-1234-1234-1234-123456789abc/image_export','{"image_ref":"approved-fixture"}'),
                ('/healthz',None)]
 
         def check_paths(marker):
@@ -106,6 +111,12 @@ HTTPServer(('0.0.0.0',8000),Handler).serve_forever()
                 result=request(path,body)
                 assert result=={'instance':marker,'path':path,'method':'POST' if body is not None else 'GET',
                     'body':body or '','host':'qa.msgctf.invalid','proto':'https','authorization':'Bearer qa-fixture'},result
+            for path in ['/internal/v1/koth_environments/not-a-uuid/image_export',
+                         '/internal/v1/koth_environments/12345678-1234-1234-1234-123456789abc/image_export/extra',
+                         '/internal/v1/koth_environments/12345678-1234-1234-1234-123456789abc/unknown']:
+                try:request(path,'{}')
+                except urllib.error.HTTPError as error:assert error.code==404,path
+                else:raise AssertionError('Unexpected internal path was forwarded: '+path)
 
         check_paths('before')
         front_started=inspect(frontend)['State']['StartedAt']
@@ -125,6 +136,7 @@ HTTPServer(('0.0.0.0',8000),Handler).serve_forever()
         print(json.dumps({'backend_ip_changed':True,'frontend_not_restarted':True,
                           'html_routes_revalidate_with_security_headers':len(html_paths),
                           'recovered_in_seconds':recovered_in,'request_cases_before_and_after':len(cases)*2,
+                          'unknown_internal_paths_rejected_before_and_after':6,
                           'paths_queries_post_bodies_and_headers_preserved':True}))
     finally:
         for name in reversed(owned):
