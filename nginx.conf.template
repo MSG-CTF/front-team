@@ -78,6 +78,37 @@ server {
         proxy_buffering off;
     }
 
+    # KOTH 서버의 팀 인증과 팀 목록 조회도 플랫폼 백엔드로 전달한다
+    location = /internal/koth/team_tokens/verify {
+        client_max_body_size 4k;
+        proxy_pass $backend_url$request_uri;
+        proxy_ssl_server_name on;
+        proxy_set_header Host $host;
+        proxy_set_header X-Internal-Token $http_x_internal_token;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+        proxy_cache off;
+        proxy_buffering off;
+    }
+
+    location = /internal/teams {
+        client_max_body_size 4k;
+        proxy_pass $backend_url$request_uri;
+        proxy_ssl_server_name on;
+        proxy_set_header Host $host;
+        proxy_set_header X-Internal-Token $http_x_internal_token;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+        proxy_cache off;
+        proxy_buffering off;
+    }
+
+    location /internal/ {
+        return 404;
+    }
+
     # SLA가 Django의 DB·Redis 점검 결과를 그대로 받을 수 있게 연결한다
     location = /healthz {
         proxy_pass $backend_url$request_uri;
