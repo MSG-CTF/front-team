@@ -70,7 +70,7 @@ export default function AdminKothDetailPage() {
       <IconButton icon="refresh" label="새로고침" onClick={refresh} disabled={detail.status === "loading"} />
     </>}>
     <AdminStatusMessage status={detail.status} error={detail.error} onRetry={detail.retry} hasData={Boolean(detail.data)} />
-    {limited && <p className={ui.callout}>{LIMITED_NOTICE}</p>}
+    {limited && tab !== "environment" && <p className={ui.callout}>{LIMITED_NOTICE}</p>}
     {challenge && <div className={ui.stack}>
       <StatStrip label="KoTH 문제 요약">
         <StatTile label="동아리 · 순번" value={challenge.club_name || "-"} text sub={challenge.open_group ? `공개 순번 ${challenge.open_group}` : ""} />
@@ -80,7 +80,7 @@ export default function AdminKothDetailPage() {
           sub={limited ? "백엔드 반영 전" : challenge.failed_period_count ? `수집 실패 ${challenge.failed_period_count}틱` : last ? periodRange(last.period_id).slice(6) : "아직 없음"} />
         <StatTile label="진행 시각" text
           value={challenge.opened_at ? `${formatAdminTime(challenge.opened_at, { seconds: false }).slice(6)} ~ ${challenge.closed_at ? formatAdminTime(challenge.closed_at, { seconds: false }).slice(6) : ""}` : "-"}
-          sub={challenge.closed_at ? "종료" : challenge.opened_at ? "진행 중" : "공개 전"} />
+          sub={challenge.status === "CLOSED" ? "종료" : challenge.status === "ACTIVE" ? "진행 중" : "공개 전"} />
       </StatStrip>
 
       <section className={ui.card}>
@@ -110,8 +110,7 @@ export default function AdminKothDetailPage() {
             {tab === "repository" && <KothRepositoryPanel challenge={challenge} limited={limited} onLinked={refresh} onUseDraft={applyDraft} />}
           </div>
           <div role="tabpanel" id="koth-detail-panel-environment" aria-labelledby="koth-detail-tab-environment" hidden={tab !== "environment"}>
-            {tab === "environment" && !limited && <AdminKothEnvironmentPanel challenge={challenge}/>}
-            {tab === "environment" && limited && <p className={ui.empty}>관리자 API 연결을 확인한 뒤 환경변수를 관리할 수 있습니다</p>}
+            {tab === "environment" && <AdminKothEnvironmentPanel challenge={challenge}/>}
           </div>
         </div>
       </section>
