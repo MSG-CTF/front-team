@@ -97,8 +97,8 @@ HTTPServer(('0.0.0.0',8000),Handler).serve_forever()
         cases=[('/api/v1/qa/items/a%2Fb?tag=a%2Bb&tag=x%2Fy',None),
                ('/api/v1/qa/submit?source=browser','{"flag":"qa-fixture"}'),
                ('/internal/v1/runtime-secrets/resolve','{"references":[]}'),
-               ('/internal/v1/koth-environments/12345678-1234-1234-1234-123456789abc',None),
-               ('/internal/v1/koth-environments/12345678-1234-1234-1234-123456789abc/status','{"state":"APPLIED"}'),
+               ('/internal/v1/koth_environments/12345678-1234-1234-1234-123456789abc',None),
+               ('/internal/v1/koth_environments/12345678-1234-1234-1234-123456789abc/status','{"state":"APPLIED"}'),
                ('/healthz',None)]
 
         def check_paths(marker):
