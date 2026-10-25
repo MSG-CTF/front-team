@@ -9,6 +9,12 @@ import {
 } from "./eventData.js";
 
 const start = Date.parse("2026-11-08T10:00:00+09:00");
+const sampleAward = {
+  label: "특별상",
+  amountKrw: 500000,
+  description: "상장 수여",
+  selectionNote: "수상 기준 별도 안내",
+};
 test("화면의 날짜와 시작 시각은 카운트다운과 같은 설정을 사용한다", () => {
   assert.deepEqual(getEventLabels(eventConfig.event), {
     fullDate: "2026년 11월 8일 일요일",
@@ -78,45 +84,38 @@ test("시간대가 없거나 날짜와 맞지 않는 시작 시간은 초 단위
     );
   }
 });
-test("기존 트랙 상금 150만원에 안랩 대표상 50만원을 더해 총 200만원이다", () => {
+test("외부 130만원과 내부 70만원을 합해 총 200만원이다", () => {
   const result = getPrizes(eventConfig.prizes);
   assert.equal(result.total, 2000000);
   assert.deepEqual(
     result.tracks.map((row) => row.amounts),
     [
-      [300000, 200000, 100000],
-      [500000, 300000, 100000],
+      [700000, 400000, 200000],
+      [400000, 200000, 100000],
     ],
   );
-  assert.deepEqual(result.specialAwards, [
-    {
-      label: "안랩 대표상",
-      amount: 500000,
-      description: "안랩 대표 명의 상장 수여",
-      selectionNote: "수상 기준은 추후 안내합니다",
-    },
-  ]);
+  assert.deepEqual(result.specialAwards, []);
   assert.equal(
     result.tracks
       .flatMap((track) => track.amounts)
       .reduce((sum, amount) => sum + amount, 0),
-    1500000,
+    2000000,
   );
 });
 test("별도 시상이 없는 기존 설정도 트랙 상금만으로 계산한다", () => {
   const result = getPrizes({
     confirmed: true,
-    totalKrw: 1500000,
+    totalKrw: 2000000,
     tracks: eventConfig.prizes.tracks,
   });
-  assert.equal(result.total, 1500000);
+  assert.equal(result.total, 2000000);
   assert.deepEqual(result.specialAwards, []);
 });
 test("미확정 상금과 합계 오류는 공개하지 않는다", () => {
   assert.equal(getPrizes({ ...eventConfig.prizes, confirmed: false }), null);
   assert.equal(getPrizes({ ...eventConfig.prizes, totalKrw: 1600000 }), null);
   assert.equal(getPrizes({ ...eventConfig.prizes, totalKrw: 1500000 }), null);
-  assert.equal(getPrizes({ ...eventConfig.prizes, specialAwards: [] }), null);
+  assert.equal(getPrizes({ ...eventConfig.prizes, specialAwards: [sampleAward] }), null);
   assert.equal(getPrizes({ ...eventConfig.prizes, tracks: [] }), null);
 });
 test("음수, 소수, 문자열 금액과 중복 트랙은 공개하지 않는다", () => {
@@ -133,17 +132,17 @@ test("음수, 소수, 문자열 금액과 중복 트랙은 공개하지 않는�
   assert.equal(
     getPrizes({
       confirmed: true,
-      totalKrw: 1200000,
+      totalKrw: 2600000,
       tracks: [eventConfig.prizes.tracks[0], eventConfig.prizes.tracks[0]],
     }),
     null,
   );
 });
 test("별도 시상의 잘못된 금액, 이름, 설명과 중복 항목은 공개하지 않는다", () => {
-  const award = eventConfig.prizes.specialAwards[0];
+  const award = sampleAward;
   for (const amountKrw of [0, -1, 1.5, "500000", NaN, Infinity]) {
     assert.equal(
-      getPrizes({ ...eventConfig.prizes, specialAwards: [{ ...award, amountKrw }] }),
+      getPrizes({ ...eventConfig.prizes, totalKrw: 2500000, specialAwards: [{ ...award, amountKrw }] }),
       null,
     );
   }
@@ -155,19 +154,28 @@ test("별도 시상의 잘못된 금액, 이름, 설명과 중복 항목은 공�
     [{ ...award, label: 1 }],
     [{ ...award, description: false }],
     [{ ...award, selectionNote: {} }],
-    [award, { ...award, label: " 안랩 대표상 " }],
+    [award, { ...award, label: " 특별상 " }],
   ]) {
-    assert.equal(getPrizes({ ...eventConfig.prizes, specialAwards }), null);
+    assert.equal(getPrizes({
+      ...eventConfig.prizes,
+      totalKrw: 2000000 + (Array.isArray(specialAwards) ? specialAwards.length : 1) * 500000,
+      specialAwards,
+    }), null);
   }
 });
 test("상금 계산 결과를 바꿔도 원본 설정은 유지된다", () => {
-  const result = getPrizes(eventConfig.prizes);
+  const source = {
+    ...eventConfig.prizes,
+    totalKrw: 2500000,
+    specialAwards: [{ ...sampleAward }],
+  };
+  const result = getPrizes(source);
   result.tracks[0].amounts[0] = 1;
   result.specialAwards[0].amount = 1;
   result.specialAwards[0].label = "변경";
-  assert.equal(eventConfig.prizes.tracks[0].amounts[0], 300000);
-  assert.equal(eventConfig.prizes.specialAwards[0].amountKrw, 500000);
-  assert.equal(eventConfig.prizes.specialAwards[0].label, "안랩 대표상");
+  assert.equal(eventConfig.prizes.tracks[0].amounts[0], 700000);
+  assert.equal(source.specialAwards[0].amountKrw, 500000);
+  assert.equal(source.specialAwards[0].label, "특별상");
 });
 test("금액 표시와 무료 참가비, 공개 링크를 확인한다", () => {
   assert.equal(formatWon(1500000), "150만원");
