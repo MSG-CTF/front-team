@@ -1,16 +1,10 @@
-@font-face {
-  font-family: "Alegreya";
-  src: url("/assets/fonts/alegreya/Alegreya-Medium.ttf") format("truetype");
-  font-style: normal;
-  font-weight: 500;
-  font-display: swap;
-}
+@import "../../../styles/board-choice-fonts.generated.css";
 
 @font-face {
-  font-family: "Board Choice Korean";
-  src: url("/assets/intro/fonts/SongMyung-Regular.ttf") format("truetype");
+  font-family: "Alegreya";
+  src: url("/assets/fonts/alegreya/Alegreya-Medium.woff2") format("woff2");
   font-style: normal;
-  font-weight: 400 500;
+  font-weight: 500;
   font-display: swap;
 }
 

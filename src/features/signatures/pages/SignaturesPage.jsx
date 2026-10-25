@@ -120,6 +120,14 @@ export function SignatureFestivalScreen({ state, onPreviewClub }) {
         )}
         <div className={styles.sceneViewport}>
           <div className={styles.scene}>
+            <picture>
+              <source type="image/avif"
+                media="(max-width: 600px) and (max-resolution: 1dppx), (max-width: 460px) and (max-resolution: 2dppx)"
+                srcSet="/assets/signatures/club-festival-v1-768.avif 768w, /assets/signatures/club-festival-v1-1024.avif 1024w"
+                sizes="max(100vw, min(150dvh, 111vw))" />
+              <img className={styles.sceneArtwork} src="/assets/signatures/club-festival-v1.webp"
+                alt="" aria-hidden="true" fetchPriority="high" decoding="async" />
+            </picture>
             <ul
               className={styles.booths}
               aria-label="동아리 부스 선택"

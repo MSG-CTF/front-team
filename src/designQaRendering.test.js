@@ -111,7 +111,7 @@ test("참가자 초기 코드에 관리자 페이지를 합치지 않고 3D는 �
   assert.match(routes, /void import\("\.\.\/features\/board\/components\/Dice3D.jsx"\)\.catch/);
   const dice = readFileSync(new URL("./features/board/components/Dice3D.jsx", import.meta.url), "utf8");
   assert.doesNotMatch(dice, /@react-three\/drei/);
-  assert.match(dice, /useLoader\(GLTFLoader, "\/models\/dice.glb"\)/);
+  assert.match(dice, /useLoader\(GLTFLoader, "\/models\/dice-display.glb"\)/);
   assert.match(dice, /frameloop="demand"/);
 });
 
@@ -223,12 +223,12 @@ test("문제 후보가 0개면 재조회 안내를 띄우고 다음 칸으로 �
 
 test("3D를 쓸 수 없어도 대체 주사위는 전달받은 두 눈만 표시한다", () => {
   const idle = render("DiceFallback");
-  assert.match(idle, /\/assets\/board\/dice.png/);
+  assert.match(idle, /\/assets\/board\/dice.webp/);
   const rolled = render("DiceFallback", { result: { diceA: 2, diceB: 6 } });
   assert.equal((rolled.match(/<circle /g) || []).length, 8);
   assert.equal((rolled.match(/<rect /g) || []).length, 2);
   assert.doesNotMatch(rolled, /<img/);
-  assert.match(render("DiceFallback", { result: { diceA: 0, diceB: 8 } }), /\/assets\/board\/dice.png/);
+  assert.match(render("DiceFallback", { result: { diceA: 0, diceB: 8 } }), /\/assets\/board\/dice.webp/);
 });
 
 test("넓어진 주사위 3D 캔버스는 주변 보드 칸의 클릭을 가로채지 않는다", () => {
@@ -402,13 +402,13 @@ test("모바일 보드 메뉴는 기존 금색 아이콘과 여섯 이동 기능
   const mobileNav = html.match(/<nav[^>]*aria-label="대회 메뉴"[\s\S]*?<\/nav>/)?.[0];
   assert.ok(mobileNav);
   assert.match(mobileNav, /<details[^>]*>[\s\S]*?<summary[^>]*aria-label="대회 전체 메뉴"/);
-  for (const image of ["nav-rules.png", "nav-mypage.png", "nav-scoreboard.png", "nav-logout.png"]) {
+  for (const image of ["nav-rules.webp", "nav-mypage.webp", "nav-scoreboard.webp", "nav-logout.webp"]) {
     assert.ok(mobileNav.includes(`/assets/board/${image}`));
   }
   for (const path of ["/rules", "/mypage", "/leaderboard", "/koth", "/signatures"]) {
     assert.ok(mobileNav.includes(`href="${path}"`));
   }
-  assert.match(mobileNav, /<button[^>]*>[\s\S]*?nav-logout\.png[\s\S]*?<span>로그아웃<\/span><\/button>/);
+  assert.match(mobileNav, /<button[^>]*>[\s\S]*?nav-logout\.webp[\s\S]*?<span>로그아웃<\/span><\/button>/);
   // 데스크톱 로그아웃은 우상단 원형 아이콘 줄의 맨 오른쪽 동전으로만 둔다
   assert.match(html, /aria-label="로그아웃"/);
   assert.doesNotMatch(html, /top-\[17\.5%\]/);
@@ -606,7 +606,7 @@ test("문제 선택은 피그마 기반 보정 에셋과 로컬 Alegreya Medium�
   });
   const alegreya = fontFaces.find((face) => face["font-family"] === '"Alegreya"');
   assert.equal(alegreya["font-weight"], "500");
-  assert.match(alegreya.src, /\/assets\/fonts\/alegreya\/Alegreya-Medium\.ttf/);
+  assert.match(alegreya.src, /\/assets\/fonts\/alegreya\/Alegreya-Medium\.woff2/);
   const html = render("ChallengeSelection", { candidates: [{ challengeId: 1, title: "AFTERIMAGE", category: "WEB" }] });
   assert.doesNotMatch(html, /selection-squirrel-refined\.webp/);
   assert.doesNotMatch(html, /piece-squirrel\.png/);

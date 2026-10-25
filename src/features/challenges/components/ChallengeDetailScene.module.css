@@ -2,20 +2,21 @@
 
 @font-face {
   font-family: "Detail Fell";
-  src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
+  src: url("/assets/intro/fonts/IMFeENrm28P.woff2") format("woff2");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "Detail Caslon";
-  src: url("/assets/leaderboard/fonts/libre-caslon-text-400.ttf") format("truetype");
+  src: url("/assets/leaderboard/fonts/libre-caslon-text-400.woff2") format("woff2");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
 }
 /* 1u = Figma 1920×1080 캔버스의 1px. 좁은 화면에서는 1px로 돌아가 일반 흐름 레이아웃이 된다 */
 .page {
+  container: challenge-page / inline-size;
   --u: 1px;
   --brown: #613d15;
   --brown-soft: #8a5e2e;
@@ -374,9 +375,11 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  min-width: 120px;
-  height: 36px;
-  padding: 0 16px;
+  flex-wrap: wrap;
+  min-width: min(120px, 100%);
+  max-width: 100%;
+  min-height: 36px;
+  padding: 8px 12px;
   border: 1px solid #8a6a3e;
   border-radius: 20px;
   background: #2e2114;
@@ -700,20 +703,20 @@
   cursor: not-allowed;
 }
 .btnCreate {
-  background-image: url("/assets/challenge-detail/button-instance-create-blank.png");
+  background-image: url("/assets/challenge-detail/button-instance-create-blank.webp");
 }
 .btnCreate:disabled {
   background-image: url("/assets/challenge-detail/button-instance-create-disabled-blank.png");
   filter: none;
 }
 .btnExtend {
-  background-image: url("/assets/challenge-detail/button-instance-extend-blank.png");
+  background-image: url("/assets/challenge-detail/button-instance-extend-blank.webp");
 }
 .btnRestart {
-  background-image: url("/assets/challenge-detail/button-instance-restart-blank.png");
+  background-image: url("/assets/challenge-detail/button-instance-restart-blank.webp");
 }
 .btnStop {
-  background-image: url("/assets/challenge-detail/button-instance-stop-blank.png");
+  background-image: url("/assets/challenge-detail/button-instance-stop-blank.webp");
 }
 .controlHints {
   display: flex;
@@ -774,7 +777,7 @@
   height: 53px;
   padding: 0 0 3px;
   border: 0;
-  background: url("/assets/challenge-detail/button-submit-blank.png") center / 100% 100% no-repeat;
+  background: url("/assets/challenge-detail/button-submit-blank.webp") center / 100% 100% no-repeat;
   color: #f3e6cf;
   font-family: var(--label);
   font-size: 20px;
@@ -1604,7 +1607,7 @@
     padding: 0;
     border: 0;
     border-radius: 0;
-    background: url("/assets/challenge-detail/panel-instance-base.png") center / 100% 100% no-repeat;
+    background: url("/assets/challenge-detail/panel-instance-base.webp") center / 100% 100% no-repeat;
   }
   .statusSlot {
     position: absolute;
@@ -1823,7 +1826,7 @@
     padding: 0;
     border: 0;
     border-radius: 0;
-    background: url("/assets/challenge-detail/panel-flag.png") center / 100% 100% no-repeat;
+    background: url("/assets/challenge-detail/panel-flag.webp") center / 100% 100% no-repeat;
   }
   .fieldLabel {
     position: absolute;
@@ -1925,7 +1928,7 @@
   .page { isolation: isolate; background: none; }
   .page::before { content: ""; position: fixed; inset: 0; z-index: -1; background: linear-gradient(#20170e55, #20170e88), url("/assets/challenge-detail/bg-forest.webp") center / cover; pointer-events: none; }
   .header, .descriptionPanel, .flagPanel { border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 / 8px stretch; border-radius: 0; background: none; }
-  .instancePanel { isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; border-radius: 0; background: #2c1c11; background-clip: padding-box; }
+  .instancePanel { isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.webp") 24 / 8px stretch; border-radius: 0; background: #2c1c11; background-clip: padding-box; }
   .bakedLabel { padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1px solid #9c7548; font-size: 17px; }
   .instancePanel .bakedLabel { border-bottom-color: #b09a76; }
   /* 첨부 제목줄도 다른 섹션 제목처럼 줄 전체에 밑줄을 긋고 개수 배지를 제목 글자 줄 가운데에 둔다 */
@@ -1946,4 +1949,13 @@
   .connectEmpty, .extendsValue, .instanceHint, .expiryTimes { color: #c4ad86; }
   .flagInput::placeholder { color: #684316; }
   .bonusNotice strong { color: #743e0d; }
+}
+
+/* 페이지 확대 뒤 실제 작업 폭이 좁아질 때도 원래 판과 단추 안에서 읽는다 */
+@container challenge-page (max-width: 260px) {
+  .board { padding: 4px; border-width: 6px; }
+  .header, .descriptionPanel, .instancePanel, .flagPanel { padding: 12px 8px; }
+  .controls, .sectionNav, .sectionNav:not(:has(> :nth-child(3))) { grid-template-columns: minmax(0, 1fr); }
+  .submitButton { padding-inline: 0; font-size: 16px; letter-spacing: 0.06em; }
+  .pill { min-width: 0; max-width: 100%; min-height: 32px; height: auto; padding-inline: 10px; font-size: 14px; white-space: normal; }
 }

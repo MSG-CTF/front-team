@@ -2,14 +2,14 @@
 
 @font-face {
   font-family: "MyPage Fell";
-  src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
+  src: url("/assets/intro/fonts/IMFeENrm28P.woff2") format("woff2");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "MyPage Caslon";
-  src: url("/assets/leaderboard/fonts/libre-caslon-text-400.ttf") format("truetype");
+  src: url("/assets/leaderboard/fonts/libre-caslon-text-400.woff2") format("woff2");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
@@ -816,11 +816,11 @@
   }
   .scorePanel {
     left: calc(var(--u) * 636);
-    background: url("/assets/mypage/panel-score.png") center / 100% 100% no-repeat;
+    background: url("/assets/mypage/panel-score.webp") center / 100% 100% no-repeat;
   }
   .mileagePanel {
     left: calc(var(--u) * 1232);
-    background: url("/assets/mypage/panel-mileage.png") center / 100% 100% no-repeat;
+    background: url("/assets/mypage/panel-mileage.webp") center / 100% 100% no-repeat;
   }
   /* 두 패널 그림의 제목 글자와 구분선이 x40에서 시작해 값도 같은 왼쪽 선에 둔다 */
   /* top 79는 마일리지 패널 그림에 구운 MI 단위와 같은 기준선이고 점수 패널은 아래에서 따로 정한다 */
@@ -980,7 +980,7 @@
   .page::before { content: ""; position: fixed; inset: 0; z-index: -1; background: linear-gradient(#20170e55, #20170e88), url("/assets/challenge-detail/bg-forest.webp") center / cover; pointer-events: none; }
   .teamCard, .historyPanel { border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 / 8px stretch; border-radius: 0; background: none; }
   .teamCard .bakedLabel:first-child { min-width: 70%; padding: 8px 24px; clip-path: polygon(0 0, 100% 0, 94% 50%, 100% 100%, 0 100%, 6% 50%); background: #842b28; }
-  .metricPanel { isolation: isolate; container-type: inline-size; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; border-radius: 0; background: #2c1c11; background-clip: padding-box; }
+  .metricPanel { isolation: isolate; container-type: inline-size; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.webp") 24 / 8px stretch; border-radius: 0; background: #2c1c11; background-clip: padding-box; }
   .metricPanel .bakedLabel { font-size: clamp(13px, 15cqw, 15px); letter-spacing: min(.16em, 1cqw); white-space: normal; overflow: visible; overflow-wrap: anywhere; }
   .metricValue { font-size: clamp(24px, 24cqw, 44px); }
   .refreshButton, .historyPagination button { min-width: 44px; min-height: 44px; }

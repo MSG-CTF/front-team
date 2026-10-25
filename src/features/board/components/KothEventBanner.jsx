@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../routes/routePaths.js";
+import { preloadGameArtwork } from "../../../routes/pageResources.js";
 import styles from "./BoardScreen.module.css";
 
 // Figma node 5:26 "버튼 없 배너"(339x627) + 5:32 "라운드 버튼"(213x168).
@@ -25,12 +26,15 @@ export default function KothEventBanner() {
 
       <button
         type="button"
+        onPointerEnter={() => preloadGameArtwork(document, ROUTES.koth)}
+        onFocus={() => preloadGameArtwork(document, ROUTES.koth)}
+        onPointerDown={() => preloadGameArtwork(document, ROUTES.koth)}
         onClick={() => navigate(ROUTES.koth)}
         aria-label="KOTH 페이지로 이동"
         className={`${styles.kothRound} absolute left-[84.73%] top-[68.15%] w-[11.09%] h-[15.56%] border-0 bg-transparent p-0 cursor-pointer`}
       >
         <img
-          src="/assets/board/button-round.png"
+          src="/assets/board/button-round.webp"
           alt=""
           aria-hidden="true"
           className="absolute inset-0 w-full h-full object-contain pointer-events-none"

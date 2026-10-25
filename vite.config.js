@@ -6,7 +6,10 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), ["VITE_API_PROXY_TARGET", "VITE_PUBLIC_SITE_URL"]);
   return {
     plugins: [react(), shareMetadataPlugin(env.VITE_PUBLIC_SITE_URL)],
+    // QA 리포트와 과거 빌드의 HTML까지 개발 의존성 진입점으로 스캔하지 않는다
+    optimizeDeps: { entries: ["index.html"] },
     server: {
+      watch: { ignored: ["**/output/**", "**/.playwright-cli/**"] },
       proxy: {
         "/api": {
           target: env.VITE_API_PROXY_TARGET || "http://127.0.0.1:8000",

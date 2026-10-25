@@ -1,14 +1,8 @@
-@font-face {
-  font-family: "MSG Login English";
-  src: url("/assets/intro/fonts/IMFeENrm28P.ttf") format("truetype");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
+@import "../../../styles/login-fonts.generated.css";
 
 @font-face {
-  font-family: "MSG Login Body";
-  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2") format("woff2");
+  font-family: "MSG Login English";
+  src: url("/assets/intro/fonts/IMFeENrm28P.woff2") format("woff2");
   font-style: normal;
   font-weight: 400;
   font-display: swap;

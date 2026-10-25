@@ -12,7 +12,8 @@ test("축제 원화와 클릭 오버레이는 모든 너비에서 같은 3:2 좌
   assert.doesNotMatch(css, /385%|290%|aspect-ratio: 0\.78|background-plaza/);
   const main = css.slice(0, css.indexOf(".clubPage"));
   assert.match(main, /\.boothPosition\s*\{[^}]*top: 20%;[^}]*left: 5\.5%;[^}]*width: 25\.5%;[^}]*height: 33%;/);
-  assert.equal((main.match(/club-festival-v1\.webp/g) || []).length, 1, "메인 화면의 중복 원화·확장 배경 없음");
+  assert.doesNotMatch(main, /club-festival-v1\.webp/, "반응형 그림과 CSS 배경을 중복해서 받지 않는다");
+  assert.match(main, /\.sceneArtwork\s*\{[^}]*position: absolute;[^}]*inset: 0;[^}]*width: 100%;[^}]*height: 100%;/);
   assert.doesNotMatch(main, /blur\(/);
   assert.doesNotMatch(css.match(/\.scene\s*\{[^}]*\}/)?.[0] || "", /scale\(/);
   assert.match(css, /--art-height: clamp\(52vw, 100dvh, 74vw\)/);

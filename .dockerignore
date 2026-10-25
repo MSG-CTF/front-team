@@ -3,6 +3,9 @@
 .gitignore
 node_modules
 dist
+output/
+.playwright-cli/
+.claude/
 archive/
 mock-backend/
 docker-compose.yml

@@ -2,7 +2,7 @@ import { useId } from "react";
 import styles from "./PanelTexture.module.css";
 
 const PAPER = {
-  paper: { src: "/assets/challenge-detail/panel-board.webp", width: 1720, height: 870, crop: "200 200 320 320" },
+  paper: { src: "/assets/rules/paper-texture.webp", width: 336, height: 336, crop: "8 8 320 320" },
   map: { src: "/assets/koth/koth-trail-background.webp", width: 1672, height: 941, crop: "650 600 240 240" },
   scoreboard: { src: "/assets/leaderboard/leaderboard-layout.webp", width: 1672, height: 941, crop: "650 600 200 200" },
 };
@@ -22,6 +22,6 @@ export default function PanelTexture({ material = "wood", responsive = "both" })
     <rect width="100%" height="100%" fill={`url(#${id})`} />
   </svg>;
   return <svg className={styles.texture} viewBox="50 190 1010 120" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
-    <image href="/assets/mypage/panel-score.png" width="1110" height="380" />
+    <image href="/assets/mypage/panel-score.webp" width="1110" height="380" />
   </svg>;
 }

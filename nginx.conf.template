@@ -27,6 +27,32 @@ server {
     add_header Content-Security-Policy "frame-ancestors 'none'" always;
     add_header X-Content-Type-Options "nosniff" always;
 
+    # 정적 코드와 모델만 압축한다 이미 압축된 그림/글꼴, API JSON은 제외한다
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_comp_level 5;
+    gzip_proxied any;
+    gzip_types text/css application/javascript image/svg+xml model/gltf-binary;
+
+    # 내용 해시가 바뀌는 Vite 청크는 오래 보관해도 새 배포와 섞이지 않는다
+    location ~ "^/assets/[^/]+-[A-Za-z0-9_-]{8,}\\.(js|css)$" {
+        try_files $uri =404;
+        expires 365d;
+    }
+
+    # 원본 경로를 유지하는 그림/글꼴은 재검증해 변경된 디자인이 바로 반영된다
+    location /assets/ {
+        try_files $uri =404;
+        expires -1;
+    }
+
+    location /models/ {
+        types { model/gltf-binary glb; }
+        try_files $uri =404;
+        expires -1;
+    }
+
     # React Router(SPA) — 새로고침/직접 URL 진입 시 index.html로 폴백
     location / {
         try_files $uri $uri/ /index.html;

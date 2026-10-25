@@ -9,7 +9,7 @@ export default function MainNavigationButton({ onClick }) {
       aria-label="메인 페이지로 이동"
     >
       <img
-        src="/assets/rules/main-navigation-button.png"
+        src="/assets/rules/main-navigation-button.webp"
         alt=""
         aria-hidden="true"
         className={styles.layerImage}

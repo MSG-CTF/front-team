@@ -30,7 +30,7 @@ export const DiceFallback = forwardRef(function DiceFallback({ onReady, inCanvas
           {PIPS[face].map(([cx, cy]) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="8" fill="#382616" />)}
         </g>)}
       </svg>
-    ) : <img src="/assets/board/dice.png" alt="" className="h-full w-full object-contain" />}
+    ) : <img src="/assets/board/dice.webp" alt="" className="h-full w-full object-contain" />}
   </span>;
 });
 
