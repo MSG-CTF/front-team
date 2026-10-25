@@ -6,7 +6,7 @@ import styles from "./AdminWorkspace.module.css";
 
 const BUTTON = styles.button;
 const INPUT = styles.input;
-const ACTION = { add: "추가", update: "변경", keep: "유지" };
+const ACTION = { add: "추가", update: "변경", keep: "유지", unset: "설정하지 않음" };
 
 export default function AdminEnvironmentFileImporter({ challengeId, release, secrets, busy, onSave }) {
   const [container, setContainer] = useState(release.containers[0].name);
@@ -111,6 +111,7 @@ export default function AdminEnvironmentFileImporter({ challengeId, release, sec
       <p>UTF-8과 Windows·Linux 줄바꿈을 지원합니다 빈 줄과 #으로 시작하는 주석 줄은 무시합니다</p>
       <p>값 양끝의 따옴표 한 쌍은 제거하고, $·#·=·역슬래시는 그대로 저장합니다 여러 줄 값과 변수 치환은 지원하지 않습니다</p>
       <p>FLAG=처럼 값을 비워두면 이 릴리스에 연결된 비밀값을 계속 사용할 수 있습니다</p>
+      <p>선택 항목의 이름만 적으면 주입하지 않습니다 이름=은 빈 문자열이므로 서로 다릅니다 필수 플래그는 미설정으로 저장할 수 없습니다</p>
     </details>
     {working && <p role="status">파일을 확인하고 있습니다</p>}
     {error && <p role="alert" className={styles.errorText}>{error}</p>}
@@ -133,7 +134,8 @@ export default function AdminEnvironmentFileImporter({ challengeId, release, sec
               </select>
             </td>
             <td className={styles.valueCell}>
-              {row.kind === "env" ? <p className={styles.monoValue}>{row.value ?? "설정 확인을 누르면 값이 표시됩니다"}</p> : <div className={styles.cellStack}>
+              {row.action === "unset" ? <p className={styles.fieldHint}>주입하지 않습니다 필수 선택을 해제한 뒤 확인해주세요</p>
+              : row.kind === "env" ? <p className={styles.monoValue}>{row.value ?? "설정 확인을 누르면 값이 표시됩니다"}</p> : <div className={styles.cellStack}>
                 <p className={styles.fieldHint}>{row.use_existing ? `저장된 값 사용${row.version ? " · 버전 " + row.version : ""}` : row.has_value ? "파일의 값을 암호화해 저장" : "파일에 값이 없습니다"}</p>
                 <input aria-label={`${row.name} 비밀값 이름`} list="env-import-secret-names" value={row.secret_name ?? ""}
                   autoComplete="off" className={INPUT} disabled={unavailable || row.name === "FLAG"}

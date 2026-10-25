@@ -8,7 +8,7 @@ import { isSuccess } from "../../../utils/response.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import { RECENT_LIMIT, latestFirst } from "../utils/adminLists.js";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { buildDerivedSettings, describeRelease, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, repositoryEnvStatus, validateRuntimeSecret, validateReleaseActivationReason } from "../utils/adminRuntime.js";
+import { buildDerivedSettings, describeRelease, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, repositoryEnvStatus, unboundEnvironmentRules, validateRuntimeSecret, validateReleaseActivationReason } from "../utils/adminRuntime.js";
 import AdminDialog from "./AdminDialog.jsx";
 import AdminEnvironmentFileImporter from "./AdminEnvironmentFileImporter.jsx";
 import AdminRepositoryEnvironmentImporter from "./AdminRepositoryEnvironmentImporter.jsx";
@@ -23,6 +23,12 @@ import { AdminReasonField } from "./AdminFormParts.jsx";
 const BUTTON = styles.button;
 const INPUT = styles.input;
 const MONO_INPUT = `${styles.input} ${styles.inputMono}`;
+
+function UnboundEnvironmentRows({ container, release }) {
+  return unboundEnvironmentRules(container, release.repository_env?.missing).map((row) => <tr key={row.name}>
+    <td className={styles.mono}>{row.name}</td><td>{row.label}</td><td>{row.required ? "필수" : "선택 항목"}</td>
+  </tr>);
+}
 
 async function loadRuntime(challengeId, config) {
   const [releases, secrets] = await Promise.all([getChallengeReleases(challengeId, config), getChallengeRuntimeSecrets(challengeId, config)]);
@@ -66,6 +72,8 @@ function RuntimeSettingsEditor({ release, secrets, busy, onSave }) {
     <datalist id="stored-runtime-secret-names">{names.map((name) => <option key={name} value={name}/>)}</datalist>
     {draft.map((container, containerIndex) => <section key={container.name} className={styles.editorContainer}>
       <h5 className={styles.editorName}>{container.name}</h5>
+      {unboundEnvironmentRules(release.containers.find((item) => item.name === container.name), release.repository_env?.missing).map((row) =>
+        <p key={row.name} className={styles.fieldHint}>{row.name} · {row.label} · 이 설정도 새 버전에 유지됩니다</p>)}
       <div className={styles.editorGroup}><p className={styles.fieldLabel}>일반 환경변수</p>{container.env.map((row, rowIndex) => <div key={rowIndex} className={styles.editorRow}>
         <input aria-label={`${container.name} 환경변수 이름 ${rowIndex + 1}`} placeholder="이름" value={row.name} disabled={busy} onChange={(event) => changeRow(containerIndex, "env", rowIndex, "name", event.target.value)} className={MONO_INPUT}/>
         <input aria-label={`${container.name} 환경변수 값 ${rowIndex + 1}`} placeholder="값" value={row.value} disabled={busy} onChange={(event) => changeRow(containerIndex, "env", rowIndex, "value", event.target.value)} className={MONO_INPUT}/>
@@ -366,7 +374,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
                 <span className={styles.rowHint}>환경변수 {Object.keys(container.env ?? {}).length} · 비밀값 {(container.secret_bindings ?? []).length}</span>
               </summary>
               <div className={styles.groupRowBody}>
-                {Object.keys(container.env ?? {}).length + (container.secret_bindings ?? []).length === 0
+                {Object.keys(container.env ?? {}).length + (container.secret_bindings ?? []).length + Object.keys(container.env_rules ?? {}).length === 0
                 ? <p className={styles.empty}>추가로 주입하는 값이 없습니다</p>
                 : <table className={styles.settingsTable} aria-label={container.name + " 환경변수"}>
                   <thead><tr><th>환경변수</th><th>값 또는 연결</th><th>구분</th></tr></thead>
@@ -381,6 +389,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
                         : <><span className={styles.mono}>{binding.name}</span><span className={styles.secondary}>버전 {binding.version}{!binding.is_latest ? " · 이전 저장값 연결" : ""}</span></>}</td>
                       <td><span className={styles.secondary}>비밀값{container.env_rules?.[binding.env_name]?.required ? " · 필수" : ""}</span></td>
                     </tr>)}
+                    <UnboundEnvironmentRows container={container} release={selected}/>
                   </tbody>
                 </table>}
               </div>
@@ -452,7 +461,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
               <summary><strong className={styles.mono}>{container.name}</strong>
                 <span className={styles.rowHint}>일반 {Object.keys(container.env ?? {}).length}개 · 비밀값 {(container.secret_bindings ?? []).length}개</span></summary>
               <div className={styles.groupRowBody}>
-                {Object.keys(container.env ?? {}).length + (container.secret_bindings ?? []).length === 0
+                {Object.keys(container.env ?? {}).length + (container.secret_bindings ?? []).length + Object.keys(container.env_rules ?? {}).length === 0
                   ? <p className={styles.empty}>이 버전에 추가로 주입하는 값이 없습니다</p>
                   : <div className={styles.tableWrap}><table className={styles.settingsTable} aria-label={container.name + " 적용 환경변수"}>
                     <thead><tr><th>이름</th><th>값 또는 연결</th><th>구분</th></tr></thead>
@@ -463,6 +472,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
                         <td className={styles.mono}>{binding.env_name}</td>
                         <td>{binding.status === "missing" ? <AdminBadge tone="bad">저장값 없음</AdminBadge> : <span className={styles.mono}>{binding.name} · 버전 {binding.version}</span>}</td>
                         <td>비밀값</td></tr>)}
+                      <UnboundEnvironmentRows container={container} release={selected}/>
                     </tbody>
                   </table></div>}
               </div>

@@ -2,6 +2,26 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { repositoryEnvironmentRequest, repositoryEnvironmentRows } from "./adminRepositoryEnvironment.js";
 
+test("미설정은 빈 문자열과 예전 비밀값을 전달하지 않는다", () => {
+  const rows = repositoryEnvironmentRows([{ name: "CASHOUT_INSTANCE_SEED", resolution: "unset", kind: "secret",
+    selected: true, required: false, use_existing: false, has_value: false, secret_name: "web_seed", secret_id: "old" }]);
+  assert.equal(rows[0].mode, "unset");
+  rows[0].override = "stale";
+  const request = repositoryEnvironmentRequest("web", "pinned-source", rows);
+  assert.deepEqual(request.overrides, {});
+  assert.equal(request.entries[0].required, false);
+  assert.equal(request.entries[0].use_existing, false);
+  assert.equal(request.entries[0].secret_id, undefined);
+});
+
+test("필수 항목과 FLAG는 자동으로 미설정으로 바꾸지 않는다", () => {
+  const rows = repositoryEnvironmentRows([
+    { name: "FLAG", resolution: "unset", required: false },
+    { name: "PORT", resolution: "unset", required: true },
+  ]);
+  assert.ok(rows.every((row) => row.mode !== "unset"));
+});
+
 test("저장소 값은 다시 보내지 않고 비밀값의 기존 연결 버전을 유지한다", () => {
   const rows = repositoryEnvironmentRows([
     { name: "PORT", value: "8080", kind: "env", selected: true, required: true, has_value: true },

@@ -108,7 +108,7 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
               <td><input type="checkbox" aria-label={`${row.name} 가져오기`} checked={row.selected} disabled={unavailable} onChange={(event) => change(row.name, { selected: event.target.checked })}/></td>
               <td><span className={styles.mono}>{row.name}</span>
                 {row.resolution !== "configured" && <span className={styles.secondary}>
-                  {{ code_default: "코드 기본값", author_example: "출제자 예시 값", needs_value: "원본에서 값 확인 필요", conflict: "원본 값 확인 필요" }[row.resolution]}
+                  {{ code_default: "코드 기본값", author_example: "출제자 예시 값", needs_value: "원본에서 값 확인 필요", conflict: "원본 값 확인 필요", unset: "원본에 값 없이 이름만 선언됨" }[row.resolution]}
                 </span>}
               </td>
               <td><select aria-label={`${row.name} 종류`} className={styles.select} value={row.kind} disabled={unavailable || row.locked_secret}
@@ -116,15 +116,21 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
                 <option value="env">일반 설정</option><option value="secret">비밀값</option>
               </select></td>
               <td className={styles.valueCell}>
-                {row.kind === "env" ? <input aria-label={`${row.name} 값`} className={styles.input} value={row.override ?? row.value ?? ""}
+                {row.mode === "unset" ? <div className={styles.cellStack}><span>설정하지 않음 · 주입하지 않습니다</span>
+                  <button type="button" className={styles.button} disabled={unavailable} onClick={() => change(row.name, { mode: "manual", override: "" })}>값 입력</button></div>
+                : row.kind === "env" ? <div className={styles.cellStack}><input aria-label={`${row.name} 값`} className={styles.input} value={row.override ?? row.value ?? ""}
                   placeholder={row.has_value ? "설정 확인 후 표시" : "값 입력"} disabled={unavailable}
                   onChange={(event) => change(row.name, { override: event.target.value, mode: "manual" })}/>
+                  {row.resolution === "unset" && row.name !== "FLAG" && <button type="button" className={styles.button} disabled={unavailable}
+                    onClick={() => change(row.name, { mode: "unset", required: false, override: undefined })}>설정하지 않음</button>}</div>
                   : <div className={styles.cellStack}>
                     <select aria-label={`${row.name} 값 선택`} className={styles.select} value={row.mode} disabled={unavailable}
-                      onChange={(event) => change(row.name, { mode: event.target.value, override: event.target.value === "manual" ? "" : undefined })}>
+                      onChange={(event) => change(row.name, { mode: event.target.value,
+                        ...(event.target.value === "unset" ? { required: false } : {}), override: event.target.value === "manual" ? "" : undefined })}>
                       <option value="existing">저장된 비밀값 사용</option>
                       <option value="repository" disabled={!row.has_value}>출제자 원본값 사용</option>
                       <option value="manual">새 값 입력</option>
+                      {row.resolution === "unset" && row.name !== "FLAG" && <option value="unset">설정하지 않음</option>}
                     </select>
                     {row.mode === "repository" && <span className={styles.secondary}>원본값을 그대로 저장합니다</span>}
                     {row.mode === "manual" && <input type="password" aria-label={`${row.name} 새 값`} className={styles.input} autoComplete="new-password"
@@ -134,7 +140,7 @@ export default function AdminRepositoryEnvironmentImporter({ challengeId, releas
                     {row.mode === "existing" && row.version && <span className={styles.secondary}>버전 {row.version} 연결</span>}
                   </div>}
               </td>
-              <td><input type="checkbox" aria-label={`${row.name} 필수`} checked={row.required} disabled={unavailable} onChange={(event) => change(row.name, { required: event.target.checked })}/></td>
+              <td><input type="checkbox" aria-label={`${row.name} 필수`} checked={row.mode === "unset" ? false : row.required} disabled={unavailable || row.mode === "unset"} onChange={(event) => change(row.name, { required: event.target.checked })}/></td>
             </tr>)}</tbody>
           </table>
         </div>

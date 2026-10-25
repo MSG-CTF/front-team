@@ -1,6 +1,28 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildDerivedSettings, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, validateRuntimeSecret, validateReleaseActivationReason } from "./adminRuntime.js";
+import { buildDerivedSettings, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, unboundEnvironmentRules, validateRuntimeSecret, validateReleaseActivationReason } from "./adminRuntime.js";
+
+test("미설정 규칙은 직접 수정 후에도 보존하고 빈 문자열과 구분한다", () => {
+  const container = { name: "web", env: { EMPTY: "" }, secret_bindings: [], env_rules: {
+    EMPTY: { kind: "env", required: false }, CASHOUT_INSTANCE_SEED: { kind: "secret", required: false },
+  } };
+  const draft = releaseSettingsDraft({ containers: [container] });
+  const saved = buildDerivedSettings(draft, []).containers[0];
+  assert.deepEqual(saved.env, { EMPTY: "" });
+  assert.deepEqual(saved.secret_env, {});
+  assert.deepEqual(saved.env_rules, container.env_rules);
+  assert.deepEqual(unboundEnvironmentRules(container).map((row) => [row.name, row.label]), [["CASHOUT_INSTANCE_SEED", "설정하지 않음"]]);
+  assert.equal(unboundEnvironmentRules(container, [{ container: "web", name: "CASHOUT_INSTANCE_SEED" }])[0].label, "확인 필요");
+  saved.env_rules.CASHOUT_INSTANCE_SEED.required = true;
+  assert.equal(container.env_rules.CASHOUT_INSTANCE_SEED.required, false);
+});
+
+test("필수 비밀값과 FLAG 누락은 미설정으로 표시하지 않는다", () => {
+  const rows = unboundEnvironmentRules({ name: "web", env_rules: {
+    FLAG: { kind: "secret", required: false }, DB_PASS: { kind: "secret", required: true },
+  } });
+  assert.deepEqual(rows.map((row) => row.label), ["확인 필요", "확인 필요"]);
+});
 
 test("activation reasons are optional and count Unicode characters like the backend", () => {
   for (const value of [undefined, null, "", "  ", "검수 완료", "  " + "한".repeat(499) + "🚀  ", "🚀".repeat(500)]) {

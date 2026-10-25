@@ -55,6 +55,16 @@ export function releaseSettingsDraft(release) {
     name: container.name,
     env: Object.entries(container.env ?? {}).map(([name, value]) => ({ name, value })),
     secret_env: (container.secret_bindings ?? []).map((binding) => ({ name: binding.env_name, value: binding.name ?? "" })),
+    env_rules: structuredClone(container.env_rules ?? {}),
+  }));
+}
+
+export function unboundEnvironmentRules(container, missing = []) {
+  const bound = new Set([...Object.keys(container.env ?? {}), ...(container.secret_bindings ?? []).map((item) => item.env_name)]);
+  return Object.entries(container.env_rules ?? {}).filter(([name]) => !bound.has(name)).map(([name, rule]) => ({
+    name, ...rule,
+    label: name === "FLAG" || rule.required || missing.some((item) => item.container === container.name && item.name === name)
+      ? "확인 필요" : "설정하지 않음",
   }));
 }
 
@@ -80,7 +90,9 @@ export function buildDerivedSettings(draft, secrets) {
       secret_env[name] = alias;
     }
     if (Object.keys(env).length + Object.keys(secret_env).length > 128) throw new Error(`${container.name}: 환경변수는 합쳐서 128개까지 저장할 수 있습니다`);
-    return { name: container.name, env, secret_env };
+    return { name: container.name, env, secret_env,
+      ...(Object.keys(container.env_rules ?? {}).length ? { env_rules: structuredClone(container.env_rules) } : {}),
+    };
   });
   return { containers };
 }
