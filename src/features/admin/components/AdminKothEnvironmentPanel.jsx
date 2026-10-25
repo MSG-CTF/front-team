@@ -135,7 +135,8 @@ export default function AdminKothEnvironmentPanel({ challenge, initialVersionId 
         </div>
         <p className={ui.fieldHint}>소스 {selected.source_revision.slice(0, 12)} · 저장자 {selected.created_by} · {formatAdminTime(selected.created_at, { seconds: false })}</p>
         {challenge.status === "ACTIVE" && <p className={ui.callout}>경기 진행 중에는 새 설정을 적용하지 않습니다</p>}
-        {selected.source_revision !== data.source_revision && <p className={ui.callout}>{selected.publication_id && data.can_apply ? "새 발행본의 설정입니다 적용이 확인되면 지문과 참가자 파일도 이 버전으로 전환합니다" : "현재 실행 소스와 다른 버전입니다 운영 연결과 필수 설정을 확인해주세요"}</p>}
+        {selected.source_revision !== data.source_revision && <p className={ui.callout}>{selected.publication_id ? pending ? "새 이미지와 실행 설정을 확인하고 있습니다 완료되면 지문과 파일도 같은 버전으로 전환합니다" : "새 발행본의 설정입니다 적용이 확인되면 지문과 참가자 파일도 이 버전으로 전환합니다" : "현재 실행 소스와 다른 버전입니다 운영 연결과 필수 설정을 확인해주세요"}</p>}
+        {!state.agent_configured && <p className={ui.callout}>실행 VM 연결이 필요합니다 가져온 지문·파일·환경변수는 먼저 확인할 수 있습니다</p>}
         {pending && <p role="status" className={ui.callout}>실행 VM이 켜져 있어야 적용할 수 있습니다 적용 확인으로 바뀔 때까지 완료 여부를 확인해주세요</p>}
         <div className={ui.rowActions}><label className={ui.inlineField}>컨테이너<select aria-label="KOTH 환경변수 컨테이너" className={ui.select} value={container.name} disabled={busy} onChange={(event) => setContainerName(event.target.value)}>
           {selected.containers.map((item) => <option key={item.name} value={item.name}>{item.name} · {item.entries.length}개 항목</option>)}
