@@ -422,7 +422,19 @@ export function updateAdminKothFiles(kothChallengeId, { mode, reason }) {
 }
 
 export function getAdminKothRepository(config) {
-  return apiClient.get("/admin/koth/repository", config);
+  return apiClient.get("/admin/koth/repository", { timeout: 120000, ...config });
+}
+
+export function getAdminKothPublications(challengeId, config) {
+  return apiClient.get(`/admin/koth/challenges/${encodeURIComponent(challengeId)}/publications`, config);
+}
+
+export function getAdminKothPublished(page = 1, config) {
+  return apiClient.get("/admin/koth/published", { timeout: 120000, ...config, params: { ...config?.params, page } });
+}
+
+export function importAdminKothPublication(challengeId, body) {
+  return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(challengeId)}/publications/import`, body, { timeout: 120000 });
 }
 
 export function linkAdminKothRepository(kothChallengeId, { slug, apply = [], reason }) {

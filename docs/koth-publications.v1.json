@@ -1,0 +1,2092 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "MSG KOTH publication and administration contract",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/admin/koth/challenges": {
+      "get": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/challenges"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "koth_challenge_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "club_id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "club_name": {
+                          "type": "string"
+                        },
+                        "title": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "opened_at": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "closed_at": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "challenge_url": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "score_api_url": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "score_api_token_env": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "current_owner_team_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "current_owner_team_name": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "updated_at": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "updated_by": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "open_group": {
+                          "type": "integer"
+                        },
+                        "scored_team_count": {
+                          "type": "integer"
+                        },
+                        "failed_period_count": {
+                          "type": "integer"
+                        },
+                        "current_score": {
+                          "type": "number"
+                        },
+                        "score_api_configured": {
+                          "type": "boolean"
+                        },
+                        "files": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "mode": {
+                              "type": "string"
+                            },
+                            "bundle": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "file_name": {
+                                      "type": "string"
+                                    },
+                                    "size_bytes": {
+                                      "type": "integer"
+                                    },
+                                    "file_count": {
+                                      "type": "integer"
+                                    },
+                                    "built_at": {
+                                      "type": "string"
+                                    },
+                                    "source_revision": {
+                                      "type": "string"
+                                    },
+                                    "sha256": {
+                                      "type": "string"
+                                    },
+                                    "registry_revision": {
+                                      "type": "integer"
+                                    }
+                                  },
+                                  "required": []
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": []
+                        },
+                        "last_period": {
+                          "anyOf": [
+                            {
+                              "$ref": "#/components/schemas/period"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "repository": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "properties": {
+                                "slug": {
+                                  "type": "string"
+                                },
+                                "source_revision": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "active_publication_id": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "metadata_revision": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "latest_revision": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "latest_registry_revision": {
+                                  "type": [
+                                    "integer",
+                                    "null"
+                                  ]
+                                },
+                                "author": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "synced_at": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "source_url": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": []
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "leaderboard": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "rank": {
+                                "type": "integer"
+                              },
+                              "team_id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "team_name": {
+                                "type": "string"
+                              },
+                              "earned_score": {
+                                "type": "number"
+                              },
+                              "solved_at": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": []
+                          }
+                        },
+                        "internal_token": {
+                          "type": "string"
+                        }
+                      },
+                      "required": []
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/challenge_create"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/koth/challenges/{challenge_id}": {
+      "get": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/challenge"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/challenge"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/challenge_update"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/koth/repository": {
+      "get": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/repository"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/koth/challenges/{challenge_id}/repository": {
+      "put": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/challenge"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/repository_link"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/koth/published": {
+      "get": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "slug",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/catalog"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/koth/challenges/{challenge_id}/publications": {
+      "get": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/publications"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/koth/challenges/{challenge_id}/publications/import": {
+      "post": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "anyOf": [
+                        {
+                          "$ref": "#/components/schemas/preview"
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "properties": {
+                            "publication_id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "registry_revision": {
+                              "type": "integer"
+                            },
+                            "run_id": {
+                              "type": "integer"
+                            },
+                            "source_sha": {
+                              "type": "string"
+                            },
+                            "title": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "author": {
+                              "type": "string"
+                            },
+                            "version_id": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "environment_version": {
+                              "type": "integer"
+                            },
+                            "missing": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/missing"
+                              }
+                            },
+                            "created_at": {
+                              "type": "string"
+                            },
+                            "files": {
+                              "$ref": "#/components/schemas/file_summary"
+                            },
+                            "source_url": {
+                              "type": "string"
+                            },
+                            "created": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": []
+                        }
+                      ]
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/import_request"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/koth/challenges/{challenge_id}/files": {
+      "get": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "publication_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/files"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/files"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/file_update"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/koth/challenges/{challenge_id}/files/download": {
+      "get": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "publication_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/koth/challenges/{challenge_id}/periods": {
+      "get": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/periods"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/koth/challenges/{challenge_id}/periods/{period_id}/retry": {
+      "post": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "period_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/period"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/koth/challenges/{challenge_id}/connection_test": {
+      "post": {
+        "security": [
+          {
+            "admin_jwt": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "challenge_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/connection"
+                    }
+                  },
+                  "required": []
+                }
+              }
+            }
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/connection_request"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "admin_jwt": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "metadata": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "dynamic": {
+            "type": "boolean"
+          }
+        },
+        "required": []
+      },
+      "missing": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "container": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": []
+      },
+      "file_summary": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "present": {
+            "type": "boolean"
+          },
+          "file_count": {
+            "type": "integer"
+          },
+          "size_bytes": {
+            "type": "integer"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "required": []
+      },
+      "publication": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "publication_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "registry_revision": {
+            "type": "integer"
+          },
+          "run_id": {
+            "type": "integer"
+          },
+          "source_sha": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "version_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "environment_version": {
+            "type": "integer"
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/missing"
+            }
+          },
+          "created_at": {
+            "type": "string"
+          },
+          "files": {
+            "$ref": "#/components/schemas/file_summary"
+          },
+          "source_url": {
+            "type": "string"
+          }
+        },
+        "required": []
+      },
+      "preview": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "preview_token": {
+            "type": "string"
+          },
+          "challenge_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "source_sha": {
+            "type": "string"
+          },
+          "registry_revision": {
+            "type": "integer"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/metadata"
+          },
+          "missing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/missing"
+            }
+          },
+          "files": {
+            "$ref": "#/components/schemas/file_summary"
+          },
+          "containers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "image_ref": {
+                  "type": "string"
+                },
+                "env_count": {
+                  "type": "integer"
+                },
+                "secret_count": {
+                  "type": "integer"
+                }
+              },
+              "required": []
+            }
+          }
+        },
+        "required": []
+      },
+      "import_request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "artifact_id": {
+            "type": "integer"
+          },
+          "preview_token": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "artifact_id"
+        ]
+      },
+      "files": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "enum": [
+              "REPOSITORY",
+              "NONE"
+            ]
+          },
+          "repository": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "slug": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  },
+                  "revision": {
+                    "type": "string"
+                  },
+                  "latest_revision": {
+                    "type": "string"
+                  },
+                  "source_url": {
+                    "type": "string"
+                  }
+                },
+                "required": []
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer"
+                }
+              },
+              "required": []
+            }
+          },
+          "total_size_bytes": {
+            "type": "integer"
+          },
+          "bundle": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "file_name": {
+                    "type": "string"
+                  },
+                  "size_bytes": {
+                    "type": "integer"
+                  },
+                  "file_count": {
+                    "type": "integer"
+                  },
+                  "built_at": {
+                    "type": "string"
+                  },
+                  "source_revision": {
+                    "type": "string"
+                  },
+                  "sha256": {
+                    "type": "string"
+                  },
+                  "registry_revision": {
+                    "type": "integer"
+                  }
+                },
+                "required": []
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "updated_at": {
+            "type": "string"
+          },
+          "updated_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": []
+      },
+      "file_update": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "enum": [
+              "REPOSITORY",
+              "NONE"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode",
+          "reason"
+        ]
+      },
+      "challenge_update": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "challenge_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "opened_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "closed_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "score_api_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "score_api_token_env": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "open_group": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "repository_link": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "apply": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "title",
+                "description"
+              ]
+            }
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "apply",
+          "reason"
+        ]
+      },
+      "challenge_create": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "challenge_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "opened_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "closed_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "score_api_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "score_api_token_env": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "open_group": {
+            "type": "integer"
+          },
+          "club_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "club_name": {
+            "type": "string"
+          },
+          "repository_slug": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "open_group",
+          "reason"
+        ]
+      },
+      "connection_request": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "challenge_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "score_api_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "score_api_token_env": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": []
+      },
+      "connection_result": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "skipped": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "latency_ms": {
+            "type": "integer"
+          },
+          "error": {
+            "type": "string"
+          },
+          "result_count": {
+            "type": "integer"
+          }
+        },
+        "required": []
+      },
+      "connection": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "challenge": {
+            "$ref": "#/components/schemas/connection_result"
+          },
+          "score_api": {
+            "$ref": "#/components/schemas/connection_result"
+          },
+          "checked_at": {
+            "type": "string"
+          }
+        },
+        "required": []
+      },
+      "period": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "period_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "last_error": {
+            "type": "string"
+          },
+          "applied_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "team_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "team_name": {
+                  "type": "string"
+                },
+                "period_rank": {
+                  "type": "integer"
+                },
+                "metric_score": {
+                  "type": [
+                    "number",
+                    "string"
+                  ]
+                },
+                "awarded_score": {
+                  "type": "number"
+                }
+              },
+              "required": []
+            }
+          }
+        },
+        "required": []
+      },
+      "periods": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "periods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/period"
+            }
+          },
+          "total_count": {
+            "type": "integer"
+          },
+          "page": {
+            "type": "integer"
+          },
+          "size": {
+            "type": "integer"
+          }
+        },
+        "required": []
+      },
+      "publications": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/publication"
+            }
+          },
+          "running_source_sha": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": []
+      },
+      "catalog": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "artifact_id": {
+                  "type": "integer"
+                },
+                "challenge_slug": {
+                  "type": "string"
+                },
+                "run_id": {
+                  "type": "integer"
+                },
+                "source_sha": {
+                  "type": "string"
+                },
+                "published_at": {
+                  "type": "string"
+                },
+                "has_release_artifact": {
+                  "type": "boolean"
+                },
+                "has_files_artifact": {
+                  "type": "boolean"
+                },
+                "workflow_state": {
+                  "type": "string"
+                },
+                "registered": {
+                  "type": "boolean"
+                },
+                "publication_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "challenge_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "required": []
+            }
+          },
+          "next_page": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "repository": {
+            "type": "string"
+          },
+          "source_ref": {
+            "type": "string"
+          }
+        },
+        "required": []
+      },
+      "challenge": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "koth_challenge_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "club_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "club_name": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "opened_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "closed_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "challenge_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "score_api_url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "score_api_token_env": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "current_owner_team_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "current_owner_team_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updated_by": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "open_group": {
+            "type": "integer"
+          },
+          "scored_team_count": {
+            "type": "integer"
+          },
+          "failed_period_count": {
+            "type": "integer"
+          },
+          "current_score": {
+            "type": "number"
+          },
+          "score_api_configured": {
+            "type": "boolean"
+          },
+          "files": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "mode": {
+                "type": "string"
+              },
+              "bundle": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "file_name": {
+                        "type": "string"
+                      },
+                      "size_bytes": {
+                        "type": "integer"
+                      },
+                      "file_count": {
+                        "type": "integer"
+                      },
+                      "built_at": {
+                        "type": "string"
+                      },
+                      "source_revision": {
+                        "type": "string"
+                      },
+                      "sha256": {
+                        "type": "string"
+                      },
+                      "registry_revision": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": []
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": []
+          },
+          "last_period": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/period"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "repository": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "slug": {
+                    "type": "string"
+                  },
+                  "source_revision": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "active_publication_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "metadata_revision": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "latest_revision": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "latest_registry_revision": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "author": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "synced_at": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "source_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": []
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "leaderboard": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "rank": {
+                  "type": "integer"
+                },
+                "team_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "team_name": {
+                  "type": "string"
+                },
+                "earned_score": {
+                  "type": "number"
+                },
+                "solved_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": []
+            }
+          }
+        },
+        "required": []
+      },
+      "challenges": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "challenges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/challenge"
+            }
+          },
+          "total_count": {
+            "type": "integer"
+          },
+          "scoring": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "period_minutes": {
+                "type": "integer"
+              },
+              "points": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            },
+            "required": []
+          }
+        },
+        "required": []
+      },
+      "repository": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "repository": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "total_count": {
+            "type": "integer"
+          },
+          "challenges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "slug": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "author": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "dynamic": {
+                  "type": "boolean"
+                },
+                "source_url": {
+                  "type": "string"
+                },
+                "linked_koth_challenge_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "last_commit": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "revision": {
+                      "type": "string"
+                    },
+                    "author": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "committed_at": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": []
+                }
+              },
+              "required": []
+            }
+          }
+        },
+        "required": []
+      }
+    }
+  }
+}

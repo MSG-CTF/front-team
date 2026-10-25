@@ -11,6 +11,7 @@ import { IconButton, StatStrip, StatTile } from "../components/AdminWidgets.jsx"
 import { KothEditorPanel, KothLeaderboardPanel, KothPeriodsPanel, KothRepositoryPanel, KothSourceLine } from "../components/AdminKothPanels.jsx";
 import AdminKothFilesPanel from "../components/AdminKothFilesPanel.jsx";
 import AdminKothEnvironmentPanel from "../components/AdminKothEnvironmentPanel.jsx";
+import AdminKothPublicationsPanel from "../components/AdminKothPublicationsPanel.jsx";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { kothStatus, periodRange, tickLabel, tickNumber } from "../utils/adminKoth.js";
 import { formatAdminNumber } from "../utils/adminNumber.js";
@@ -36,12 +37,13 @@ async function loadKothDetail(id, config) {
 }
 
 const TABS = [
-  { id: "periods", label: "틱 기록" },
-  { id: "ranking", label: "누적 순위" },
   { id: "edit", label: "문제 정보" },
+  { id: "publications", label: "배포 버전" },
   { id: "files", label: "참가자 파일" },
   { id: "environment", label: "환경변수" },
   { id: "repository", label: "저장소 연결" },
+  { id: "periods", label: "틱 기록" },
+  { id: "ranking", label: "누적 순위" },
 ];
 
 // KoTH 상세: 15분 틱마다 받은 순위와 환산 점수, 누적 순위, 지문 수정, 참가자 파일, 출제 저장소 연결을 한 화면에서 다룬다
@@ -51,8 +53,9 @@ export default function AdminKothDetailPage() {
   const leaderboard = useAdminResource((config) => getKothLeaderboard(kothChallengeId, config), [kothChallengeId], "누적 순위를 불러오지 못했습니다");
   // 등록 창에서 넘어오면 넘겨받은 탭(문제 정보, 저장소 연결)부터 연다
   const location = useLocation();
-  const [tab, setTab] = useState(() => TABS.some((item) => item.id === location.state?.tab) ? location.state.tab : "periods");
+  const [tab, setTab] = useState(() => TABS.some((item) => item.id === location.state?.tab) ? location.state.tab : "edit");
   const [draft, setDraft] = useState(null);
+  const [environmentVersion, setEnvironmentVersion] = useState("");
   const challenge = detail.data;
   const limited = Boolean(challenge?.limited);
   const status = kothStatus(challenge?.status);
@@ -92,6 +95,9 @@ export default function AdminKothDetailPage() {
           </div>
         </div>
         <div className={ui.cardBody}>
+          <div role="tabpanel" id="koth-detail-panel-publications" aria-labelledby="koth-detail-tab-publications" hidden={tab !== "publications"}>
+            {tab === "publications" && <AdminKothPublicationsPanel key={kothChallengeId} challenge={challenge} onSaved={refresh} onEnvironment={(version) => { setEnvironmentVersion(version); setTab("environment"); }} />}
+          </div>
           <div role="tabpanel" id="koth-detail-panel-periods" aria-labelledby="koth-detail-tab-periods" hidden={tab !== "periods"}>
             {tab === "periods" && <KothPeriodsPanel challengeId={kothChallengeId} openedAt={challenge.opened_at} limited={limited} onRetried={refresh} />}
           </div>
@@ -110,7 +116,7 @@ export default function AdminKothDetailPage() {
             {tab === "repository" && <KothRepositoryPanel challenge={challenge} limited={limited} onLinked={refresh} onUseDraft={applyDraft} />}
           </div>
           <div role="tabpanel" id="koth-detail-panel-environment" aria-labelledby="koth-detail-tab-environment" hidden={tab !== "environment"}>
-            {tab === "environment" && <AdminKothEnvironmentPanel challenge={challenge}/>}
+            {tab === "environment" && <AdminKothEnvironmentPanel key={environmentVersion} initialVersionId={environmentVersion} challenge={challenge} onApplied={refresh}/>}
           </div>
         </div>
       </section>

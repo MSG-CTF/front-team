@@ -1,11 +1,16 @@
 # 관리자 KoTH 화면과 요청 계약
 
-2026-10-23 KST 확인 기준
+2026-10-26 KST 변경
+
+관리자 목록·상세·지문 수정·참가자 파일 API와 KOTH 발행본 가져오기를 연결했습니다
+배포 버전 탭에서 가져온 버전과 GitHub 발행본을 구분하고, 환경변수 탭에서 적용할 버전을 선택합니다
+새 버전은 같은 커밋의 지문·파일·환경변수·이미지를 함께 보관하며 실제 적용 확인 후 전환합니다
+기존 실행 버전의 파일을 main 최신 파일로 따로 다시 묶지 않습니다
 
 - 프론트 화면: /admin/koth (목록), /admin/koth/{koth_challenge_id} (상세), /admin/koth/{koth_challenge_id}/preview (참가자 화면 미리보기)
 - 확인한 백엔드 main: ab849ff (MSG-CTF/msg-backend)
 - 확인한 문제 저장소 main: 84742c5 (MSG-CTF/2026_MSG_CTF)
-- 아래 관리자 API는 프론트 요청이며 백엔드에는 아직 없다 화면은 목업으로 먼저 맞췄다
+- 아래 관리자 API는 백엔드 KOTH 관리 API와 연결합니다 구버전 서버의 제한 모드는 호환을 위해 유지합니다
 
 ## 지금 백엔드에 있는 것
 
@@ -14,7 +19,7 @@
 - 채점: poll_koth_scores 명령이 15분 구간마다 문제 서버 GET /internal/koth/scores 를 불러 period_rank 를 점수로 바꾼다
 - 구간(period_id)은 정각 기준 15분 칸이다 parse_period 가 분이 0, 15, 30, 45 가 아니면 거부한다
 - 실패하거나 반영 전인 구간은 poll_koth_scores --period-id 로 다시 부를 수 있다 명령은 ACTIVE 문제만 돈다
-- 관리자 등록과 편집은 Django 관리자(/admin/)에서만 된다 지문(description) 칸은 모델에 없다
+- 관리자 API에서 지문을 포함해 등록·수정할 수 있습니다 공개 전 지문은 관리자에게만 보입니다
 - 문제 서버는 플랫폼의 /internal/koth/team_tokens/verify, /internal/teams 를 koth_challenge_id 와 X-Internal-Token 헤더로 부른다 플랫폼은 그 토큰의 sha256 만 inbound_internal_token_hash 에 둔다
 
 ## 화면 동작
@@ -103,7 +108,7 @@
 
 - club_id 와 club_name 중 하나만 보낸다 KothChallenge 는 동아리마다 하나(uq_koth_challenge_club)라 club_id 는 문제가 없는 동아리만 받고, club_name 을 보내면 KothClub 을 같이 만든다
 - 새 문제의 status 는 SCHEDULED 다 칸 규칙은 PATCH 와 같다
-- repository_slug 를 보내면 PUT .../repository 처럼 그 폴더에 잇고 지금 main 커밋을 source_revision 으로 남긴다
+- repository_slug 를 보내면 폴더를 연결하고 지문 기준 커밋을 metadata_revision에 남긴다 실행 소스는 적용 확인 전까지 바꾸지 않는다
 - inbound_internal_token_hash 가 필수 칸이라 서버가 내부 토큰을 만들고 해시만 저장한다 원문은 이 응답의 internal_token 으로 한 번만 준다
 - 응답은 201, 목록 항목과 같은 모양에 internal_token 을 더한다 운영 기록(AdminEvent)에 사유를 남긴다
 - 오류: 400 INVALID_REQUEST, 404 CLUB_NOT_FOUND, 409 KOTH_CLUB_HAS_CHALLENGE, 409 KOTH_CLUB_NAME_TAKEN, 404 REPOSITORY_FOLDER_NOT_FOUND, 409 REPOSITORY_ALREADY_LINKED
@@ -212,7 +217,7 @@
 { "mode": "REPOSITORY", "reason": "저장소 파일 반영" }
 ```
 
-- REPOSITORY 는 저장소 main 의 prob/for_user 를 zip 으로 다시 묶는다 이미 REPOSITORY 여도 다시 보내면 최신 파일로 다시 묶는다
+- REPOSITORY 는 현재 실행 발행본의 참가자 ZIP을 제공한다 새 파일은 배포 버전에서 같은 커밋의 이미지·지문과 함께 전환한다
 - NONE 은 참가자 화면에서 파일 받기를 없앤다
 - 응답은 GET 과 같은 모양 오류: 400 INVALID_REQUEST, 409 KOTH_FILES_NOT_FOUND (prob/for_user 가 비었거나 없음)
 
@@ -246,7 +251,7 @@
 ```
 
 - apply 에 든 칸만 info.yaml 값으로 바꾼다 응답은 목록 항목과 같은 모양
-- 이미 연결한 폴더를 다시 보내면 저장소 main 최신 커밋으로 다시 반영한다 source_revision, committed_at, synced_at 이 바뀐다 화면의 최신 커밋 반영 단추가 이 요청이다
+- 이미 연결한 폴더를 다시 보내면 선택한 제목·지문과 metadata_revision만 바뀐다 source_revision과 참가자 ZIP은 실행 버전 적용 확인 전까지 유지한다
 - 오류: 404 REPOSITORY_FOLDER_NOT_FOUND, 409 REPOSITORY_ALREADY_LINKED
 
 ## 문제 저장소의 KoTH 폴더 (2026-10-23 확인)

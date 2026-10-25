@@ -12,9 +12,9 @@ import styles from "./AdminKothEnvironment.module.css";
 const EMPTY_ENTRY = { name: "", value: "", kind: "secret", required: true };
 const ACTIONS = { keep: "유지", add: "추가", update: "변경", unset: "설정하지 않음" };
 
-export default function AdminKothEnvironmentPanel({ challenge }) {
+export default function AdminKothEnvironmentPanel({ challenge, initialVersionId = "", onApplied }) {
   const id = challenge.koth_challenge_id;
-  const [versionId, setVersionId] = useState("");
+  const [versionId, setVersionId] = useState(initialVersionId);
   const resource = useAdminResource((config) => getAdminKothEnvironment(id, versionId, config), [id, versionId], "환경변수를 불러오지 못했습니다");
   const data = resource.data, selected = data?.selected, state = data?.state;
   const [containerName, setContainerName] = useState("");
@@ -33,6 +33,14 @@ export default function AdminKothEnvironmentPanel({ challenge }) {
   const status = KOTH_ENV_STATES[state?.state] ?? KOTH_ENV_STATES.UNCONFIGURED;
   const applied = data?.versions.find((item) => item.version_id === state?.applied_version_id);
   const pending = ["QUEUED", "APPLYING"].includes(state?.state);
+  const observedApplied = useRef(null);
+  useEffect(() => {
+    if (state?.state === "READY" && state.applied_version_id && observedApplied.current !== state.applied_version_id) {
+      const previous = observedApplied.current;
+      observedApplied.current = state.applied_version_id;
+      if (previous) onApplied?.();
+    }
+  }, [state?.state, state?.applied_version_id, onApplied]);
 
   function reset() {
     sequence.current += 1; fileContent.current = ""; saveId.current = null;
@@ -127,7 +135,7 @@ export default function AdminKothEnvironmentPanel({ challenge }) {
         </div>
         <p className={ui.fieldHint}>소스 {selected.source_revision.slice(0, 12)} · 저장자 {selected.created_by} · {formatAdminTime(selected.created_at, { seconds: false })}</p>
         {challenge.status === "ACTIVE" && <p className={ui.callout}>경기 진행 중에는 새 설정을 적용하지 않습니다</p>}
-        {selected.source_revision !== data.source_revision && <p role="alert" className={ui.errorText}>현재 실행 이미지와 설정의 소스 커밋이 다릅니다 운영 연결을 먼저 확인해주세요</p>}
+        {selected.source_revision !== data.source_revision && <p className={ui.callout}>{selected.publication_id && data.can_apply ? "새 발행본의 설정입니다 적용이 확인되면 지문과 참가자 파일도 이 버전으로 전환합니다" : "현재 실행 소스와 다른 버전입니다 운영 연결과 필수 설정을 확인해주세요"}</p>}
         {pending && <p role="status" className={ui.callout}>실행 VM이 켜져 있어야 적용할 수 있습니다 적용 확인으로 바뀔 때까지 완료 여부를 확인해주세요</p>}
         <div className={ui.rowActions}><label className={ui.inlineField}>컨테이너<select aria-label="KOTH 환경변수 컨테이너" className={ui.select} value={container.name} disabled={busy} onChange={(event) => setContainerName(event.target.value)}>
           {selected.containers.map((item) => <option key={item.name} value={item.name}>{item.name} · {item.entries.length}개 항목</option>)}

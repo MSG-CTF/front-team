@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { downloadAdminKothFiles, getAdminKothFiles, updateAdminKothFiles } from "../../../api/admin.js";
+import { downloadAdminKothFiles, getAdminKothFiles, getAdminKothPublications, updateAdminKothFiles } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { KOTH_FILE_MODES, groupKothFiles, kothFileWarnings, repositoryFreshness } from "../utils/adminKoth.js";
@@ -13,7 +13,7 @@ import ui from "./AdminWorkspace.module.css";
 import styles from "../pages/AdminKoth.module.css";
 
 const REASONS = {
-  REPOSITORY: ["저장소 파일 반영", "출제자 요청", "캐시 파일 정리 후 다시 묶기"],
+  REPOSITORY: ["저장소 파일 반영", "출제자 요청", "현재 배포 버전 파일 제공"],
   NONE: ["접속 주소만으로 풀이", "파일 점검 중", "출제자 요청"],
 };
 
@@ -35,8 +35,11 @@ export function KothFileSummary({ challenge, limited, onOpenFiles }) {
 // 참가자 파일: 제오파디 문제처럼 파일이 있을 수도 없을 수도 있다
 // 저장소 prob/for_user 폴더를 zip 하나로 묶어 주거나, 접속 주소만 주고 파일은 주지 않는다
 export default function AdminKothFilesPanel({ challenge, limited, onSaved, onOpenRepository }) {
-  const files = useAdminResource((config) => getAdminKothFiles(challenge.koth_challenge_id, config),
-    [challenge.koth_challenge_id, challenge.repository?.slug], "참가자 파일 정보를 불러오지 못했습니다");
+  const [publicationId, setPublicationId] = useState("");
+  const publications = useAdminResource((config) => getAdminKothPublications(challenge.koth_challenge_id, config), [challenge.koth_challenge_id], "배포 버전을 불러오지 못했습니다");
+  const fileConfig = (config) => ({ ...config, params: { ...config?.params, ...(publicationId ? { publication_id: publicationId } : {}) } });
+  const files = useAdminResource((config) => getAdminKothFiles(challenge.koth_challenge_id, fileConfig(config)),
+    [challenge.koth_challenge_id, challenge.repository?.slug, challenge.repository?.source_revision, publicationId], "참가자 파일 정보를 불러오지 못했습니다");
   const data = files.data;
   const list = useMemo(() => data?.files ?? [], [data]);
   const groups = useMemo(() => groupKothFiles(list), [list]);
@@ -58,13 +61,13 @@ export default function AdminKothFilesPanel({ challenge, limited, onSaved, onOpe
   }
 
   async function save(target) {
-    if (busy || !reason.trim()) return;
+    if (busy || publicationId || !reason.trim()) return;
     setBusy(true);
     setError("");
     try {
       const response = await updateAdminKothFiles(challenge.koth_challenge_id, { mode: target, reason: reason.trim() });
       if (!isSuccess(response.data)) throw new Error(response.data?.message || "저장하지 못했습니다");
-      setSaved(target === "NONE" ? "참가자 파일을 내렸습니다" : mode === "REPOSITORY" ? "저장소 최신 파일로 다시 묶었습니다" : "참가자에게 저장소 파일을 줍니다");
+      setSaved(target === "NONE" ? "참가자 파일을 내렸습니다" : mode === "REPOSITORY" ? "현재 실행 버전의 파일을 제공합니다" : "참가자에게 저장소 파일을 줍니다");
       setPending(null);
       setReason("");
       await Promise.all([files.reload(), onSaved?.()]);
@@ -91,8 +94,13 @@ export default function AdminKothFilesPanel({ challenge, limited, onSaved, onOpe
     latest_revision: data.repository.latest_revision, latest_committed_at: data.repository.latest_committed_at });
 
   return <div className={styles.files}>
+    <label className={ui.inlineField}>확인할 파일 버전<select className={ui.select} aria-label="KOTH 파일 버전" value={publicationId} disabled={busy} onChange={(event) => { setPublicationId(event.target.value); setPending(null); setSaved(""); setReason(""); }}>
+      <option value="">현재 실행 버전</option>
+      {(publications.data?.items ?? []).map((item) => <option key={item.publication_id} value={item.publication_id}>발행본 {item.registry_revision} · {item.source_sha.slice(0, 12)}</option>)}
+    </select></label>
+    {publicationId && <p className={ui.callout}>선택한 발행본의 파일 미리보기입니다 실행 버전이 전환되기 전에는 참가자에게 제공되지 않습니다</p>}
     <div className={styles.filesHead}>
-      <AdminSegmented label="참가자 파일" value={shownMode} onChange={pick} disabled={busy}
+      <AdminSegmented label="참가자 파일" value={shownMode} onChange={pick} disabled={busy || Boolean(publicationId)}
         items={KOTH_FILE_MODES.map((item) => ({ ...item, disabled: item.key === "REPOSITORY" && !hasRepositoryFiles }))} />
       <p className={styles.filesLead}>
         {shownMode === "NONE" ? "참가자 화면에는 접속 주소만 보입니다"
@@ -121,17 +129,17 @@ export default function AdminKothFilesPanel({ challenge, limited, onSaved, onOpe
         </div>
         {shownMode === "NONE" && <AdminBadge>주지 않음</AdminBadge>}
         {data.repository.source_url && <a className={`${ui.button} ${ui.small}`} href={data.repository.source_url} target="_blank" rel="noreferrer">GitHub에서 보기 ↗</a>}
-        {data.bundle && <AdminDownloadButton small fetchFile={(config) => downloadAdminKothFiles(challenge.koth_challenge_id, config)} fileName={data.bundle.file_name}
+        {data.bundle && <AdminDownloadButton small fetchFile={(config) => downloadAdminKothFiles(challenge.koth_challenge_id, fileConfig(config))} fileName={data.bundle.file_name}
           label="ZIP 받기" ariaLabel={`${data.bundle.file_name} 받기`} />}
-        {mode === "REPOSITORY" && !pending && <button type="button" className={`${ui.button} ${ui.small}`} disabled={busy} onClick={() => { setPending("REPOSITORY"); setSaved(""); }}>저장소 최신으로 다시 묶기</button>}
+        {mode === "REPOSITORY" && !publicationId && !pending && <button type="button" className={`${ui.button} ${ui.small}`} disabled={busy} onClick={() => { setPending("REPOSITORY"); setSaved(""); }}>현재 버전 파일 제공</button>}
       </header>
-      {mode === "REPOSITORY" && fresh.behind && <p className={ui.callout} data-tone="warn"><strong>저장소 main 에 새 커밋이 있습니다</strong>
-        {" "}{[fresh.latest, fresh.latestAt && formatAdminTime(fresh.latestAt, { seconds: false })].filter(Boolean).join(" · ")} · 다시 묶으면 참가자 파일도 이 커밋으로 바뀝니다</p>}
+      {mode === "REPOSITORY" && fresh.behind && <p className={ui.callout} data-tone="warn"><strong>새 발행본이 있습니다</strong>
+        {" "}{[fresh.latest, fresh.latestAt && formatAdminTime(fresh.latestAt, { seconds: false })].filter(Boolean).join(" · ")} · 배포 버전에서 지문과 파일을 함께 확인해주세요</p>}
 
       {warnings.length > 0 && <ul className={styles.fileWarnings} aria-label="확인할 파일">
         {warnings.map((warning) => <li key={warning.key}>
           <strong>{warning.label} {formatAdminNumber(warning.paths.length)}개</strong>
-          <span>{warning.hint} 저장소에서 지운 뒤 다시 묶으세요</span>
+          <span>{warning.hint} 출제자 제공 파일인지 확인해주세요</span>
           <code title={warning.paths.join("\n")}>{warning.paths.slice(0, 2).join(", ")}{warning.paths.length > 2 ? ` 외 ${warning.paths.length - 2}개` : ""}</code>
         </li>)}
       </ul>}
@@ -166,14 +174,14 @@ export default function AdminKothFilesPanel({ challenge, limited, onSaved, onOpe
 
     {pending && <section className={styles.filesSave} aria-label="참가자 파일 바꾸기">
       <p>{pending === "NONE" ? "참가자 화면에서 파일 받기 버튼이 사라집니다 이미 받은 팀의 파일은 그대로 남습니다"
-        : rebuilding ? "저장소 main 의 최신 prob/for_user 로 zip 을 다시 만듭니다 받기 버튼은 그대로 두고 파일만 바뀝니다"
-          : "저장소 prob/for_user 를 zip 으로 묶어 참가자 화면에 받기 버튼을 둡니다"}</p>
+        : rebuilding ? "현재 실행 이미지와 같은 커밋에서 발행한 ZIP을 제공합니다"
+          : "현재 실행 버전의 참가자 ZIP 받기 버튼을 표시합니다"}</p>
       <AdminReasonField label="사유" value={reason} onChange={setReason} presets={REASONS[pending]} disabled={busy} required />
       {error && <p role="alert" className={ui.errorText}>{error}</p>}
       <div className={ui.formActions}>
         <button type="button" className={ui.button} disabled={busy} onClick={() => { setPending(null); setReason(""); setError(""); }}>취소</button>
         <button type="button" className={pending === "NONE" ? ui.dangerSolid : ui.primary} disabled={busy || !reason.trim()} onClick={() => save(pending)}>
-          {busy ? "저장 중" : pending === "NONE" ? "파일 내리기" : rebuilding ? "다시 묶기" : "파일 주기"}
+          {busy ? "저장 중" : pending === "NONE" ? "파일 내리기" : rebuilding ? "현재 파일 제공" : "파일 주기"}
         </button>
       </div>
     </section>}
