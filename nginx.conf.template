@@ -78,6 +78,21 @@ server {
         proxy_buffering off;
     }
 
+    # 전용 VM 에이전트가 자기 문제의 설정과 적용 결과만 조회한다
+    location ~ "^/internal/v1/koth-environments/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(/status)?$" {
+        client_max_body_size 4k;
+        proxy_pass $backend_url$request_uri;
+        proxy_ssl_server_name on;
+        proxy_set_header Host $host;
+        proxy_set_header Authorization $http_authorization;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $proxy_x_forwarded_proto;
+        proxy_cache off;
+        proxy_buffering off;
+    }
+    location /internal/v1/koth-environments/ { return 404; }
+
     # KOTH 서버의 팀 인증과 팀 목록 조회도 플랫폼 백엔드로 전달한다
     location = /internal/koth/team_tokens/verify {
         client_max_body_size 4k;

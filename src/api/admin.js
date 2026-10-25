@@ -490,3 +490,22 @@ export function updateAdminSettings(partialSettings) {
   // [백엔드: 시작 전] 보낸 키만 부분 수정. 예: { board: { dice_rolls_per_reset: 4 } }
   return apiClient.patch("/admin/settings", partialSettings, MUTATION_CONFIG);
 }
+
+export function getAdminKothEnvironment(challengeId, versionId, config = {}) {
+  return apiClient.get(`/admin/koth/challenges/${encodeURIComponent(challengeId)}/environment`, {
+    ...config, params: { ...config.params, ...(versionId ? { version_id: versionId } : {}) },
+  });
+}
+
+export function previewAdminKothEnvironment(challengeId, body) {
+  return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(challengeId)}/environment/preview`, body, MUTATION_CONFIG);
+}
+
+export function saveAdminKothEnvironment(challengeId, body) {
+  return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(challengeId)}/environment/versions`, body, MUTATION_CONFIG);
+}
+
+export function applyAdminKothEnvironment(challengeId, versionId, requestId) {
+  return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(challengeId)}/environment/versions/${encodeURIComponent(versionId)}/apply`,
+    { request_id: requestId }, MUTATION_CONFIG);
+}

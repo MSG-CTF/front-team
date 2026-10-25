@@ -10,6 +10,7 @@ import { Glyph } from "../components/AdminGlyph.jsx";
 import { IconButton, StatStrip, StatTile } from "../components/AdminWidgets.jsx";
 import { KothEditorPanel, KothLeaderboardPanel, KothPeriodsPanel, KothRepositoryPanel, KothSourceLine } from "../components/AdminKothPanels.jsx";
 import AdminKothFilesPanel from "../components/AdminKothFilesPanel.jsx";
+import AdminKothEnvironmentPanel from "../components/AdminKothEnvironmentPanel.jsx";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { kothStatus, periodRange, tickLabel, tickNumber } from "../utils/adminKoth.js";
 import { formatAdminNumber } from "../utils/adminNumber.js";
@@ -39,6 +40,7 @@ const TABS = [
   { id: "ranking", label: "누적 순위" },
   { id: "edit", label: "문제 정보" },
   { id: "files", label: "참가자 파일" },
+  { id: "environment", label: "환경변수" },
   { id: "repository", label: "저장소 연결" },
 ];
 
@@ -106,6 +108,10 @@ export default function AdminKothDetailPage() {
           </div>
           <div role="tabpanel" id="koth-detail-panel-repository" aria-labelledby="koth-detail-tab-repository" hidden={tab !== "repository"}>
             {tab === "repository" && <KothRepositoryPanel challenge={challenge} limited={limited} onLinked={refresh} onUseDraft={applyDraft} />}
+          </div>
+          <div role="tabpanel" id="koth-detail-panel-environment" aria-labelledby="koth-detail-tab-environment" hidden={tab !== "environment"}>
+            {tab === "environment" && !limited && <AdminKothEnvironmentPanel challenge={challenge}/>}
+            {tab === "environment" && limited && <p className={ui.empty}>관리자 API 연결을 확인한 뒤 환경변수를 관리할 수 있습니다</p>}
           </div>
         </div>
       </section>
