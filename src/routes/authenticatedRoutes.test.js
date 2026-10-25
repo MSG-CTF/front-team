@@ -52,7 +52,7 @@ test("홍보와 참가 안내, 로그인 외 모든 등록 경로에 서버 인�
   assert.ok(paths.length >= 25);
   for (const route of paths) {
     // API와 분리된 개발 전용 디자인 미리보기는 인증/게임 상태를 읽지 않는다.
-    if (["/", "/guide", "/login", "*", "/dev/golden-key-preview", "/dev/booth-menu-preview"].includes(route.path)) assert.equal(route.protected, false, route.path);
+    if (["/", "/guide", "/login", "*", "/dev/golden-key-preview", "/dev/booth-menu-preview", "/dev/remote-run-preview"].includes(route.path)) assert.equal(route.protected, false, route.path);
     else assert.equal(route.protected, true, route.path);
     if (route.path.startsWith("/admin")) assert.equal(route.admin, true, route.path);
   }

@@ -6,6 +6,7 @@ import ChallengeDescriptionPanel from "./ChallengeDescriptionPanel.jsx";
 import InstancePanel from "./InstancePanel.jsx";
 import InstanceControls from "./InstanceControls.jsx";
 import InstanceActionDialog from "./InstanceActionDialog.jsx";
+import RemoteRunPanel from "./RemoteRunPanel.jsx";
 import FlagSubmitPanel from "./FlagSubmitPanel.jsx";
 import RequestFeedback from "./RequestFeedback.jsx";
 import { formatRemaining } from "../../../utils/time.js";
@@ -40,10 +41,13 @@ export default function ChallengeDetailScreen({
   onRetry,
   readOnly = false,
   downloadFile,
+  remoteRun,
 }) {
   const [dismissedFeedback, setDismissedFeedback] = useState(null);
   const showBonus =submission.remainingSeconds != null && !submission.blocked;
-  const showInstance = challenge?.requiresInstance || instance != null;
+  // 파일을 내서 운영 VM에서 돌리는 문제는 인스턴스 대신 원격 실행 칸을 같은 자리에 둔다
+  const showRemoteRun = Boolean(challenge?.remoteRun);
+  const showInstance = !showRemoteRun && (challenge?.requiresInstance || instance != null);
   const showDock =
     challenge &&
     !loading &&
@@ -92,6 +96,7 @@ export default function ChallengeDetailScreen({
               <nav className={styles.sectionNav} aria-label="문제 상세 바로가기">
                 <a href="#challenge-description">문제 설명</a>
                 {showInstance && <a href="#challenge-instance">인스턴스</a>}
+                {showRemoteRun && <a href="#challenge-remote-run">원격 실행</a>}
                 <a href="#challenge-flag">플래그 제출</a>
               </nav>
               <div className={styles.contentGrid}>
@@ -101,6 +106,15 @@ export default function ChallengeDetailScreen({
                   downloadFile={downloadFile}
                 />
                 <div className={styles.actionColumn}>
+                  {showRemoteRun && (
+                    <RemoteRunPanel
+                      config={challenge.remoteRun}
+                      {...remoteRun}
+                      solved={submission.blocked}
+                      preview={readOnly}
+                      disabled={readOnly || Boolean(refreshError) || !remoteRun?.onSubmit}
+                    />
+                  )}
                   {showInstance && (
                     <>
                       <InstancePanel

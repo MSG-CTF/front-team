@@ -668,6 +668,335 @@
   color: #d8c7a6;
 }
 
+/* 원격 실행: 인스턴스 판과 같은 짜임을 쓴다 접속 칸, 안내, 시간 값, 막대는 인스턴스 클래스를 그대로 쓰고
+   여기에는 제목, 라벨, 파일 칸 상태, 단추 줄, 결과 창 출력만 둔다 */
+.runPanel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 16px;
+  border: 3px double #a9803f;
+  border-radius: 6px;
+  color: #e4dbd1;
+  background: linear-gradient(135deg, #35291b, #1f170f);
+}
+.runTitle {
+  margin: 0;
+  font-family: var(--label);
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c49a58;
+}
+.runLabel {
+  margin: 0;
+  font-family: var(--label);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a8875a;
+}
+/* 휴대폰은 다른 칸처럼 한글 제목, 데스크톱은 판 그림의 영문 제목과 같은 말씨 */
+.runEn {
+  display: none;
+}
+.runField {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+.runField:hover:not([data-disabled]) {
+  border-color: #8b6a3e;
+}
+.runField[data-dragging] {
+  border-color: #e59f29;
+  background: #24180c;
+}
+.runField[data-invalid] {
+  border-color: #9a4f3c;
+}
+.runField[data-disabled] {
+  cursor: not-allowed;
+}
+.runField:focus-within {
+  outline: 2px solid #e59f29;
+  outline-offset: 2px;
+}
+.runDropTouch {
+  display: none;
+}
+@media (hover: none) {
+  .runDropMouse {
+    display: none;
+  }
+  .runDropTouch {
+    display: inline;
+  }
+}
+.runUpload {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  background: #e59f29;
+  transition: width 0.2s ease-out;
+}
+.instanceHint[data-error] {
+  color: #f0b49e;
+}
+.runRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  min-width: 0;
+}
+.runRow .ttlValue {
+  margin-left: auto;
+}
+.runLastValue {
+  margin: 0;
+  color: #e4dbd1;
+  font-family: var(--sans);
+  font-size: 14px;
+}
+.runLastTime {
+  flex-basis: 100%;
+  margin: 0;
+  color: #a58e68;
+  font-family: var(--sans);
+  font-size: 12px;
+  text-align: right;
+}
+.ttlTrack[data-tone="bad"] .ttlFill {
+  background: #c8553d;
+}
+/* 단추 줄은 인스턴스 단추와 같은 나무 판이다 둘로 나눠 넓히되 양 끝 장식은 늘이지 않는다 */
+.runControls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.runPlaque {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 54px;
+  padding: 0 0 4px 0.1em;
+  border: solid transparent;
+  border-width: 0 40px;
+  border-image: url("/assets/challenge-detail/button-instance-extend-blank.png") 0 46 fill / 0 40px / 0 stretch;
+  background: none;
+  color: #f3e6cf;
+  font-family: var(--label);
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  text-shadow: 0 1px 2px #000a;
+  cursor: pointer;
+}
+.runPlaqueRun {
+  border-image-source: url("/assets/challenge-detail/button-instance-create-blank.png");
+}
+.runPlaque:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+.runPlaque:disabled {
+  color: #b9ab94;
+  cursor: not-allowed;
+}
+/* 둘 다 잠기면 인스턴스 CREATE 잠김 판 하나로 맞춘다 */
+.runPlaque:disabled {
+  border-image-source: url("/assets/challenge-detail/button-instance-create-disabled-blank.png");
+}
+.runPanel .copyButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.runPlaque:focus-visible {
+  outline: 2px solid #e59f29;
+  outline-offset: 2px;
+}
+/* 결과 창: 원격 실행 판과 같은 어두운 판이다 판 그림의 위 장식과 제목 밑줄, 아래 테두리는 원래 비율로 두고 가운데만 늘인다
+   크기는 창 폭(100cqw)을 640 판 그림에 맞춰 잰다 제목 줄은 밑줄 위 64, 안쪽 여백은 판 라벨과 같은 35 */
+.runResult {
+  position: relative;
+  isolation: isolate;
+  container-type: inline-size;
+  width: min(600px, 100%);
+  color: #e4dbd1;
+  text-align: left;
+  filter: drop-shadow(0 18px 40px #0a0604b0);
+}
+.runResult::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border: 0 solid transparent;
+  border-image: url("/assets/challenge-detail/panel-run-result.png") 92 0 18 fill / calc(100cqw * 92 / 640) 0 calc(100cqw * 18 / 640) stretch;
+  pointer-events: none;
+}
+.runResultBody {
+  display: grid;
+  gap: 10px;
+  padding: 0 calc(100cqw * 35 / 640) max(20px, calc(100cqw * 30 / 640));
+}
+.runResultHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  height: calc(100cqw * 64 / 640);
+  margin-bottom: calc(100cqw * 18 / 640);
+  padding-top: calc(100cqw * 10 / 640);
+}
+.runResultTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  color: #e2b56b;
+  font-family: var(--label);
+  font-size: clamp(19px, calc(100cqw * 26 / 640), 26px);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* 데스크톱 판의 상태 알약과 라벨은 판 안 자리에 고정돼 있어 결과 창에서는 흐름대로 되돌린다 */
+.runResultHead .statusBadge {
+  flex: none;
+  width: auto;
+  min-width: 0;
+  height: clamp(28px, calc(100cqw * 36 / 640), 36px);
+  padding: 0 clamp(10px, calc(100cqw * 16 / 640), 16px);
+  font-size: clamp(12px, calc(100cqw * 14 / 640), 14px);
+}
+.runResultLabelRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.runResultLabelRow .runLabel {
+  position: static;
+  color: #926f43;
+  font-size: 13px;
+  line-height: 1.2;
+}
+.runResult .runEn {
+  display: inline;
+}
+.runResult .runKo {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+.runResultFacts {
+  margin: 0;
+  color: #c4ad86;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.runResultNotice {
+  margin: 0;
+  color: #e8d3a8;
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+.runResult:is([data-status="TIMED_OUT"], [data-status="CRASHED"]) .runResultNotice {
+  color: #f4c3ae;
+}
+/* 출력 칸은 판의 접속 칸과 같은 파인 홈이다 */
+.runResultOutput {
+  min-height: 132px;
+  max-height: min(44dvh, 360px);
+  margin: 0;
+  padding: 12px 14px;
+  overflow: auto;
+  border: 1px solid #4b3520;
+  border-radius: 6px;
+  background: linear-gradient(#150e08, #1d130b);
+  color: #e4dbd1;
+  font-family: var(--mono);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  scrollbar-width: thin;
+  scrollbar-color: #8b6a3e transparent;
+}
+.runResultNone {
+  display: grid;
+  place-items: center;
+  color: #8f7a58;
+  font-family: var(--sans);
+}
+.runResultErr summary {
+  margin-bottom: 6px;
+  color: #a58e68;
+  font-family: var(--sans);
+  font-size: 13px;
+  cursor: pointer;
+}
+.runResultErr .runResultOutput {
+  min-height: 0;
+  color: #f0b49e;
+}
+.runResultActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+.runResultClose {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  z-index: 1;
+  width: 36px;
+  height: 36px;
+  border: 2px solid #c49a58;
+  border-radius: 50%;
+  background: #3a2412;
+  color: #f3dfb0;
+  font: 22px/1 serif;
+  box-shadow: 0 2px 6px #00000080;
+  cursor: pointer;
+}
+.runResultClose::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+}
+.runResultClose:hover {
+  background: #4c301a;
+}
+.runResultClose:focus-visible {
+  outline: 2px solid #e59f29;
+  outline-offset: 2px;
+}
+/* 상태 알약의 점만 결과 색으로 바꾼다 끝난 실행은 초록, 시간 초과와 VM 중단은 붉은색, 횟수를 쓰지 않은 실패는 흐리게 */
+.statusBadge[data-run="COMPLETED"] i {
+  background: #8cc56f;
+}
+.statusBadge:is([data-run="TIMED_OUT"], [data-run="CRASHED"]) i {
+  background: #e57a5c;
+}
+.statusBadge:is([data-run="FAILED"], [data-run="REJECTED"]) i {
+  background: #8f7a58;
+}
 .controls {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1812,6 +2141,94 @@
     line-height: calc(var(--u) * 15);
   }
 
+  /* 원격 실행: 인스턴스 판과 같은 640x300 자리와 높이다 라벨은 인스턴스 그림의 CONNECT, TIME TO LIVE, EXTENDS 자리에 둔다 */
+  .runPanel {
+    position: absolute;
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 333);
+    width: calc(var(--u) * 640);
+    height: calc(var(--u) * 300);
+    display: block;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: url("/assets/challenge-detail/panel-run-base.png") center / 100% 100% no-repeat;
+  }
+  .runTitle {
+    position: absolute;
+    left: calc(var(--u) * 35);
+    top: calc(var(--u) * 30);
+    font-size: calc(var(--u) * 22);
+    line-height: calc(var(--u) * 24);
+  }
+  .runLabel {
+    position: absolute;
+    left: calc(var(--u) * 35);
+    font-size: max(9px, calc(var(--u) * 14));
+    line-height: calc(var(--u) * 16);
+    color: #926f43;
+  }
+  .runPayloadLabel {
+    top: calc(var(--u) * 90);
+  }
+  .runTimeLabel {
+    top: calc(var(--u) * 188);
+  }
+  .runLastLabel {
+    top: calc(var(--u) * 264);
+  }
+  .runEn {
+    display: inline;
+  }
+  .runKo {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .runRow {
+    display: contents;
+  }
+  .runRow .ttlValue {
+    margin-left: 0;
+  }
+  .runLastValue {
+    position: absolute;
+    left: calc(var(--u) * 160);
+    top: calc(var(--u) * 262);
+    font-size: max(9px, calc(var(--u) * 15));
+    line-height: calc(var(--u) * 18);
+    color: #d8c7a6;
+  }
+  .runLastTime {
+    position: absolute;
+    right: calc(var(--u) * 35);
+    top: calc(var(--u) * 264);
+    font-size: max(8px, calc(var(--u) * 11));
+    line-height: calc(var(--u) * 14);
+  }
+  .runUpload {
+    height: calc(var(--u) * 3);
+  }
+  .runControls {
+    position: absolute;
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 653);
+    width: calc(var(--u) * 640);
+    height: calc(var(--u) * 62);
+    gap: calc(var(--u) * 12);
+  }
+  .runPlaque {
+    height: calc(var(--u) * 62);
+    padding: 0 0 calc(var(--u) * 4) 0.1em;
+    border-width: 0 calc(var(--u) * 46);
+    border-image-width: 0 calc(var(--u) * 46);
+    font-size: max(10px, calc(var(--u) * 20));
+  }
+
   /* 플래그 제출 */
   .flagPanel {
     position: absolute;
@@ -1925,7 +2342,8 @@
   .page { isolation: isolate; background: none; }
   .page::before { content: ""; position: fixed; inset: 0; z-index: -1; background: linear-gradient(#20170e55, #20170e88), url("/assets/challenge-detail/bg-forest.webp") center / cover; pointer-events: none; }
   .header, .descriptionPanel, .flagPanel { border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 / 8px stretch; border-radius: 0; background: none; }
-  .instancePanel { isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; border-radius: 0; background: #2c1c11; background-clip: padding-box; }
+  .instancePanel, .runPanel { isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.png") 24 / 8px stretch; border-radius: 0; background: #2c1c11; background-clip: padding-box; }
+  .runTitle { width: 100%; padding-bottom: 10px; border-bottom: 1px solid #b09a76; font-size: 17px; }
   .bakedLabel { padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1px solid #9c7548; font-size: 17px; }
   .instancePanel .bakedLabel { border-bottom-color: #b09a76; }
   /* 첨부 제목줄도 다른 섹션 제목처럼 줄 전체에 밑줄을 긋고 개수 배지를 제목 글자 줄 가운데에 둔다 */

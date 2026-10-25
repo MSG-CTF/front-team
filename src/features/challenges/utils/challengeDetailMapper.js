@@ -31,7 +31,34 @@ export function getAttachmentUrl(value) {
   }
 }
 
+const positiveInteger = (value, fallback) =>
+  Number.isInteger(value) && value > 0 ? value : fallback;
+
+// 윈도우 커널 문제처럼 참가자가 실행 파일을 내면 운영 VM에서 한 번 돌려 출력을 돌려주는 문제
+// GET /challenges/{id} 의 remote_run 이 있으면 인스턴스 대신 원격 실행 칸을 그린다 값이 없으면 문제 파일 기본값을 쓴다
+export function mapRemoteRunConfig(value) {
+  if (!value || typeof value !== "object") return null;
+  const accept = Array.isArray(value.accept)
+    ? value.accept
+        .filter((extension) => typeof extension === "string" && /^\.[a-z0-9]+$/i.test(extension))
+        .map((extension) => extension.toLowerCase())
+    : [];
+  return {
+    environment: typeof value.environment === "string" ? value.environment.trim() : "",
+    accept: accept.length ? accept : [".exe"],
+    executable: typeof value.executable === "string" ? value.executable : "",
+    maxBytes: positiveInteger(value.max_file_bytes, 10 * 1024 * 1024),
+    timeoutSeconds: positiveInteger(value.timeout_seconds, 180),
+    maxAttempts: positiveInteger(value.max_attempts, 5),
+    usedAttempts:
+      Number.isInteger(value.used_attempts) && value.used_attempts >= 0
+        ? value.used_attempts
+        : 0,
+  };
+}
+
 export function mapChallengeDetail(data) {
+  const remoteRun = mapRemoteRunConfig(data.remote_run);
   return {
     title: data.title || "제목 없는 문제",
     category: data.category,
@@ -43,7 +70,8 @@ export function mapChallengeDetail(data) {
     accessStatus: data.status ?? null,
     openedAt: data.opened_at ?? null,
     description: typeof data.description === "string" ? data.description : "",
-    requiresInstance: data.requires_instance !== false,
+    requiresInstance: !remoteRun && data.requires_instance !== false,
+    remoteRun,
     attachments: Array.isArray(data.files)
       ? data.files
           .filter((file) => file && typeof file === "object")

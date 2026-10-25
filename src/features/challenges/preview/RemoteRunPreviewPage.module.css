@@ -1,0 +1,3 @@
+.states { position: fixed; left: 50%; bottom: max(8px, env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 10; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; width: min(94vw, 760px); padding: 6px; border: 1px solid #af8346; border-radius: 6px; background: rgb(44 28 15 / 94%); font: 13px/1.4 sans-serif; }
+.states a { padding: 4px 9px; border-radius: 4px; color: #f6dfb1; text-decoration: none; }
+.states a[aria-current="page"] { background: #f6dfb1; color: #2c1c0f; }
