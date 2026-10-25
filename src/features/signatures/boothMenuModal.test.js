@@ -64,14 +64,14 @@ test("부스 메뉴판은 설명 길이만큼 아래로만 늘어나고 위 자�
   const css = readFileSync(new URL("./components/BoothMenuModal.module.css", import.meta.url), "utf8");
   // 위 자리는 3:4 메뉴판과 제출 칸 높이로만 정해 메뉴를 바꾸거나 정답을 내도 움직이지 않는다
   assert.match(css, /\.overlay \{[^}]*container-type: size;/);
-  assert.match(css, /\.dialog \{[^}]*margin: max\(0px, calc\(\(100cqh - var\(--menu-w\) \* 4 \/ 3 - var\(--below\)\) \/ 2\)\) auto auto;/);
+  assert.match(css, /\.dialog \{[^}]*margin: max\(0px, calc\(\(var\(--booth-view-height, 100cqh\) - var\(--menu-w\) \* 4 \/ 3 - var\(--below\)\) \/ 2\)\) auto auto;/);
   assert.match(css, /\.dialog\[data-submit\] \{ --below: 112px; \}/);
   // 메뉴판은 3:4 보다 작아지지 않고, 종이 그림은 위 장식과 아래 풍경을 그대로 둔 채 가운데 빈 띠만 늘인다
   assert.match(css, /\.menu \{[^}]*isolation: isolate;[^}]*min-height: calc\(var\(--menu-w\) \* 4 \/ 3\);/);
   assert.doesNotMatch(css, /\.menu \{[^}]*aspect-ratio/);
-  assert.match(css, /\.menu::before \{[^}]*border-image: url\("\/assets\/signatures\/booth-menu-paper-v1\.webp"\) 740 0 548 fill \/ calc\(100cqw \* 740 \/ 1086\) 0 calc\(100cqw \* 548 \/ 1086\) stretch;/);
+  assert.match(css, /\.menu::before \{[^}]*border-image: url\("\/assets\/signatures\/booth-menu-paper-v1\.webp"\) 740 0 548 fill \/ calc\(calc\(var\(--menu-unit\) \* 100\) \* 740 \/ 1086\) 0 calc\(calc\(var\(--menu-unit\) \* 100\) \* 548 \/ 1086\) stretch;/);
   // 설명 영역은 풍경 위에 두고 화면 안에서 더 늘어날 수 없을 때만 스크롤한다
-  assert.match(css, /\.content \{[^}]*margin: 6\.6667% 10% 36%;[^}]*max-height: max\(90\.67cqw, calc\(50cqh \+ 24cqw - var\(--below\) \/ 2 - 2px\)\);[^}]*overflow-y: auto;/);
+  assert.match(css, /\.content \{[^}]*margin: 6\.6667% 10% 36%;[^}]*max-height: max\(calc\(var\(--menu-unit\) \* 90\.67\), calc\(var\(--booth-view-height, 100cqh\) \/ 2 \+ calc\(var\(--menu-unit\) \* 24\) - var\(--below\) \/ 2 - 2px\)\);[^}]*overflow-y: auto;/);
   const server = await createServer({ server: { middlewareMode: true, hmr: false, watch: null }, appType: "custom" });
   try {
     const { default: Modal } = await server.ssrLoadModule("/src/features/signatures/components/BoothMenuModal.jsx");
