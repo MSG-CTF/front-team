@@ -27,7 +27,10 @@ const CHALLENGE = {
     executable: "pe-amd64",
     max_file_bytes: 10485760,
     timeout_seconds: 180,
-    max_attempts: 5,
+    max_attempts: null,
+    rate_limit_seconds: 30,
+    available: true,
+    enabled: true,
     used_attempts: 0,
   },
 };
@@ -59,7 +62,7 @@ const STATES = {
     ],
     used: 3,
   },
-  exhausted: { label: "더 못 냄", runs: [run("r5", "COMPLETED", { exit_code: 1, stdout: "[-] stage 2 failed\n" })], used: 5 },
+  exhausted: { label: "실행 기록", runs: [run("r5", "COMPLETED", { exit_code: 1, stdout: "[-] stage 2 failed\n" })], used: 5 },
   solved: { label: "해결함", runs: [run("r1", "COMPLETED", { stdout: OUTPUT })], used: 1, solved: true },
 };
 
@@ -115,7 +118,7 @@ function Preview({ stateKey }) {
       remoteRun={{
         runs: simulated.runs,
         usedAttempts: simulated.used,
-        maxAttempts: 5,
+        maxAttempts: null,
         upload: simulated.upload,
         onSubmit: simulated.submit,
       }}
