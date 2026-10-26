@@ -202,10 +202,6 @@
 }
 .lineOverlay { position: absolute; inset: 0; z-index: 12; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 /* 풀이 상태는 유지하고 독점은 칸 바깥의 연속선으로만 구분한다 */
-.solvedCells { --line-accent: #a8c8ae; }
-.spentSpecialCells { --line-accent: #bd9c68; }
-.lineCellOutline { fill: none; stroke: var(--line-accent); stroke-width: 3px; opacity: 0.85; }
-.lineCellOutline[data-outline-state="spent"] { opacity: 0.75; }
 .lineAccent { pointer-events: none; }
 .lineAccentControl { cursor: pointer; outline: none; }
 .lineAccentHitArea { fill: transparent; pointer-events: fill; }

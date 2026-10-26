@@ -170,11 +170,11 @@ test("숫자와 pts 단위를 분리해도 소수와 천 단위 표기는 동일
   for (const value of [null, undefined, NaN, Infinity, -1, "150"]) assert.equal(formatBoardLineScoreValue(value), null);
 });
 
-test("풀이 윤곽은 유지하며 독점은 면 채색이나 명패 없이 연속 외곽선으로만 표시한다", () => {
+test("칸 안쪽 테두리 없이 독점은 면 채색이나 명패 없는 연속 외곽선으로만 표시한다", () => {
   const css = readFileSync(new URL("../components/BoardScreen.module.css", import.meta.url), "utf8");
   const component = readFileSync(new URL("../components/BoardLineOverlay.jsx", import.meta.url), "utf8");
   assert.doesNotMatch(css + component, /lineCellBand|lineSolveMark|lineCellBevel|lineCellClaimed|lineCellSolved/);
-  assert.match(css, /\.lineCellOutline \{ fill: none; stroke: var\(--line-accent\); stroke-width: 3px/);
+  assert.doesNotMatch(css + component, /lineCellOutline|data-line-outline|data-event-outline/);
   assert.doesNotMatch(css + component, /lineCellSelected|lineClaimFlash|lineCellFinish|lineRegionScore|lineScoreShade|data-line-badge|<text|<image/);
   assert.match(css, /\.lineAccent \{ pointer-events: none;/);
   assert.match(component, /<BoardGemRail cellIndexes=\{segment.cellIndexes\}/);
@@ -182,7 +182,7 @@ test("풀이 윤곽은 유지하며 독점은 면 채색이나 명패 없이 연
   assert.doesNotMatch(component.slice(component.indexOf("function LineCells"), component.indexOf("export default")), /getBoardCellMaskPath|clipPath|lineCellOutline/);
   assert.match(component, /line.isCompleted \? getBoardLineAccentSegments\(line.cellIndexes, boardCells\) : \[\]/);
   assert.match(component, /data-line-segment=\{segment.cellIndexes.join\(","\)\}/);
-  assert.match(component, /vectorEffect="non-scaling-stroke" strokeLinejoin="round"/);
+  assert.doesNotMatch(component, /getBoardCellMaskPath|vectorEffect|<clipPath/);
 });
 
 test("라인 목록 순서나 선택 여부가 바뀌어도 완료 테두리의 색은 고정한다", () => {
