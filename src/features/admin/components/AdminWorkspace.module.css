@@ -195,7 +195,8 @@
 .choiceList .check { min-height: 36px; padding: 0 10px; border-radius: var(--radius-sm); }
 .choiceList .check:hover { background: var(--fill); }
 .choiceList .check[data-disabled="true"] { color: var(--label-3); cursor: default; }
-.choiceList .check:has(.snapshotText) { min-height: 48px; padding-block: 6px; }
+.choiceList .check:has(.snapshotText) { align-items: flex-start; min-height: 48px; padding-block: 8px; }
+.choiceList .check:has(.snapshotText) input { margin-top: 3px; }
 .fileInput, .fileBox input[type="file"] { display: block; width: 100%; min-height: 36px; padding: 2px 0; color: var(--label-2); font-size: 13px; line-height: 20px; }
 .fileInput::file-selector-button,
 .fileBox input[type="file"]::file-selector-button {
@@ -414,9 +415,9 @@
 .grantError { grid-column: 1 / -1; }
 .checkField { align-self: end; min-height: 36px; }
 .inlineNote { display: flex; align-self: end; align-items: center; min-height: 36px; margin: 0; color: var(--label-3); font-size: 12px; line-height: 17px; }
-.snapshotText { display: grid; min-width: 0; }
+.snapshotText { display: grid; flex: 1 1 auto; gap: 2px; min-width: 0; }
 .snapshotText strong { color: var(--label); font-weight: 600; overflow-wrap: anywhere; }
-.snapshotText span { color: var(--label-3); font-size: 12px; line-height: 17px; font-variant-numeric: tabular-nums; }
+.snapshotText span { min-width: 0; color: var(--label-3); font-size: 12px; line-height: 17px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .dangerRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
 .dangerRow p { flex: 1; min-width: 200px; margin: 0; color: var(--label-2); font-size: 13px; }
 .reasonInput { width: 168px; }
