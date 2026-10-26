@@ -1,4 +1,4 @@
-import { mapRemoteRunConfig } from "../../challenges/utils/challengeDetailMapper.js";
+import { formatFileSize, mapRemoteRunConfig } from "../../challenges/utils/challengeDetailMapper.js";
 
 const MEGABYTE = 1024 * 1024;
 
@@ -17,6 +17,7 @@ export const ADMIN_REMOTE_RUN_BADGES = {
 };
 
 function formatLimit(bytes) {
+  if (bytes < MEGABYTE) return formatFileSize(bytes);
   const megabytes = bytes / MEGABYTE;
   return Number.isInteger(megabytes) ? `${megabytes} MB` : `${megabytes.toFixed(1)} MB`;
 }
@@ -43,7 +44,7 @@ export function remoteRunDraft(value) {
     environment: config.environment,
     accept: config.accept.join(", "),
     amd64: config.executable === "pe-amd64",
-    maxMegabytes: String(Math.max(1, Math.round(config.maxBytes / MEGABYTE))),
+    maxMegabytes: String(config.maxBytes / MEGABYTE),
     timeoutSeconds: String(config.timeoutSeconds),
     rateLimitSeconds: String(config.rateLimitSeconds),
     enabled: config.enabled,
@@ -60,13 +61,13 @@ const wholeNumber = (text, min, max) => {
 export function remoteRunChanges(draft) {
   const environment = draft.environment.trim();
   const accept = draft.accept.split(",").map((part) => part.trim().toLowerCase()).filter(Boolean);
-  const maxMegabytes = wholeNumber(draft.maxMegabytes, 1, 10);
+  const maxFileBytes = Number(draft.maxMegabytes) * MEGABYTE;
   const timeoutSeconds = wholeNumber(draft.timeoutSeconds, 10, 180);
   const rateLimitSeconds = wholeNumber(draft.rateLimitSeconds, 1, 3600);
   let error = "";
   if (!environment || environment.length > 80) error = "실행 환경을 80자 안으로 적어주세요";
   else if (accept.length !== 1 || accept[0] !== ".exe" || !draft.amd64) error = "이 문제는 x64 PE 실행 파일(.exe)만 받습니다";
-  else if (maxMegabytes == null) error = "최대 크기는 1에서 10 MB 사이 정수로 적어주세요";
+  else if (!Number.isSafeInteger(maxFileBytes) || maxFileBytes < 1 || maxFileBytes > 10 * MEGABYTE) error = "최대 크기는 1바이트에서 10 MB 사이로 적어주세요";
   else if (timeoutSeconds == null) error = "제한 시간은 10에서 180초 사이 정수로 적어주세요";
   else if (rateLimitSeconds == null) error = "요청 간격은 1에서 3600초 사이 정수로 적어주세요";
   return {
@@ -75,7 +76,7 @@ export function remoteRunChanges(draft) {
       environment,
       accept,
       executable: draft.amd64 ? "pe-amd64" : "",
-      max_file_bytes: maxMegabytes * MEGABYTE,
+      max_file_bytes: maxFileBytes,
       timeout_seconds: timeoutSeconds,
       rate_limit_seconds: rateLimitSeconds,
       enabled: draft.enabled === true,

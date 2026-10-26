@@ -81,7 +81,7 @@ function RemoteRunSettings({ challengeId, saved, onSaved, onBusyChange }) {
         <label className={styles.remoteWide}>실행 환경<input className={styles.input} value={draft.environment} maxLength={80} disabled={busy}
           onChange={(event) => change("environment", event.target.value)} placeholder="Windows 11 25H2 x64"/></label>
         <label>받는 파일<input className={styles.input} value={draft.accept} readOnly placeholder=".exe"/></label>
-        <label>최대 크기 (MB)<input type="number" min="1" max="10" step="1" inputMode="numeric" className={styles.input} value={draft.maxMegabytes} disabled={busy}
+        <label>최대 크기 (MB)<input type="number" min={1 / 1048576} max="10" step="any" inputMode="decimal" className={styles.input} value={draft.maxMegabytes} disabled={busy}
           onChange={(event) => change("maxMegabytes", event.target.value)}/></label>
         <label>제한 시간 (초)<input type="number" min="10" max="180" step="1" inputMode="numeric" className={styles.input} value={draft.timeoutSeconds} disabled={busy}
           onChange={(event) => change("timeoutSeconds", event.target.value)}/></label>

@@ -25,7 +25,7 @@ test("원격 실행 설정은 틀린 칸을 한 줄로 알리고 저장 값을 �
   const draft = remoteRunDraft(SAVED);
   assert.match(remoteRunChanges({ ...draft, environment: " " }).error, /실행 환경/);
   assert.match(remoteRunChanges({ ...draft, accept: "exe" }).error, /x64 PE/);
-  assert.match(remoteRunChanges({ ...draft, maxMegabytes: "0" }).error, /1에서 10 MB/);
+  assert.match(remoteRunChanges({ ...draft, maxMegabytes: "0" }).error, /1바이트에서 10 MB/);
   assert.match(remoteRunChanges({ ...draft, timeoutSeconds: "5" }).error, /10에서 180초/);
   assert.match(remoteRunChanges({ ...draft, rateLimitSeconds: "2.5" }).error, /1에서 3600초/);
   assert.equal(remoteRunChanges({ ...draft, rateLimitSeconds: "3601" }).payload, null);

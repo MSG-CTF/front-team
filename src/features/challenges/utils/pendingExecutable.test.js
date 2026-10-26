@@ -62,3 +62,11 @@ test("admin settings send a request interval and enforce the same limits as the 
   for (const change of [{ rateLimitSeconds: "0" }, { timeoutSeconds: "181" }, { maxMegabytes: "11" }, { amd64: false }])
     assert.notEqual(remoteRunChanges({ ...draft, ...change }).error, "");
 });
+
+test("editing the request interval preserves a previously configured fractional megabyte limit", () => {
+  const draft = remoteRunDraft({ environment: "Windows", executable: "pe-amd64", max_file_bytes: 512000, rate_limit_seconds: 30 });
+  const result = remoteRunChanges({ ...draft, rateLimitSeconds: "45" });
+  assert.equal(result.error, "");
+  assert.equal(result.payload.max_file_bytes, 512000);
+  assert.equal(result.payload.rate_limit_seconds, 45);
+});
