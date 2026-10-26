@@ -55,6 +55,16 @@ export default function AdminKothPreviewPage() {
     return () => { pendingPopup.current?.close(); pendingPopup.current = null; };
   }, [kothChallengeId, clearTeamToken]);
 
+  function openTeamToken() {
+    setIsTeamTokenOpen(true);
+    teamToken.requestTeamToken();
+  }
+
+  function closeTeamToken() {
+    setIsTeamTokenOpen(false);
+    clearTeamToken();
+  }
+
   async function openGame() {
     if (!target || opening) return;
     const popup = window.open("about:blank", "_blank");
@@ -82,6 +92,7 @@ export default function AdminKothPreviewPage() {
       {list.status === "success" && !target && <span>이 KoTH 문제를 찾지 못했습니다</span>}
       {target?.status === "SCHEDULED" && <button type="button" className={styles.button} onClick={openGame}
         disabled={opening || !target.challenge_url?.startsWith("https://")}>{opening ? "게임 여는 중" : "게임 테스트 열기"}</button>}
+      <button type="button" className={styles.button} onClick={openTeamToken}>팀 토큰</button>
       {openError && <span role="alert">{openError}</span>}
       <button type="button" className={styles.button} onClick={() => navigate(ROUTES.adminKothDetail(kothChallengeId))}>KoTH 관리로</button>
     </aside>
@@ -91,10 +102,9 @@ export default function AdminKothPreviewPage() {
     }}>
       <KothScreen requestStatus={list.status === "success" ? "success" : list.status === "loading" ? "loading" : "error"} requestError={list.error}
         authenticated clubsStale={false} problemRanking={problemRanking} challenges={models} isEmpty={list.status === "success" && models.length === 0}
-        unmappedChallengeCount={0} teamName={teamToken.data?.team_name ?? "테스트 팀"} totalKothScore={null} selectedChallenge={selected ?? null} clubDetail={READY}
+        unmappedChallengeCount={0} teamName={teamToken.data?.team_name ?? "테스트 팀"} totalKothScore={null} selectedChallenge={isTeamTokenOpen ? null : selected ?? null} clubDetail={READY}
         isTeamTokenOpen={isTeamTokenOpen} teamToken={teamToken} onRetry={list.retry} onSelectChallenge={() => {}} onCloseChallenge={() => navigate(ROUTES.adminKothDetail(kothChallengeId))}
-        onOpenTeamToken={() => { setIsTeamTokenOpen(true); teamToken.requestTeamToken(); }}
-        onCloseTeamToken={() => { setIsTeamTokenOpen(false); clearTeamToken(); }} />
+        onOpenTeamToken={openTeamToken} onCloseTeamToken={closeTeamToken} />
     </div>
   </div>;
 }
