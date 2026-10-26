@@ -71,6 +71,7 @@ function RemoteRunSettings({ challengeId, saved, onSaved, onBusyChange }) {
       <div>
         <p className={styles.remoteTitle}><span className={styles.deployPill} data-state="remote"><i aria-hidden="true" />원격 실행</span>{summary?.environment}</p>
         <p className={styles.helpText}>{summary?.rules}</p>
+        <p className={styles.helpText} role="status">{saved?.available ? "참가자 실행 요청을 받을 수 있습니다" : saved?.availability_message || "Azure 실행 환경과 체커 연결을 준비하고 있습니다"}</p>
       </div>
       {!editing && <button type="button" className={styles.button} onClick={() => { setDraft(remoteRunDraft(saved)); setEditing(true); setNotice(""); }}>설정 바꾸기</button>}
     </div>
@@ -79,19 +80,23 @@ function RemoteRunSettings({ challengeId, saved, onSaved, onBusyChange }) {
       <div className={styles.remoteFields}>
         <label className={styles.remoteWide}>실행 환경<input className={styles.input} value={draft.environment} maxLength={80} disabled={busy}
           onChange={(event) => change("environment", event.target.value)} placeholder="Windows 11 25H2 x64"/></label>
-        <label>받는 파일<input className={styles.input} value={draft.accept} disabled={busy} onChange={(event) => change("accept", event.target.value)} placeholder=".exe"/></label>
-        <label>최대 크기 (MB)<input type="number" min="1" max="100" step="1" inputMode="numeric" className={styles.input} value={draft.maxMegabytes} disabled={busy}
+        <label>받는 파일<input className={styles.input} value={draft.accept} readOnly placeholder=".exe"/></label>
+        <label>최대 크기 (MB)<input type="number" min="1" max="10" step="1" inputMode="numeric" className={styles.input} value={draft.maxMegabytes} disabled={busy}
           onChange={(event) => change("maxMegabytes", event.target.value)}/></label>
-        <label>제한 시간 (초)<input type="number" min="10" max="600" step="1" inputMode="numeric" className={styles.input} value={draft.timeoutSeconds} disabled={busy}
+        <label>제한 시간 (초)<input type="number" min="10" max="180" step="1" inputMode="numeric" className={styles.input} value={draft.timeoutSeconds} disabled={busy}
           onChange={(event) => change("timeoutSeconds", event.target.value)}/></label>
-        <label>팀당 횟수 (회)<input type="number" min="1" max="20" step="1" inputMode="numeric" className={styles.input} value={draft.maxAttempts} disabled={busy}
-          onChange={(event) => change("maxAttempts", event.target.value)}/></label>
+        <label>요청 간격 (초)<input type="number" min="1" max="3600" step="1" inputMode="numeric" className={styles.input} value={draft.rateLimitSeconds} disabled={busy}
+          onChange={(event) => change("rateLimitSeconds", event.target.value)}/></label>
         <div className={styles.remoteSwitch}>
           <span><strong>x64 실행 파일만 받기</strong><small>올리기 전에 브라우저가 PE 머리에서 AMD64 인지 먼저 확인합니다</small></span>
-          <AdminSwitch checked={draft.amd64} onChange={(value) => change("amd64", value)} label="x64(AMD64) PE 실행 파일만 받기" disabled={busy}/>
+          <AdminSwitch checked={draft.amd64} label="x64(AMD64) PE 실행 파일만 받기" disabled/>
+        </div>
+        <div className={styles.remoteSwitch}>
+          <span><strong>실행 접수</strong><small>Azure 실행 환경과 체커 연결을 확인한 뒤 켤 수 있습니다</small></span>
+          <AdminSwitch checked={draft.enabled} onChange={(value) => change("enabled", value)} label="원격 실행 접수" disabled={busy || (!saved?.can_enable && !draft.enabled)}/>
         </div>
       </div>
-      <p className={styles.helpText}>팀당 횟수는 참가자 화면에 보이지 않습니다 다 쓰면 RUN 단추만 잠기고, 운영 오류로 실행하지 못한 기록은 횟수에 넣지 않습니다</p>
+      <p className={styles.helpText}>총 실행 횟수는 제한하지 않습니다 같은 팀의 요청 간격을 확인하고, 이전 실행의 정리가 끝나야 새 실행을 받습니다</p>
       {invalid && <p role="alert" className={styles.errorNotice}>{invalid}</p>}
       {error && <p role="alert" className={styles.errorNotice}>{error}</p>}
       <div className={styles.basicFooter}>
@@ -139,7 +144,7 @@ function RemoteRunHistory({ challengeId }) {
   const summary = data?.summary;
 
   if (runs.status === "unavailable") {
-    return <p className={styles.quietNote}>실행 기록은 GET /admin/challenges/&#123;id&#125;/remote_runs 가 백엔드에 반영되면 보입니다</p>;
+    return <p className={styles.quietNote}>실행 기록을 아직 불러올 수 없습니다 잠시 후 다시 확인해주세요</p>;
   }
   return <section aria-label="원격 실행 기록" className={styles.solvesPanel}>
     {summary && <StatStrip label="원격 실행 요약">
@@ -147,7 +152,7 @@ function RemoteRunHistory({ challengeId }) {
       <StatTile label="실행한 팀" value={formatAdminNumber(summary.teams)} unit="팀" />
       <StatTile label="시간 초과·VM 중단" value={formatAdminNumber((summary.timed_out ?? 0) + (summary.crashed ?? 0))} unit="회"
         alert={(summary.timed_out ?? 0) + (summary.crashed ?? 0) > 0} />
-      <StatTile label="운영 실패" value={formatAdminNumber(summary.failed)} unit="회" sub="횟수에 넣지 않은 실행" alert={summary.failed > 0} />
+      <StatTile label="확인 필요" value={formatAdminNumber(summary.failed)} unit="회" sub="실행 환경 오류·실행 여부 불명" alert={summary.failed > 0} />
     </StatStrip>}
     <AdminChoiceChips label="실행 결과 고르기" items={STATUS_CHIPS} value={status} onPick={(next) => { setStatus(next); setPage(1); }} disabled={runs.status === "loading"} />
     <AdminStatusMessage status={runs.status} error={runs.error} onRetry={runs.retry} hasData={Boolean(data)} />

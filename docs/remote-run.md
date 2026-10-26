@@ -1,52 +1,32 @@
-# 윈도우 문제 원격 실행
+# Windows 원격 실행
 
-참가자에게 VM을 주지 않는 윈도우 문제는 참가자가 실행 파일을 내면 검증 VM에서 한 번 돌리고 출력을 문제 화면에 보여준다
-제한값 기준은 2026_MSG_CTF pwn-msgdriver 의 vm-manifest.yaml submission 값이다 (.exe x64, 10 MB, 180초, 팀당 5회)
-화면 캡처는 목 서버와 개발 미리보기 데이터다
+참가자는 x64 EXE를 올리고 실행 출력을 확인한 뒤 기존 플래그 제출 기능으로 정답을 제출한다
+드라이버와 풀이 코드는 바꾸지 않는다
 
-## 참가자 문제 화면
+## 제출과 재시도
 
-- 문제 상세 응답에 remote_run 이 있으면 인스턴스 판 자리에 원격 실행 판을 둔다 판 크기와 자리, 상태 알약, 입력 칸, 안내 줄, 시간 값, 막대는 인스턴스 판과 같은 클래스를 쓴다
-- 판 그림은 인스턴스 판 그림에서 글자만 지운 panel-run-base.png 다 PAYLOAD, RUN TIME, LAST RUN 라벨은 원래 CONNECT, TIME TO LIVE, EXTENDS 자리에 둔다
-- PAYLOAD 칸에 실행 파일을 끌어다 놓거나 선택으로 고른다 확장자, 크기, x64 PE 머리를 올리기 전에 브라우저에서 먼저 확인한다
-- RUN TIME 은 도는 동안 지난 시간, 끝나면 걸린 시간이고 막대는 제한 시간 대비다 시간 초과와 VM 중단은 막대가 붉다
-- LAST RUN 은 최근 실행의 회차, 결과, 종료 코드와 끝난 시각이다
-- 판 아래에는 인스턴스 단추와 같은 나무 판으로 RUN, RESULT 를 둔다 양 끝 장식은 늘이지 않는다
-- 실행이 끝나면 결과 창이 뜨고 RESULT 로 다시 연다 결과 창은 같은 어두운 판에 결과, 회차, 출력, 오류 출력, COPY, OK 를 둔다
-- 팀 제출 횟수는 참가자 화면에 보이지 않는다 다 쓰면 RUN 만 잠긴다
-- 휴대폰은 인스턴스 칸처럼 한글 제목 아래로 차례대로 쌓는다
-
-![원격 실행 판](images/remote-run/remote-run-page.jpg)
-
-![상태별 원격 실행 판](images/remote-run/remote-run-states.jpg)
-
-![실행 결과 창](images/remote-run/remote-run-result.jpg)
-
-![휴대폰](images/remote-run/remote-run-phone.jpg)
+- 접수와 실행 기록은 GET·POST /challenges/{challenge_id}/exe-submissions 를 사용한다
+- 파일은 .exe, 최대 10 MiB, 실행 제한은 최대 180초다
+- 총 실행 횟수는 제한하지 않는다 기본 요청 간격은 팀별 30초이며 관리자가 바꿀 수 있다
+- 이전 실행의 종료와 정리가 끝나야 새 파일을 받는다
+- 올리기 전에 요청 키와 파일 해시를 계정·팀·문제별로 저장한다 응답이 끊기면 같은 파일과 같은 키로 재시도한다
+- 새로고침과 오프라인 복구 때는 저장한 키로 기존 접수를 먼저 조회한다 파일 내용과 인증 토큰은 이 기록에 저장하지 않는다
+- 실행 여부가 불명확하거나 정리 중이면 RUN을 막고 기존 상태를 조회한다 출력이 있으면 RESULT에서 확인할 수 있다
+- 출력은 일반 텍스트로 표시한다 로그를 읽거나 실행을 마쳐도 정답과 보상은 지급하지 않는다
 
 ## 관리자
 
-- 문제 목록 배포 칸에 원격 실행 알약과 실행 환경, 받는 파일 제한을 보인다
-- 관리 창에 원격 실행 탭을 둔다 설정 카드는 평소 한 줄 요약이고, 설정 바꾸기로 실행 환경, 받는 파일, 최대 크기, 제한 시간, 팀당 횟수, x64 실행 파일만 받기를 고친다
-- 실행 기록은 전체 실행, 실행한 팀, 시간 초과와 VM 중단, 운영 실패 요약과 결과 고르기, 팀, 회차, 결과, 걸린 시간, 파일 해시, 출력 보기를 둔다 운영 실패는 횟수에 넣지 않는다
-- 배포 설정은 원격 실행 문제에서 이미지 등록 대신 원격 실행 탭을 가리킨다
-- 참가자 화면 미리보기는 원격 실행도 막고 파일 칸에 미리보기에서는 실행할 수 없다고 적는다
+원격 실행 탭에서 실행 환경, 파일 크기, 제한 시간, 요청 간격과 접수 상태를 관리한다
+검증한 실행 환경과 체커 연결이 준비되기 전에는 접수를 켤 수 없다
 
-![문제 목록](images/remote-run/admin-remote-run-list.jpg)
+- 설정: PATCH /admin/challenges/{challenge_id}/remote_run
+- 전체 팀 실행 기록: GET /admin/challenges/{challenge_id}/remote_runs
+- 기록은 팀, 실행 시각, 상태, 파일 해시, 출력과 정리 상태를 확인하는 용도다
 
-![원격 실행 탭](images/remote-run/admin-remote-run.jpg)
+## 실제 실행을 켜기 전
 
-![설정 바꾸기와 출력 보기](images/remote-run/admin-remote-run-edit.jpg)
+2026년 10월 26일 기준 실제 EXE 체커의 저장소와 실행 주소는 미정이다
+이 변경은 백엔드 접수·조회·설정 API와 화면을 연결한다 Azure VM 실행 성공을 뜻하지 않는다
+브로커의 Azure 실행 대상, 스케줄러의 게스트 준비 확인, 작업별 체커 인증과 결과 callback을 연결한 뒤 실제 EXE 실행과 정리까지 별도로 검증해야 한다
 
-## 백엔드 요청 (프론트 제안)
-
-- GET /challenges/{id}, GET /admin/challenges, GET /admin/challenges/{id} 에 remote_run: environment, accept[], executable(pe-amd64), max_file_bytes, timeout_seconds, max_attempts, used_attempts(참가자만)
-- 참가자 실행 기록 GET /challenges/{id}/remote_runs, 실행 요청 POST /challenges/{id}/remote_runs (multipart file 하나)
-- 실행 기록 status 는 QUEUED, RUNNING, COMPLETED, TIMED_OUT, CRASHED, FAILED, REJECTED 이고 counted 로 횟수에 넣었는지 알린다 운영 오류(FAILED)와 파일 거절(REJECTED)은 넣지 않는다
-- 관리자 실행 기록 GET /admin/challenges/{id}/remote_runs?status=&page=&size= 는 summary(total, teams, timed_out, crashed, failed), runs[], total_count 를 준다 status=ACTIVE 는 대기와 실행 중이다
-- 관리자 설정 PATCH /admin/challenges/{id}/remote_run 은 environment, accept[], executable, max_file_bytes, timeout_seconds, max_attempts 를 받는다
-
-## 남은 일
-
-- 참가자 실행 파일 올리기와 실행 기록 조회는 백엔드 API가 생기면 붙인다 지금 실제 문제 화면에서는 원격 실행 판이 잠긴 채로 보인다
-- 개발 서버의 /dev/remote-run-preview 에서 상태를 바꿔 보고, 파일을 골라 RUN 을 누르면 올리기부터 결과 창까지 흉내 낸다
+이 문서의 images/remote-run 이미지는 이전 목 데이터 화면이다 현재 동작 검증 근거로 사용하지 않는다
