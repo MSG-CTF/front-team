@@ -5,6 +5,7 @@ import { startAdminKothPreview } from "../../../api/admin.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import usePageResources from "../../../routes/usePageResources.js";
 import KothScreen from "../../koth/components/KothScreen.jsx";
+import { useKothTeamToken } from "../../koth/hooks/useKothData.js";
 import { KOTH_CHALLENGE_VISUALS } from "../../koth/config/kothVisualConfig.js";
 import { createKothChallengeViewModels, kothFile } from "../../koth/utils/kothChallengeState.js";
 import useAdminResource from "../hooks/useAdminResource.js";
@@ -15,7 +16,6 @@ import { loadKothList } from "./AdminKothPage.jsx";
 import styles from "../components/AdminWorkspace.module.css";
 import previewStyles from "./AdminKothPreviewPage.module.css";
 
-const NO_TOKEN = { status: "idle", data: null, error: "", requestTeamToken() {}, clearTeamToken() {} };
 const READY = { status: "success", data: null, error: "", retry() {} };
 
 // 참가자 지도와 지문은 미리보기로 보고 관리자 게임 테스트는 별도 탭에서 연다
@@ -45,11 +45,15 @@ export default function AdminKothPreviewPage() {
   const status = kothStatus(target?.status);
   const [opening, setOpening] = useState(false);
   const [openError, setOpenError] = useState("");
+  const [isTeamTokenOpen, setIsTeamTokenOpen] = useState(false);
+  const teamToken = useKothTeamToken();
+  const { clearTeamToken } = teamToken;
   const pendingPopup = useRef(null);
   useEffect(() => {
     setOpening(false); setOpenError("");
+    setIsTeamTokenOpen(false); clearTeamToken();
     return () => { pendingPopup.current?.close(); pendingPopup.current = null; };
-  }, [kothChallengeId]);
+  }, [kothChallengeId, clearTeamToken]);
 
   async function openGame() {
     if (!target || opening) return;
@@ -87,9 +91,10 @@ export default function AdminKothPreviewPage() {
     }}>
       <KothScreen requestStatus={list.status === "success" ? "success" : list.status === "loading" ? "loading" : "error"} requestError={list.error}
         authenticated clubsStale={false} problemRanking={problemRanking} challenges={models} isEmpty={list.status === "success" && models.length === 0}
-        unmappedChallengeCount={0} teamName="미리보기" totalKothScore={null} selectedChallenge={selected ?? null} clubDetail={READY}
-        isTeamTokenOpen={false} teamToken={NO_TOKEN} onRetry={list.retry} onSelectChallenge={() => {}} onCloseChallenge={() => navigate(ROUTES.adminKothDetail(kothChallengeId))}
-        onOpenTeamToken={() => {}} onCloseTeamToken={() => {}} />
+        unmappedChallengeCount={0} teamName={teamToken.data?.team_name ?? "테스트 팀"} totalKothScore={null} selectedChallenge={selected ?? null} clubDetail={READY}
+        isTeamTokenOpen={isTeamTokenOpen} teamToken={teamToken} onRetry={list.retry} onSelectChallenge={() => {}} onCloseChallenge={() => navigate(ROUTES.adminKothDetail(kothChallengeId))}
+        onOpenTeamToken={() => { setIsTeamTokenOpen(true); teamToken.requestTeamToken(); }}
+        onCloseTeamToken={() => { setIsTeamTokenOpen(false); clearTeamToken(); }} />
     </div>
   </div>;
 }
