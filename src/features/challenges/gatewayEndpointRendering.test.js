@@ -38,11 +38,30 @@ for (const screen of ["participant", "administrator"]) {
 
   test(`${screen} shows Gateway public port, TLS and explicit SNI without linking TLS as a web URL`, () => {
     const html = render(gatewayEndpoint);
+    assert.match(html, /ncat --ssl-verify --ssl-servername route-example\.ctf\.example i-example\.ctf\.example 443/);
     assert.match(html, /tls:\/\/i-example\.ctf\.example:443/);
     assert.match(html, /<dt>TLS<\/dt><dd>사용<\/dd>/);
     assert.match(html, /<dt>연결 포트<\/dt><dd>443<\/dd>/);
     assert.match(html, /<dt>SNI<\/dt><dd>route-example\.ctf\.example<\/dd>/);
     assert.doesNotMatch(html, /href="tls:|31337/);
+  });
+
+  test(`${screen} shows an nc command for an assigned plaintext TCP port`, () => {
+    const html = render({
+      container_name: "pwn", port: 1337, protocol: "TCP",
+      service_url: "tcp://abc.gate.msgctf.kr:42817", hostname: "abc.gate.msgctf.kr",
+      connection_port: 42817, tls: false,
+    });
+    assert.match(html, /nc abc\.gate\.msgctf\.kr 42817/);
+    assert.match(html, /<dt>TLS<\/dt><dd>사용 안 함<\/dd>/);
+    assert.doesNotMatch(html, /ncat|1337|href="tcp:/);
+  });
+
+  test(`${screen} keeps malformed TCP details visible but disables clipboard copying`, () => {
+    const html = render({ ...gatewayEndpoint, server_name: "$(id).gate.msgctf.kr" });
+    assert.match(html, /<dt>SNI<\/dt><dd>\$\(id\)\.gate\.msgctf\.kr<\/dd>/);
+    assert.match(html, /<button(?=[^>]*disabled="")[^>]*>접속 정보 복사<\/button>/);
+    assert.doesNotMatch(html, /ncat --ssl/);
   });
 
   test(`${screen} keeps legacy TCP display and explicit false/null distinct`, () => {

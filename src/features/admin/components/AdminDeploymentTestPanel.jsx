@@ -8,7 +8,7 @@ import { activeTestFromFailure, deploymentTestStatus, deploymentTestSteps } from
 import { AdminBadge } from "./AdminLayout.jsx";
 import styles from "./AdminWorkspace.module.css";
 import InstanceConnectionDetails from "../../challenges/components/InstanceConnectionDetails.jsx";
-import { endpointConnectionDetails, endpointCopyText } from "../../challenges/utils/instanceConnectionDetails.js";
+import { endpointConnectionCommand, endpointConnectionDetails, endpointCopyText } from "../../challenges/utils/instanceConnectionDetails.js";
 
 const RUNNING_STATES = ["REQUESTED", "SCHEDULING", "PROVISIONING"];
 
@@ -20,10 +20,12 @@ function elapsedLabel(fromIso, now) {
 }
 
 export function AdminDeploymentEndpoint({ endpoint, copied, onCopy }) {
+  const command = endpointConnectionCommand(endpoint);
+  const copyText = endpointCopyText(endpoint);
   return <div className={styles.testEndpoint}>
-    <div><strong>{endpoint.name}</strong><code>{endpoint.url}</code><InstanceConnectionDetails endpoint={endpoint} /></div>
+    <div><strong>{endpoint.name}</strong><code title={endpoint.url}>{command || endpoint.url}</code><InstanceConnectionDetails endpoint={endpoint} /></div>
     <div>{endpoint.isWeb && <a href={endpoint.url} target="_blank" rel="noopener noreferrer" className={styles.button}>접속하기</a>}
-      <button type="button" className={styles.button} onClick={() => onCopy(endpoint)}>{copied === endpoint.url ? "복사됨" : endpointConnectionDetails(endpoint).length ? "접속 정보 복사" : "주소 복사"}</button></div>
+      <button type="button" className={styles.button} disabled={!copyText} onClick={() => { if (copyText) onCopy(endpoint); }}>{copied === endpoint.url ? "복사됨" : command ? "접속 명령 복사" : endpointConnectionDetails(endpoint).length ? "접속 정보 복사" : "주소 복사"}</button></div>
   </div>;
 }
 
@@ -103,7 +105,9 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
   }
 
   async function copy(endpoint) {
-    try { await navigator.clipboard.writeText(endpointCopyText(endpoint)); setCopied(endpoint.url); }
+    const copyText = endpointCopyText(endpoint);
+    if (!copyText) return;
+    try { await navigator.clipboard.writeText(copyText); setCopied(endpoint.url); }
     catch { setError("주소를 복사하지 못했습니다 접속 주소를 직접 선택해 복사해주세요"); }
   }
 
