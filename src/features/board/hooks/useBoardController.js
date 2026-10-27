@@ -4,6 +4,7 @@ import { presentTrainJourney } from "../utils/trainJourney.js";
 import { createStartRewardRecorder } from "../utils/boardStartReward.js";
 import { scheduleBoardDeadlineRefresh } from "../utils/boardDeadlineRefresh.js";
 import { getBoardLineProgress } from "../utils/boardLines.js";
+import { watchBoardLineSnapshot } from "../utils/boardLineRefresh.js";
 import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
 import { useAuthenticatedUser } from "../../../routes/AuthenticatedRoute.jsx";
 import { createPendingDiceRoll, restorePendingDiceRoll } from "../utils/pendingDiceRoll.js";
@@ -626,9 +627,23 @@ export default function useBoardController() {
   );
 
   const lineProgress = useMemo(
-    () => getBoardLineProgress(boardDefinition?.cells, cellStatesByIndex),
-    [boardDefinition?.cells, cellStatesByIndex],
+    () => getBoardLineProgress(boardDefinition?.cells, cellStatesByIndex, myBoard, user?.team_id),
+    [boardDefinition?.cells, cellStatesByIndex, myBoard, user?.team_id],
   );
+
+  useEffect(() => {
+    if (!user?.team_id || isLoading) return undefined;
+    return watchBoardLineSnapshot({
+      teamId: user.team_id,
+      canRefresh: () => mountedRef.current && !mutationLockRef.current,
+      read: async (options) => adaptMyBoard(unwrapBoardResponse(await getMyBoard(options))),
+      apply: (snapshot) => setMyBoard((previous) => previous && ({
+        ...previous, teamId: snapshot.teamId,
+        cellStates: snapshot.cellStates, lineMonopolies: snapshot.lineMonopolies,
+      })),
+      onError: () => setMyBoard((previous) => previous && ({ ...previous, lineMonopolies: null })),
+    });
+  }, [user?.team_id, isLoading]);
 
   const reload = useCallback(() => {
     if (mutationKeysRef.current.has("dice-roll") || pendingDiceRoll.peek()) {

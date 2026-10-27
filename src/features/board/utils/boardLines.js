@@ -77,9 +77,20 @@ export function getBoardSolvedCellIndexes(cells, cellStatesByIndex) {
 }
 
 // 서버가 지정한 라인과 현재 팀의 CLEARED 상태만 연결한다
-// 지급 확인 응답이 없으므로 완료와 보너스 점수는 만들지 않는다
-export function getBoardLineProgress(cells, cellStatesByIndex) {
+// 현재 인증 팀과 일치하는 /board/me의 확정 지급 기록만 완료로 인정한다.
+export function getBoardLineProgress(cells, cellStatesByIndex, snapshot = null, currentTeamId = null) {
   if (!Array.isArray(cells) || !(cellStatesByIndex instanceof Map)) return [];
+  const records = snapshot?.teamId && snapshot.teamId === currentTeamId && Array.isArray(snapshot.lineMonopolies)
+    ? snapshot.lineMonopolies : null;
+  const awards = new Map();
+  const duplicateLines = new Set();
+  for (const record of records ?? []) {
+    const number = record?.line_number;
+    if (!Number.isInteger(number) || number < 1 || number > 6) continue;
+    if (awards.has(number)) duplicateLines.add(number);
+    const score = typeof record.earned_score === "number" ? validScore(record.earned_score) : null;
+    awards.set(number, score);
+  }
   const grouped = new Map();
   for (const cell of cells) {
     if (cell?.type !== "CHALLENGE" || BOARD_LINE_SPECIAL_INDEXES.includes(cell.cellIndex)) continue;
@@ -88,21 +99,25 @@ export function getBoardLineProgress(cells, cellStatesByIndex) {
     indexes.push(cell.cellIndex);
     grouped.set(cell.lineNumber, indexes);
   }
-  return prepareBoardLines([...grouped].filter(([, indexes]) => indexes.length === 5).sort(([left], [right]) => left - right).map(([number, cellIndexes]) => ({
+  return prepareBoardLines([...grouped].filter(([, indexes]) => indexes.length === 5).sort(([left], [right]) => left - right).map(([number, cellIndexes]) => {
+    const score = duplicateLines.has(number) ? null : awards.get(number);
+    const paid = score !== undefined && score !== null;
+    const solvedCellIndexes = cellIndexes.filter((index) => cellStatesByIndex.get(index)?.status === "CLEARED");
+    return {
     lineId: `line-${number}`,
     lineNumber: number,
-    payoutStatus: "unknown",
+    payoutStatus: paid ? "paid" : records && !awards.has(number) && solvedCellIndexes.length < 5 ? "not_earned" : "unknown",
     label: `${number}번 라인`,
     cellIndexes,
-    solvedCellIndexes: cellIndexes.filter((index) => cellStatesByIndex.get(index)?.status === "CLEARED"),
-    isCompleted: false,
+    solvedCellIndexes,
+    isCompleted: paid,
     rewardScore: null,
-    bonusScore: null,
-  })), cells);
+    bonusScore: paid ? score : null,
+  }; }), cells);
 }
 
 // 화면용 모델이며 API 계약이 아니다
-// 실제 연동 전까지 라인 묶음, 완료 여부, 지급 점수를 자동으로 만들지 않는다
+// 확정 지급 또는 명시적인 개발 미리보기 외에는 완료와 지급 점수를 추정하지 않는다
 // 칸 소모나 방문 완료는 문제 정답 처리와 별개다
 export function prepareBoardLines(input, cells) {
   if (!Array.isArray(input)) return [];
@@ -130,7 +145,9 @@ export function prepareBoardLines(input, cells) {
     const cellIndexes = [...line.cellIndexes].sort((a, b) => a - b);
     const solvedCellIndexes = [...new Set(line.solvedCellIndexes)].sort((a, b) => a - b);
     const allProblemsCleared = solvedCellIndexes.length === cellIndexes.length;
-    const isCompleted = line.payoutStatus !== "unknown" && line.isCompleted === true && allProblemsCleared;
+    // 확정 지급 기록은 셀 상태를 읽은 직후 지급된 경우에도 권위가 있다.
+    const serverPaid = line.payoutStatus === "paid" && validScore(line.bonusScore) !== null;
+    const isCompleted = line.payoutStatus !== "unknown" && line.isCompleted === true && (allProblemsCleared || serverPaid);
     return {
       lineId: line.lineId, label: line.label, cellIndexes, solvedCellIndexes, isCompleted,
       lineNumber: line.lineNumber,
@@ -308,7 +325,9 @@ export function getBoardLineCounts(lines) {
   const payoutUnknown = list.some((line) => line.payoutStatus === "unknown");
   const cleared = list.filter((line) => line.allProblemsCleared).length;
   const completed = list.filter((line) => line.isCompleted).length;
-  return { total: list.length, cleared, completed, payoutUnknown, done: payoutUnknown ? cleared : completed };
+  const hasConfirmedPayout = list.some((line) => ["paid", "not_earned"].includes(line.payoutStatus));
+  return { total: list.length, cleared, completed, payoutUnknown, hasConfirmedPayout,
+    done: payoutUnknown && !hasConfirmedPayout ? cleared : completed };
 }
 
 export function getBoardLineStatus(line) {

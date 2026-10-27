@@ -30,7 +30,7 @@ export function getBoard() {
 }
 
 export function getMyBoard(config) {
-  // GET /board/me - 내 팀 진행 상태 전체(cell_states, chance_cards, active_challenge 등).
+  // GET /board/me - 내 팀 진행 상태와 확정 지급 기록(team_id, line_monopolies).
   return apiClient.get("/board/me", config);
 }
 

@@ -59,6 +59,9 @@ export function adaptBoardDefinition(data) {
 
 export function adaptMyBoard(data) {
   return {
+    teamId: typeof data?.team_id === "string" ? data.team_id : null,
+    // 누락(구버전/실패)과 빈 배열(조회 성공, 지급 기록 없음)을 구분한다.
+    lineMonopolies: Array.isArray(data?.line_monopolies) ? data.line_monopolies : null,
     position: data?.position ?? null,
     type: data?.type ?? null,
     diceRollsLeft: data?.dice_rolls_left ?? 0,
