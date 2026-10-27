@@ -6,6 +6,7 @@ const CONNECTION_FIELDS = [
 const DNS_NAME = /^(?=.{1,253}$)[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?(?:\.[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?)*$/i;
 
 export function endpointConnectionCommand(endpoint) {
+  if (endpoint?.isWeb) return "";
   let url;
   try { url = new URL(endpoint.url); } catch { return ""; }
   if (!["tcp:", "tls:"].includes(url.protocol) || url.username || url.password
@@ -22,13 +23,19 @@ export function endpointConnectionCommand(endpoint) {
   const port = endpoint.connection_port ?? urlPort;
   if (!Number.isInteger(port) || port < 1 || port > 65535 || (urlPort != null && port !== urlPort)) return "";
 
-  if (!tls) return `nc ${host} ${port}`;
+  const family = host.includes(":") ? " -6" : "";
+  if (!tls) return `nc${family} ${host} ${port}`;
   let sni = "";
   if (endpoint.server_name != null) {
     if (typeof endpoint.server_name !== "string" || !DNS_NAME.test(endpoint.server_name)) return "";
     sni = ` --ssl-servername ${endpoint.server_name}`;
   }
-  return `ncat --ssl-verify${sni} ${host} ${port}`;
+  return `ncat${family} --ssl-verify${sni} ${host} ${port}`;
+}
+
+export function endpointTerminalConnection(endpoint) {
+  const command = endpointConnectionCommand(endpoint);
+  return command ? { label: command.startsWith("ncat ") ? "NCAT / TLS" : "NC", command } : null;
 }
 
 export function endpointConnectionDetails(endpoint) {
@@ -42,8 +49,8 @@ export function endpointConnectionDetails(endpoint) {
 }
 
 export function endpointCopyText(endpoint) {
-  const command = endpointConnectionCommand(endpoint);
-  if (command) return command;
+  const terminal = endpointTerminalConnection(endpoint);
+  if (terminal) return terminal.command;
   // Rejected TCP metadata must not bypass command validation via the old
   // multiline fallback: shell substitutions in those details still execute.
   try {

@@ -1,5 +1,5 @@
 import { useId, useRef, useState } from "react";
-import { endpointConnectionCommand, endpointConnectionDetails, endpointCopyText } from "../utils/instanceConnectionDetails.js";
+import { endpointConnectionDetails, endpointCopyText, endpointTerminalConnection } from "../utils/instanceConnectionDetails.js";
 import styles from "./InstanceConnectionDetails.module.css";
 
 export default function InstanceConnectionDetails({ endpoint, compact = false, buttonClassName }) {
@@ -7,7 +7,7 @@ export default function InstanceConnectionDetails({ endpoint, compact = false, b
   const titleId = useId();
   const [copyStatus, setCopyStatus] = useState("");
   const details = endpointConnectionDetails(endpoint);
-  const command = endpointConnectionCommand(endpoint);
+  const terminal = endpointTerminalConnection(endpoint);
   const copyText = endpointCopyText(endpoint);
   if (!details.length) return null;
   const content = <div className={styles.connection}>
@@ -25,7 +25,7 @@ export default function InstanceConnectionDetails({ endpoint, compact = false, b
     if (!copyText) return;
     try {
       await navigator.clipboard.writeText(copyText);
-      setCopyStatus(command ? "접속 명령을 복사했습니다" : "접속 정보를 복사했습니다");
+      setCopyStatus(terminal ? "접속 명령어를 복사했습니다" : "접속 정보를 복사했습니다");
     } catch {
       setCopyStatus("복사하지 못했습니다 아래 정보를 선택해 복사해주세요");
     }
@@ -35,11 +35,12 @@ export default function InstanceConnectionDetails({ endpoint, compact = false, b
       onClick={() => { setCopyStatus(""); dialog.current.showModal(); }}>정보</button>
     <dialog ref={dialog} className={styles.dialog} aria-labelledby={titleId}>
       <h2 id={titleId}>{endpoint.name} 접속 정보</h2>
-      <p className={styles.url}>{command || endpoint.url}</p>
+      {terminal && <p className={styles.command} aria-label="터미널 접속 명령어">{terminal.command}</p>}
+      <p className={styles.url}>{endpoint.url}</p>
       {content}
       <p role="status">{copyStatus}</p>
       <div className={styles.actions}>
-        <button type="button" onClick={copy} disabled={!copyText}>{command ? "접속 명령 복사" : "접속 정보 복사"}</button>
+        <button type="button" onClick={copy} disabled={!copyText}>{terminal ? "명령어 복사" : "접속 정보 복사"}</button>
         <button type="button" onClick={() => dialog.current.close()} autoFocus>닫기</button>
       </div>
     </dialog>

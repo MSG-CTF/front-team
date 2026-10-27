@@ -448,6 +448,10 @@
   background: none;
 }
 .endpointName {
+  display: flex;
+  align-items: baseline;
+  gap: 4px 6px;
+  min-width: 0;
   color: #b7a07a;
   font-family: var(--sans);
   font-size: 11px;
@@ -456,8 +460,14 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.endpointLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .endpointName small {
-  margin-left: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
   font-family: var(--mono);
   font-size: 10px;
 }
@@ -1644,6 +1654,7 @@
   .endpointName,
   .endpointCompact .endpointName {
     max-width: none;
+    flex-wrap: wrap;
     white-space: normal;
     overflow-wrap: anywhere;
   }
@@ -1657,6 +1668,17 @@
   }
   .endpointCompact .copyButton {
     min-height: 44px;
+  }
+  .connect {
+    container-type: inline-size;
+  }
+  @container (max-width: 240px) {
+    .endpointRow {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .copyButton {
+      justify-self: end;
+    }
   }
   .copyButton {
     align-self: start;
