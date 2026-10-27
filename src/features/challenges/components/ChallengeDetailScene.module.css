@@ -1478,8 +1478,12 @@
 }
 
 .confirmDialog {
-  width: min(460px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  width: min(460px, calc(100% - 32px));
+  height: fit-content;
+  max-height: calc(100% - 32px);
   margin: auto;
   padding: 28px;
   border: 3px double var(--line);
@@ -1703,9 +1707,8 @@
     margin-top: 0;
   }
   .confirmDialog {
-    box-sizing: border-box;
     padding: 20px 16px;
-    max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100% - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     overscroll-behavior: contain;
   }
   .dialogActions {

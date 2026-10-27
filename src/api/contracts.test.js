@@ -102,9 +102,13 @@ test("랭킹과 관리자 내역은 페이지와 snake_case 필터를 그대로 
   }
 });
 
-test("인스턴스 생성은 challenge_id만 보내고 제어 요청은 서버 계약을 따른다", async () => {
+test("인스턴스 생성은 확인한 교체 대상만 보내고 제어 요청은 서버 계약을 따른다", async () => {
   await createInstance({ challengeId: "challenge-1" });
   assert.deepEqual(JSON.parse(calls.at(-1).data), { challenge_id: "challenge-1" });
+  await createInstance({ challengeId: "challenge-1", replaceInstanceId: "confirmed-instance" });
+  assert.deepEqual(JSON.parse(calls.at(-1).data), {
+    challenge_id: "challenge-1", replace_instance_id: "confirmed-instance",
+  });
   for (const operation of [resetInstance, extendInstance]) {
     await operation("instance-1");
     const request = calls.at(-1);

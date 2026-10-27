@@ -33,5 +33,5 @@ test("모바일 파일 다운로드와 입력·확인 버튼의 터치 영역을
   assert.match(mobile, /\.attachmentButton,[\s\S]*?min-height: 44px;/);
   assert.match(mobile, /\.flagInput\s*\{[^}]*font-size: 18px;/);
   assert.match(mobile, /\.submitButton\s*\{[^}]*width: 100%;/);
-  assert.match(mobile, /\.confirmDialog\s*\{[^}]*100dvh/);
+  assert.match(mobile, /\.confirmDialog\s*\{[^}]*max-height:/);
 });
