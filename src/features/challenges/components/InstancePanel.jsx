@@ -9,7 +9,7 @@ import { getInstanceFailureNotice } from "../utils/instanceFailureNotice.js";
 import styles from "./ChallengeDetailScene.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
 import InstanceConnectionDetails from "./InstanceConnectionDetails.jsx";
-import { endpointConnectionDetails } from "../utils/instanceConnectionDetails.js";
+import { endpointConnectionDetails, endpointTerminalConnection } from "../utils/instanceConnectionDetails.js";
 
 // 생성은 요청 접수 > 서버 배정 > 환경 준비 순서로 상태가 바뀐다 지금 칸에서 돌고, 지난 칸은 체크한다
 const CREATE_STEPS = [
@@ -76,6 +76,9 @@ function WaitingProgress({ step, busyLabel, seconds }) {
 
 function Endpoint({ endpoint, compact }) {
   const hasDetails = endpointConnectionDetails(endpoint).length > 0;
+  const terminal = endpointTerminalConnection(endpoint);
+  const connectionText = terminal?.command ?? endpoint.url;
+  const copyLabel = terminal ? "접속 명령어" : "접속 주소";
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
   const resetTimer = useRef(null);
@@ -89,7 +92,7 @@ function Endpoint({ endpoint, compact }) {
   }, []);
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(endpoint.url);
+      await navigator.clipboard.writeText(connectionText);
       if (!mounted.current) return;
       setCopied(true);
       setCopyError(false);
@@ -107,8 +110,8 @@ function Endpoint({ endpoint, compact }) {
     >
       <div className={styles.endpointBox}>
         <span className={styles.endpointName}>
-          {endpoint.name}
-          <small>{endpoint.isWeb ? "WEB" : endpoint.tls === true ? "TCP · TLS" : "TCP"}</small>
+          <span className={styles.endpointLabel}>{endpoint.name}</span>
+          <small>{endpoint.isWeb ? "WEB" : terminal?.label ?? "터미널"}</small>
         </span>
         {endpoint.isWeb ? (
           <a
@@ -122,8 +125,8 @@ function Endpoint({ endpoint, compact }) {
             <span aria-hidden="true"> ↗</span>
           </a>
         ) : (
-          <span className={styles.connectionText} title={endpoint.url}>
-            {endpoint.url}
+          <span className={styles.connectionText} title={connectionText} aria-label={endpoint.name + " " + copyLabel}>
+            {connectionText}
           </span>
         )}
       </div>
@@ -131,16 +134,16 @@ function Endpoint({ endpoint, compact }) {
         type="button"
         className={styles.copyButton}
         onClick={copy}
-        aria-label={endpoint.name + " 접속 주소 복사"}
+        aria-label={endpoint.name + " " + copyLabel + " 복사"}
       >
         {copied ? "복사됨" : "복사"}
       </button>}
       <span className={styles.srOnly} role="status">
-        {copied ? endpoint.name + " 주소를 복사했습니다" : ""}
+        {copied ? endpoint.name + " " + copyLabel + "를 복사했습니다" : ""}
       </span>
       {copyError && (
         <p className={styles.copyError} role="status">
-          복사하지 못했습니다 주소를 선택해 복사해주세요
+          복사하지 못했습니다 접속 내용을 선택해 복사해주세요
         </p>
       )}
     </div>
@@ -210,7 +213,11 @@ export default function InstancePanel({ instance, otherInstance, error, pendingA
     : ended
       ? "다시 사용하려면 새 인스턴스를 생성해 주세요"
     : running
-      ? "웹 주소는 새 탭에서 열립니다"
+      ? endpoints.some((endpoint) => endpointTerminalConnection(endpoint))
+        ? "명령어를 복사해 터미널에서 실행하세요"
+        : endpoints.some((endpoint) => !endpoint.isWeb)
+          ? "접속 정보를 확인해 터미널에서 접속하세요"
+          : "웹 주소는 새 탭에서 열립니다"
       : !instance && otherInstance
         ? null
         : status
