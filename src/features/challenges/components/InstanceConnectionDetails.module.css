@@ -4,11 +4,12 @@
 .details dt { flex: 0 0 65px; opacity: .75; }
 .details dd { min-width: 0; margin: 0; overflow-wrap: anywhere; user-select: all; }
 .hint { margin: 5px 0 0; font-size: 12px; line-height: 1.5; }
-.dialog { box-sizing: border-box; position: fixed; inset: 0; width: min(520px, calc(100vw - 32px)); height: fit-content; max-height: calc(100dvh - 32px); margin: auto; overflow: auto; padding: 22px; border: 2px solid #a9803f; border-radius: 10px; background: #f8f2e8; color: #3d2d1b; font-family: inherit; }
+.dialog { box-sizing: border-box; position: fixed; inset: 0; width: min(520px, calc(100% - 32px)); height: fit-content; max-height: calc(100% - 32px); margin: auto; overflow: auto; padding: 22px; border: 2px solid #a9803f; border-radius: 10px; background: #f8f2e8; color: #3d2d1b; font-family: inherit; }
 .dialog::backdrop { background: #160d08b8; }
 .dialog h2 { margin: 0 0 14px; font-size: 20px; }
 .dialog .details { grid-template-columns: minmax(0, 1fr); font-size: 14px; gap: 8px; }
 .url { overflow-wrap: anywhere; user-select: all; font-size: 14px; }
+.command { overflow-wrap: anywhere; white-space: pre-wrap; user-select: all; padding: 10px; border: 1px solid #c9b18d; background: #fffaf3; font: 14px/1.6 ui-monospace, monospace; }
 .actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; margin-top: 16px; }
 .actions button { min-height: 44px; padding: 8px 14px; border: 1px solid #8b6a3e; border-radius: 6px; background: #fffaf3; color: inherit; font: inherit; cursor: pointer; }
 @media (max-width: 440px) { .details { grid-template-columns: minmax(0, 1fr); } }
