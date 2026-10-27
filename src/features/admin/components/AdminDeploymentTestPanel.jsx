@@ -8,7 +8,7 @@ import { activeTestFromFailure, deploymentTestStatus, deploymentTestSteps } from
 import { AdminBadge } from "./AdminLayout.jsx";
 import styles from "./AdminWorkspace.module.css";
 import InstanceConnectionDetails from "../../challenges/components/InstanceConnectionDetails.jsx";
-import { endpointConnectionDetails, endpointCopyText } from "../../challenges/utils/instanceConnectionDetails.js";
+import { endpointConnectionDetails, endpointCopyText, endpointTerminalConnection } from "../../challenges/utils/instanceConnectionDetails.js";
 
 const RUNNING_STATES = ["REQUESTED", "SCHEDULING", "PROVISIONING"];
 
@@ -20,10 +20,11 @@ function elapsedLabel(fromIso, now) {
 }
 
 export function AdminDeploymentEndpoint({ endpoint, copied, onCopy }) {
+  const terminal = endpointTerminalConnection(endpoint);
   return <div className={styles.testEndpoint}>
-    <div><strong>{endpoint.name}</strong><code>{endpoint.url}</code><InstanceConnectionDetails endpoint={endpoint} /></div>
+    <div><strong>{endpoint.name}{terminal ? ` (${terminal.label})` : ""}</strong><code title={endpoint.url}>{terminal?.command ?? endpoint.url}</code><InstanceConnectionDetails endpoint={endpoint} /></div>
     <div>{endpoint.isWeb && <a href={endpoint.url} target="_blank" rel="noopener noreferrer" className={styles.button}>접속하기</a>}
-      <button type="button" className={styles.button} onClick={() => onCopy(endpoint)}>{copied === endpoint.url ? "복사됨" : endpointConnectionDetails(endpoint).length ? "접속 정보 복사" : "주소 복사"}</button></div>
+      <button type="button" className={styles.button} onClick={() => onCopy(endpoint)}>{copied === endpoint.url ? "복사됨" : terminal ? "명령어 복사" : endpointConnectionDetails(endpoint).length ? "접속 정보 복사" : "주소 복사"}</button></div>
   </div>;
 }
 

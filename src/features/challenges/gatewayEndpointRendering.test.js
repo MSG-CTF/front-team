@@ -39,19 +39,30 @@ for (const screen of ["participant", "administrator"]) {
   test(`${screen} shows Gateway public port, TLS and explicit SNI without linking TLS as a web URL`, () => {
     const html = render(gatewayEndpoint);
     assert.match(html, /tls:\/\/i-example\.ctf\.example:443/);
+    assert.match(html, /NCAT \/ TLS/);
+    assert.match(html, /ncat --ssl --ssl-servername route-example\.ctf\.example i-example\.ctf\.example 443/);
+    assert.match(html, /명령어 복사/);
     assert.match(html, /<dt>TLS<\/dt><dd>사용<\/dd>/);
     assert.match(html, /<dt>연결 포트<\/dt><dd>443<\/dd>/);
     assert.match(html, /<dt>SNI<\/dt><dd>route-example\.ctf\.example<\/dd>/);
     assert.doesNotMatch(html, /href="tls:|31337/);
   });
 
-  test(`${screen} keeps legacy TCP display and explicit false/null distinct`, () => {
+  test(`${screen} labels legacy TCP as NC and keeps explicit false/null distinct`, () => {
     const legacy = render({ service_url: "tcp://old.example:31000" });
-    assert.match(legacy, /tcp:\/\/old\.example:31000/);
+    assert.match(legacy, /NC/);
+    assert.match(legacy, /nc old\.example 31000/);
+    assert.doesNotMatch(legacy, />TCP<|href="tcp:/);
     assert.doesNotMatch(legacy, /<dt>TLS|<dt>SNI/);
     const explicit = render({ ...gatewayEndpoint, tls: false, server_name: null });
     assert.match(explicit, /<dt>TLS<\/dt><dd>사용 안 함<\/dd>/);
     assert.match(explicit, /<dt>SNI<\/dt><dd>미제공<\/dd>/);
     assert.doesNotMatch(explicit, /<dd>route-example/);
+  });
+
+  test(`${screen} retains web links and does not suggest terminal commands`, () => {
+    const html = render({service_url:"https://web.example/path"});
+    assert.match(html,/href="https:\/\/web\.example\/path"/);
+    assert.doesNotMatch(html,/NCAT|>NC<|ncat --ssl|nc web\.example/);
   });
 }
