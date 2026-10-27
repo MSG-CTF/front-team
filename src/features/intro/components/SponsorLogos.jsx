@@ -48,22 +48,6 @@ export default function SponsorLogos() {
               loading="lazy"
             />
           </a>
-          <a
-            className="sponsor sponsor--ahnlab"
-            href="https://www.ahnlab.com/ko"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="안랩 공식 사이트 새 창"
-          >
-            <img
-              className="sponsor-logo"
-              src="/assets/intro/ahnlab-logo.svg"
-              width="113"
-              height="27"
-              alt="AhnLab"
-              loading="lazy"
-            />
-          </a>
         </div>
       </div>
     </section>

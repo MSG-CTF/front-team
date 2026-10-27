@@ -1,6 +1,6 @@
 .desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene, .leftPanel, .leftPanelCard { display: contents; }
 .panelToggleSection { display: none; }
-.navCaption { position: absolute; left: 50%; transform: translateX(-50%); z-index: 1; pointer-events: none; white-space: nowrap; color: #f5c451; font: 700 clamp(10px, 0.72cqw, 14px)/1 var(--board-body-font); letter-spacing: 0.08em; text-shadow: 0 1px 2px #000c, 0 0 0.5cqw #000a; }
+.navCaption { position: absolute; left: 50%; transform: translateX(-50%); z-index: 1; pointer-events: none; white-space: nowrap; color: #d9c08e; font: 600 clamp(10px, 0.74cqw, 14px)/1 "Pretendard", var(--board-body-font); letter-spacing: 0.06em; text-shadow: 0 1px 2px #000b; }
 .mobileNav, .boardControls, .boardHint, .sceneBackdrop, .mobileCellInfo { display: none; }
 .frame {
   --board-label-font: "Song Myung", "Batang", serif;
@@ -202,10 +202,6 @@
 }
 .lineOverlay { position: absolute; inset: 0; z-index: 12; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 /* 풀이 상태는 유지하고 독점은 칸 바깥의 연속선으로만 구분한다 */
-.solvedCells { --line-accent: #a8c8ae; }
-.spentSpecialCells { --line-accent: #bd9c68; }
-.lineCellOutline { fill: none; stroke: var(--line-accent); stroke-width: 3px; opacity: 0.85; }
-.lineCellOutline[data-outline-state="spent"] { opacity: 0.75; }
 .lineAccent { pointer-events: none; }
 .lineAccentControl { cursor: pointer; outline: none; }
 .lineAccentHitArea { fill: transparent; pointer-events: fill; }

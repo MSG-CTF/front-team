@@ -64,3 +64,15 @@ test("조회 실패는 미확인 상태로 전환하고 다음 조회로 복구�
   assert.equal(h.applied.length, 1);
   h.dispose();
 });
+
+test("이동이 시작되거나 팀 컨텍스트가 해제된 뒤 도착한 응답은 적용하지 않는다", async () => {
+  let active = true;
+  let resolve;
+  const h = harness(() => new Promise(done => { resolve = done; }), { canRefresh: () => active });
+  h.tick();
+  active = false;
+  resolve({ teamId: "team-a", snapshot: { lineMonopolies: [{ lineNumber: 1, earnedScore: 999 }] } });
+  await flush();
+  assert.equal(h.applied.length, 0);
+  h.dispose();
+});

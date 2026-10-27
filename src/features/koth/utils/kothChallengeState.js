@@ -83,9 +83,23 @@ export function createKothChallengeViewModels(visuals, clubs = [], teamChallenge
       currentOwnerTeamId: challenge.current_owner_team_id ?? null, currentOwnerTeamName: challenge.current_owner_team_name,
       currentScore: challenge.current_score, openedAt: challenge.opened_at, closedAt: challenge.closed_at,
       earnedScore: progress?.earned_score ?? null, rank: progress?.rank ?? null,
+      collection: kothCollectionState(progress), lastCollectedAt: progress?.last_collected_at ?? null,
+      collectionPeriodId: progress?.collection_period_id ?? null,
       solvedAt: progress?.solved_at ?? null, solved: isKothChallengeSolved(progress),
     };
   });
+}
+
+// 점수를 아직 모으지 못한 것과 실제 0점을 구분한다 백엔드가 collection_status / is_stale 로 알려 준다
+// 값이 없는 구버전 응답은 수집이 끝난 것으로 본다
+const COLLECTION_FAILED = new Set(["FAILED", "FAILURE", "ERROR"]);
+const COLLECTION_DONE = new Set(["COLLECTED", "SUCCESS", "SUCCEEDED", "COMPLETED", "OK", "DONE"]);
+export function kothCollectionState(progress) {
+  const status = typeof progress?.collection_status === "string" ? progress.collection_status.trim().toUpperCase() : "";
+  if (COLLECTION_FAILED.has(status)) return "failed";
+  if (status && !COLLECTION_DONE.has(status)) return "pending";
+  if (progress?.is_stale === true) return "stale";
+  return "ready";
 }
 
 export function getUnmappedKothChallenges(visuals, clubs = []) {

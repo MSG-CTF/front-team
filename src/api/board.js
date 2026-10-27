@@ -1,4 +1,5 @@
 import apiClient from "./client.js";
+import { parseScoreJson } from "../utils/scoreJson.js";
 
 // 보드 페이지 API. 경로와 스키마는 README.md "2. 문제 리스트(보드) 페이지"
 // (Notion API명세서 2026-08-23 스냅샷)와 브라우저 간 요청 복구 계약 기준.
@@ -30,8 +31,8 @@ export function getBoard() {
 }
 
 export function getMyBoard(config) {
-  // GET /board/me - 내 팀 진행 상태와 확정 지급 기록(team_id, line_monopolies).
-  return apiClient.get("/board/me", config);
+  // GET /board/me - 내 팀 진행 상태 전체(cell_states, chance_cards, active_challenge 등).
+  return apiClient.get("/board/me", { ...config, transformResponse: [parseScoreJson] });
 }
 
 export function getDiceStatus(config) {
@@ -124,6 +125,7 @@ export function useChanceCard(payload, { idempotencyKey } = {}) {
   //  card_move_offset  -> { card_id, offset: -3~3(0 제외) }
   //  card_free_travel  -> { card_id, destination_index }
   //  그 외             -> { card_id }
+  //  보유 카드 UUID 가 있으면 모든 경우에 team_card_id 를 함께 보낸다
   return apiClient.post(
     "/board/chance/use",
     payload,
@@ -131,20 +133,20 @@ export function useChanceCard(payload, { idempotencyKey } = {}) {
   );
 }
 
-export function confirmChanceCard({ choice, idempotencyKey }) {
+export function confirmChanceCard({ choice, teamCardId, idempotencyKey }) {
   // POST /board/chance/confirm - card_roll_twice_choose 전용. choice: "FIRST" | "SECOND".
   return apiClient.post(
     "/board/chance/confirm",
-    { choice },
+    { choice, ...(teamCardId ? { team_card_id: teamCardId } : {}) },
     idKey("chance-confirm", idempotencyKey),
   );
 }
 
-export function discardChanceCard({ cardId, idempotencyKey }) {
-  // POST /board/chance/discard - 보유 2장일 때 1장 폐기.
+export function discardChanceCard({ cardId, teamCardId, idempotencyKey }) {
+  // POST /board/chance/discard - 보유 2장일 때 1장 폐기. 같은 종류 두 장이면 team_card_id 로 한 장을 고른다.
   return apiClient.post(
     "/board/chance/discard",
-    { card_id: cardId },
+    teamCardId ? { card_id: cardId, team_card_id: teamCardId } : { card_id: cardId },
     idKey("chance-discard", idempotencyKey),
   );
 }

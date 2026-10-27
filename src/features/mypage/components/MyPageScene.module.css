@@ -239,6 +239,14 @@
   overflow-wrap: anywhere;
   text-align: center;
 }
+.qrHint {
+  margin: 0;
+  color: #775b33;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
 .qrStatus strong {
   color: var(--brown);
   font-variant-numeric: tabular-nums;
@@ -246,20 +254,45 @@
 .qrError {
   color: #893c2c;
 }
-.logoutButton {
-  min-height: 36px;
-  padding: 4px 12px;
-  border: 0;
-  background: transparent;
-  color: #605145;
-  font-family: var(--sans);
-  font-size: 14px;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  cursor: pointer;
+/* 새로고침과 로그아웃은 한 묶음으로 오른쪽 끝에 붙여 좁은 화면에서 멀어지지 않게 한다 */
+.statusActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
-.logoutButton:disabled {
+.logoutCoin {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.logoutCoin svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.logoutCoin:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+.logoutCoin:active:not(:disabled) {
+  filter: brightness(0.95);
+}
+.logoutCoin:disabled {
   opacity: 0.6;
+  cursor: not-allowed;
+}
+.logoutCoin:focus-visible {
+  outline: 2px solid #f1e4c8;
+  outline-offset: 2px;
 }
 .membersRegion {
   width: 100%;
@@ -614,7 +647,8 @@
   /* 상태줄: 보드판 위 여백 오른쪽 */
   .statusBar {
     position: absolute;
-    right: calc(var(--u) * 134);
+    /* 로그아웃 동전의 오른쪽 끝이 마이페이지 박스 오른쪽 끝(무대 98+1720=1818 -> 오른쪽에서 102)에 닿고, 상태줄은 동전 폭 64와 간격 24만큼 왼쪽으로 민다 */
+    right: calc(var(--u) * 190);
     top: calc(var(--u) * 58);
     max-width: calc(var(--u) * 1300);
     min-height: calc(var(--u) * 46);
@@ -628,6 +662,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .statusActions { display: contents; }
+  .logoutCoin {
+    position: absolute;
+    left: calc(100% + var(--u) * 24);
+    top: 50%;
+    width: calc(var(--u) * 64);
+    height: calc(var(--u) * 64);
+    transform: translateY(-50%);
   }
   .refreshButton {
     flex: none;
@@ -681,10 +724,19 @@
   .qrBlock {
     display: contents;
   }
+  /* 팀 이름(172~232)과 QR 틀 사이 팀 이름과 같은 가운데 선(235)에 둔다 */
+  .qrHint {
+    position: absolute;
+    left: calc(var(--u) * 35);
+    top: calc(var(--u) * 232);
+    width: calc(var(--u) * 400);
+    font-size: max(10px, calc(var(--u) * 19));
+    line-height: calc(var(--u) * 24);
+  }
   .qrSlot {
     position: absolute;
     left: calc(var(--u) * 149);
-    top: calc(var(--u) * 245);
+    top: calc(var(--u) * 266);
     width: calc(var(--u) * 172);
     height: calc(var(--u) * 172);
     padding: calc(var(--u) * 7);
@@ -717,16 +769,6 @@
     text-align: center;
   }
   /* Figma 451:300 로그아웃: 무대 x481 y616 → 카드 x356 y421 */
-  /* 같은 줄의 QR 안내 문구와 기준선을 맞추려고 3 올린다 */
-  .logoutButton {
-    position: absolute;
-    left: calc(var(--u) * 350);
-    top: calc(var(--u) * 410);
-    min-height: 0;
-    height: calc(var(--u) * 30);
-    padding: 0 calc(var(--u) * 6);
-    font-size: max(10px, calc(var(--u) * 15));
-  }
   /* 원화 MEMBERS 하단(y490)과 PERSONAL RANK 상단(y658) 사이의 공통 좌표계 */
   .membersRegion {
     position: absolute;
@@ -1062,7 +1104,6 @@
   .teamCard { grid-row: span 2; }
 }
 
-@media (max-width: 1100px), (max-height: 619px) { .logoutButton { min-height: 44px; } }
 
 @media (max-width: 1100px), (max-height: 619px) {
   .teamName { white-space: normal; overflow: visible; overflow-wrap: anywhere; font-size: clamp(24px, 7vw, 30px); }
@@ -1078,7 +1119,7 @@
   .teamCard > h2 { position: static; width: 100%; height: auto; margin: 4px 0; padding-top: 16px; overflow: visible; clip: auto; border-top: 1px solid #ac8c5c66; font: 15px/1.4 var(--label); font-weight: 400; letter-spacing: .16em; color: var(--brown-soft); white-space: normal; overflow-wrap: anywhere; }
   .page { --brown-soft: #684316; --ink-soft: #684316; --gold: #6f3e0c; --minus: #7b302b; }
   .statusBar, .qrStatus, .personalRank h2, .personalMessage, .historyPagination { font-size: 14px; }
-  .qrStatus, .logoutButton { color: var(--brown); }
+  .qrStatus { color: var(--brown); }
   .breakdown, .personalStats small { font-size: 13px; }
   .historyTable thead .bakedLabel { color: var(--brown-soft); font-size: 14px; white-space: nowrap; overflow: visible; }
 }

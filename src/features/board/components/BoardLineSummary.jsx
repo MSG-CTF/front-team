@@ -8,7 +8,7 @@ import styles from "./BoardScreen.module.css";
 // 푼 칸 번호만 진하게 써서 어느 칸이 남았는지 읽히게 하고, 배점과 획득 점수는 값이 있을 때만 쓴다
 function lineBadge(line) {
   if (line.isCompleted) return { tone: "won", text: "독점 완료" };
-  if (line.payoutStatus === "unknown" && line.allProblemsCleared) return { tone: "done", text: "풀이 완료" };
+  if (line.payoutStatus === "unknown" && line.allProblemsCleared) return { tone: "done", text: "지급 미확인" };
   if (line.awaitingConfirmation) return { tone: "wait", text: "확인 중" };
   return { tone: "count", text: `${line.solvedCellIndexes.length}/${line.cellIndexes.length}` };
 }

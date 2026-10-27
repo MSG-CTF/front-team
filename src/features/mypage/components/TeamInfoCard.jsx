@@ -12,6 +12,8 @@ function QrSlot({ qrState, onIssueQr, qrDisabled }) {
     qrState.remainingSeconds > 0;
   return (
     <div className={styles.qrBlock}>
+      {/* 발급 전 안내는 팀 이름과 QR 틀 사이에 둔다 */}
+      {qrState.status === "idle" && <p className={styles.qrHint}>결제할 때 QR을 발급하세요</p>}
       {/* Figma의 원형 틀을 사각형 QR 틀로 바꿨다. 발급·만료·재발급 흐름은 그대로 */}
       <section
         className={styles.qrSlot}
@@ -32,7 +34,6 @@ function QrSlot({ qrState, onIssueQr, qrDisabled }) {
         {showQr && <><strong>{qrState.remainingSeconds}초</strong> 후 만료</>}
         {qrState.status === "error" && qrState.error}
         {qrState.status === "expired" && "QR이 만료되었습니다"}
-        {qrState.status === "idle" && "결제할 때 QR을 발급하세요"}
       </p>
     </div>
   );
@@ -65,7 +66,7 @@ function PersonalRank({ memberRanking }) {
 const CARD_MEMBER_ROWS = 2;
 
 // Figma 309:306 — TEAM 리본, 구분선, MEMBERS, MSG CTF는 카드 그림에 그려져 있다
-export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQr, qrDisabled, onLogout, isLoggingOut }) {
+export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQr, qrDisabled }) {
   const membersId = useId();
   const [showAllMembers, setShowAllMembers] = useState(false);
   let teamName = profile.data?.teamName || "-";
@@ -79,9 +80,6 @@ export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQ
       <p className={styles.bakedLabel}>TEAM</p>
       <h1 className={styles.teamName} title={teamName}>{teamName}</h1>
       <QrSlot qrState={qrState} onIssueQr={onIssueQr} qrDisabled={qrDisabled} />
-      <button type="button" className={styles.logoutButton} onClick={onLogout} disabled={isLoggingOut}>
-        로그아웃
-      </button>
       <h2 className={styles.srOnly}>MEMBERS</h2>
       <div className={styles.membersRegion}>
         <ul id={membersId} className={styles.members} data-expanded={showAllMembers || undefined}>

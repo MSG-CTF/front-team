@@ -387,6 +387,10 @@ export function testAdminKothConnection(kothChallengeId, { challengeUrl, scoreAp
   }, MUTATION_CONFIG);
 }
 
+export function startAdminKothPreview(kothChallengeId) {
+  return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/preview_sessions`, {}, MUTATION_CONFIG);
+}
+
 // 반영되지 못한 틱을 문제 서버에서 다시 불러와 반영한다 이미 반영된 틱은 그대로 둔다
 export function retryAdminKothPeriod(kothChallengeId, periodId) {
   return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/periods/${encodeURIComponent(periodId)}/retry`, null, MUTATION_CONFIG);

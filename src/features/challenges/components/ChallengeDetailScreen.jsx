@@ -48,6 +48,8 @@ export default function ChallengeDetailScreen({
   // 파일을 내서 운영 VM에서 돌리는 문제는 인스턴스 대신 원격 실행 칸을 같은 자리에 둔다
   const showRemoteRun = Boolean(challenge?.remoteRun);
   const showInstance = !showRemoteRun && (challenge?.requiresInstance || instance != null);
+  // 인스턴스도 원격 실행도 없는 문제는 그 자리에 마스코트를 둬 빈 칸처럼 보이지 않게 한다
+  const showMascot = !showRemoteRun && !showInstance;
   const showDock =
     challenge &&
     !loading &&
@@ -134,6 +136,12 @@ export default function ChallengeDetailScreen({
                         onRetry={onRetry}
                       />
                     </>
+                  )}
+                  {showMascot && (
+                    <div className={styles.mascotPanel} aria-hidden="true">
+                      <img src="/assets/challenge-detail/mascot-squirrel.webp" alt="" width="360" height="490" decoding="async" />
+                      <p className={styles.mascotCaption}>Get the flag!</p>
+                    </div>
                   )}
                   <FlagSubmitPanel
                     value={flagValue}

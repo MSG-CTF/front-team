@@ -1,0 +1,14 @@
+.shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.shell > aside { position: relative; z-index: 40; flex: none; }
+
+/* Keep the original game's fixed canvas and dialog inside the preview area. */
+.canvas { position: relative; flex: 1; min-height: 0; overflow: clip; transform: translateZ(0); }
+.canvas > main { min-height: 0; }
+.canvas :global([role="dialog"]) { max-height: 100%; }

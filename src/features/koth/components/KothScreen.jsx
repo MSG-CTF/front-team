@@ -30,6 +30,7 @@ export default function KothScreen({
   onCloseChallenge,
   onOpenTeamToken,
   onCloseTeamToken,
+  downloadFile,
 }) {
   const detailReady = clubDetail.status === "success";
   const connection = clubsStale || !detailReady ? null : getKothConnection(selectedChallenge);
@@ -122,6 +123,7 @@ export default function KothScreen({
           authenticated={authenticated}
           teamId={teamId}
           onClose={onCloseChallenge}
+          downloadFile={downloadFile}
         />
       )}
 

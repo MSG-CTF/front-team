@@ -122,6 +122,33 @@
   color: #e4dbd1;
   background: linear-gradient(135deg, #35291b, #1f170f);
 }
+.mascotPanel {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 0;
+}
+.mascotPanel img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: clamp(150px, 30vw, 220px);
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px #0009);
+  pointer-events: none;
+  user-select: none;
+}
+.mascotCaption {
+  margin: 0;
+  color: #7a4a14;
+  font-family: var(--label);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 #f6e3bc;
+}
 .bakedLabel {
   margin: 0 0 6px;
   font-family: var(--label);
@@ -1971,6 +1998,24 @@
     border: 0;
     border-radius: 0;
     background: url("/assets/challenge-detail/panel-instance-base.webp") center / 100% 100% no-repeat;
+  }
+  /* 인스턴스 판과 컨트롤 줄이 있던 640x382 자리 가운데에 배경 없이 마스코트와 문구만 둔다 아래 끝은 플래그 판 위 735에서 20 뗀다 */
+  .mascotPanel {
+    position: absolute;
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 333);
+    width: calc(var(--u) * 640);
+    height: calc(var(--u) * 382);
+    /* 마스코트 아래 끝(290)과 플래그 판 위(402) 사이의 한가운데에 문구를 둔다 */
+    align-content: start;
+    gap: calc(var(--u) * 39);
+    padding: calc(var(--u) * 40) 0 0;
+  }
+  .mascotPanel img {
+    height: calc(var(--u) * 250);
+  }
+  .mascotCaption {
+    font-size: max(14px, calc(var(--u) * 28));
   }
   .statusSlot {
     position: absolute;

@@ -942,42 +942,20 @@
   color: var(--muted);
   font-size: 15px;
 }
-.msg-intro .rank-awards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-.msg-intro .rank-awards > div {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: var(--space-1);
-  min-width: 0;
-}
-.msg-intro .rank-awards dt {
-  flex-shrink: 0;
-  color: var(--muted);
-  font-size: 14px;
-}
-.msg-intro .rank-awards dd {
-  color: var(--accent);
-  font-size: 16px;
-}
-.msg-intro .guide-prizes .rank-awards {
-  margin-top: var(--space-2);
-  margin-bottom: var(--space-2);
-}
 .msg-intro .special-awards {
   margin-bottom: var(--space-6);
 }
 .msg-intro .special-award {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px var(--space-4);
   padding: var(--space-3) var(--space-4);
   border-block: 1px solid #a98b61;
+}
+.msg-intro .special-award-copy {
+  flex: 1 1 160px;
+  min-width: 0;
 }
 .msg-intro .special-award + .special-award {
   margin-top: var(--space-3);
@@ -1004,7 +982,7 @@
   letter-spacing: -0.05em;
 }
 .msg-intro .special-award .special-award-note {
-  grid-column: 1 / -1;
+  flex-basis: 100%;
   margin: 0;
   color: var(--muted);
   font-size: 14px;
@@ -1643,7 +1621,7 @@
 }
 .msg-intro .sponsor-lineup {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: center;
   gap: var(--space-6);
   margin-top: var(--space-4);
@@ -1669,11 +1647,6 @@
 .msg-intro .sponsor--siya .sponsor-logo {
   width: 310px;
   max-height: none;
-}
-.msg-intro .sponsor--ahnlab .sponsor-logo {
-  width: 220px;
-  padding: 14px 18px;
-  background: #fff;
 }
 .msg-intro .site-footer {
   background: #111211;
@@ -2239,19 +2212,6 @@
   .msg-intro .prize-total .prize-caption {
     font-size: 14px;
   }
-  .msg-intro .rank-awards {
-    grid-template-columns: 1fr;
-    width: fit-content;
-    max-width: 100%;
-    margin-inline: auto;
-    gap: var(--space-1);
-  }
-  .msg-intro .rank-awards > div {
-    justify-content: flex-start;
-  }
-  .msg-intro .guide-prizes .rank-awards {
-    margin-inline: 0;
-  }
   .msg-intro .special-awards {
     margin-bottom: var(--space-4);
   }
@@ -2465,6 +2425,9 @@
   .msg-intro .sponsor-lineup {
     grid-template-columns: 1fr 1fr;
     gap: var(--space-2) var(--space-4);
+  }
+  .msg-intro .sponsor--monster {
+    grid-column: 1 / -1;
   }
   .msg-intro .sponsor {
     min-height: 100px;
