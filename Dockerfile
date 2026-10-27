@@ -18,7 +18,7 @@ FROM nginxinc/nginx-unprivileged:1.31-alpine@sha256:aa8c9087d36d93e9d650c5365f88
 
 USER root
 RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
-USER 101
+USER 0:0
 
 # 이미지의 entrypoint가 /etc/resolv.conf에서 현재 컨테이너의 DNS 주소를 읽는다.
 ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
