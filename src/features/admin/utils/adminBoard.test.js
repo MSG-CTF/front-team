@@ -33,8 +33,9 @@ test("칸 상태 변경과 말 이동은 칸 번호, 상태, 사유 1~500자를 
 
 test("이벤트 필터에 보드 조작과 릴리스 전환이 중복 없이 포함된다", () => {
   const values = ADMIN_EVENT_TYPES.map((item) => item.value);
-  assert.equal(values.length, 14);
-  assert.equal(new Set(values).size, 14);
+  assert.equal(values.length, 15);
+  assert.ok(values.includes("SUBMISSION_DELETED"));
+  assert.equal(new Set(values).size, 15);
   for (const value of ["DICE_ADJUSTED", "BOARD_POSITION_MOVED", "CELL_STATUS_CHANGED", "CHALLENGE_RELEASE_ACTIVATED"]) assert.ok(values.includes(value));
   assert.equal(getAdminEventTypeLabel("CHALLENGE_RELEASE_ACTIVATED"), "배포 버전 전환");
   assert.equal(getAdminEventTypeLabel("UNKNOWN_TYPE"), "UNKNOWN_TYPE");

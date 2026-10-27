@@ -18,11 +18,12 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
   const [problemBusy, setProblemBusy] = useState(false);
   const [deploymentBusy, setDeploymentBusy] = useState(false);
   const [remoteBusy, setRemoteBusy] = useState(false);
+  const [submissionBusy, setSubmissionBusy] = useState(false);
   // 실행 파일을 내서 검증 VM에서 돌리는 문제는 원격 실행 탭에서 설정과 실행 기록을 본다
   const remote = Boolean(challenge.remote_run);
   // 기본 정보의 파일 카드에서 배포 설정의 참가자 파일 칸으로 바로 넘긴다
   const [deploymentFocus, setDeploymentFocus] = useState(null);
-  const busy = problemBusy || deploymentBusy || remoteBusy;
+  const busy = problemBusy || deploymentBusy || remoteBusy || submissionBusy;
 
   function selectSection(next) {
     if (busy) return;
@@ -65,7 +66,7 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
       {opened.has("solves") && <AdminChallengeSolvesPanel challengeId={challenge.challenge_id} currentScore={challenge.score}/>}
     </section>
     <section role="tabpanel" id="challenge-workspace-panel-submissions" aria-labelledby="challenge-workspace-tab-submissions" hidden={section !== "submissions"} className={styles.panel}>
-      {opened.has("submissions") && <AdminChallengeSubmissionsPanel challengeId={challenge.challenge_id}/>}
+      {opened.has("submissions") && <AdminChallengeSubmissionsPanel key={challenge.challenge_id} challengeId={challenge.challenge_id} challengeTitle={title} onBusyChange={setSubmissionBusy}/>}
     </section>
   </AdminDialog>;
 }

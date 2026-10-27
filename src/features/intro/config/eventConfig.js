@@ -33,11 +33,10 @@ export const eventConfig = Object.freeze({
   participationFee: "무료",
   prizes: {
     confirmed: true,
-    totalKrw: 2000000,
-    rankAwards: ["HSPACE상", "시야인사이트상", "안랩상"],
+    totalKrw: 1500000,
     tracks: [
-      { label: "외부 트랙", amounts: [700000, 400000, 200000] },
-      { label: "내부 트랙", amounts: [400000, 200000, 100000] },
+      { label: "외부 트랙", amounts: [500000, 300000, 100000] },
+      { label: "내부 트랙", amounts: [300000, 200000, 100000] },
     ],
     specialAwards: [],
   },

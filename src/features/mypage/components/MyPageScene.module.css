@@ -254,6 +254,13 @@
 .qrError {
   color: #893c2c;
 }
+/* 새로고침과 로그아웃은 한 묶음으로 오른쪽 끝에 붙여 좁은 화면에서 멀어지지 않게 한다 */
+.statusActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
 .logoutCoin {
   flex: none;
   display: grid;
@@ -656,6 +663,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .statusActions { display: contents; }
   .logoutCoin {
     position: absolute;
     left: calc(100% + var(--u) * 24);

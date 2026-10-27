@@ -50,7 +50,7 @@ const BUTTONS = [
   },
   {
     key: "scoreboard",
-    caption: "Scoreboard",
+    caption: "Score",
     to: ROUTES.leaderboard,
     label: "스코어보드",
     mobileLabel: "순위",

@@ -69,6 +69,8 @@ export function mapChallengeDetail(data) {
     solved: data.is_solved === true,
     accessStatus: data.status ?? null,
     openedAt: data.opened_at ?? null,
+    // 제한시간은 관리자 설정으로 달라질 수 있어 서버가 준 마감을 쓴다 opened_at + 15분은 구버전 응답용 대체값이다
+    solveDeadlineAt: data.solve_deadline_at ?? null,
     description: typeof data.description === "string" ? data.description : "",
     requiresInstance: !remoteRun && data.requires_instance !== false,
     remoteRun,
@@ -87,7 +89,7 @@ export function mapChallengeDetail(data) {
 }
 
 export function getChallengeSubmissionState(challenge, now = Date.now()) {
-  const deadline = getChallengeDeadline(challenge?.openedAt);
+  const deadline = getChallengeDeadline(challenge?.openedAt, challenge?.solveDeadlineAt);
   const remainingSeconds =
     deadline == null
       ? null

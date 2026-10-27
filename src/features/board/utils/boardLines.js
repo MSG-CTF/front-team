@@ -1,11 +1,12 @@
+import { LosslessNumber } from "lossless-json";
 import { BOARD_CELL_COUNT, BOARD_IMAGE_SIZE, getBoardCellPosition } from "./boardData.js";
 import { BOARD_CELL_FACE_OUTLINES } from "./boardCellFaces.js";
 import { BOARD_GEM_RAIL_PALETTES } from "./boardGemRail.js";
+import { validScore } from "../../../utils/scoreJson.js";
 
 // 동일한 금속 프레임 위에 얇게 사용하는 저채도 보석색
 const LINE_ACCENTS = Object.freeze(BOARD_GEM_RAIL_PALETTES.map(palette => palette.mid));
 export const BOARD_LINE_SPECIAL_INDEXES = Object.freeze([1, 7, 16, 21, 25, 30]);
-const validScore = (score) => Number.isFinite(score) && score >= 0 ? (score === 0 ? 0 : score) : null;
 export const BOARD_LINE_SCORE_UNIT = "pts";
 
 export function formatBoardLineScoreValue(score) {
@@ -27,13 +28,24 @@ export function formatBoardLineScore(score) {
 // 소수 배점을 합쳐도 0.30000000000000004처럼 보이지 않도록 십진수로 합산한다
 function sumKnownScores(scores) {
   if (scores.some((score) => score === null)) return null;
-  const parts = scores.map((score) => {
+  const decimalParts = (score) => {
     const [coefficient, exponent = "0"] = String(score).split("e");
     return { digits: BigInt(coefficient.replace(".", "")), scale: (coefficient.split(".")[1]?.length ?? 0) - Number(exponent) };
-  });
+  };
+  const parts = scores.map(decimalParts);
   const scale = Math.max(0, ...parts.map((part) => part.scale));
   const total = parts.reduce((sum, part) => sum + part.digits * 10n ** BigInt(scale - part.scale), 0n);
-  return validScore(Number(`${total}e-${scale}`));
+  const numeric = Number(`${total}e-${scale}`);
+  const rounded = Number.isFinite(numeric) ? decimalParts(numeric) : null;
+  const commonScale = Math.max(scale, rounded?.scale ?? 0, 0);
+  const preservesDigits = rounded && total * 10n ** BigInt(commonScale - scale) ===
+    rounded.digits * 10n ** BigInt(commonScale - rounded.scale);
+  if (scores.some((score) => score instanceof LosslessNumber) || (rounded && !preservesDigits)) {
+    const digits = String(total).padStart(scale + 1, "0");
+    const text = scale === 0 ? digits : `${digits.slice(0, -scale)}.${digits.slice(-scale)}`;
+    return new LosslessNumber(text);
+  }
+  return validScore(numeric);
 }
 
 // 예정 배점과 지급된 보너스는 다른 값이다 완료 확정 대기는 0점으로 숨기지 않는다
@@ -76,10 +88,10 @@ export function getBoardSolvedCellIndexes(cells, cellStatesByIndex) {
   ).map((cell) => cell.cellIndex))].sort((a, b) => a - b);
 }
 
-// 서버가 지정한 라인과 현재 팀의 CLEARED 상태만 연결한다
-// 지급 확인 응답이 없으므로 완료와 보너스 점수는 만들지 않는다
-export function getBoardLineProgress(cells, cellStatesByIndex) {
+// 서버의 지급 기록과 현재 팀의 CLEARED 상태를 함께 확인한다
+export function getBoardLineProgress(cells, cellStatesByIndex, lineMonopolies = null) {
   if (!Array.isArray(cells) || !(cellStatesByIndex instanceof Map)) return [];
+  const payouts = new Map((lineMonopolies ?? []).map((row) => [row.lineNumber, row]));
   const grouped = new Map();
   for (const cell of cells) {
     if (cell?.type !== "CHALLENGE" || BOARD_LINE_SPECIAL_INDEXES.includes(cell.cellIndex)) continue;
@@ -88,21 +100,24 @@ export function getBoardLineProgress(cells, cellStatesByIndex) {
     indexes.push(cell.cellIndex);
     grouped.set(cell.lineNumber, indexes);
   }
-  return prepareBoardLines([...grouped].filter(([, indexes]) => indexes.length === 5).sort(([left], [right]) => left - right).map(([number, cellIndexes]) => ({
+  return prepareBoardLines([...grouped].filter(([, indexes]) => indexes.length === 5).sort(([left], [right]) => left - right).map(([number, cellIndexes]) => {
+    const solvedCellIndexes = cellIndexes.filter((index) => cellStatesByIndex.get(index)?.status === "CLEARED");
+    return {
     lineId: `line-${number}`,
     lineNumber: number,
-    payoutStatus: "unknown",
+    payoutStatus: payouts.has(number) ? "paid" : Array.isArray(lineMonopolies) && solvedCellIndexes.length < cellIndexes.length ? "unpaid" : "unknown",
     label: `${number}번 라인`,
     cellIndexes,
-    solvedCellIndexes: cellIndexes.filter((index) => cellStatesByIndex.get(index)?.status === "CLEARED"),
-    isCompleted: false,
+    solvedCellIndexes,
+    isCompleted: payouts.has(number),
     rewardScore: null,
-    bonusScore: null,
-  })), cells);
+    bonusScore: payouts.get(number)?.earnedScore ?? null,
+    isCategoryBonus: payouts.get(number)?.isCategoryBonus ?? null,
+  }; }), cells);
 }
 
 // 화면용 모델이며 API 계약이 아니다
-// 실제 연동 전까지 라인 묶음, 완료 여부, 지급 점수를 자동으로 만들지 않는다
+// 호출자가 전달한 서버 확인 여부를 유지하고 방문 상태로 지급을 추정하지 않는다
 // 칸 소모나 방문 완료는 문제 정답 처리와 별개다
 export function prepareBoardLines(input, cells) {
   if (!Array.isArray(input)) return [];
@@ -135,10 +150,12 @@ export function prepareBoardLines(input, cells) {
       lineId: line.lineId, label: line.label, cellIndexes, solvedCellIndexes, isCompleted,
       lineNumber: line.lineNumber,
       payoutStatus: line.payoutStatus,
+      isCategoryBonus: line.isCategoryBonus ?? null,
       allProblemsCleared,
       rewardScore: validScore(line.rewardScore),
       bonusScore: isCompleted ? validScore(line.bonusScore) : null,
-      awaitingConfirmation: !isCompleted && solvedCellIndexes.length === cellIndexes.length,
+      awaitingConfirmation: !isCompleted && (line.payoutStatus === "paid" ||
+        (line.payoutStatus !== "unpaid" && allProblemsCleared)),
     };
   });
 }
@@ -308,7 +325,9 @@ export function getBoardLineCounts(lines) {
   const payoutUnknown = list.some((line) => line.payoutStatus === "unknown");
   const cleared = list.filter((line) => line.allProblemsCleared).length;
   const completed = list.filter((line) => line.isCompleted).length;
-  return { total: list.length, cleared, completed, payoutUnknown, done: payoutUnknown ? cleared : completed };
+  const hasConfirmedPayout = list.some((line) => ["paid", "unpaid"].includes(line.payoutStatus));
+  return { total: list.length, cleared, completed, payoutUnknown, hasConfirmedPayout,
+    done: payoutUnknown && !hasConfirmedPayout ? cleared : completed };
 }
 
 export function getBoardLineStatus(line) {

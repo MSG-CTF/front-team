@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { chanceCardKey } from "../utils/boardData.js";
 import styles from "./BoardScreen.module.css";
 
 const OFFSET_OPTIONS = [-3, -2, -1, 1, 2, 3];
@@ -28,17 +29,18 @@ export default function ChanceCardSummary({
   }, [availableDestinations]);
 
   const useCard = (card) => {
+    const key = chanceCardKey(card);
     if (card.cardId === "card_move_offset") {
-      onUseCard(card.cardId, { offset });
+      onUseCard(key, { offset });
       return;
     }
     if (card.cardId === "card_free_travel") {
-      onUseCard(card.cardId, {
+      onUseCard(key, {
         destinationIndex: Number(destinationIndex),
       });
       return;
     }
-    onUseCard(card.cardId);
+    onUseCard(key);
   };
 
   return (
@@ -69,7 +71,7 @@ export default function ChanceCardSummary({
 
           return (
             <li
-              key={card.cardId}
+              key={chanceCardKey(card)}
               className="rounded-[0.25cqw] border border-[#6f4929] bg-[#1f120a]/65 p-[0.28cqw] text-[0.56cqw]"
             >
               <div className="flex items-center justify-between gap-[0.35cqw]">

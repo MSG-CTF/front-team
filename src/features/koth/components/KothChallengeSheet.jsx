@@ -82,6 +82,8 @@ export default function KothChallengeSheet({ challenge, connection, detail, rank
   const opened = clock(challenge.openedAt);
   const ownerIsMine = teamId != null && challenge.currentOwnerTeamId === teamId;
   const firstScore = clock(challenge.solvedAt);
+  const waiting = challenge.collection === "pending";
+  const failed = challenge.collection === "failed";
   const routeMessage = !detailReady ? "최신 상태 확인 후 접속할 수 있습니다"
     : stale ? "목록 갱신 후 접속할 수 있습니다"
       : challenge.status === "ACTIVE" ? "접속 주소 준비 중" : "현재 접속할 수 없는 문제입니다";
@@ -150,10 +152,10 @@ export default function KothChallengeSheet({ challenge, connection, detail, rank
             <div>
               <dt><Label en="MY TEAM" ko="우리 팀" /></dt>
               <dd>
-                <span className={styles.standingName}>{authenticated && challenge.rank != null ? `${challenge.rank}위` : "순위 없음"}</span>
-                <span className={styles.standingScore}>{authenticated && challenge.earnedScore != null ? challenge.earnedScore : "-"}</span>
+                <span className={styles.standingName}>{!authenticated ? "순위 없음" : waiting ? "집계 대기" : failed ? "수집 실패" : challenge.rank != null ? `${challenge.rank}위` : challenge.earnedScore === 0 ? "—" : "순위 없음"}</span>
+                <span className={styles.standingScore}>{authenticated && !waiting && !failed && challenge.earnedScore != null ? challenge.earnedScore : "-"}</span>
               </dd>
-              <dd className={styles.standingNote}>{!authenticated ? "로그인 후 확인" : firstScore ? `${firstScore} 첫 득점` : "아직 득점 전"}</dd>
+              <dd className={styles.standingNote}>{!authenticated ? "로그인 후 확인" : failed ? "점수 수집에 실패했습니다 잠시 후 다시 확인해주세요" : waiting ? "점수를 아직 수집하지 못했습니다" : challenge.collection === "stale" ? "마지막으로 수집한 점수입니다" : firstScore ? `${firstScore} 첫 득점` : challenge.earnedScore === 0 ? "수집 결과 0점" : "아직 득점 전"}</dd>
             </div>
           </dl>
           <section className={styles.sheetDescription} aria-labelledby={`${ids}description`}>

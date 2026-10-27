@@ -154,9 +154,8 @@ test("CLEARED와 is_solved를 독립적으로 유지하면서 완료 문제의 �
   assert.equal(getChallengeSubmissionState(solved).blocked, true);
 });
 
-test("미제공 상태/시간을 목록이나 예전 deadline 필드로 추측하지 않는다", () => {
+test("미제공 상태/시간을 목록이나 created_at 으로 추측하지 않는다", () => {
   const challenge = mapChallengeDetail({
-    solve_deadline_at: deadline,
     created_at: openedAt,
   });
   assert.equal(challenge.openedAt, null);
@@ -168,6 +167,17 @@ test("미제공 상태/시간을 목록이나 예전 deadline 필드로 추측�
     assert.equal(state.isCleared, false);
     assert.equal(state.blocked, false);
   }
+});
+
+test("제한시간은 opened_at + 15분 대신 서버의 solve_deadline_at 을 쓴다", () => {
+  const challenge = mapChallengeDetail({ opened_at: openedAt, solve_deadline_at: deadline });
+  assert.equal(challenge.solveDeadlineAt, deadline);
+  const at = Date.parse(deadline);
+  assert.equal(getChallengeSubmissionState(challenge, at - 90_000).remainingSeconds, 90);
+  assert.equal(getChallengeSubmissionState(challenge, at).expired, true);
+  // 마감이 없는 구버전 응답만 opened_at + 15분으로 계산한다
+  const legacy = mapChallengeDetail({ opened_at: openedAt });
+  assert.equal(getChallengeSubmissionState(legacy, Date.parse(openedAt) + 14 * 60_000).remainingSeconds, 60);
 });
 
 test("Board는 서버 마감을 사용하고 서버 시각으로 남은 시간을 보정한다", () => {

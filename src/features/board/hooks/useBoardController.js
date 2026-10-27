@@ -3,7 +3,9 @@ import { openChallengeAccess } from "../utils/openChallengeAccess.js";
 import { presentTrainJourney } from "../utils/trainJourney.js";
 import { createStartRewardRecorder } from "../utils/boardStartReward.js";
 import { scheduleBoardDeadlineRefresh } from "../utils/boardDeadlineRefresh.js";
+import { createRequestSequence } from "../utils/requestSequence.js";
 import { getBoardLineProgress } from "../utils/boardLines.js";
+import { watchBoardLineSnapshot } from "../utils/boardLineRefresh.js";
 import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
 import { useAuthenticatedUser } from "../../../routes/AuthenticatedRoute.jsx";
 import { createPendingDiceRoll, restorePendingDiceRoll } from "../utils/pendingDiceRoll.js";
@@ -38,6 +40,7 @@ import {
   adaptMovementResult,
   adaptMyBoard,
   adaptRouletteResult,
+  chanceCardKey,
   getBoardError,
   mergeOwnedChanceCards,
   unwrapBoardResponse,
@@ -53,6 +56,8 @@ function wait(milliseconds) {
 
 export default function useBoardController() {
   const user = useAuthenticatedUser();
+  // API에 없는 team_id를 요구하지 않는다. 응답은 요청 당시 인증 컨텍스트에 묶는다.
+  const progressScope = JSON.stringify([user?.user_id, user?.team_id]);
   const pendingDiceRoll = useMemo(() => createPendingDiceRoll({
     userId: user?.user_id, teamId: user?.team_id,
     createKey: async () => unwrapBoardResponse(await prepareDiceRoll()).request_key,
@@ -72,6 +77,11 @@ export default function useBoardController() {
   const [openedChallenges, setOpenedChallenges] = useState([]);
   const [openedChallengesLoading, setOpenedChallengesLoading] = useState(true);
   const [openedChallengesError, setOpenedChallengesError] = useState("");
+  // 보드 조회 응답은 순서가 뒤집혀 도착할 수 있다 가장 나중에 시작한 조회만 상태에 반영하고
+  // 이동·보정 같은 변경이 시작되면 그 전에 시작한 조회는 버린다
+  const progressRequest = useRef(null);
+  const lineSnapshotRevision = useRef(0);
+  if (progressRequest.current === null) progressRequest.current = createRequestSequence();
   const openedRequest = useRef(0);
   const openedController = useRef(null);
   const completedDeadlines = useRef(new Set());
@@ -118,6 +128,8 @@ export default function useBoardController() {
   const reloadOpenedChallenges = requestOpenedChallenges;
 
   const load = useCallback(async () => {
+    ++lineSnapshotRevision.current;
+    const progressSeq = progressRequest.current.begin();
     setIsLoading(true);
     setError(null);
     setDeadlineError(null);
@@ -134,7 +146,7 @@ export default function useBoardController() {
       const nextBoardDefinition = adaptBoardDefinition(
         unwrapBoardResponse(boardResponse),
       );
-      const nextMyBoard = adaptMyBoard(unwrapBoardResponse(myBoardResponse));
+      const nextMyBoard = { ...adaptMyBoard(unwrapBoardResponse(myBoardResponse)), progressScope };
       const nextDiceStatus = adaptDiceStatus(unwrapBoardResponse(diceResponse));
       const nextCatalog = adaptChanceCatalog(unwrapBoardResponse(catalogResponse));
       await openedTask;
@@ -144,14 +156,19 @@ export default function useBoardController() {
 
       if (!mountedRef.current) return;
       setBoardDefinition(nextBoardDefinition);
-      setMyBoard(nextMyBoard);
-      setDiceStatus(nextDiceStatus);
       setChanceCatalog(nextCatalog);
-      setCurrentCell(nextCurrentCell);
-      setDisplayPosition(nextMyBoard.position);
-      setAwaitingDiscard(false);
-      setPendingRoll(null);
-      setPendingChanceChoice(null);
+      // 더 나중에 시작한 조회나 변경이 있으면 이 늦은 응답의 위치·주사위는 반영하지 않는다
+      if (progressRequest.current.isLatest(progressSeq)) {
+        ++lineSnapshotRevision.current;
+        setMyBoard(nextMyBoard);
+        setDiceStatus(nextDiceStatus);
+        setCurrentCell(nextCurrentCell);
+        setDisplayPosition(nextMyBoard.position);
+        // 새로고침 뒤에도 보유 카드가 2장이면 폐기 안내를 이어서 보인다
+        setAwaitingDiscard(mergeOwnedChanceCards(nextMyBoard.chanceCards, nextCatalog).length >= 2);
+        setPendingRoll(null);
+        setPendingChanceChoice(nextMyBoard.pendingChanceChoice ?? null);
+      }
       if (pendingDiceRoll.peek()) setError({
         code: "ROLL_RESULT_UNCONFIRMED",
         message: "이전 주사위 결과를 확인하지 못했어요 다시 시도를 눌러주세요",
@@ -161,7 +178,7 @@ export default function useBoardController() {
     } finally {
       if (mountedRef.current) setIsLoading(false);
     }
-  }, [pendingDiceRoll, requestCurrentCell, requestOpenedChallenges]);
+  }, [pendingDiceRoll, progressScope, requestCurrentCell, requestOpenedChallenges]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -196,24 +213,32 @@ export default function useBoardController() {
 
   const syncProgress = useCallback(
     async ({ includeCurrentCell = true, preserveDisplayPosition = false, requestOptions, isCurrent = () => true } = {}) => {
+      ++lineSnapshotRevision.current;
+      const progressSeq = progressRequest.current.begin();
+      const latest = () => progressRequest.current.isLatest(progressSeq) && isCurrent();
       const [myBoardResponse, diceResponse] = await Promise.all([
         getMyBoard(requestOptions),
         getDiceStatus(requestOptions),
       ]);
-      const nextMyBoard = adaptMyBoard(unwrapBoardResponse(myBoardResponse));
+      const nextMyBoard = { ...adaptMyBoard(unwrapBoardResponse(myBoardResponse)), progressScope };
       const nextDiceStatus = adaptDiceStatus(unwrapBoardResponse(diceResponse));
-      if (!mountedRef.current || !isCurrent()) return;
+      if (!mountedRef.current || !latest()) return;
       await requestOpenedChallenges();
       const nextCurrentCell = includeCurrentCell ? await requestCurrentCell() : null;
 
-      if (!mountedRef.current || !isCurrent()) return;
+      if (!mountedRef.current || !latest()) return;
+      ++lineSnapshotRevision.current;
       setMyBoard(nextMyBoard);
       setDiceStatus(nextDiceStatus);
+      // Older servers omit this field; keep the in-flight use response there.
+      if (nextMyBoard.pendingChanceChoice !== undefined) {
+        setPendingChanceChoice(nextMyBoard.pendingChanceChoice);
+      }
       if (includeCurrentCell) setCurrentCell(nextCurrentCell);
       if (!preserveDisplayPosition) setDisplayPosition(nextMyBoard.position);
       return { myBoard: nextMyBoard, diceStatus: nextDiceStatus };
     },
-    [requestCurrentCell, requestOpenedChallenges],
+    [progressScope, requestCurrentCell, requestOpenedChallenges],
   );
 
   const runMutation = useCallback(
@@ -233,6 +258,9 @@ export default function useBoardController() {
       }
 
       mutationLockRef.current = true;
+      ++lineSnapshotRevision.current;
+      // 변경이 시작되면 그 전에 보낸 조회 응답은 더 이상 최신이 아니다
+      progressRequest.current.invalidate();
       setIsMutating(true);
       setError(null);
       let idempotencyKey;
@@ -432,15 +460,18 @@ export default function useBoardController() {
   );
 
   const handleUseChanceCard = useCallback(
-    (cardId, options = {}) => {
+    (cardKey, options = {}) => {
       if (awaitingDiscard) return Promise.resolve(null);
       const card = mergeOwnedChanceCards(
         myBoard?.chanceCards ?? [],
         chanceCatalog,
-      ).find((item) => item.cardId === cardId);
+      ).find((item) => chanceCardKey(item) === cardKey);
       if (!card?.usableNow) return Promise.resolve(null);
+      const cardId = card.cardId;
 
+      // 같은 종류 두 장 중 고른 한 장만 처리되도록 보유 카드 UUID 를 함께 보낸다
       const payload = { card_id: cardId };
+      if (card.teamCardId) payload.team_card_id = card.teamCardId;
       if (cardId === "card_move_offset") payload.offset = options.offset;
       if (cardId === "card_free_travel") {
         payload.destination_index = options.destinationIndex;
@@ -488,12 +519,16 @@ export default function useBoardController() {
   const handleConfirmChance = useCallback(
     (choice) =>
       runMutation({
-        actionId: `chance-confirm:${choice}`,
+        actionId: `chance-confirm:${pendingChanceChoice?.teamCardId ?? "legacy"}:${choice}`,
         prefix: "chance-confirm",
         request: async (idempotencyKey) => {
           const result = adaptChanceConfirmation(
             unwrapBoardResponse(
-              await confirmChanceCard({ choice, idempotencyKey }),
+              await confirmChanceCard({
+                choice,
+                teamCardId: pendingChanceChoice?.teamCardId,
+                idempotencyKey,
+              }),
             ),
           );
           if (result.toIndex != null) await animateMovement([result.toIndex]);
@@ -505,25 +540,29 @@ export default function useBoardController() {
           return result;
         },
       }),
-    [animateMovement, runMutation, syncProgress],
+    [animateMovement, pendingChanceChoice?.teamCardId, runMutation, syncProgress],
   );
 
   const handleDiscardChance = useCallback(
-    (cardId) =>
-      runMutation({
-        actionId: `chance-discard:${cardId}`,
+    (cardKey) => {
+      const card = mergeOwnedChanceCards(myBoard?.chanceCards ?? [], chanceCatalog)
+        .find((item) => chanceCardKey(item) === cardKey);
+      if (!card) return Promise.resolve(null);
+      return runMutation({
+        actionId: `chance-discard:${cardKey}`,
         prefix: "chance-discard",
         allowWhileAwaitingDiscard: true,
         request: async (idempotencyKey) => {
           const result = unwrapBoardResponse(
-            await discardChanceCard({ cardId, idempotencyKey }),
+            await discardChanceCard({ cardId: card.cardId, teamCardId: card.teamCardId, idempotencyKey }),
           );
           await syncProgress();
           if (mountedRef.current) setAwaitingDiscard(false);
           return result;
         },
-      }),
-    [runMutation, syncProgress],
+      });
+    },
+    [chanceCatalog, myBoard?.chanceCards, runMutation, syncProgress],
   );
 
   const handleSpinRoulette = useCallback(
@@ -629,9 +668,35 @@ export default function useBoardController() {
   );
 
   const lineProgress = useMemo(
-    () => getBoardLineProgress(boardDefinition?.cells, cellStatesByIndex),
-    [boardDefinition?.cells, cellStatesByIndex],
+    () => getBoardLineProgress(boardDefinition?.cells, cellStatesByIndex,
+      myBoard?.progressScope === progressScope ? myBoard?.lineMonopolies : null),
+    [boardDefinition?.cells, cellStatesByIndex, myBoard?.lineMonopolies, myBoard?.progressScope, progressScope],
   );
+
+  useEffect(() => {
+    if (!user?.team_id || isLoading) return undefined;
+    let refreshRevision;
+    return watchBoardLineSnapshot({
+      teamId: user.team_id,
+      canRefresh: () => mountedRef.current && !mutationLockRef.current,
+      read: async (options) => {
+        refreshRevision = lineSnapshotRevision.current;
+        const snapshot = adaptMyBoard(unwrapBoardResponse(await getMyBoard(options)));
+        return { teamId: user.team_id, snapshot, revision: refreshRevision };
+      },
+      apply: ({ snapshot, revision }) => {
+        if (lineSnapshotRevision.current !== revision) return;
+        setMyBoard((previous) => previous?.progressScope === progressScope ? {
+          ...previous, cellStates: snapshot.cellStates, lineMonopolies: snapshot.lineMonopolies,
+        } : previous);
+      },
+      onError: () => {
+        if (lineSnapshotRevision.current !== refreshRevision) return;
+        setMyBoard((previous) => previous?.progressScope === progressScope
+          ? { ...previous, lineMonopolies: null } : previous);
+      },
+    });
+  }, [user?.team_id, progressScope, isLoading]);
 
   const reload = useCallback(() => {
     if (mutationKeysRef.current.has("dice-roll") || pendingDiceRoll.peek()) {
