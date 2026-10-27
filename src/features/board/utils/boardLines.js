@@ -100,18 +100,20 @@ export function getBoardLineProgress(cells, cellStatesByIndex, lineMonopolies = 
     indexes.push(cell.cellIndex);
     grouped.set(cell.lineNumber, indexes);
   }
-  return prepareBoardLines([...grouped].filter(([, indexes]) => indexes.length === 5).sort(([left], [right]) => left - right).map(([number, cellIndexes]) => ({
+  return prepareBoardLines([...grouped].filter(([, indexes]) => indexes.length === 5).sort(([left], [right]) => left - right).map(([number, cellIndexes]) => {
+    const solvedCellIndexes = cellIndexes.filter((index) => cellStatesByIndex.get(index)?.status === "CLEARED");
+    return {
     lineId: `line-${number}`,
     lineNumber: number,
-    payoutStatus: payouts.has(number) ? "paid" : Array.isArray(lineMonopolies) ? "unpaid" : "unknown",
+    payoutStatus: payouts.has(number) ? "paid" : Array.isArray(lineMonopolies) && solvedCellIndexes.length < cellIndexes.length ? "unpaid" : "unknown",
     label: `${number}번 라인`,
     cellIndexes,
-    solvedCellIndexes: cellIndexes.filter((index) => cellStatesByIndex.get(index)?.status === "CLEARED"),
+    solvedCellIndexes,
     isCompleted: payouts.has(number),
     rewardScore: null,
     bonusScore: payouts.get(number)?.earnedScore ?? null,
     isCategoryBonus: payouts.get(number)?.isCategoryBonus ?? null,
-  })), cells);
+  }; }), cells);
 }
 
 // 화면용 모델이며 API 계약이 아니다
@@ -323,7 +325,9 @@ export function getBoardLineCounts(lines) {
   const payoutUnknown = list.some((line) => line.payoutStatus === "unknown");
   const cleared = list.filter((line) => line.allProblemsCleared).length;
   const completed = list.filter((line) => line.isCompleted).length;
-  return { total: list.length, cleared, completed, payoutUnknown, done: payoutUnknown ? cleared : completed };
+  const hasConfirmedPayout = list.some((line) => ["paid", "unpaid"].includes(line.payoutStatus));
+  return { total: list.length, cleared, completed, payoutUnknown, hasConfirmedPayout,
+    done: payoutUnknown && !hasConfirmedPayout ? cleared : completed };
 }
 
 export function getBoardLineStatus(line) {

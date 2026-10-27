@@ -5,6 +5,7 @@ import { createStartRewardRecorder } from "../utils/boardStartReward.js";
 import { scheduleBoardDeadlineRefresh } from "../utils/boardDeadlineRefresh.js";
 import { createRequestSequence } from "../utils/requestSequence.js";
 import { getBoardLineProgress } from "../utils/boardLines.js";
+import { watchBoardLineSnapshot } from "../utils/boardLineRefresh.js";
 import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
 import { useAuthenticatedUser } from "../../../routes/AuthenticatedRoute.jsx";
 import { createPendingDiceRoll, restorePendingDiceRoll } from "../utils/pendingDiceRoll.js";
@@ -55,6 +56,8 @@ function wait(milliseconds) {
 
 export default function useBoardController() {
   const user = useAuthenticatedUser();
+  // API에 없는 team_id를 요구하지 않는다. 응답은 요청 당시 인증 컨텍스트에 묶는다.
+  const progressScope = JSON.stringify([user?.user_id, user?.team_id]);
   const pendingDiceRoll = useMemo(() => createPendingDiceRoll({
     userId: user?.user_id, teamId: user?.team_id,
     createKey: async () => unwrapBoardResponse(await prepareDiceRoll()).request_key,
@@ -77,6 +80,7 @@ export default function useBoardController() {
   // 보드 조회 응답은 순서가 뒤집혀 도착할 수 있다 가장 나중에 시작한 조회만 상태에 반영하고
   // 이동·보정 같은 변경이 시작되면 그 전에 시작한 조회는 버린다
   const progressRequest = useRef(null);
+  const lineSnapshotRevision = useRef(0);
   if (progressRequest.current === null) progressRequest.current = createRequestSequence();
   const openedRequest = useRef(0);
   const openedController = useRef(null);
@@ -124,6 +128,7 @@ export default function useBoardController() {
   const reloadOpenedChallenges = requestOpenedChallenges;
 
   const load = useCallback(async () => {
+    ++lineSnapshotRevision.current;
     const progressSeq = progressRequest.current.begin();
     setIsLoading(true);
     setError(null);
@@ -141,7 +146,7 @@ export default function useBoardController() {
       const nextBoardDefinition = adaptBoardDefinition(
         unwrapBoardResponse(boardResponse),
       );
-      const nextMyBoard = adaptMyBoard(unwrapBoardResponse(myBoardResponse));
+      const nextMyBoard = { ...adaptMyBoard(unwrapBoardResponse(myBoardResponse)), progressScope };
       const nextDiceStatus = adaptDiceStatus(unwrapBoardResponse(diceResponse));
       const nextCatalog = adaptChanceCatalog(unwrapBoardResponse(catalogResponse));
       await openedTask;
@@ -154,6 +159,7 @@ export default function useBoardController() {
       setChanceCatalog(nextCatalog);
       // 더 나중에 시작한 조회나 변경이 있으면 이 늦은 응답의 위치·주사위는 반영하지 않는다
       if (progressRequest.current.isLatest(progressSeq)) {
+        ++lineSnapshotRevision.current;
         setMyBoard(nextMyBoard);
         setDiceStatus(nextDiceStatus);
         setCurrentCell(nextCurrentCell);
@@ -172,7 +178,7 @@ export default function useBoardController() {
     } finally {
       if (mountedRef.current) setIsLoading(false);
     }
-  }, [pendingDiceRoll, requestCurrentCell, requestOpenedChallenges]);
+  }, [pendingDiceRoll, progressScope, requestCurrentCell, requestOpenedChallenges]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -207,19 +213,21 @@ export default function useBoardController() {
 
   const syncProgress = useCallback(
     async ({ includeCurrentCell = true, preserveDisplayPosition = false, requestOptions, isCurrent = () => true } = {}) => {
+      ++lineSnapshotRevision.current;
       const progressSeq = progressRequest.current.begin();
       const latest = () => progressRequest.current.isLatest(progressSeq) && isCurrent();
       const [myBoardResponse, diceResponse] = await Promise.all([
         getMyBoard(requestOptions),
         getDiceStatus(requestOptions),
       ]);
-      const nextMyBoard = adaptMyBoard(unwrapBoardResponse(myBoardResponse));
+      const nextMyBoard = { ...adaptMyBoard(unwrapBoardResponse(myBoardResponse)), progressScope };
       const nextDiceStatus = adaptDiceStatus(unwrapBoardResponse(diceResponse));
       if (!mountedRef.current || !latest()) return;
       await requestOpenedChallenges();
       const nextCurrentCell = includeCurrentCell ? await requestCurrentCell() : null;
 
       if (!mountedRef.current || !latest()) return;
+      ++lineSnapshotRevision.current;
       setMyBoard(nextMyBoard);
       setDiceStatus(nextDiceStatus);
       // Older servers omit this field; keep the in-flight use response there.
@@ -230,7 +238,7 @@ export default function useBoardController() {
       if (!preserveDisplayPosition) setDisplayPosition(nextMyBoard.position);
       return { myBoard: nextMyBoard, diceStatus: nextDiceStatus };
     },
-    [requestCurrentCell, requestOpenedChallenges],
+    [progressScope, requestCurrentCell, requestOpenedChallenges],
   );
 
   const runMutation = useCallback(
@@ -250,6 +258,7 @@ export default function useBoardController() {
       }
 
       mutationLockRef.current = true;
+      ++lineSnapshotRevision.current;
       // 변경이 시작되면 그 전에 보낸 조회 응답은 더 이상 최신이 아니다
       progressRequest.current.invalidate();
       setIsMutating(true);
@@ -659,9 +668,35 @@ export default function useBoardController() {
   );
 
   const lineProgress = useMemo(
-    () => getBoardLineProgress(boardDefinition?.cells, cellStatesByIndex, myBoard?.lineMonopolies),
-    [boardDefinition?.cells, cellStatesByIndex, myBoard?.lineMonopolies],
+    () => getBoardLineProgress(boardDefinition?.cells, cellStatesByIndex,
+      myBoard?.progressScope === progressScope ? myBoard?.lineMonopolies : null),
+    [boardDefinition?.cells, cellStatesByIndex, myBoard?.lineMonopolies, myBoard?.progressScope, progressScope],
   );
+
+  useEffect(() => {
+    if (!user?.team_id || isLoading) return undefined;
+    let refreshRevision;
+    return watchBoardLineSnapshot({
+      teamId: user.team_id,
+      canRefresh: () => mountedRef.current && !mutationLockRef.current,
+      read: async (options) => {
+        refreshRevision = lineSnapshotRevision.current;
+        const snapshot = adaptMyBoard(unwrapBoardResponse(await getMyBoard(options)));
+        return { teamId: user.team_id, snapshot, revision: refreshRevision };
+      },
+      apply: ({ snapshot, revision }) => {
+        if (lineSnapshotRevision.current !== revision) return;
+        setMyBoard((previous) => previous?.progressScope === progressScope ? {
+          ...previous, cellStates: snapshot.cellStates, lineMonopolies: snapshot.lineMonopolies,
+        } : previous);
+      },
+      onError: () => {
+        if (lineSnapshotRevision.current !== refreshRevision) return;
+        setMyBoard((previous) => previous?.progressScope === progressScope
+          ? { ...previous, lineMonopolies: null } : previous);
+      },
+    });
+  }, [user?.team_id, progressScope, isLoading]);
 
   const reload = useCallback(() => {
     if (mutationKeysRef.current.has("dice-roll") || pendingDiceRoll.peek()) {

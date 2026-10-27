@@ -877,8 +877,8 @@ test("라인 완료 대기, 배점 미정, 지급 미확인은 숫자로 확정�
   const unknown = render("BoardLineSummary", { lines: lines.map(line => ({ ...line, payoutStatus: "unknown", allProblemsCleared: true })) });
   assert.match(unknown, /<dt>풀이 완료 라인<\/dt><dd>1<small>\/1<\/small><\/dd>/);
   assert.match(unknown, /data-pending="true">지급 미확인/);
-  assert.match(unknown, /data-tone="done">풀이 완료/);
-  assert.match(unknown, /운영진이 지급을 확인하면 독점 점수가 표시됩니다/);
+  assert.match(unknown, /data-tone="done">지급 미확인/);
+  assert.match(unknown, /서버에서 지급이 확인되면 독점 점수가 표시됩니다/);
   const root = css("features/board/components/BoardScreen.module.css");
   const name = Object.fromEntries(declarations(root, ".lineName"));
   assert.equal(name["word-break"], "keep-all");

@@ -8,7 +8,7 @@ import styles from "./BoardScreen.module.css";
 // 푼 칸 번호만 진하게 써서 어느 칸이 남았는지 읽히게 하고, 배점과 획득 점수는 값이 있을 때만 쓴다
 function lineBadge(line) {
   if (line.isCompleted) return { tone: "won", text: "독점 완료" };
-  if (line.payoutStatus === "unknown" && line.allProblemsCleared) return { tone: "done", text: "풀이 완료" };
+  if (line.payoutStatus === "unknown" && line.allProblemsCleared) return { tone: "done", text: "지급 미확인" };
   if (line.awaitingConfirmation) return { tone: "wait", text: "확인 중" };
   return { tone: "count", text: `${line.solvedCellIndexes.length}/${line.cellIndexes.length}` };
 }
@@ -28,16 +28,19 @@ export default function BoardLineSummary({ lines, selectedLineId, isPreview = fa
     return { "--gem-light": palette.light, "--gem-mid": palette.mid, "--gem-dark": palette.dark, "--line-accent": palette.mid };
   };
   const rewardLabel = isPreview ? "시안 배점" : "독점 배점";
-  const earnedLabel = isPreview ? "시안 획득" : "획득 점수";
+  const earnedLabel = isPreview ? "시안 획득" : counts.hasConfirmedPayout && counts.payoutUnknown ? "확정 획득 점수" : "획득 점수";
   const rewardText = (line) => formatBoardLineScore(line.rewardScore) ?? "미정";
   const earnedText = (line) => formatBoardLineScore(getBoardLineEarnedScore(line)) ?? "확인 중";
-  const earnedTotal = counts.payoutUnknown ? null : formatBoardLineScore(totals.earnedScore);
+  const confirmedTotals = getBoardLineScoreTotals(lines.filter(line => line.payoutStatus !== "unknown"));
+  const earnedTotal = counts.payoutUnknown
+    ? counts.hasConfirmedPayout ? formatBoardLineScore(confirmedTotals.earnedScore) : null
+    : formatBoardLineScore(totals.earnedScore);
   const rewardTotal = formatBoardLineScore(totals.rewardScore);
   return (
     <div id="board-line-progress" className={styles.lineSummary}>
       <dl className={styles.lineStats}>
         <div>
-          <dt>{counts.payoutUnknown ? "풀이 완료 라인" : "독점한 라인"}</dt>
+          <dt>{counts.payoutUnknown && !counts.hasConfirmedPayout ? "풀이 완료 라인" : "독점한 라인"}</dt>
           <dd>{counts.done}<small>{`/${counts.total}`}</small></dd>
         </div>
         <div>
@@ -76,7 +79,7 @@ export default function BoardLineSummary({ lines, selectedLineId, isPreview = fa
           );
         })}
       </ol>
-      {counts.payoutUnknown && <p className={styles.lineNote}>운영진이 지급을 확인하면 독점 점수가 표시됩니다</p>}
+      {counts.payoutUnknown && <p className={styles.lineNote}>서버에서 지급이 확인되면 독점 점수가 표시됩니다{counts.hasConfirmedPayout ? " · 미확인 라인은 합계에서 제외됩니다" : ""}</p>}
     </div>
   );
 }

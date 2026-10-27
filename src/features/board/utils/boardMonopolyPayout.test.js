@@ -35,10 +35,10 @@ test("정답 회수 뒤 빈 지급 목록과 OPENED 상태가 오면 레일과 �
   assert.equal(getBoardLineEarnedScore(line), 0);
 });
 
-test("모두 CLEARED여도 서버가 빈 지급 목록을 확인하면 획득은 0점이다", () => {
+test("모두 CLEARED여도 지급 기록이 없으면 지급 미확인으로 구분한다", () => {
   const lines = progress({ line_monopolies: [] });
-  assert.ok(lines.every((line) => !line.isCompleted && !line.awaitingConfirmation));
-  assert.equal(getBoardLineScoreTotals(lines).earnedScore, 0);
+  assert.ok(lines.every((line) => !line.isCompleted && line.awaitingConfirmation));
+  assert.equal(getBoardLineScoreTotals(lines).earnedScore, null);
 });
 
 test("지급 기록과 풀이 상태가 충돌하면 완료나 0점을 확정하지 않는다", () => {
