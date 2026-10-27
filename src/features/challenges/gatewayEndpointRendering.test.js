@@ -40,7 +40,7 @@ for (const screen of ["participant", "administrator"]) {
     const html = render(gatewayEndpoint);
     assert.match(html, /tls:\/\/i-example\.ctf\.example:443/);
     assert.match(html, /NCAT \/ TLS/);
-    assert.match(html, /ncat --ssl --ssl-servername route-example\.ctf\.example i-example\.ctf\.example 443/);
+    assert.match(html, /ncat --ssl-verify --ssl-servername route-example\.ctf\.example i-example\.ctf\.example 443/);
     assert.match(html, /명령어 복사/);
     assert.match(html, /<dt>TLS<\/dt><dd>사용<\/dd>/);
     assert.match(html, /<dt>연결 포트<\/dt><dd>443<\/dd>/);
@@ -58,6 +58,30 @@ for (const screen of ["participant", "administrator"]) {
     assert.match(explicit, /<dt>TLS<\/dt><dd>사용 안 함<\/dd>/);
     assert.match(explicit, /<dt>SNI<\/dt><dd>미제공<\/dd>/);
     assert.doesNotMatch(explicit, /<dd>route-example/);
+  });
+
+  test(`${screen} shows an NC command for an assigned plaintext public port`, () => {
+    const html = render({
+      container_name: "pwn", port: 1337, protocol: "TCP",
+      service_url: "tcp://abc.gate.msgctf.kr:42817", hostname: "abc.gate.msgctf.kr",
+      connection_port: 42817, tls: false,
+    });
+    assert.match(html, /nc abc\.gate\.msgctf\.kr 42817/);
+    assert.match(html, /<dt>TLS<\/dt><dd>사용 안 함<\/dd>/);
+    assert.doesNotMatch(html, /ncat|1337|href="tcp:/);
+  });
+
+  test(`${screen} keeps malformed TCP details visible but disables clipboard copying`, () => {
+    const html = render({ ...gatewayEndpoint, server_name: "$(id).gate.msgctf.kr" });
+    assert.match(html, /<dt>SNI<\/dt><dd>\$\(id\)\.gate\.msgctf\.kr<\/dd>/);
+    assert.match(html, /<button(?=[^>]*disabled="")[^>]*>접속 정보 복사<\/button>/);
+    assert.doesNotMatch(html, /ncat --ssl/);
+  });
+
+  test(`${screen} disables copying when a TCP URL has no metadata and an invalid path`, () => {
+    const html = render({ service_url: "tcp://old.example:31000/unsafe" });
+    assert.match(html, /<button(?=[^>]*disabled="")[^>]*>/);
+    assert.doesNotMatch(html, /nc old\.example 31000/);
   });
 
   test(`${screen} retains web links and does not suggest terminal commands`, () => {

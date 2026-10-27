@@ -21,10 +21,11 @@ function elapsedLabel(fromIso, now) {
 
 export function AdminDeploymentEndpoint({ endpoint, copied, onCopy }) {
   const terminal = endpointTerminalConnection(endpoint);
+  const copyText = endpointCopyText(endpoint);
   return <div className={styles.testEndpoint}>
     <div><strong>{endpoint.name}{terminal ? ` (${terminal.label})` : ""}</strong><code title={endpoint.url}>{terminal?.command ?? endpoint.url}</code><InstanceConnectionDetails endpoint={endpoint} /></div>
     <div>{endpoint.isWeb && <a href={endpoint.url} target="_blank" rel="noopener noreferrer" className={styles.button}>접속하기</a>}
-      <button type="button" className={styles.button} onClick={() => onCopy(endpoint)}>{copied === endpoint.url ? "복사됨" : terminal ? "명령어 복사" : endpointConnectionDetails(endpoint).length ? "접속 정보 복사" : "주소 복사"}</button></div>
+      <button type="button" className={styles.button} disabled={!copyText} onClick={() => { if (copyText) onCopy(endpoint); }}>{copied === endpoint.url ? "복사됨" : terminal ? "명령어 복사" : endpointConnectionDetails(endpoint).length ? "접속 정보 복사" : "주소 복사"}</button></div>
   </div>;
 }
 
@@ -104,7 +105,9 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
   }
 
   async function copy(endpoint) {
-    try { await navigator.clipboard.writeText(endpointCopyText(endpoint)); setCopied(endpoint.url); }
+    const copyText = endpointCopyText(endpoint);
+    if (!copyText) return;
+    try { await navigator.clipboard.writeText(copyText); setCopied(endpoint.url); }
     catch { setError("주소를 복사하지 못했습니다 접속 주소를 직접 선택해 복사해주세요"); }
   }
 

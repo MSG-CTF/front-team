@@ -9,7 +9,7 @@ import { getInstanceFailureNotice } from "../utils/instanceFailureNotice.js";
 import styles from "./ChallengeDetailScene.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
 import InstanceConnectionDetails from "./InstanceConnectionDetails.jsx";
-import { endpointConnectionDetails, endpointTerminalConnection } from "../utils/instanceConnectionDetails.js";
+import { endpointConnectionDetails, endpointCopyText, endpointTerminalConnection } from "../utils/instanceConnectionDetails.js";
 
 // 생성은 요청 접수 > 서버 배정 > 환경 준비 순서로 상태가 바뀐다 지금 칸에서 돌고, 지난 칸은 체크한다
 const CREATE_STEPS = [
@@ -78,6 +78,7 @@ function Endpoint({ endpoint, compact }) {
   const hasDetails = endpointConnectionDetails(endpoint).length > 0;
   const terminal = endpointTerminalConnection(endpoint);
   const connectionText = terminal?.command ?? endpoint.url;
+  const copyText = endpointCopyText(endpoint);
   const copyLabel = terminal ? "접속 명령어" : "접속 주소";
   const [copied, setCopied] = useState(false);
   const [copyError, setCopyError] = useState(false);
@@ -91,8 +92,9 @@ function Endpoint({ endpoint, compact }) {
     };
   }, []);
   const copy = async () => {
+    if (!copyText) return;
     try {
-      await navigator.clipboard.writeText(connectionText);
+      await navigator.clipboard.writeText(copyText);
       if (!mounted.current) return;
       setCopied(true);
       setCopyError(false);
@@ -134,6 +136,7 @@ function Endpoint({ endpoint, compact }) {
         type="button"
         className={styles.copyButton}
         onClick={copy}
+        disabled={!copyText}
         aria-label={endpoint.name + " " + copyLabel + " 복사"}
       >
         {copied ? "복사됨" : "복사"}

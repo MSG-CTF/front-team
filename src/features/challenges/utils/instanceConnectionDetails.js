@@ -3,45 +3,39 @@ const CONNECTION_FIELDS = [
   ["tls", "TLS"], ["server_name", "SNI"],
 ];
 
-function commandHost(value) {
-  if (typeof value !== "string" || !value || value !== value.trim()) return null;
-  const host = value.startsWith("[") && value.endsWith("]") ? value.slice(1, -1) : value;
-  if (host.includes(":")) {
-    try { return new URL(`http://[${host}]/`).hostname.slice(1, -1); }
-    catch { return null; }
+const DNS_NAME = /^(?=.{1,253}$)[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?(?:\.[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?)*$/i;
+
+export function endpointConnectionCommand(endpoint) {
+  if (endpoint?.isWeb) return "";
+  let url;
+  try { url = new URL(endpoint.url); } catch { return ""; }
+  if (!["tcp:", "tls:"].includes(url.protocol) || url.username || url.password
+    || (url.pathname && url.pathname !== "/") || url.search || url.hash) return "";
+
+  const host = url.hostname.replace(/^\[|\]$/g, "");
+  if (!DNS_NAME.test(host) && !(url.hostname.startsWith("[") && /^[a-f\d:]+$/i.test(host))) return "";
+  if (endpoint.hostname != null && (typeof endpoint.hostname !== "string"
+    || endpoint.hostname.toLowerCase() !== url.hostname.toLowerCase())) return "";
+
+  const tls = url.protocol === "tls:";
+  if (endpoint.tls != null && (typeof endpoint.tls !== "boolean" || endpoint.tls !== tls)) return "";
+  const urlPort = url.port ? Number(url.port) : tls ? 443 : null;
+  const port = endpoint.connection_port ?? urlPort;
+  if (!Number.isInteger(port) || port < 1 || port > 65535 || (urlPort != null && port !== urlPort)) return "";
+
+  const family = host.includes(":") ? " -6" : "";
+  if (!tls) return `nc${family} ${host} ${port}`;
+  let sni = "";
+  if (endpoint.server_name != null) {
+    if (typeof endpoint.server_name !== "string" || !DNS_NAME.test(endpoint.server_name)) return "";
+    sni = ` --ssl-servername ${endpoint.server_name}`;
   }
-  return host.length <= 253 && /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.?$/i.test(host)
-    ? host : null;
+  return `ncat${family} --ssl-verify${sni} ${host} ${port}`;
 }
 
 export function endpointTerminalConnection(endpoint) {
-  if (!endpoint || endpoint.isWeb) return null;
-  try {
-    const url = new URL(endpoint.url);
-    if (!["tcp:", "tls:"].includes(url.protocol) || url.username || url.password) return null;
-    if (endpoint.tls != null && typeof endpoint.tls !== "boolean") return null;
-    if (url.protocol === "tls:" && endpoint.tls === false) return null;
-    const host = commandHost(endpoint.hostname ?? url.hostname);
-    // port는 컨테이너 내부 포트다 공개된 연결 포트와 서비스 URL만 사용한다
-    const publicPort = endpoint.connection_port ?? url.port;
-    if (!host || !/^\d{1,5}$/.test(String(publicPort))) return null;
-    const port = Number(publicPort);
-    if (port < 1 || port > 65535) return null;
-    const tls = endpoint.tls === true || url.protocol === "tls:";
-    const hasServerName = endpoint.server_name != null && endpoint.server_name !== "";
-    const serverName = hasServerName ? commandHost(endpoint.server_name) : null;
-    if (tls && hasServerName && !serverName) return null;
-    const args = [tls ? "ncat" : "nc"];
-    if (host.includes(":")) args.push("-6");
-    if (tls) {
-      args.push("--ssl");
-      if (serverName) args.push("--ssl-servername", serverName);
-    }
-    args.push(host, String(port));
-    return { label: tls ? "NCAT / TLS" : "NC", command: args.join(" ") };
-  } catch {
-    return null;
-  }
+  const command = endpointConnectionCommand(endpoint);
+  return command ? { label: command.startsWith("ncat ") ? "NCAT / TLS" : "NC", command } : null;
 }
 
 export function endpointConnectionDetails(endpoint) {
@@ -57,6 +51,11 @@ export function endpointConnectionDetails(endpoint) {
 export function endpointCopyText(endpoint) {
   const terminal = endpointTerminalConnection(endpoint);
   if (terminal) return terminal.command;
+  // Rejected TCP metadata must not bypass command validation via the old
+  // multiline fallback: shell substitutions in those details still execute.
+  try {
+    if (!["http:", "https:"].includes(new URL(endpoint.url).protocol)) return "";
+  } catch { return ""; }
   return [endpoint.url, ...endpointConnectionDetails(endpoint)
     .map(({ label, value }) => `${label}: ${value}`)].join("\n");
 }
