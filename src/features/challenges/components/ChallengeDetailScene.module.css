@@ -2064,11 +2064,18 @@
     width: 100%;
     height: 100%;
   }
+  /* 대기 중 배지도 RUNNING 그림과 같은 슬롯 크기 한 줄에 가둬 판의 선을 넘지 않게 한다 */
   .statusBadge {
+    box-sizing: border-box;
+    flex-wrap: nowrap;
     width: 100%;
     min-width: 0;
     height: 100%;
-    gap: calc(var(--u) * 8);
+    min-height: 0;
+    gap: calc(var(--u) * 6);
+    padding: 0 calc(var(--u) * 8);
+    overflow: hidden;
+    white-space: nowrap;
     border-radius: calc(var(--u) * 20);
     font-size: max(10px, calc(var(--u) * 15));
   }
