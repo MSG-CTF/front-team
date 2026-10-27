@@ -169,7 +169,17 @@ test("팀 요약은 이름과 점수를 한 줄로, 팀 토큰과 새로고침�
   assert.equal((summary.match(/<button /g) || []).length, 2);
   assert.match(summary, /data-tone="quiet"[^>]*>새로고침</);
   const signedOut = render({ authenticated: false, selectedChallenge: null });
-  assert.match(signedOut, /<button type="button" class="[^"]+" disabled="">\s*팀 토큰/);
+  assert.match(signedOut, /<button type="button" class="[^"]+" disabled=""[^>]*>\s*팀 토큰/);
+});
+
+test("문제를 선택해야 해당 문제의 팀 토큰을 열고 패널에 문제명을 표시한다", () => {
+  const unselected = render({ selectedChallenge: null });
+  assert.match(unselected, /<button[^>]*disabled=""[^>]*>\s*팀 토큰/);
+  const selected = render({
+    isTeamTokenOpen: true,
+    teamToken: { status: "success", data: { team_name: "도토리묵사발", team_token: "local-test-token" } },
+  });
+  assert.match(selected, /선택한 문제: STACK STACK STACK/);
 });
 
 test("시트는 문제 상세 화면의 판 그림을 쓰고 지도 크기를 따라 줄되 기준 글자 14px 아래로 내려가지 않는다", () => {

@@ -8,6 +8,7 @@ export default function KothTeamTokenPanel({
   data,
   error,
   teamName,
+  challengeTitle,
   onRetry,
   onClose,
 }) {
@@ -77,6 +78,7 @@ export default function KothTeamTokenPanel({
         </button>
         <p className={styles.tokenLabel} aria-hidden="true">TEAM TOKEN</p>
         <h2 id="koth-token-title" className={styles.tokenTeam}>{owner}<span className="sr-only"> KoTH 팀 토큰</span></h2>
+        {challengeTitle && <p>선택한 문제: {challengeTitle}</p>}
 
         {status === "error" ? (
           <p className={styles.tokenError} role="alert">{error}</p>

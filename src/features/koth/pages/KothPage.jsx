@@ -47,8 +47,9 @@ export default function KothPage() {
   const problemRanking = useKothLeaderboard(selectedChallengeId, kothData.authenticated);
 
   const handleOpenTeamToken = () => {
+    if (!selectedChallengeId) return;
     setIsTeamTokenOpen(true);
-    teamToken.requestTeamToken();
+    teamToken.requestTeamToken(selectedChallengeId);
   };
 
   const handleCloseTeamToken = () => {
@@ -57,6 +58,8 @@ export default function KothPage() {
   };
 
   const handleSelectChallenge = (challenge) => {
+    setIsTeamTokenOpen(false);
+    teamToken.clearTeamToken();
     setSelectedChallengeId(challenge.kothChallengeId);
   };
 
@@ -80,7 +83,7 @@ export default function KothPage() {
       teamToken={teamToken}
       onRetry={kothData.retry}
       onSelectChallenge={handleSelectChallenge}
-      onCloseChallenge={() => setSelectedChallengeId(null)}
+      onCloseChallenge={() => { handleCloseTeamToken(); setSelectedChallengeId(null); }}
       onOpenTeamToken={handleOpenTeamToken}
       onCloseTeamToken={handleCloseTeamToken}
     />

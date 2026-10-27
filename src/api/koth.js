@@ -26,10 +26,16 @@ export function getMyKothProgress(config) {
   return apiClient.get("/koth/me", config);
 }
 
-export function getKothTeamToken(config) {
-  // GET /koth/team_token (Bearer)
-  // 외부 KOTH 문제 서버에 입력할 팀 토큰이며 로그인 JWT와는 별도 값이다.
-  return apiClient.get("/koth/team_token", config);
+export function getKothTeamToken(challengeId, config) {
+  // GET /koth/team_token?koth_challenge_id=... (Bearer)
+  // 외부 KOTH 문제 서버에 입력할 문제별 팀 토큰이며 로그인 JWT와는 별도 값이다.
+  if (typeof challengeId !== "string" || !challengeId.trim()) {
+    throw new TypeError("KOTH challenge ID is required");
+  }
+  return apiClient.get("/koth/team_token", {
+    ...config,
+    params: { ...config?.params, koth_challenge_id: challengeId },
+  });
 }
 export function getKothLeaderboard(challengeId, config) {
   return apiClient.get("/koth/leaderboard", { ...config, params: { koth_challenge_id: challengeId } });

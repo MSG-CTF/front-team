@@ -108,16 +108,17 @@ export function useKothTeamToken() {
   const controller = useRef(null);
   const [state, setState] = useState({ status: "idle", data: null, error: "" });
   useEffect(() => () => { ++sequence.current; controller.current?.abort(); }, []);
-  const requestTeamToken = useCallback(async () => {
+  const requestTeamToken = useCallback(async (challengeId) => {
     if (pending.current) return;
     pending.current = true;
     const request = ++sequence.current;
     controller.current = new AbortController();
     setState({ status: "loading", data: null, error: "" });
     try {
-      const response = await getKothTeamToken({ signal: controller.current.signal, timeout: 10000 });
+      const response = await getKothTeamToken(challengeId, { signal: controller.current.signal, timeout: 10000 });
       const envelope = response.data;
-      if (!isSuccess(envelope) || typeof envelope.data?.team_token !== "string" || !envelope.data.team_token.trim()) {
+      if (!isSuccess(envelope) || envelope.data?.koth_challenge_id !== challengeId ||
+          typeof envelope.data?.team_token !== "string" || !envelope.data.team_token.trim()) {
         throw new Error("KOTH 팀 토큰을 불러오지 못했습니다");
       }
       if (request === sequence.current) setState({ status: "success", data: envelope.data, error: "" });

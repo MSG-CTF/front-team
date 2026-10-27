@@ -43,7 +43,7 @@ test("다섯 화면의 조회는 /api/v1과 최신 경로, Bearer 계약을 쓴�
     [() => getSignatures(config), "/signatures"],
     [() => getSignature("signature-1", config), "/signatures/signature-1"],
     [() => getMyKothProgress(config), "/koth/me"],
-    [() => getKothTeamToken(config), "/koth/team_token"],
+    [() => getKothTeamToken("challenge-1", config), "/koth/team_token"],
     [() => getAdminTeamDetail("team-1", {}, config), "/admin/teams/team-1"],
     [() => getAdminSignatures(config), "/admin/signatures"],
     [() => getAdminKothChallenges(config), "/admin/koth/challenges"],

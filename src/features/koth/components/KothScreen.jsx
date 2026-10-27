@@ -57,7 +57,9 @@ export default function KothScreen({
               <span><small>KoTH</small> <b>{formatValue(totalKothScore)}</b> <small>pts</small></span>
             </p>
             <div className={styles.teamActions}>
-              <button type="button" className={styles.summaryAction} onClick={onOpenTeamToken} disabled={!authenticated}>
+              <button type="button" className={styles.summaryAction} onClick={onOpenTeamToken}
+                disabled={!authenticated || !selectedChallenge}
+                title={!selectedChallenge ? "문제를 선택한 뒤 팀 토큰을 확인할 수 있습니다" : undefined}>
                 팀 토큰
               </button>
               <button type="button" className={styles.summaryAction} data-tone="quiet" onClick={onRetry}>새로고침</button>
@@ -131,11 +133,12 @@ export default function KothScreen({
 
       {isTeamTokenOpen && (
         <KothTeamTokenPanel
+          challengeTitle={selectedChallenge?.title}
           status={teamToken.status}
           data={teamToken.data}
           error={teamToken.error}
           teamName={teamName}
-          onRetry={teamToken.requestTeamToken}
+          onRetry={() => teamToken.requestTeamToken(selectedChallenge?.kothChallengeId)}
           onClose={onCloseTeamToken}
         />
       )}
