@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, importChallengeRepositoryEnvironment, registerChallengeRelease, registerChallengeRuntimeSecret, configureChallengeReleaseFiles } from "../../../api/admin.js";
 import AdminReleaseFilesEditor from "./AdminReleaseFilesEditor.jsx";
 import AdminDeploymentTestPanel from "./AdminDeploymentTestPanel.jsx";
+import AdminImagePreparationPanel from "./AdminImagePreparationPanel.jsx";
 import AdminCollectedFilesPanel, { RepositoryFilesDetails } from "./AdminCollectedFilesPanel.jsx";
 import AdminActiveFlagBindings from "./AdminActiveFlagBindings.jsx";
 import { isSuccess } from "../../../utils/response.js";
@@ -109,7 +110,8 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const [error, setError] = useState("");
   const [saving, setBusy] = useState(false);
   const [testBusy, setTestBusy] = useState(false);
-  const busy = saving || testBusy;
+  const [preparationBusy, setPreparationBusy] = useState(false);
+  const busy = saving || testBusy || preparationBusy;
   useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
   const [confirming, setConfirming] = useState(false);
   const [activationReason, setActivationReason] = useState("");
@@ -365,6 +367,8 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
               </div>
             </div>
           </div>
+          {active && panel === "overview" && <AdminImagePreparationPanel key={selected.release_id}
+            challengeId={challenge.challenge_id} release={selected} busy={busy} onBusyChange={setPreparationBusy}/>}
           <h4 className={styles.groupTitle}>컨테이너</h4>
           <div className={styles.group}>
             {selected.containers.map((container) => <details key={container.name} className={styles.groupRow}>

@@ -3,6 +3,22 @@ import apiClient from "./client.js";
 const MUTATION_CONFIG = { timeout: 15000, timeoutErrorMessage: "요청 결과를 확인하지 못했습니다. 최신 상태를 조회한 뒤 확인하세요" };
 const PUBLICATION_CONFIG = { timeout: 120000, timeoutErrorMessage: "발행본 처리 결과를 확인하지 못했습니다 같은 요청으로 다시 시도해주세요" };
 
+export function getAdminImagePreparations(challengeId, releaseId, page = 1, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/releases/${encodeURIComponent(releaseId)}/image_preparations`,
+    { timeout: 10000, ...config, params: { page } });
+}
+
+export function createAdminImagePreparation(challengeId, releaseId, idempotencyKey, config) {
+  if (typeof idempotencyKey !== "string" || !idempotencyKey.trim()) throw new Error("Idempotency-Key가 필요합니다");
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/releases/${encodeURIComponent(releaseId)}/image_preparations`,
+    {}, { ...MUTATION_CONFIG, ...config, headers: { "Idempotency-Key": idempotencyKey } });
+}
+
+export function getAdminImagePreparation(challengeId, requestId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/image_preparations/${encodeURIComponent(requestId)}`,
+    { timeout: 10000, ...config });
+}
+
 export function getPublishedChallenges(page = 1, config) {
   return apiClient.get("/admin/published_challenges", { ...PUBLICATION_CONFIG, ...config, params: { page } });
 }
