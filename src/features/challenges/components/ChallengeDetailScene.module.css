@@ -1478,6 +1478,7 @@
 }
 
 .confirmDialog {
+  container: instance-dialog / inline-size;
   box-sizing: border-box;
   position: fixed;
   inset: 0;
@@ -1504,18 +1505,26 @@
 .confirmDialog h2 {
   margin: 0 0 14px;
   font-family: var(--serif);
-  font-size: 24px;
+  font-size: clamp(20px, 20cqi, 24px);
   font-weight: 400;
   line-height: 1.4;
-  overflow-wrap: anywhere;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  text-wrap: balance;
 }
-.confirmDialog h2 + p {
-  margin: 0;
+.confirmDescription {
   color: #6b4a22;
   font-size: 14px;
   line-height: 1.8;
   word-break: keep-all;
   overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.confirmDescription p {
+  margin: 0;
+}
+.confirmDescription p + p {
+  margin-top: 0.75em;
 }
 .dialogActions {
   display: flex;

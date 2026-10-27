@@ -24,22 +24,29 @@ export default function InstanceActionDialog({
   }, [returnFocusTo]);
   const content = {
     create: {
-      title: "이 문제의 인스턴스로 전환",
-      description:
+      title: "인스턴스 전환",
+      description: [
         (otherInstance?.challengeTitle || "다른 문제") +
-        "에서 사용 중인 인스턴스를 종료하고 새로 생성합니다 기존 작업 내용은 유지되지 않습니다",
+          "에서 사용 중인 인스턴스를 종료하고 새로 생성합니다",
+        "기존 작업 내용은 유지되지 않습니다",
+      ],
       button: "전환하고 생성",
     },
     restart: {
       title: "인스턴스 재시작",
-      description:
-        "현재 환경을 초기화하고 새 인스턴스를 만듭니다 작업 내용이 사라지고 접속 주소가 바뀔 수 있습니다 남은 시간은 늘어나지 않으니 만료가 가까우면 먼저 연장해 주세요",
+      description: [
+        "현재 환경을 초기화하고 새 인스턴스를 만듭니다",
+        "작업 내용이 사라지고 접속 주소가 바뀔 수 있습니다",
+        "남은 시간은 늘어나지 않으니 만료가 가까우면 먼저 연장해 주세요",
+      ],
       button: "재시작",
     },
     stop: {
       title: "인스턴스 종료",
-      description:
-        "현재 문제의 실행 환경을 종료합니다 다시 사용하려면 새 인스턴스를 생성해주세요",
+      description: [
+        "현재 문제의 실행 환경을 종료합니다",
+        "다시 사용하려면 새 인스턴스를 생성해주세요",
+      ],
       button: "종료하기",
     },
   }[action];
@@ -53,7 +60,11 @@ export default function InstanceActionDialog({
     >
       <p className={styles.eyebrow}>INSTANCE</p>
       <h2 id={titleId}>{content.title}</h2>
-      <p id={descriptionId}>{content.description}</p>
+      <div id={descriptionId} className={styles.confirmDescription}>
+        {content.description.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
+      </div>
       <div className={styles.dialogActions}>
         <button
           type="button"
