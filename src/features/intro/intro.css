@@ -1466,7 +1466,9 @@
   display: block;
   flex-shrink: 0;
   width: 104px;
-  height: 104px;
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1;
   fill: var(--accent);
 }
 .msg-intro .shop-categories .icon-cutout-fill {
@@ -1828,6 +1830,7 @@
   .msg-intro .site-nav {
     order: 3;
     flex-basis: 100%;
+    min-width: 0;
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 6px 24px;
@@ -1839,6 +1842,8 @@
     font-size: 20px;
     padding: 9px 0;
     justify-self: start;
+    max-width: 100%;
+    white-space: normal;
   }
   .msg-intro .cover {
     min-height: max(600px, calc(100svh - 81px));
@@ -1928,7 +1933,6 @@
   }
   .msg-intro .shop-categories svg {
     width: 80px;
-    height: 80px;
   }
   .msg-intro .onsite-items {
     gap: var(--space-4);
@@ -2002,7 +2006,7 @@
     font-size: 14px;
   }
   .msg-intro .site-nav {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 5px 22px;
     padding-block: 20px;
   }
@@ -2384,7 +2388,6 @@
   }
   .msg-intro .shop-categories svg {
     width: 72px;
-    height: 72px;
   }
   .msg-intro .shop-categories h3 {
     font-size: 18px;
