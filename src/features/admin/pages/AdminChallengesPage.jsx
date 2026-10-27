@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { forceResetInstance, forceStopInstance, getAdminChallenges, getAdminInstances, setChallengeVisibility } from "../../../api/admin.js";
+import { forceResetInstance, forceStopInstance, retryInstanceCleanup, getAdminChallenges, getAdminInstances, setChallengeVisibility } from "../../../api/admin.js";
 import { INSTANCE_STATUS } from "../../../constants/enums.js";
 import { isSuccess } from "../../../utils/response.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import { formatAdminNumber } from "../utils/adminNumber.js";
 import { formatResourceAmount } from "../utils/adminNodeAllocation.js";
-import { canForceStop } from "../utils/adminAttention.js";
+import { canForceStop, canRetryCleanup, CLEANUP_RETRY, cleanupRetryNotice, cleanupRetryError } from "../utils/adminAttention.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
 import { IconButton } from "../components/AdminWidgets.jsx";
 import AdminPagination from "../components/AdminPagination.jsx";
@@ -76,12 +76,20 @@ function InstancesSection({ initialStatus = "" }) {
     setBusy(true);
     setNotice("");
     try {
-      const response = await (confirmation.kind === "reset" ? forceResetInstance : forceStopInstance)(confirmation.instance.instance_id);
+      const action = confirmation.kind === "cleanup" ? retryInstanceCleanup : confirmation.kind === "reset" ? forceResetInstance : forceStopInstance;
+      const response = await action(confirmation.instance.instance_id);
       if (!isSuccess(response.data)) throw new Error(response.data?.message || "요청이 처리되지 않았습니다");
+      const message = confirmation.kind === "cleanup" ? cleanupRetryNotice(response.data, confirmation.instance.instance_id) : response.data?.message || "요청이 접수되었습니다 상태가 자동으로 갱신됩니다";
       setConfirmation(null);
       const refreshed = await instances.reload();
-      setNotice(refreshed ? (response.data?.message || "요청이 접수되었습니다 상태가 자동으로 갱신됩니다") : "요청은 접수됐지만 최신 상태를 조회하지 못했습니다");
-    } catch (error) { setNotice(error?.response?.data?.message || error.message || "요청이 처리되지 않았습니다"); }
+      setNotice(refreshed ? message : "요청은 접수됐지만 최신 상태를 조회하지 못했습니다");
+    } catch (error) {
+      setNotice(confirmation.kind === "cleanup" ? cleanupRetryError(error) : error?.response?.data?.message || error.message || "요청이 처리되지 않았습니다");
+      if (confirmation.kind === "cleanup") {
+        if (error?.response?.data?.code === "INVALID_STATE_TRANSITION") setConfirmation(null);
+        await instances.reload();
+      }
+    }
     finally { pending.current = false; setBusy(false); }
   }
   return <section>
@@ -99,7 +107,7 @@ function InstancesSection({ initialStatus = "" }) {
           <td><span className={styles.title}>{instance.team_name}</span><details className={styles.secondary}><summary className={styles.idSummary}>인스턴스 ID</summary><span className={`${styles.mono} ${styles.idValue}`}>{instance.instance_id}</span></details></td>
           <td className={styles.wrap}>{instance.challenge_title}</td><td><AdminBadge tone={instance.status === "FAILED" ? "bad" : instance.status === "RUNNING" ? "good" : "neutral"}>{instance.status}</AdminBadge></td>
           <td className={styles.time}>{formatAdminTime(instance.expires_at)}</td>
-          <td>{canForceStop(instance) ? <div className={styles.rowActions}>
+          <td>{canRetryCleanup(instance) ? <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "cleanup" }); }}>{CLEANUP_RETRY.action}</button> : canForceStop(instance) ? <div className={styles.rowActions}>
             {instance.status === "RUNNING" && <button type="button" className={`${BUTTON} ${styles.small}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "reset" }); }}>강제 재시작</button>}
             <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "stop" }); }}>{instance.status === "CLEANUP_PENDING" ? "강제 정리" : "강제 종료"}</button>
           </div> : <span className={styles.muted}>-</span>}</td>
@@ -108,14 +116,14 @@ function InstancesSection({ initialStatus = "" }) {
       {instances.data?.instances?.length === 0 && <p className={styles.empty}>표시할 인스턴스가 없습니다</p>}
     </div>}
     <AdminPagination page={page} totalCount={instances.data?.total_count} onChange={setPage} disabled={busy || instances.status !== "success"}/>
-    {confirmation && <AdminDialog title={confirmation.kind === "reset" ? "인스턴스 강제 재시작" : "인스턴스 강제 종료"} onClose={() => setConfirmation(null)} busy={busy}>
+    {confirmation && <AdminDialog title={confirmation.kind === "cleanup" ? CLEANUP_RETRY.title : confirmation.kind === "reset" ? "인스턴스 강제 재시작" : "인스턴스 강제 종료"} onClose={() => setConfirmation(null)} busy={busy}>
       <p className={styles.dialogLead}><strong>{confirmation.instance.team_name}</strong> · {confirmation.instance.challenge_title}</p>
       <p className={`${styles.mono} ${styles.dialogId}`}>{confirmation.instance.instance_id}</p>
-      <p className={styles.callout} data-tone="bad">{confirmation.instance.status === "CLEANUP_PENDING" ? "생성 실패가 확인된 오래된 요청만 처리합니다 실행 자원이 남아 있는지는 별도로 확인해주세요" : "선택한 인스턴스의 현재 접속이 종료됩니다"}</p>
+      <p className={styles.callout} data-tone="bad">{confirmation.kind === "cleanup" ? CLEANUP_RETRY.description : confirmation.instance.status === "CLEANUP_PENDING" ? "생성 실패가 확인된 오래된 요청만 처리합니다 실행 자원이 남아 있는지는 별도로 확인해주세요" : "선택한 인스턴스의 현재 접속이 종료됩니다"}</p>
       {notice && <p role="alert" className={styles.errorText}>{notice}</p>}
       <div className={styles.formActions}>
         <button type="button" onClick={() => setConfirmation(null)} disabled={busy} className={BUTTON}>취소</button>
-        <button type="button" onClick={runAction} disabled={busy} className={styles.dangerSolid}>{confirmation.kind === "reset" ? "재시작 실행" : "종료 실행"}</button>
+        <button type="button" onClick={runAction} disabled={busy} className={styles.dangerSolid}>{confirmation.kind === "cleanup" ? CLEANUP_RETRY.action : confirmation.kind === "reset" ? "재시작 실행" : "종료 실행"}</button>
       </div>
     </AdminDialog>}
   </section>;

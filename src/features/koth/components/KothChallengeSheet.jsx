@@ -3,13 +3,17 @@ import { toKst } from "../../../utils/time.js";
 import KothCardArt from "./KothCardArt.jsx";
 import KothFileButton from "./KothFileButton.jsx";
 import { KothCrown, KothRoundRibbon } from "./KothMobileArtwork.jsx";
-import { kothRound } from "../utils/kothChallengeState.js";
+import { kothRound, kothCollectionState } from "../utils/kothChallengeState.js";
 import styles from "./KothScreen.module.css";
 
 const STATUS_LABELS = { ACTIVE: "진행 중", SCHEDULED: "열리기 전", CLOSED: "종료" };
 
 function clock(value) {
   return value ? toKst(value, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }) : "";
+}
+
+function collectionTime(value) {
+  return value ? toKst(value, { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }) : "";
 }
 
 // 문제 상세 화면처럼 판 소제목은 영문 대문자로 보이고 화면 낭독기에는 한글로 읽힌다
@@ -29,15 +33,24 @@ function KothRanking({ ranking, teamId }) {
   if (ranking.status === "unauthenticated") return <p className={styles.rankingState}>로그인 후 순위를 확인할 수 있습니다</p>;
   if (ranking.status === "error") return <p className={styles.rankingState} role="alert">{ranking.error} <button type="button" onClick={ranking.retry}>다시 시도</button></p>;
   const rows = ranking.data.leaderboard;
-  if (rows.length === 0) return <p className={styles.rankingState}>아직 득점한 팀이 없습니다</p>;
-  return <div className={styles.rankingScroll} tabIndex={0} aria-label="문제별 누적 순위 목록">
+  const collection = kothCollectionState(ranking.data);
+  const collectedAt = collectionTime(ranking.data.last_collected_at);
+  const notice = collection === "failed" ? "순위 수집에 실패했습니다"
+    : collection === "pending" ? "순위 수집을 기다리고 있습니다"
+      : collection === "stale" ? "마지막으로 수집한 순위입니다" : "";
+  return <>
+    {(notice || collectedAt) && <p className={styles.rankingNotice} role={collection === "failed" ? "alert" : "status"}>
+      {notice}{notice && collectedAt && <br />}{collectedAt && <>마지막 수집 <time dateTime={ranking.data.last_collected_at}>{collectedAt}</time></>}
+      {notice && rows.length > 0 && <span className={styles.collectionHint}>아래는 저장된 누적 점수입니다</span>}
+    </p>}
+    {rows.length === 0 ? (!notice && <p className={styles.rankingState}>아직 득점한 팀이 없습니다</p>) : <div className={styles.rankingScroll} tabIndex={0} aria-label="문제별 누적 순위 목록">
     <table className={styles.rankingTable}>
       <colgroup><col className={styles.rankColumn} /><col /><col className={styles.scoreColumn} /></colgroup>
       <thead><tr><th scope="col">순위</th><th scope="col">팀</th><th scope="col">점수</th></tr></thead>
       <tbody>{rows.map((row) => {
         const mine = teamId != null && row.team_id === teamId;
-        return <tr key={row.team_id} data-mine={mine || undefined} data-top={row.rank <= 3 || undefined}>
-          <td>{row.rank}</td>
+        return <tr key={row.team_id} data-mine={mine || undefined} data-top={row.rank != null && row.rank <= 3 || undefined}>
+          <td>{row.rank ?? "—"}</td>
           <td><span className={styles.rankingName}>
             {row.rank === 1 && <KothCrown className={styles.rankCrown} />}
             <span title={row.team_name}>{row.team_name}</span>
@@ -47,10 +60,11 @@ function KothRanking({ ranking, teamId }) {
         </tr>;
       })}</tbody>
     </table>
-  </div>;
+  </div>}
+  </>;
 }
 
-export default function KothChallengeSheet({ challenge, connection, detail, ranking, stale, authenticated, teamId, onClose, downloadFile }) {
+export default function KothChallengeSheet({ challenge, connection, detail, ranking, stale, authenticated, progressError, teamId, onClose, downloadFile }) {
   const sheet = useRef(null);
   const ids = useId();
   const close = useRef(onClose);
@@ -84,6 +98,7 @@ export default function KothChallengeSheet({ challenge, connection, detail, rank
   const firstScore = clock(challenge.solvedAt);
   const waiting = challenge.collection === "pending";
   const failed = challenge.collection === "failed";
+  const collectedAt = collectionTime(challenge.lastCollectedAt);
   const routeMessage = !detailReady ? "최신 상태 확인 후 접속할 수 있습니다"
     : stale ? "목록 갱신 후 접속할 수 있습니다"
       : challenge.status === "ACTIVE" ? "접속 주소 준비 중" : "현재 접속할 수 없는 문제입니다";
@@ -152,10 +167,12 @@ export default function KothChallengeSheet({ challenge, connection, detail, rank
             <div>
               <dt><Label en="MY TEAM" ko="우리 팀" /></dt>
               <dd>
-                <span className={styles.standingName}>{!authenticated ? "순위 없음" : waiting ? "집계 대기" : failed ? "수집 실패" : challenge.rank != null ? `${challenge.rank}위` : challenge.earnedScore === 0 ? "—" : "순위 없음"}</span>
-                <span className={styles.standingScore}>{authenticated && !waiting && !failed && challenge.earnedScore != null ? challenge.earnedScore : "-"}</span>
+                <span className={styles.standingName}>{!authenticated ? "순위 없음" : progressError ? "조회 실패" : waiting ? "집계 대기" : failed ? "수집 실패" : challenge.rank != null ? `${challenge.rank}위` : challenge.earnedScore === 0 ? "—" : "순위 없음"}</span>
+                <span className={styles.standingScore}>{authenticated && !progressError && !waiting && !failed && challenge.earnedScore != null ? challenge.earnedScore : "-"}</span>
               </dd>
-              <dd className={styles.standingNote}>{!authenticated ? "로그인 후 확인" : failed ? "점수 수집에 실패했습니다 잠시 후 다시 확인해주세요" : waiting ? "점수를 아직 수집하지 못했습니다" : challenge.collection === "stale" ? "마지막으로 수집한 점수입니다" : firstScore ? `${firstScore} 첫 득점` : challenge.earnedScore === 0 ? "수집 결과 0점" : "아직 득점 전"}</dd>
+              <dd className={styles.standingNote} role="status" aria-live="polite">{!authenticated ? "로그인 후 확인" : progressError ? "내 팀 점수를 갱신하지 못했습니다 잠시 후 다시 확인해주세요" : failed ? "점수 수집에 실패했습니다 잠시 후 다시 확인해주세요" : waiting ? "점수를 아직 수집하지 못했습니다" : challenge.collection === "stale" ? "마지막으로 수집한 점수입니다" : firstScore ? `${firstScore} 첫 득점` : challenge.earnedScore === 0 ? "수집 결과 0점" : "아직 득점 전"}
+                {authenticated && collectedAt && <span className={styles.collectionHint}>마지막 수집 <time dateTime={challenge.lastCollectedAt}>{collectedAt}</time></span>}
+              </dd>
             </div>
           </dl>
           <section className={styles.sheetDescription} aria-labelledby={`${ids}description`}>

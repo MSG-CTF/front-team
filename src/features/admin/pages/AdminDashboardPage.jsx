@@ -5,6 +5,7 @@ import {
   activateChallengeRelease,
   adjustMileage,
   forceStopInstance,
+  retryInstanceCleanup,
   getAdminDashboard,
   getAdminChallenges,
   getAdminEvents,
@@ -29,7 +30,7 @@ import useAdminTeamOptions from "../hooks/useAdminTeamOptions.js";
 import { getAdminRequestError } from "../utils/adminValidation.js";
 import { getAdminEventSeverity, getAdminEventTypeLabel } from "../utils/adminBoard.js";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { ATTENTION_QUERIES, canForceStop, describeAttention, summarizeAttention } from "../utils/adminAttention.js";
+import { ATTENTION_QUERIES, canForceStop, canRetryCleanup, CLEANUP_RETRY, cleanupRetryNotice, cleanupRetryError, describeAttention, summarizeAttention } from "../utils/adminAttention.js";
 import { collectPages } from "../utils/adminLists.js";
 import { formatAdminNumber } from "../utils/adminNumber.js";
 import AdminMileageAdjustForm from "../components/AdminMileageAdjustForm.jsx";
@@ -57,6 +58,7 @@ async function loadAttentionInstances(config) {
 }
 
 function AttentionInstances({ instances, onChanged, className = "" }) {
+  const pending = useRef(false);
   const [busyId, setBusyId] = useState(null);
   const [confirm, setConfirm] = useState(null);
   const [notice, setNotice] = useState("");
@@ -66,16 +68,26 @@ function AttentionInstances({ instances, onChanged, className = "" }) {
   const now = Date.now();
 
   async function stop(instance) {
+    if (pending.current) return;
+    pending.current = true;
     setBusyId(instance.instance_id);
     setNotice("");
     try {
-      const response = await forceStopInstance(instance.instance_id);
+      const cleanup = canRetryCleanup(instance);
+      const response = await (cleanup ? retryInstanceCleanup : forceStopInstance)(instance.instance_id);
       if (!isSuccess(response.data)) throw new Error(response.data?.message || "종료 요청이 처리되지 않았습니다");
+      const message = cleanup ? cleanupRetryNotice(response.data, instance.instance_id) : "종료 요청이 접수됐습니다";
       setConfirm(null);
       await onChanged();
+      if (cleanup) setNotice(message);
     } catch (error) {
-      setNotice(getAdminRequestError(error, "종료 요청이 처리되지 않았습니다").error);
+      setNotice(canRetryCleanup(instance) ? cleanupRetryError(error) : getAdminRequestError(error, "종료 요청이 처리되지 않았습니다").error);
+      if (canRetryCleanup(instance)) {
+        if (error?.response?.data?.code === "INVALID_STATE_TRANSITION") setConfirm(null);
+        await onChanged();
+      }
     } finally {
+      pending.current = false;
       setBusyId(null);
     }
   }
@@ -84,7 +96,7 @@ function AttentionInstances({ instances, onChanged, className = "" }) {
     count={instances.data ? summary.count : undefined} meta={summary.partial ? "일부만 집계" : undefined}
     more={{ to: `${ROUTES.adminChallenges}?tab=instances`, label: hidden > 0 ? `${hidden}건 더 보기` : "모두 보기" }}>
     <div className={intro.inset}><AdminStatusMessage status={instances.status} error={instances.error} onRetry={instances.retry} hasData={Boolean(instances.data)} /></div>
-    {notice && <p role="alert" className={`${ui.callout} ${ui.calloutInset}`} data-tone="bad">{notice}</p>}
+    {notice && <p role="status" className={`${ui.callout} ${ui.calloutInset}`}>{notice}</p>}
     {instances.data && rows.length === 0 && (summary.partial
       ? <p className={intro.allClear}>목록이 길어 일부만 확인했습니다 인스턴스 목록에서 확인해주세요</p>
       : <p className={intro.allClear}><StatusSymbol tone="good" />실패하거나 멈춘 인스턴스가 없습니다</p>)}
@@ -94,17 +106,18 @@ function AttentionInstances({ instances, onChanged, className = "" }) {
       return <li key={instance.instance_id}>
         <span className={intro.who}><strong>{instance.team_name || "-"}</strong><span>{instance.challenge_title || "-"}</span></span>
         <span className={intro.why}><AdminBadge tone={why.kind === "failed" ? "bad" : "warn"}>{why.label}</AdminBadge><span>{why.age}</span></span>
-        {canForceStop(instance)
+        {canRetryCleanup(instance) ? <button type="button" className={`${ui.button} ${ui.small} ${ui.danger}`} disabled={Boolean(busyId)} onClick={() => { setNotice(""); setConfirm(instance); }}>{CLEANUP_RETRY.action}</button> : canForceStop(instance)
           ? <button type="button" className={`${ui.button} ${ui.small} ${ui.danger}`} disabled={busy || Boolean(busyId)} onClick={() => setConfirm(instance)}>{instance.status === "CLEANUP_PENDING" ? "강제 정리" : "종료"}</button>
           : <Link to={`${ROUTES.adminChallenges}?tab=instances&status=${encodeURIComponent(instance.status)}`} className={`${ui.button} ${ui.small}`}>보기</Link>}
       </li>;
     })}</ul>}
-    {confirm && <Modal title="인스턴스 강제 종료" onClose={() => setConfirm(null)} busy={Boolean(busyId)}>
+    {confirm && <Modal title={canRetryCleanup(confirm) ? CLEANUP_RETRY.title : "인스턴스 강제 종료"} onClose={() => setConfirm(null)} busy={Boolean(busyId)}>
       <p className={ui.dialogLead}><strong>{confirm.team_name}</strong> · {confirm.challenge_title}</p>
-      <p className={ui.callout} data-tone="bad">{confirm.status === "CLEANUP_PENDING" ? "생성 실패가 확인된 오래된 요청만 처리합니다 실행 자원이 남아 있는지는 별도로 확인해주세요" : "참가자의 현재 접속이 끊기고 인스턴스가 정리됩니다"}</p>
+      <p className={ui.callout} data-tone="bad">{canRetryCleanup(confirm) ? CLEANUP_RETRY.description : confirm.status === "CLEANUP_PENDING" ? "생성 실패가 확인된 오래된 요청만 처리합니다 실행 자원이 남아 있는지는 별도로 확인해주세요" : "참가자의 현재 접속이 끊기고 인스턴스가 정리됩니다"}</p>
+      {notice && <p role="alert" className={ui.callout} data-tone="bad">{notice}</p>}
       <div className={ui.formActions}>
         <button type="button" onClick={() => setConfirm(null)} disabled={Boolean(busyId)} className={ui.button}>취소</button>
-        <button type="button" onClick={() => stop(confirm)} disabled={Boolean(busyId)} className={ui.dangerSolid}>종료 실행</button>
+        <button type="button" onClick={() => stop(confirm)} disabled={Boolean(busyId)} className={ui.dangerSolid}>{canRetryCleanup(confirm) ? CLEANUP_RETRY.action : "종료 실행"}</button>
       </div>
     </Modal>}
   </Widget>;

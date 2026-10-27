@@ -458,6 +458,9 @@ a.connectButton:hover { filter: brightness(1.15); }
    바탕은 양옆으로 조금 넓혀 그려 순위 숫자와 점수가 끝선에 그대로 닿게 한다 */
 .sheetRanking { display: flex; flex-direction: column; min-width: 0; min-height: 0; padding: 0.35em 0.75em 0.5em; border: 1.125em solid transparent; border-image: url("/assets/challenge-detail/panel-flag.webp") 18 / 1.125em stretch; background: var(--well) padding-box; }
 .rankingScroll { flex: 1 1 auto; min-height: 0; margin: 0.2em -0.5em 0; padding: 0 0.5em; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #a98550 transparent; }
+.rankingNotice { flex: none; margin: 0.5em 0; color: var(--brown-soft); font: 500 0.75em/1.5 "Pretendard", sans-serif; overflow-wrap: anywhere; }
+.rankingNotice[role="alert"] { color: #9a2f17; }
+.collectionHint { display: block; margin-top: 0.25em; }
 .rankingTable { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
 .rankColumn { width: 2.6em; }
 .scoreColumn { width: 4.4em; }
