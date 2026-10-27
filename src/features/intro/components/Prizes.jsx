@@ -5,7 +5,7 @@ export function PrizeTotal({ as: Tag = "p" }) {
   const prizes = getPrizes(eventConfig.prizes);
   return (
     <Tag data-prize-total="" className={prizes ? "is-confirmed" : undefined}>
-      {prizes ? formatWon(prizes.total) : "추후 공개"}
+      {prizes ? formatWon(prizes.trackTotal) : "추후 공개"}
     </Tag>
   );
 }

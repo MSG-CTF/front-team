@@ -70,15 +70,16 @@ test("개요 다음에 참가 신청을 배치하고 현장 안내는 부스 뒤
   ]);
 });
 
-test("기존 후원사 순서는 유지하고 안랩을 마지막에 추가한다", () => {
+test("후원사는 기존 세 곳을 순서대로 표시하고 안랩은 제외한다", () => {
   const sponsors = main.match(/<section id="sponsors"[\s\S]*?<\/section>/)?.[0];
   assert.ok(sponsors);
   const names = [...sponsors.matchAll(/<img\b[^>]*alt="([^"]+)"/g)]
     .map((match) => match[1]);
-  assert.deepEqual(names, ["HSPACE", "시야인사이트", "MONSTER ENERGY", "AhnLab"]);
+  assert.deepEqual(names, ["HSPACE", "시야인사이트", "MONSTER ENERGY"]);
+  assert.doesNotMatch(sponsors, /안랩|AhnLab|ahnlab/);
 });
 
-test("후원사는 PC 네 열, 모바일 두 열로 배치하며 특정 로고가 한 줄을 차지하지 않는다", () => {
+test("후원사는 PC 세 열, 모바일 두 열과 가운데 마지막 로고로 배치한다", () => {
   const css = readFileSync(new URL("./intro.css", import.meta.url), "utf8");
   const fullRowSponsors = [];
   const gridColumns = [];
@@ -96,26 +97,11 @@ test("후원사는 PC 네 열, 모바일 두 열로 배치하며 특정 로고�
       if (decl.value === "1 / -1") fullRowSponsors.push(rule.selector);
     });
   });
-  assert.deepEqual(fullRowSponsors, []);
+  assert.deepEqual(fullRowSponsors, [".msg-intro .sponsor--monster"]);
   assert.deepEqual(gridColumns, [
-    { media: null, value: "repeat(4, minmax(0, 1fr))" },
+    { media: null, value: "repeat(3, minmax(0, 1fr))" },
     { media: "(max-width: 680px)", value: "1fr 1fr" },
   ]);
-});
-
-test("안랩 로고는 로컬 SVG를 지연 로딩하고 공식 사이트를 새 창으로 연결한다", () => {
-  const sponsor = main.match(/<a\b[^>]*class="sponsor sponsor--ahnlab"[\s\S]*?<\/a>/)?.[0];
-  assert.ok(sponsor);
-  assert.match(sponsor, /href="https:\/\/www\.ahnlab\.com\/ko"/);
-  assert.match(sponsor, /rel="noopener noreferrer"/);
-  assert.match(sponsor, /target="_blank"/);
-  assert.match(sponsor, /src="\/assets\/intro\/ahnlab-logo\.svg"/);
-  assert.match(sponsor, /alt="AhnLab"/);
-  assert.match(sponsor, /loading="lazy"/);
-  const logo = readFileSync(new URL("../../../public/assets/intro/ahnlab-logo.svg", import.meta.url), "utf8");
-  assert.match(logo, /viewBox="0 0 113 27"/);
-  assert.equal((logo.match(/fill="#154087"/g) || []).length, 6);
-  assert.doesNotMatch(logo, /<script|<image|<foreignObject/);
 });
 
 test("신청과 현장 안내, 상세 안내와 FAQ에 무료 참가비를 표시한다", () => {
@@ -163,21 +149,22 @@ test("올해 모집 인원과 작년 실적을 분리하고 원본 포스터를 
   assert.match(main, /\/assets\/intro\/msg-ctf-2025-poster.png/);
   assert.doesNotMatch(main, /192/);
 });
-test("메인과 상세 안내의 총 200만원 시상과 확정 트랙별 상금이 일치한다", () => {
+test("메인과 상세 안내의 대회 상금 150만원과 복원한 트랙별 상금이 일치한다", () => {
   for (const html of [main, guide]) {
-    assert.match(html, /data-prize-total=""[^>]*>200만원</);
-    assert.doesNotMatch(html, /150만원/);
+    assert.match(html, /data-prize-total=""[^>]*>150만원</);
+    assert.match(html, /대회 상금/);
+    assert.doesNotMatch(html, /data-prize-total=""[^>]*>(?:200|250)만원</);
   }
   assert.match(
     guide.replace(/<wbr\s*\/?\s*>/g, ""),
-    /내부 트랙<\/th><td>40만원<\/td><td>20만원<\/td><td>10만원<\/td>/,
+    /내부 트랙<\/th><td>30만원<\/td><td>20만원<\/td><td>10만원<\/td>/,
   );
   assert.match(
     guide.replace(/<wbr\s*\/?\s*>/g, ""),
-    /외부 트랙<\/th><td>70만원<\/td><td>40만원<\/td><td>20만원<\/td>/,
+    /외부 트랙<\/th><td>50만원<\/td><td>30만원<\/td><td>10만원<\/td>/,
   );
 });
-test("두 트랙의 순위별 상 이름이 같고 이전 별도 시상 안내는 표시하지 않는다", () => {
+test("순위별 상 이름을 유지하고 안랩 대표상 50만원을 별도로 표시한다", () => {
   for (const html of [main, guide]) {
     const awards = html.match(/<dl class="rank-awards"[^>]*>[\s\S]*?<\/dl>/g);
     assert.equal(awards?.length, 1);
@@ -185,7 +172,12 @@ test("두 트랙의 순위별 상 이름이 같고 이전 별도 시상 안내�
     assert.match(awards[0], /<dt>1위<\/dt><dd>HSPACE상<\/dd>/);
     assert.match(awards[0], /<dt>2위<\/dt><dd>시야인사이트상<\/dd>/);
     assert.match(awards[0], /<dt>3위<\/dt><dd>안랩상<\/dd>/);
-    assert.doesNotMatch(html, /special-award|안랩 대표상|대표 명의 상장|수상 기준은 추후 안내합니다/);
+    const specialAwards = html.match(/<article class="special-award"[^>]*>[\s\S]*?<\/article>/g);
+    assert.equal(specialAwards?.length, 1);
+    assert.match(specialAwards[0], /<h3>안랩 대표상<\/h3>/);
+    assert.match(specialAwards[0], /<strong>50만원<\/strong>/);
+    assert.match(specialAwards[0], /안랩 대표 명의 상장 수여/);
+    assert.match(specialAwards[0], /수상 기준은 추후 안내합니다/);
   }
 });
 test("로그인은 기존 경로를 사용하고 참가 신청은 HSPACE 주소를 새 창으로 연다", () => {

@@ -113,7 +113,7 @@ export default function IntroGuidePage() {
         </p>
         <div className="guide-prizes">
           <p>
-            총상금 <PrizeTotal as="strong" />
+            대회 상금 <PrizeTotal as="strong" />
           </p>
           <RankAwards />
           <SpecialAwards />

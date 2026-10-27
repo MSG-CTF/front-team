@@ -95,6 +95,7 @@ export function getPrizes(value) {
   if (trackTotal + specialAwardTotal !== value.totalKrw) return null;
   return {
     total: value.totalKrw,
+    trackTotal,
     tracks: value.tracks.map((row) => ({
       label: row.label.trim(),
       amounts: [...row.amounts],

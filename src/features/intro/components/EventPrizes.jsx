@@ -10,9 +10,9 @@ export default function EventPrizes() {
       <h2 id="prizes-title">시상 안내</h2>
       <div className="prize-layout">
         <div className="prize-total">
-          <span>총 시상액</span>
+          <span>대회 상금</span>
           <PrizeTotal />
-          <p className="prize-caption">내부·외부 트랙별 1~3위 시상</p>
+          <p className="prize-caption">내부·외부 트랙별 1~3위 · 안랩 대표상 별도</p>
         </div>
         <div className="prize-details">
           <RankAwards />
