@@ -51,7 +51,7 @@ export default function AdminKothPreviewPage() {
 
   function openTeamToken() {
     setIsTeamTokenOpen(true);
-    teamToken.requestTeamToken();
+    teamToken.requestTeamToken(kothChallengeId);
   }
 
   function closeTeamToken() {
@@ -99,7 +99,7 @@ export default function AdminKothPreviewPage() {
         unmappedChallengeCount={0} teamId={kothData.progressData?.team_id ?? null} teamName={kothData.progressData?.team_name ?? "테스트 팀"}
         totalKothScore={kothData.progressData?.total_koth_score ?? null} selectedChallenge={isTeamTokenOpen ? null : selected ?? null} clubDetail={READY}
         isTeamTokenOpen={isTeamTokenOpen} teamToken={teamToken} onRetry={list.retry} onSelectChallenge={() => {}} onCloseChallenge={() => navigate(ROUTES.adminKothDetail(kothChallengeId))}
-        onOpenTeamToken={openTeamToken} onCloseTeamToken={closeTeamToken} downloadFile={downloadAdminKothFiles} />
+        onOpenTeamToken={openTeamToken} onRetryTeamToken={() => teamToken.requestTeamToken(kothChallengeId)} onCloseTeamToken={closeTeamToken} downloadFile={downloadAdminKothFiles} />
     </div>
   </div>;
 }
