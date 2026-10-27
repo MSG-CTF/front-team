@@ -31,6 +31,7 @@ export function validateBoardPositionMove({ position, reason }) {
 
 // 관리자 이벤트 필터에 릴리스 활성화 감사 로그를 포함한다
 export const ADMIN_EVENT_TYPES = [
+  { value: "SUBMISSION_DELETED", label: "제출 기록 삭제 / 정답 회수" },
   { value: "TEAM_BANNED", label: "팀 밴" },
   { value: "TEAM_UNBANNED", label: "팀 밴 해제" },
   { value: "MILEAGE_ADJUSTED", label: "마일리지 조정" },

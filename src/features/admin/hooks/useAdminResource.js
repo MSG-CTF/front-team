@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isSuccess } from "../../../utils/response.js";
 import { createRequestGuard, getAdminRequestError } from "../utils/adminValidation.js";
+import { ADMIN_RESOURCE_CHANGED } from "../utils/adminResourceEvents.js";
 
 export default function useAdminResource(fetcher, deps, fallbackMessage) {
   const [revision, setRevision] = useState(0);
@@ -52,5 +53,9 @@ export default function useAdminResource(fetcher, deps, fallbackMessage) {
   }, [load, revision]);
 
   const retry = useCallback(() => setRevision((value) => value + 1), []);
+  useEffect(() => {
+    window.addEventListener(ADMIN_RESOURCE_CHANGED, retry);
+    return () => window.removeEventListener(ADMIN_RESOURCE_CHANGED, retry);
+  }, [retry]);
   return { ...state, retry, reload: load };
 }

@@ -54,6 +54,14 @@ export function getAdminChallengeSubmissions(challengeId, { result, teamId, page
   });
 }
 
+export function deleteAdminChallengeSubmission(challengeId, submissionId, reason) {
+  const trimmed = reason.trim();
+  if (!trimmed || Array.from(trimmed).length > 500) throw new Error("사유는 1~500자로 입력하세요");
+  return apiClient.delete(`/admin/challenges/${encodeURIComponent(challengeId)}/submissions/${encodeURIComponent(submissionId)}`, {
+    ...MUTATION_CONFIG, data: { reason: trimmed },
+  });
+}
+
 // [프론트 요청, 백엔드 대기] 원격 실행 기록: 실행 파일을 내서 검증 VM에서 돌린 기록을 모든 팀에 걸쳐 본다
 //  summary: total, teams, timed_out, crashed, failed / runs[]: run_id, team_id, team_name, user{nickname}, run_number,
 //  status, counted, file_name, file_size, payload_sha256, created_at, finished_at, duration_ms, exit_code, stdout, stderr, message
