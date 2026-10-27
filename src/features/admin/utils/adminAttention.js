@@ -83,3 +83,28 @@ export function summarizeAttention(pages, now = Date.now()) {
 export function canForceStop(instance) {
   return ["RUNNING", "CLEANUP_PENDING"].includes(instance.status);
 }
+
+export function canRetryCleanup(instance) {
+  return instance.status === "FAILED";
+}
+
+export const CLEANUP_RETRY = {
+  title: "인스턴스 정리 재시도",
+  action: "정리 재시도",
+  description: "실패한 인스턴스의 정리를 다시 요청합니다 완료 여부는 이후 상태에서 확인해주세요",
+};
+
+export function cleanupRetryNotice(envelope, instanceId) {
+  if (envelope?.code !== "SUCCESS" || envelope.data?.instance_id !== instanceId || envelope.data?.status !== "CLEANUP_PENDING") {
+    throw new Error("정리 재시도 접수 결과를 확인하지 못했습니다 최신 상태를 확인해주세요");
+  }
+  return "정리 재시도가 접수됐습니다 정리와 예약 반납이 끝나면 상태가 갱신됩니다";
+}
+
+export function cleanupRetryError(error) {
+  const code = error?.response?.data?.code;
+  if (code === "INSTANCE_NOT_FOUND") return "실행 서버에서 이 인스턴스를 찾지 못했습니다 정리 완료 여부를 확인해주세요";
+  if (code === "INVALID_STATE_TRANSITION") return "지금 상태에서는 정리를 다시 요청할 수 없습니다 최신 상태를 확인해주세요";
+  if (!error?.response || code === "SCHEDULER_UNAVAILABLE") return "정리 요청의 결과를 확인하지 못했습니다 최신 상태를 확인한 뒤 다시 시도해주세요";
+  return error.response.data?.message || "정리를 다시 요청하지 못했습니다 최신 상태를 확인해주세요";
+}

@@ -56,6 +56,43 @@ function render(overrides = {}) {
   return renderToStaticMarkup(createElement(MemoryRouter, null, createElement(KothScreen, props)));
 }
 
+test("failed collection labels the ranking and keeps a zero row unranked", () => {
+  const html=render({problemRanking:{status:"success",data:{collection_status:"FAILED",is_stale:true,
+    last_collected_at:null,leaderboard:[{team_id:MY_TEAM,team_name:"우리 팀",rank:null,earned_score:0}]}}});
+  assert.match(html,/role="alert">순위 수집에 실패했습니다/);
+  assert.match(html,/아래는 저장된 누적 점수입니다/);
+  assert.match(html,/<td>—<\/td>/);
+  assert.doesNotMatch(html,/data-top="true"/);
+});
+
+test("an empty uncollected ranking is distinct from a successfully collected empty ranking", () => {
+  for(const status of ["NOT_COLLECTED","PENDING","FAILED"]) {
+    const html=render({problemRanking:{status:"success",data:{collection_status:status,leaderboard:[]}}});
+    assert.doesNotMatch(html,/아직 득점한 팀이 없습니다/);
+    assert.match(html,status==="FAILED"?/순위 수집에 실패했습니다/:/순위 수집을 기다리고 있습니다/);
+  }
+  assert.match(render({problemRanking:{status:"success",data:{collection_status:"COLLECTED",is_stale:false,leaderboard:[]}}}),/아직 득점한 팀이 없습니다/);
+});
+
+test("recovered collection shows its successful timestamp and a real zero score", () => {
+  const at="2026-10-27T04:30:00Z";
+  const selected={...createKothChallengeViewModels(KOTH_CHALLENGE_VISUALS,clubs,progress)[2],
+    collection:"ready",lastCollectedAt:at,earnedScore:0,rank:null,solvedAt:null};
+  const html=render({selectedChallenge:selected,problemRanking:{status:"success",data:{
+    collection_status:"COLLECTED",last_collected_at:at,leaderboard:[]}}});
+  assert.match(html,/수집 결과 0점/);
+  assert.equal((html.match(/dateTime="2026-10-27T04:30:00Z"/gi)||[]).length,2);
+  assert.doesNotMatch(html,/수집에 실패했습니다/);
+});
+
+test("team progress request failure does not present cached rank and score as current", () => {
+  const html=render({progressError:"내 팀 점수를 갱신하지 못했습니다"});
+  const standing=/<dl[^>]*>([\s\S]*?)<\/dl>/.exec(html)?.[1]??"";
+  assert.match(standing,/조회 실패/);
+  assert.match(standing,/내 팀 점수를 갱신하지 못했습니다/);
+  assert.doesNotMatch(standing,/22위/);
+});
+
 test("문제를 고르면 왼쪽에 지도에서 고른 우표 카드를 크게 두고 가운데에 동아리, 제목, 지도의 라운드 리본, 진행 상태를 둔다", () => {
   const html = render();
   const dialog = /<section[^>]*role="dialog"[^>]*>/.exec(html)?.[0] ?? "";

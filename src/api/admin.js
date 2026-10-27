@@ -259,6 +259,10 @@ export function forceStopInstance(instanceId) {
   return apiClient.delete(`/admin/instances/${instanceId}`, MUTATION_CONFIG);
 }
 
+export function retryInstanceCleanup(instanceId) {
+  return apiClient.post(`/admin/instances/${encodeURIComponent(instanceId)}/retry-cleanup`, {}, MUTATION_CONFIG);
+}
+
 // ── 문제 / 릴리스 ──────────────────────────────────────────────────────────
 export function getAdminChallenges({ category, isPublished, sort = "running", page = 1, size = 50 } = {}, config) {
   // [백엔드: 완료] sort: "running" | "title" | "score"

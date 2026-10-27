@@ -15,6 +15,7 @@ export default function KothScreen({
   requestStatus,
   requestError,
   authenticated, clubsStale, problemRanking,
+  progressError,
   challenges,
   isEmpty,
   unmappedChallengeCount,
@@ -121,6 +122,7 @@ export default function KothScreen({
           ranking={problemRanking}
           stale={clubsStale}
           authenticated={authenticated}
+          progressError={progressError}
           teamId={teamId}
           onClose={onCloseChallenge}
           downloadFile={downloadFile}

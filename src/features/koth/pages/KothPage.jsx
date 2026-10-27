@@ -66,6 +66,7 @@ export default function KothPage() {
       requestError={kothData.error}
       authenticated={kothData.authenticated}
       clubsStale={kothData.clubsStale}
+      progressError={kothData.progressError}
       problemRanking={problemRanking}
       challenges={challenges}
       isEmpty={kothData.status === "success" && allChallenges.length === 0}
