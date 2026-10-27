@@ -2064,11 +2064,18 @@
     width: 100%;
     height: 100%;
   }
+  /* 대기 중 배지도 RUNNING 그림과 같은 슬롯 크기 한 줄에 가둬 판의 선을 넘지 않게 한다 */
   .statusBadge {
+    box-sizing: border-box;
+    flex-wrap: nowrap;
     width: 100%;
     min-width: 0;
     height: 100%;
-    gap: calc(var(--u) * 8);
+    min-height: 0;
+    gap: calc(var(--u) * 6);
+    padding: 0 calc(var(--u) * 8);
+    overflow: hidden;
+    white-space: nowrap;
     border-radius: calc(var(--u) * 20);
     font-size: max(10px, calc(var(--u) * 15));
   }
@@ -2183,38 +2190,41 @@
   .waiting {
     display: flex;
     align-items: center;
-    gap: calc(var(--u) * 14);
+    box-sizing: border-box;
+    gap: calc(var(--u) * 10);
     width: calc(var(--u) * 570);
     height: calc(var(--u) * 47);
-    padding: 0 calc(var(--u) * 14);
+    padding: 0 calc(var(--u) * 12);
     border-radius: calc(var(--u) * 6);
+    overflow: hidden;
   }
   .createSteps {
     flex: 1 1 auto;
-    gap: calc(var(--u) * 10);
+    min-width: 0;
+    gap: calc(var(--u) * 6);
   }
   .createSteps li,
   .waitingBusy {
     flex: 1 1 auto;
-    gap: calc(var(--u) * 8);
-    font-size: max(11px, calc(var(--u) * 16));
+    gap: calc(var(--u) * 5);
+    font-size: max(10px, calc(var(--u) * 14));
   }
   .createSteps li i,
   .waitingBusy i {
-    width: calc(var(--u) * 18);
-    height: calc(var(--u) * 18);
-    border-width: max(1.5px, calc(var(--u) * 2));
+    width: calc(var(--u) * 12);
+    height: calc(var(--u) * 12);
+    border-width: max(1.5px, calc(var(--u) * 1.5));
   }
   .createSteps li[data-state="done"] i::after {
-    left: calc(var(--u) * 4.5);
-    top: calc(var(--u) * 1.5);
-    width: calc(var(--u) * 4.5);
-    height: calc(var(--u) * 9);
-    border-width: 0 max(1.5px, calc(var(--u) * 2)) max(1.5px, calc(var(--u) * 2)) 0;
+    left: calc(var(--u) * 2.5);
+    top: calc(var(--u) * 0.5);
+    width: calc(var(--u) * 3);
+    height: calc(var(--u) * 6);
+    border-width: 0 max(1.5px, calc(var(--u) * 1.5)) max(1.5px, calc(var(--u) * 1.5)) 0;
   }
   .waitingElapsed {
     flex: none;
-    font-size: max(10px, calc(var(--u) * 13));
+    font-size: max(10px, calc(var(--u) * 12));
   }
   .expiryTimes {
     position: absolute;
