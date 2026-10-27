@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { getKothLeaderboard } from "../../../api/koth.js";
 import { downloadAdminKothFiles, startAdminKothPreview } from "../../../api/admin.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import usePageResources from "../../../routes/usePageResources.js";
 import KothScreen from "../../koth/components/KothScreen.jsx";
-import { useKothTeamToken } from "../../koth/hooks/useKothData.js";
+import { useKothData, useKothLeaderboard, useKothTeamToken } from "../../koth/hooks/useKothData.js";
 import { KOTH_CHALLENGE_VISUALS } from "../../koth/config/kothVisualConfig.js";
-import { createKothChallengeViewModels, kothFile } from "../../koth/utils/kothChallengeState.js";
+import { kothFile } from "../../koth/utils/kothChallengeState.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { kothStatus } from "../utils/adminKoth.js";
 import { kothLivePreviewUrl } from "../utils/kothLivePreview.js";
+import { kothPreviewModels } from "../utils/kothPreviewData.js";
 import { isSuccess } from "../../../utils/response.js";
 import { loadKothList } from "./AdminKothPage.jsx";
 import styles from "../components/AdminWorkspace.module.css";
@@ -25,18 +25,12 @@ export default function AdminKothPreviewPage() {
   const { kothChallengeId } = useParams();
   const navigate = useNavigate();
   const list = useAdminResource(loadKothList, [], "KoTH 문제를 불러오지 못했습니다");
-  const ranking = useAdminResource((config) => getKothLeaderboard(kothChallengeId, config), [kothChallengeId], "누적 순위를 불러오지 못했습니다");
+  const kothData = useKothData();
+  const ranking = useKothLeaderboard(kothChallengeId, kothData.authenticated);
   const challenges = useMemo(() => list.data?.challenges ?? [], [list.data]);
   const target = challenges.find((item) => item.koth_challenge_id === kothChallengeId);
-  const clubs = useMemo(() => {
-    const grouped = new Map();
-    for (const item of challenges) {
-      if (!grouped.has(item.club_id)) grouped.set(item.club_id, { club_id: item.club_id, name: item.club_name, challenges: [] });
-      grouped.get(item.club_id).challenges.push(item);
-    }
-    return [...grouped.values()];
-  }, [challenges]);
-  const models = useMemo(() => createKothChallengeViewModels(KOTH_CHALLENGE_VISUALS, clubs, []), [clubs]);
+  const models = useMemo(() => kothPreviewModels(KOTH_CHALLENGE_VISUALS, challenges,
+    kothData.clubsData?.clubs ?? [], kothData.progressData), [challenges, kothData.clubsData, kothData.progressData]);
   const model = models.find((item) => item.kothChallengeId === kothChallengeId);
   const bundle = target?.files?.mode === "REPOSITORY" ? target.files.bundle : null;
   const selected = model && { ...model, status: "ACTIVE", description: target?.description ?? null, file: kothFile(bundle) };
@@ -101,8 +95,9 @@ export default function AdminKothPreviewPage() {
       if (event.target.closest("a")) { event.preventDefault(); event.stopPropagation(); }
     }}>
       <KothScreen requestStatus={list.status === "success" ? "success" : list.status === "loading" ? "loading" : "error"} requestError={list.error}
-        authenticated clubsStale={false} problemRanking={problemRanking} challenges={models} isEmpty={list.status === "success" && models.length === 0}
-        unmappedChallengeCount={0} teamName={teamToken.data?.team_name ?? "테스트 팀"} totalKothScore={null} selectedChallenge={isTeamTokenOpen ? null : selected ?? null} clubDetail={READY}
+        authenticated={kothData.authenticated} clubsStale={false} progressError={kothData.progressError} problemRanking={problemRanking} challenges={models} isEmpty={list.status === "success" && models.length === 0}
+        unmappedChallengeCount={0} teamId={kothData.progressData?.team_id ?? null} teamName={kothData.progressData?.team_name ?? "테스트 팀"}
+        totalKothScore={kothData.progressData?.total_koth_score ?? null} selectedChallenge={isTeamTokenOpen ? null : selected ?? null} clubDetail={READY}
         isTeamTokenOpen={isTeamTokenOpen} teamToken={teamToken} onRetry={list.retry} onSelectChallenge={() => {}} onCloseChallenge={() => navigate(ROUTES.adminKothDetail(kothChallengeId))}
         onOpenTeamToken={openTeamToken} onCloseTeamToken={closeTeamToken} downloadFile={downloadAdminKothFiles} />
     </div>
