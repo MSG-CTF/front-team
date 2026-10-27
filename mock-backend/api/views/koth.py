@@ -131,12 +131,16 @@ class KothTeamTokenView(APIView):
 
     def get(self, request):
         team = require_team(request)
+        challenge_id = request.query_params.get("koth_challenge_id")
+        if not challenge_id:
+            raise ApiError("KOTH_CHALLENGE_ID_REQUIRED", "koth_challenge_id가 필요합니다", status=400)
         return success(
             {
                 "team_id": str(team.id),
                 "team_name": team.team_name,
+                "koth_challenge_id": challenge_id,
                 # 로그인 JWT와 무관한 별도 값(AGENT.md 9절) — 목서버에서는 team_id 기반 고정값으로 대체
-                "team_token": f"koth_{str(team.id).replace('-', '')[:16]}",
+                "team_token": f"koth_{str(team.id).replace('-', '')[:8]}{challenge_id.replace('-', '')[:8]}",
                 "issued_at": timezone.now(),
             }
         )

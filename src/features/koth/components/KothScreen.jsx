@@ -30,6 +30,7 @@ export default function KothScreen({
   onSelectChallenge,
   onCloseChallenge,
   onOpenTeamToken,
+  onRetryTeamToken,
   onCloseTeamToken,
   downloadFile,
 }) {
@@ -57,9 +58,6 @@ export default function KothScreen({
               <span><small>KoTH</small> <b>{formatValue(totalKothScore)}</b> <small>pts</small></span>
             </p>
             <div className={styles.teamActions}>
-              <button type="button" className={styles.summaryAction} onClick={onOpenTeamToken} disabled={!authenticated}>
-                팀 토큰
-              </button>
               <button type="button" className={styles.summaryAction} data-tone="quiet" onClick={onRetry}>새로고침</button>
             </div>
             {!authenticated && <span className={styles.summaryNote}>로그인 후 팀 점수와 토큰 확인</span>}
@@ -124,6 +122,7 @@ export default function KothScreen({
           authenticated={authenticated}
           progressError={progressError}
           teamId={teamId}
+          onOpenTeamToken={onOpenTeamToken}
           onClose={onCloseChallenge}
           downloadFile={downloadFile}
         />
@@ -135,7 +134,7 @@ export default function KothScreen({
           data={teamToken.data}
           error={teamToken.error}
           teamName={teamName}
-          onRetry={teamToken.requestTeamToken}
+          onRetry={onRetryTeamToken}
           onClose={onCloseTeamToken}
         />
       )}

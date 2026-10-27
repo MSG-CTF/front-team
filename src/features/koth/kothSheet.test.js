@@ -161,15 +161,19 @@ test("순위표는 득점한 팀을 모두 그리고 1위에 왕관, 우리 팀 
   assert.doesNotMatch(html, /전체 \d+팀 보기/);
 });
 
-test("팀 요약은 이름과 점수를 한 줄로, 팀 토큰과 새로고침은 명판 단추로 둔다", () => {
+test("팀 요약은 이름과 점수를 한 줄로, 새로고침은 명판 단추로 둔다", () => {
   const html = render();
   const summary = /<aside[^>]*aria-label="내 팀 KoTH 점수"[^>]*>([\s\S]*?)<\/aside>/.exec(html)?.[1] ?? "";
   assert.match(summary, /<strong>도토리묵사발<\/strong>/);
   assert.match(summary, /<b>537<\/b>/);
-  assert.equal((summary.match(/<button /g) || []).length, 2);
+  assert.equal((summary.match(/<button /g) || []).length, 1);
   assert.match(summary, /data-tone="quiet"[^>]*>새로고침</);
-  const signedOut = render({ authenticated: false, selectedChallenge: null });
-  assert.match(signedOut, /<button type="button" class="[^"]+" disabled="">\s*팀 토큰/);
+});
+
+test("팀 토큰 단추는 문제를 선택해 시트가 열렸고 로그인했을 때만 시트 안에 나온다", () => {
+  assert.match(render(), /<button type="button" class="[^"]+">팀 토큰<\/button>/);
+  assert.doesNotMatch(render({ authenticated: false }), />팀 토큰</);
+  assert.doesNotMatch(render({ selectedChallenge: null }), />팀 토큰</);
 });
 
 test("시트는 문제 상세 화면의 판 그림을 쓰고 지도 크기를 따라 줄되 기준 글자 14px 아래로 내려가지 않는다", () => {

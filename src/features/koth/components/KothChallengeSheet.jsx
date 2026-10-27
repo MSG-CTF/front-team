@@ -64,7 +64,7 @@ function KothRanking({ ranking, teamId }) {
   </>;
 }
 
-export default function KothChallengeSheet({ challenge, connection, detail, ranking, stale, authenticated, progressError, teamId, onClose, downloadFile }) {
+export default function KothChallengeSheet({ challenge, connection, detail, ranking, stale, authenticated, progressError, teamId, onOpenTeamToken, onClose, downloadFile }) {
   const sheet = useRef(null);
   const ids = useId();
   const close = useRef(onClose);
@@ -128,6 +128,9 @@ export default function KothChallengeSheet({ challenge, connection, detail, rank
               ? <a href={connection} target="_blank" rel="noopener noreferrer" className={styles.connectButton} aria-label="문제 접속 새 창으로 열기">CONNECT</a>
               : <span className={styles.connectButton} data-disabled="true" aria-hidden="true">CONNECT</span>}
             <p className={styles.endpoint} data-empty={!connection || undefined}>{connection ? connection.replace(/^https?:\/\//, "") : routeMessage}</p>
+            {authenticated && onOpenTeamToken && (
+              <button type="button" className={styles.summaryAction} onClick={onOpenTeamToken}>팀 토큰</button>
+            )}
             {detail.status === "loading" && <p className={styles.detailFeedback} role="status">최신 문제 정보를 확인하는 중</p>}
             {detail.status === "error" && <p className={styles.detailFeedback} role="alert">{detail.error} <button type="button" onClick={detail.retry}>다시 확인</button></p>}
           </div>

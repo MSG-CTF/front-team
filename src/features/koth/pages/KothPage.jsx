@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import KothScreen from "../components/KothScreen.jsx";
 import { KOTH_CHALLENGE_VISUALS } from "../config/kothVisualConfig.js";
 import {
@@ -46,14 +46,25 @@ export default function KothPage() {
 
   const problemRanking = useKothLeaderboard(selectedChallengeId, kothData.authenticated);
 
+  const { clearTeamToken, requestTeamToken } = teamToken;
+
+  // 문제를 바꾸거나 닫으면 이전 문제의 토큰 표시와 진행 중인 요청을 버린다
+  useEffect(() => {
+    setIsTeamTokenOpen(false);
+    clearTeamToken();
+  }, [selectedChallengeId, clearTeamToken]);
+
   const handleOpenTeamToken = () => {
+    if (!selectedChallengeId) return;
     setIsTeamTokenOpen(true);
-    teamToken.requestTeamToken();
+    requestTeamToken(selectedChallengeId);
   };
+
+  const handleRetryTeamToken = () => requestTeamToken(selectedChallengeId);
 
   const handleCloseTeamToken = () => {
     setIsTeamTokenOpen(false);
-    teamToken.clearTeamToken();
+    clearTeamToken();
   };
 
   const handleSelectChallenge = (challenge) => {
@@ -82,6 +93,7 @@ export default function KothPage() {
       onSelectChallenge={handleSelectChallenge}
       onCloseChallenge={() => setSelectedChallengeId(null)}
       onOpenTeamToken={handleOpenTeamToken}
+      onRetryTeamToken={handleRetryTeamToken}
       onCloseTeamToken={handleCloseTeamToken}
     />
   );
