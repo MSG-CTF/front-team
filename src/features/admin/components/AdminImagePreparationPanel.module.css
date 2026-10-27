@@ -1,0 +1,11 @@
+.panel { display: grid; gap: 12px; margin: 20px 0; padding: 16px; border: 1px solid var(--separator); border-radius: var(--radius-lg); min-width: 0; }
+.panel p, .panel h4, .panel h5 { margin: 0; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.history { overflow-x: auto; }
+.history table { min-width: 620px; }
+.identifier { overflow-wrap: anywhere; font-size: 12px; }
+.detail { display: grid; gap: 12px; padding-top: 12px; border-top: 1px solid var(--separator); min-width: 0; }
+.detail dl { margin: 0; }
+.nodes { display: grid; gap: 12px; padding-left: 20px; }
+.nodes ul { padding-left: 16px; }
+@media (max-width: 600px) { .panel { padding: 12px; } }
