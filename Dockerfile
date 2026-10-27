@@ -14,7 +14,7 @@ ARG VITE_PUBLIC_SITE_URL=https://msgctf.kr
 RUN npm run build
 
 # 2) 서빙 스테이지 — 정적 파일 + /api/v1 리버스 프록시
-FROM nginxinc/nginx-unprivileged:1.31-alpine@sha256:aa8c9087d36d93e9d650c5365f883b421e8214aedbad24ade52b844c583358f1 AS runtime
+FROM nginx:1.27-alpine AS runtime
 
 USER root
 RUN apk update && apk upgrade && rm -rf /var/cache/apk/*
