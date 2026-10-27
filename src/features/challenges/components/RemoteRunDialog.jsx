@@ -26,9 +26,10 @@ export default function RemoteRunDialog({ fileName, onConfirm, onCancel, disable
     >
       <p className={styles.eyebrow}>REMOTE RUN</p>
       <h2 id={titleId}>원격 실행</h2>
-      <p id={descriptionId}>
-        <strong>{fileName}</strong> 을 검증 VM에서 한 번 실행합니다 끝나면 출력이 이 화면에 표시됩니다
-      </p>
+      <div id={descriptionId} className={styles.confirmDescription}>
+        <p><strong>{fileName}</strong> 을 검증 VM에서 한 번 실행합니다</p>
+        <p>끝나면 출력이 이 화면에 표시됩니다</p>
+      </div>
       <div className={styles.dialogActions}>
         <button type="button" className={styles.secondaryButton} onClick={onCancel} autoFocus>
           취소
