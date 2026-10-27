@@ -164,7 +164,7 @@ test("메인과 상세 안내의 대회 상금 150만원과 복원한 트랙별 
     /외부 트랙<\/th><td>50만원<\/td><td>30만원<\/td><td>10만원<\/td>/,
   );
 });
-test("순위별 상 이름을 유지하고 안랩 대표상 50만원을 별도로 표시한다", () => {
+test("순위별 상 이름을 유지하고 취소된 안랩 대표상 안내는 표시하지 않는다", () => {
   for (const html of [main, guide]) {
     const awards = html.match(/<dl class="rank-awards"[^>]*>[\s\S]*?<\/dl>/g);
     assert.equal(awards?.length, 1);
@@ -172,12 +172,7 @@ test("순위별 상 이름을 유지하고 안랩 대표상 50만원을 별도�
     assert.match(awards[0], /<dt>1위<\/dt><dd>HSPACE상<\/dd>/);
     assert.match(awards[0], /<dt>2위<\/dt><dd>시야인사이트상<\/dd>/);
     assert.match(awards[0], /<dt>3위<\/dt><dd>안랩상<\/dd>/);
-    const specialAwards = html.match(/<article class="special-award"[^>]*>[\s\S]*?<\/article>/g);
-    assert.equal(specialAwards?.length, 1);
-    assert.match(specialAwards[0], /<h3>안랩 대표상<\/h3>/);
-    assert.match(specialAwards[0], /<strong>50만원<\/strong>/);
-    assert.match(specialAwards[0], /안랩 대표 명의 상장 수여/);
-    assert.match(specialAwards[0], /수상 기준은 추후 안내합니다/);
+    assert.doesNotMatch(html, /special-award|안랩 대표상|대표 명의 상장|수상 기준은 추후 안내합니다/);
   }
 });
 test("로그인은 기존 경로를 사용하고 참가 신청은 HSPACE 주소를 새 창으로 연다", () => {

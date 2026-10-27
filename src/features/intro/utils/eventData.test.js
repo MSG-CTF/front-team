@@ -84,9 +84,9 @@ test("시간대가 없거나 날짜와 맞지 않는 시작 시간은 초 단위
     );
   }
 });
-test("대회 상금 150만원과 별도 안랩 대표상 50만원을 구분한다", () => {
+test("대회 상금은 150만원이며 별도 시상은 없다", () => {
   const result = getPrizes(eventConfig.prizes);
-  assert.equal(result.total, 2000000);
+  assert.equal(result.total, 1500000);
   assert.equal(result.trackTotal, 1500000);
   assert.deepEqual(
     result.tracks.map((row) => row.amounts),
@@ -95,12 +95,7 @@ test("대회 상금 150만원과 별도 안랩 대표상 50만원을 구분한�
       [300000, 200000, 100000],
     ],
   );
-  assert.deepEqual(result.specialAwards, [{
-    label: "안랩 대표상",
-    amount: 500000,
-    description: "안랩 대표 명의 상장 수여",
-    selectionNote: "수상 기준은 추후 안내합니다",
-  }]);
+  assert.deepEqual(result.specialAwards, []);
   assert.equal(
     result.tracks
       .flatMap((track) => track.amounts)
@@ -121,8 +116,8 @@ test("별도 시상이 없는 기존 설정도 트랙 상금만으로 계산한�
 test("미확정 상금과 합계 오류는 공개하지 않는다", () => {
   assert.equal(getPrizes({ ...eventConfig.prizes, confirmed: false }), null);
   assert.equal(getPrizes({ ...eventConfig.prizes, totalKrw: 1600000 }), null);
-  assert.equal(getPrizes({ ...eventConfig.prizes, totalKrw: 1500000 }), null);
-  assert.equal(getPrizes({ ...eventConfig.prizes, specialAwards: [] }), null);
+  assert.equal(getPrizes({ ...eventConfig.prizes, totalKrw: 2000000 }), null);
+  assert.equal(getPrizes({ ...eventConfig.prizes, specialAwards: [sampleAward] }), null);
   assert.equal(getPrizes({ ...eventConfig.prizes, tracks: [] }), null);
 });
 test("음수, 소수, 문자열 금액과 중복 트랙은 공개하지 않는다", () => {
