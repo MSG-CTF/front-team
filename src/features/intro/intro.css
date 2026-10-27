@@ -942,32 +942,6 @@
   color: var(--muted);
   font-size: 15px;
 }
-.msg-intro .rank-awards {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-.msg-intro .rank-awards > div {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: var(--space-1);
-  min-width: 0;
-}
-.msg-intro .rank-awards dt {
-  flex-shrink: 0;
-  color: var(--muted);
-  font-size: 14px;
-}
-.msg-intro .rank-awards dd {
-  color: var(--accent);
-  font-size: 16px;
-}
-.msg-intro .guide-prizes .rank-awards {
-  margin-top: var(--space-2);
-  margin-bottom: var(--space-2);
-}
 .msg-intro .special-awards {
   margin-bottom: var(--space-6);
 }
@@ -2237,19 +2211,6 @@
   }
   .msg-intro .prize-total .prize-caption {
     font-size: 14px;
-  }
-  .msg-intro .rank-awards {
-    grid-template-columns: 1fr;
-    width: fit-content;
-    max-width: 100%;
-    margin-inline: auto;
-    gap: var(--space-1);
-  }
-  .msg-intro .rank-awards > div {
-    justify-content: flex-start;
-  }
-  .msg-intro .guide-prizes .rank-awards {
-    margin-inline: 0;
   }
   .msg-intro .special-awards {
     margin-bottom: var(--space-4);

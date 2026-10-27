@@ -10,20 +10,6 @@ export function PrizeTotal({ as: Tag = "p" }) {
   );
 }
 
-export function RankAwards() {
-  if (!getPrizes(eventConfig.prizes)) return null;
-  return (
-    <dl className="rank-awards" aria-label="두 트랙 공통 순위별 상 이름">
-      {eventConfig.prizes.rankAwards.map((award, index) => (
-        <div key={award}>
-          <dt>{index + 1}위</dt>
-          <dd>{award}</dd>
-        </div>
-      ))}
-    </dl>
-  );
-}
-
 export function SpecialAwards() {
   const prizes = getPrizes(eventConfig.prizes);
   if (!prizes?.specialAwards.length) return null;
