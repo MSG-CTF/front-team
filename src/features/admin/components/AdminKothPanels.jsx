@@ -5,7 +5,7 @@ import {
 import { isSuccess } from "../../../utils/response.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import {
-  KOTH_POINTS, KOTH_STATUS, KOTH_STATUS_ORDER, buildKothPatch, kothEditForm, numberTicks, periodRange, periodRows, periodStatus,
+  KOTH_STATUS, KOTH_STATUS_ORDER, buildKothPatch, kothEditForm, kothScoring, numberTicks, periodRange, periodRows, periodStatus,
   repositoryFreshness, retryablePeriod, statusGoesBack, suggestRepository, tickLabel, validateKothEdit,
 } from "../utils/adminKoth.js";
 import { shiftKstInput } from "../utils/adminContestTime.js";
@@ -33,18 +33,27 @@ async function loadPeriodPages(challengeId, pages, config) {
 const EDIT_REASONS = ["지문 오타 수정", "접속 주소 변경", "공개 일정 조정", "저장소 지문 반영"];
 const LINK_REASONS = ["출제 저장소 연결", "저장소 최신 커밋 반영", "폴더 이름 변경 반영"];
 
-// 점수 환산 규칙 카드: 백엔드 PERIOD_POINTS 와 같은 표
-export function KothScoringRule() {
-  return <section className={styles.rule} aria-label="KoTH 점수 환산">
+// 틱 배점 카드: 백엔드가 부문별 등록 팀 수로 만든 표(scoring.points_by_division)를 그대로 보인다
+// scoring 을 따로 불러오는 화면은 status, error, onRetry 를 넘겨 불러오는 중과 실패를 표 자리에 보인다
+export function KothScoringRule({ scoring, status, error, onRetry, className }) {
+  const divisions = kothScoring(scoring);
+  const waiting = !divisions && (status === "loading" || status === "error");
+  return <section className={[styles.rule, className].filter(Boolean).join(" ")} aria-label="KoTH 틱 배점">
     <div className={styles.ruleHead}>
-      <strong>점수 환산</strong>
-      <span>한 틱은 15분이고, 틱마다 문제 서버가 준 순위를 플랫폼 점수로 바꿔 쌓습니다</span>
+      <strong>틱 배점</strong>
+      <span>한 틱은 15분 · 부문마다 정지되지 않은 등록 팀 수의 절반까지 점수를 받습니다</span>
     </div>
-    <ol className={styles.points}>
-      {KOTH_POINTS.map((points, index) => <li key={points}><span>{index + 1}위</span><strong>{points}</strong></li>)}
-      <li><span>6위부터</span><strong>0</strong></li>
-    </ol>
-    <p className={styles.ruleNote}>공동 순위는 차지한 순위의 점수를 합쳐 팀 수로 나누고 소수점은 버립니다 · 공동 1위 두 팀은 (40 + 25) ÷ 2 = 32점씩</p>
+    {waiting && <AdminStatusMessage status={status} error={error} onRetry={onRetry} />}
+    {divisions && <div className={styles.divisions}>
+      {divisions.map((division) => <div key={division.key} className={styles.division}>
+        <p className={styles.divisionName}><strong>{division.label}</strong><span>{division.points.length ? `${division.points.length}위까지` : "등록 팀 없음"}</span></p>
+        {division.points.length > 0 && <ol className={styles.points} aria-label={`${division.label} 부문 순위별 점수`}>
+          {division.points.map((points, index) => <li key={index}><span>{index + 1}위</span><strong>{points}</strong></li>)}
+        </ol>}
+      </div>)}
+    </div>}
+    {!divisions && !waiting && <p className={ui.quietNote}>배점표는 관리자 KoTH API(GET /admin/koth/challenges)가 주면 보입니다</p>}
+    <p className={styles.ruleNote}>공동 순위는 차지한 순위 점수의 평균을 내림 · 문제 점수가 0 이하인 팀은 0점 · 테스트 팀도 등록 팀 수에 들어갑니다</p>
   </section>;
 }
 
@@ -143,6 +152,10 @@ export function KothPeriodsPanel({ challengeId, openedAt, limited, onRetried }) 
             </tr>)}</tbody>
           </table>
         </div>}
+        {/* 순위는 두 부문을 섞은 전체 순위라 환산 점수가 순위 순서대로 줄지 않을 수 있다 백엔드가 옛 규칙으로 다시 만든 틱은 따로 알린다 */}
+        {selected.status === "APPLIED" && rows.length > 0 && <p className={ui.quietNote}>{selected.award_provenance === "RECONSTRUCTED_FROM_RESPONSE"
+          ? "예전 고정 배점으로 반영한 틱입니다"
+          : "순위는 문제 서버가 매긴 전체 순위이고 환산 점수는 내부와 외부 부문 안 순위로 매깁니다"}</p>}
         {selected.status === "APPLIED" && rows.length === 0 && <p className={ui.quietNote}>이 틱에는 순위에 든 팀이 없습니다</p>}
       </div>}
     </>}
@@ -150,10 +163,11 @@ export function KothPeriodsPanel({ challengeId, openedAt, limited, onRetried }) 
 }
 
 // 누적 순위: 문제 하나 안의 팀별 누적 KoTH 점수 (GET /koth/leaderboard 구현 완료)
-export function KothLeaderboardPanel({ leaderboard }) {
+// 배점표는 목록 API에만 있어 상세는 scoring 을 따로 받아 넘긴다
+export function KothLeaderboardPanel({ leaderboard, scoring }) {
   const rows = leaderboard.data?.leaderboard ?? [];
   return <div className={styles.leaderboard}>
-    <KothScoringRule />
+    <KothScoringRule scoring={scoring.data?.scoring} status={scoring.status} error={scoring.error} onRetry={scoring.retry} />
     <AdminStatusMessage status={leaderboard.status} error={leaderboard.error} onRetry={leaderboard.retry} hasData={Boolean(leaderboard.data)} />
     {leaderboard.data && <div className={ui.tableWrap}>
       <table className={ui.table} aria-label="누적 순위">

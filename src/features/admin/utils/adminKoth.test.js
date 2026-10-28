@@ -1,35 +1,31 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  buildKothPatch, groupKothFiles, kothAwards, repositoryFreshness, kothEditForm, kothListFromClubs, kothSummary, numberTicks, periodRange, periodRows, retryablePeriod,
+  buildKothPatch, groupKothFiles, kothScoring, repositoryFreshness, kothEditForm, kothListFromClubs, kothSummary, numberTicks, periodRange, periodRows, retryablePeriod,
   kothFileWarnings, statusGoesBack, suggestRepository, tickLabel, tickNumber, validateKothEdit,
   NEW_KOTH_CLUB, applyKothFolder, buildKothCreate, freeKothClubs, kothCreateForm, kothFolderTwin, validateKothCreate,
 } from "./adminKoth.js";
 
 const row = (team, rank, extra = {}) => ({ team_id: team, team_name: team, period_rank: rank, metric_score: 100 - rank, ...extra });
 
-test("구간 배점은 1위부터 40, 25, 15, 12, 8이고 6위 아래는 0점이다", () => {
-  const awards = kothAwards([row("a", 1), row("b", 2), row("c", 3), row("d", 4), row("e", 5), row("f", 6)]);
-  assert.deepEqual([...awards.values()], [40, 25, 15, 12, 8, 0]);
+test("배점표는 서버가 준 부문별 점수를 내부, 외부 순서로 그대로 편다", () => {
+  const scoring = { period_minutes: 15, first_place_points: 40, points_by_division: { EXTERNAL: [40, 18, 8, 1], INTERNAL: [40, 1] } };
+  assert.deepEqual(kothScoring(scoring), [
+    { key: "INTERNAL", label: "내부", points: [40, 1] },
+    { key: "EXTERNAL", label: "외부", points: [40, 18, 8, 1] },
+  ]);
+  // 팀이 없는 부문은 빈 표, 표가 없는 응답(구버전 서버, 참가자 API 목록)은 null
+  assert.deepEqual(kothScoring({ points_by_division: { INTERNAL: [40] } })[1], { key: "EXTERNAL", label: "외부", points: [] });
+  assert.equal(kothScoring({ period_minutes: 15 }), null);
+  assert.equal(kothScoring(null), null);
 });
 
-test("공동 순위는 차지한 연속 순위 배점을 합쳐 나누고 내림한다", () => {
-  const tiedFirst = kothAwards([row("a", 1), row("b", 1), row("c", 3)]);
-  assert.equal(tiedFirst.get("a"), 32);
-  assert.equal(tiedFirst.get("b"), 32);
-  assert.equal(tiedFirst.get("c"), 15);
-  const tiedThird = kothAwards([row("a", 1), row("b", 2), row("c", 3), row("d", 3), row("e", 3)]);
-  assert.equal(tiedThird.get("c"), Math.floor((15 + 12 + 8) / 3));
-  const tiedFifth = kothAwards([row("a", 5), row("b", 5)]);
-  assert.equal(tiedFifth.get("a"), 4);
-});
-
-test("구간 결과 줄은 순위 순서로 서고 서버가 준 환산 점수를 먼저 쓴다", () => {
-  const rows = periodRows({ results: [row("b", 2), row("a", 1, { awarded_score: 40 }), row("c", 2)] });
-  assert.deepEqual(rows.map((item) => item.team_id), ["a", "b", "c"]);
-  assert.equal(rows[0].awarded, 40);
+test("구간 결과 줄은 순위 순서로 서고 환산 점수는 서버 값만 쓴다", () => {
+  const rows = periodRows({ results: [row("b", 2, { awarded_score: 33 }), row("a", 1, { awarded_score: 40 }), row("c", 2, { awarded_score: 30 }), row("d", 4)] });
+  assert.deepEqual(rows.map((item) => item.team_id), ["a", "b", "c", "d"]);
+  assert.deepEqual(rows.map((item) => item.awarded), [40, 33, 30, 0]);
   assert.equal(rows[1].tied, true);
-  assert.equal(rows[1].awarded, Math.floor((25 + 15) / 2));
+  assert.equal(rows[3].tied, false);
   assert.deepEqual(periodRows({ results: null }), []);
 });
 

@@ -2,9 +2,14 @@ import { formatAdminTime } from "./adminTime.js";
 import { isoFromKstInput, kstInputFromIso } from "./adminContestTime.js";
 
 // KoTH 관리: 15분 구간마다 문제 서버가 준 순위를 플랫폼 점수로 바꿔 누적한다
-// 환산 규칙은 백엔드 apps/koth/services.py PERIOD_POINTS · _awards 와 같다
-export const KOTH_POINTS = [40, 25, 15, 12, 8];
+// 배점은 백엔드가 부문별 팀 수로 정하고(apps/koth/services.py rank_points) 화면은 받은 표와 환산 점수만 보인다
 export const KOTH_PERIOD_MINUTES = 15;
+
+// 부문 순서와 이름은 백엔드 Team.KothDivision 과 같다
+const KOTH_DIVISIONS = [
+  { key: "INTERNAL", label: "내부" },
+  { key: "EXTERNAL", label: "외부" },
+];
 
 export const KOTH_STATUS = {
   SCHEDULED: { label: "공개 예정", tone: "neutral" },
@@ -27,36 +32,26 @@ export function periodStatus(status) {
   return PERIOD_STATUS[status] ?? { label: status || "상태 미수집", tone: "neutral" };
 }
 
-// 공동 순위 팀은 차지한 연속 순위의 배점을 합쳐 팀 수로 나누고 소수점 아래를 버린다
-// 예: 공동 1위 두 팀은 (40 + 25) / 2 = 32점씩, 6위 아래는 0점
-export function kothAwards(results = []) {
-  const groups = new Map();
-  for (const row of results) {
-    const rank = Number(row?.period_rank);
-    if (!Number.isInteger(rank) || rank < 1) continue;
-    if (!groups.has(rank)) groups.set(rank, []);
-    groups.get(rank).push(row);
-  }
-  const awards = new Map();
-  for (const [rank, rows] of groups) {
-    let occupied = 0;
-    for (let position = rank; position < rank + rows.length; position += 1) occupied += KOTH_POINTS[position - 1] ?? 0;
-    const each = Math.floor(occupied / rows.length);
-    for (const row of rows) awards.set(row.team_id, each);
-  }
-  return awards;
+// 배점표: GET /admin/koth/challenges 의 scoring.points_by_division 을 부문 순서대로 편다
+// 표가 없으면(구버전 서버, 참가자 API로 채운 목록) null
+export function kothScoring(scoring) {
+  const table = scoring?.points_by_division;
+  if (!table || typeof table !== "object") return null;
+  return KOTH_DIVISIONS.map((division) => ({
+    ...division,
+    points: Array.isArray(table[division.key]) ? table[division.key].filter((points) => Number.isFinite(points)) : [],
+  }));
 }
 
-// 구간 결과 줄: 순위 순서, 공동 순위 표시, 환산 점수는 서버 값이 있으면 그 값을 쓰고 없으면 같은 규칙으로 계산한다
+// 구간 결과 줄: 순위 순서와 공동 순위 표시, 환산 점수는 서버가 반영한 awarded_score 그대로다
 export function periodRows(period) {
   const results = Array.isArray(period?.results) ? period.results : [];
-  const computed = kothAwards(results);
   const sizes = new Map();
   for (const row of results) sizes.set(row.period_rank, (sizes.get(row.period_rank) ?? 0) + 1);
   return results.map((row) => ({
     ...row,
     tied: (sizes.get(row.period_rank) ?? 0) > 1,
-    awarded: Number.isFinite(row.awarded_score) ? row.awarded_score : computed.get(row.team_id) ?? 0,
+    awarded: Number.isFinite(row.awarded_score) ? row.awarded_score : 0,
   })).sort((a, b) => a.period_rank - b.period_rank || String(a.team_name ?? "").localeCompare(String(b.team_name ?? ""), "ko"));
 }
 

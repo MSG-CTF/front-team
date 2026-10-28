@@ -9,7 +9,8 @@ import AdminKothCreateDialog from "../components/AdminKothCreateDialog.jsx";
 import { Glyph } from "../components/AdminGlyph.jsx";
 import { IconButton, StatStrip, StatTile } from "../components/AdminWidgets.jsx";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { KOTH_POINTS, byOpenGroup, kothListFromClubs, kothStatus, kothSummary, periodRange, periodStatus, repositoryFreshness, tickLabel, tickNumber } from "../utils/adminKoth.js";
+import { KothScoringRule } from "../components/AdminKothPanels.jsx";
+import { byOpenGroup, kothListFromClubs, kothStatus, kothSummary, periodRange, periodStatus, repositoryFreshness, tickLabel, tickNumber } from "../utils/adminKoth.js";
 import { formatAdminNumber } from "../utils/adminNumber.js";
 import { getAdminRequestError } from "../utils/adminValidation.js";
 import ui from "../components/AdminWorkspace.module.css";
@@ -20,12 +21,13 @@ export async function loadKothList(config) {
   try {
     const response = await getAdminKothChallenges(config);
     if (!isSuccess(response.data)) throw new Error(response.data?.message || "KoTH 문제를 불러오지 못했습니다");
-    return { data: { code: "SUCCESS", data: { challenges: [...(response.data.data?.challenges ?? [])].sort(byOpenGroup), limited: false } } };
+    const data = response.data.data;
+    return { data: { code: "SUCCESS", data: { challenges: [...(data?.challenges ?? [])].sort(byOpenGroup), scoring: data?.scoring ?? null, limited: false } } };
   } catch (error) {
     if (getAdminRequestError(error, "").status !== "unavailable") throw error;
     const clubs = await getKothClubs(config);
     if (!isSuccess(clubs.data)) throw new Error(clubs.data?.message || "KoTH 문제를 불러오지 못했습니다");
-    return { data: { code: "SUCCESS", data: { challenges: kothListFromClubs(clubs.data.data), limited: true } } };
+    return { data: { code: "SUCCESS", data: { challenges: kothListFromClubs(clubs.data.data), scoring: null, limited: true } } };
   }
 }
 
@@ -63,7 +65,6 @@ export default function AdminKothPage() {
       <section className={ui.card} aria-labelledby="koth-list">
         <header className={ui.cardHeader}>
           <h2 id="koth-list" className={ui.cardTitle}>문제</h2>
-          <span className={ui.cardMeta}>한 틱은 15분 · 틱마다 1위부터 {KOTH_POINTS.join(" · ")}점으로 환산해 쌓습니다</span>
         </header>
         <div className={`${ui.tableWrap} ${ui.tableFlush} ${styles.listStack}`}>
           <table className={ui.table} aria-label="KoTH 문제 목록">
@@ -102,6 +103,7 @@ export default function AdminKothPage() {
             </tbody>
           </table>
         </div>
+        <div className={ui.cardBody}><KothScoringRule scoring={list.data.scoring} className={styles.listRule} /></div>
       </section>
     </div>}
     {creating && <AdminKothCreateDialog key={creating} source={creating} challenges={challenges} limited={limited} onClose={() => setCreating(null)}
