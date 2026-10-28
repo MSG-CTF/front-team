@@ -294,10 +294,11 @@ test("리더보드 표는 모든 열과 긴 팀명, 원래 1~3위 이미지를 �
   for (const rank of [1, 2, 3]) assert.match(html, new RegExp(`aria-label="${rank}위"`));
   assert.equal((html.match(/class="[^"]*rankArtwork/g) || []).length, 3);
   assert.match(html, />CLUB<\/th>/);
-  for (const label of ["Point", "Solves", "MISC", "WEB", "FOR", "REV", "PWN", "CRY", "OSINT", "WEB3", "KoTH", "CLUB"]) {
+  assert.match(html, /title="보드 라인 독점 점수"[^>]*>LINE<\/th>/);
+  for (const label of ["Point", "Solves", "MISC", "WEB", "FOR", "REV", "PWN", "CRY", "OSINT", "WEB3", "KoTH", "CLUB", "LINE"]) {
     assert.ok(html.includes(`aria-hidden="true">${label}</span>`));
   }
-  assert.equal((html.match(/scope="col"/g) || []).length, 14);
+  assert.equal((html.match(/scope="col"/g) || []).length, 15);
 });
 
 test("순위표는 폰에서 팀마다 카드로 쌓이고 태블릿에서는 모든 열을 유지한 채 표 안에서만 가로 이동한다", () => {
@@ -311,18 +312,18 @@ test("순위표는 폰에서 팀마다 카드로 쌓이고 태블릿에서는 �
   assert.ok(declarations(phone, ".mobileTableHint").some(([key, value]) => key === "display" && value === "none"));
   assert.ok(declarations(phone, ".mobileCellLabel").some(([key, value]) => key === "display" && value === "block"));
   const tablet = root.nodes.filter((node) => node.type === "atrule" && node.params === "(max-width: 1100px)");
-  assert.ok(tablet.some((node) => declarations(node, ".rankingGrid").some(([key, value]) => key === "min-width" && value === "960px")));
+  assert.ok(tablet.some((node) => declarations(node, ".rankingGrid").some(([key, value]) => key === "min-width" && value === "1036px")));
   assert.ok(!tablet.some((node) => declarations(node, ".rankingGrid tbody tr").some(([key]) => key === "grid-template-columns")));
   assert.ok(!declarations(root, ".rankingGrid thead").some(([key]) => key === "clip-path"));
   const html = render("Leaderboard", {
     teams: [], leaderboardStatus: "empty", rankingStatus: "success",
     rankings: [{ key: "all-fields", rank: 1, teamName: "전체 점수 확인", teamScore: 1234567.89,
-      solveCount: 123, categoryScores: [11, 22, 33, 44, 55, 66, 77, 88], kothScore: 999.99, signatureScore: 1234.56 }],
+      solveCount: 123, categoryScores: [11, 22, 33, 44, 55, 66, 77, 88], kothScore: 999.99, signatureScore: 1234.56, lineScore: 562.5 }],
   });
-  for (const value of ["11", "22", "33", "44", "55", "66", "77", "88", "999.99", "1,234.56", "1,234,567.89"]) {
+  for (const value of ["11", "22", "33", "44", "55", "66", "77", "88", "999.99", "1,234.56", "562.5", "1,234,567.89"]) {
     assert.ok(html.includes(`>${value}</span>`));
   }
-  assert.equal((html.match(/scope="col"/g) || []).length, 14);
+  assert.equal((html.match(/scope="col"/g) || []).length, 15);
   assert.match(html, /id="leaderboard-viewport"/);
   assert.doesNotMatch(html, /스코어보드 읽기 크기로 확대/);
   assert.match(html, /좌우로 밀어 모든 분야의 점수를 확인하세요/);
