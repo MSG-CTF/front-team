@@ -326,6 +326,12 @@ export function activateChallengeRelease(challengeId, releaseId, { reason } = {}
   return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/activate`, reason === undefined ? {} : { reason }, MUTATION_CONFIG);
 }
 
+// 활성화 없이 승인만 기록한다 현재 적용 버전은 바뀌지 않으며 Idempotency-Key가 필요 없다
+export function approveChallengeRelease(challengeId, releaseId, { reason } = {}) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/releases/${encodeURIComponent(releaseId)}/approve`,
+    reason === undefined ? {} : { reason }, MUTATION_CONFIG);
+}
+
 export function deriveChallengeRelease(challengeId, releaseId, settings) {
   return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/derive`, settings, MUTATION_CONFIG);
 }
