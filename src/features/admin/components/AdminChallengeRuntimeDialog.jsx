@@ -26,10 +26,10 @@ const INPUT = styles.input;
 const MONO_INPUT = `${styles.input} ${styles.inputMono}`;
 
 // '승인됨'은 '사용 중'과 별개이며 이미지 준비나 Runtime 정책 승인을 뜻하지 않는다
-function ApprovalBadge({ release, withTime = false }) {
+function ApprovalBadge({ release }) {
   const approval = describeApproval(release);
   if (approval.state === "approved") {
-    return <AdminBadge tone="blue">승인됨{withTime ? ` · ${formatAdminTime(approval.approvedAt, { seconds: false })}` : ""}</AdminBadge>;
+    return <AdminBadge tone="blue">승인됨</AdminBadge>;
   }
   return <AdminBadge tone="neutral">{approval.state === "unsupported" ? "승인 미지원" : "미승인"}</AdminBadge>;
 }
@@ -276,10 +276,12 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
               <AdminBadge tone={selected.is_current ? "good" : "neutral"}>{selected.is_current ? "새 인스턴스에 적용 중" : "아직 적용 전"}</AdminBadge>
               <AdminBadge tone={selectedInfo.tone}>{selectedInfo.label}{selectedInfo.baseVersion ? ` · v${selectedInfo.baseVersion} 기반` : ""}</AdminBadge>
               {selectedInfo.isLatestGithub && <AdminBadge tone="orange">GitHub 최신</AdminBadge>}
-              <ApprovalBadge release={selected} withTime />
+              <ApprovalBadge release={selected} />
             </div>
             <p className={styles.versionMeta}>{[selected.created_at && `등록 ${formatAdminTime(selected.created_at, { seconds: false })}`,
-              selected.registry_revision > 0 && `발행 #${selected.registry_revision}`, selected.runtime_type, selected.architecture].filter(Boolean).map((part) => <span key={part}>{part}</span>)}</p>
+              selected.registry_revision > 0 && `발행 #${selected.registry_revision}`, selected.runtime_type, selected.architecture].filter(Boolean).map((part) => <span key={part}>{part}</span>)}
+              {selectedApproval.state === "approved" && <span aria-label="승인 시각">승인 <time dateTime={selectedApproval.approvedAt}>{formatAdminTime(selectedApproval.approvedAt, { seconds: false })}</time></span>}
+            </p>
           </> : <>
             <div className={styles.versionTitle}><h3>{challenge.remote_run ? "원격 실행 문제" : "실행 이미지 없음"}</h3></div>
             <p>{challenge.remote_run
