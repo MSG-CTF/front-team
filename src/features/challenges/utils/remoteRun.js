@@ -40,6 +40,7 @@ export const REMOTE_RUN_NOTICE = {
 const ACTIVE_STATUSES = new Set(["QUEUED", "PREPARING", "RUNNING", "CLEANUP_PENDING", "START_UNKNOWN"]);
 
 export function isActiveRun(run) {
+  if (run?.canStartNext === true) return false;
   return ACTIVE_STATUSES.has(run?.status) || run?.releasePending === true || run?.requiresReview === true;
 }
 
@@ -65,6 +66,9 @@ export function mapRemoteRun(run) {
     status: typeof status === "string" ? status : "",
     releasePending: run.release_pending === true,
     requiresReview: run.requires_review === true,
+    canStartNext: run.requires_review === false && Boolean(date(run.finished_at))
+      && ["CLEANUP_PENDING", "COMPLETED", "CRASH", "TIMEOUT", "INFRA_ERROR"].includes(run.status)
+      && ["COMPLETED", "CRASH", "TIMEOUT", "INFRA_ERROR"].includes(run.execution_status),
     outputAvailable: output != null || typeof run.stdout === "string" || typeof run.stderr === "string",
     counted: run.counted === true,
     queuePosition:
