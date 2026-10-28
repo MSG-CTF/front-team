@@ -15,6 +15,7 @@ export default function useRemoteRun(challengeId, config) {
   const intent = useMemo(() => executableIntent({ userId: user?.user_id, teamId: user?.team_id, challengeId }),
     [user?.user_id, user?.team_id, challengeId]);
   const [runs, setRuns] = useState([]);
+  const [totalRuns, setTotalRuns] = useState(0);
   const [upload, setUpload] = useState(null);
   const [error, setError] = useState(null);
   const [retryAt, setRetryAt] = useState(0);
@@ -44,7 +45,9 @@ export default function useRemoteRun(challengeId, config) {
         }
       }
       if (generation.current !== current || requestSequence.current !== sequence) return;
-      setRuns(mapRemoteRuns(data).runs);
+      const history = mapRemoteRuns(data);
+      setRuns(history.runs);
+      setTotalRuns(history.totalRuns);
       const seconds = data.remote_run?.retry_after_seconds;
       setRetryAt(Math.max(rejectedUntil.current, seconds > 0 ? Date.now() + seconds * 1000 : 0));
     } catch (failure) {
@@ -54,7 +57,7 @@ export default function useRemoteRun(challengeId, config) {
 
   useEffect(() => {
     generation.current += 1;
-    setRuns([]); setError(null); setRetryAt(0); rejectedUntil.current = 0;
+    setRuns([]); setTotalRuns(0); setError(null); setRetryAt(0); rejectedUntil.current = 0;
     if (!enabled) return undefined;
     const stop = startVisiblePolling(load, { intervalMs: 5000 });
     const clock = window.setInterval(() => setNow(Date.now()), 1000);
@@ -100,5 +103,5 @@ export default function useRemoteRun(challengeId, config) {
       if (generation.current === current) setUpload(null);
     }
   };
-  return { runs, upload, submitError: error, onSubmit, retrySeconds: Math.max(0, Math.ceil((retryAt - now) / 1000)) };
+  return { runs, totalRuns, upload, submitError: error, onSubmit, retrySeconds: Math.max(0, Math.ceil((retryAt - now) / 1000)) };
 }

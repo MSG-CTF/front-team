@@ -65,7 +65,7 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
         focusPanel={deploymentFocus} onBusyChange={setDeploymentBusy} onChanged={onChanged}/>}
     </section>
     {remote && <section role="tabpanel" id="challenge-workspace-panel-remote" aria-labelledby="challenge-workspace-tab-remote" hidden={section !== "remote"} className={styles.panel}>
-      {opened.has("remote") && <AdminRemoteRunPanel challenge={challenge} onBusyChange={setRemoteBusy} onChanged={onChanged}/>}
+      {opened.has("remote") && <AdminRemoteRunPanel challenge={challenge} active={section === "remote"} onBusyChange={setRemoteBusy} onChanged={onChanged}/>}
     </section>}
     <section role="tabpanel" id="challenge-workspace-panel-solves" aria-labelledby="challenge-workspace-tab-solves" hidden={section !== "solves"} className={styles.panel}>
       {opened.has("solves") && <AdminChallengeSolvesPanel challengeId={challenge.challenge_id} currentScore={challenge.score}/>}

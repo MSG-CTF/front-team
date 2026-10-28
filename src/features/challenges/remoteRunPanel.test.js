@@ -56,9 +56,9 @@ function pe(machine) {
 test("remote_run 이 있으면 인스턴스 대신 원격 실행을 쓰고 빈 값은 문제 파일 기본값으로 채운다", () => {
   const challenge = mapChallengeDetail({ title: "msgdriver", requires_instance: true, remote_run: REMOTE });
   assert.equal(challenge.requiresInstance, false);
-  assert.deepEqual(challenge.remoteRun, { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, usedAttempts: 1, rateLimitSeconds: 30, retryAfterSeconds: 0, available: true, enabled: true, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
+  assert.deepEqual(challenge.remoteRun, { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, queuePolicy: null, usedAttempts: 1, rateLimitSeconds: 30, retryAfterSeconds: 0, available: true, enabled: true, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
   assert.equal(mapChallengeDetail({ title: "웹" }).remoteRun, null);
-  assert.deepEqual(mapRemoteRunConfig({ accept: ["exe", ".EXE"], max_file_bytes: -1 }), { environment: "", accept: [".exe"], executable: "", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, usedAttempts: 0, rateLimitSeconds: 30, retryAfterSeconds: 0, available: false, enabled: false, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
+  assert.deepEqual(mapRemoteRunConfig({ accept: ["exe", ".EXE"], max_file_bytes: -1 }), { environment: "", accept: [".exe"], executable: "", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, queuePolicy: null, usedAttempts: 0, rateLimitSeconds: 30, retryAfterSeconds: 0, available: false, enabled: false, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
 });
 
 test("실행 기록은 최신순으로 두고 모양이 어긋난 기록은 버린다", () => {
@@ -89,6 +89,24 @@ test("실행 파일은 확장자, 크기, x64 PE 머리를 브라우저에서 �
   assert.equal(await readPeMachine(new File([new Uint8Array(0x100)], "zero.exe")), "not-pe");
   assert.match(await checkPayloadMachine(pe(0x014c), config), /AMD64/);
   assert.equal(await checkPayloadMachine(pe(0x014c), { ...config, executable: "" }), null);
+});
+
+test("최근 20건만 받아도 전체 접수 수로 완료 회차를 표시한다", () => {
+  const records = Array.from({ length: 20 }, (_, index) => ({
+    submission_id: `run-${1008 - index}`, status: "COMPLETED", exit_code: 0,
+    created_at: new Date(Date.UTC(2026, 9, 28, 10, 0, 20 - index)).toISOString(),
+    finished_at: "2026-10-28T10:01:00Z",
+  }));
+  const history = mapRemoteRuns({ total_count: 1008, runs: records });
+  assert.equal(history.totalRuns, 1008);
+  assert.match(render({ remoteRun: { ...history, onSubmit: async () => true } }), /1008회차/);
+  records[0].status = "QUEUED";
+  records[0].finished_at = null;
+  const waiting = mapRemoteRuns({ total_count: 1008, runs: records });
+  assert.match(render({ remoteRun: { ...waiting, onSubmit: async () => true } }), /1007회차/);
+  for (const total_count of [undefined, -1, 1, true, "1008", Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(mapRemoteRuns({ total_count, runs: records }).totalRuns, 20);
+  }
 });
 
 test("원격 실행 문제는 인스턴스 판과 같은 짜임으로 그리고 제출 횟수는 보이지 않는다", () => {

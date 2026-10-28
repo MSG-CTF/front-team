@@ -6,6 +6,7 @@ import {
   checkPayloadFile,
   checkPayloadMachine,
   isActiveRun,
+  currentQueuePosition,
 } from "../utils/remoteRun.js";
 import { toKst } from "../../../utils/time.js";
 import RemoteRunDialog from "./RemoteRunDialog.jsx";
@@ -54,6 +55,7 @@ function Label({ en, ko, className }) {
 export default function RemoteRunPanel({
   config,
   runs = [],
+  totalRuns,
   retrySeconds = 0,
   upload = null,
   submitError = null,
@@ -83,9 +85,11 @@ export default function RemoteRunPanel({
   }, [runs]);
 
   const activeRun = runs.find(isActiveRun) ?? null;
+  const queuePosition = currentQueuePosition(activeRun);
   const finishedIndex = runs.findIndex((run) => run.finishedAt || !isActiveRun(run));
   const finished = finishedIndex >= 0 ? runs[finishedIndex] : null;
-  const finishedNumber = finished ? runs.length - finishedIndex : null;
+  const runCount = Number.isSafeInteger(totalRuns) ? Math.max(totalRuns, runs.length) : runs.length;
+  const finishedNumber = finished ? runCount - finishedIndex : null;
   const locked = disabled || solved || !config.available || retrySeconds > 0;
   const canRun = Boolean(file) && !fileError && !upload && !activeRun && !locked && Boolean(onSubmit);
   const elapsed = useElapsed(activeRun);
@@ -116,13 +120,18 @@ export default function RemoteRunPanel({
     `${formatLimit(config.maxBytes)} 이하`,
     `${environment ? `${environment}에서 ` : ""}${config.timeoutSeconds}초 안에 실행`,
     `팀별 요청 간격 ${config.rateLimitSeconds}초`,
-  ].join(" · ");
+    config.queuePolicy === "TEAM_FIFO" ? "팀당 대기 또는 실행 1건 · 총 횟수 제한 없음" : null,
+  ].filter(Boolean).join(" · ");
   const errorNote = submitError?.message || fileError || "";
   const hint = errorNote
     || (!config.available ? lockedReason : retrySeconds > 0 ? `${retrySeconds}초 후 다시 실행할 수 있습니다` : "")
     || (upload ? "파일을 올리고 있습니다"
       : activeRun?.status === REMOTE_RUN_STATUS.QUEUED
-        ? activeRun.queuePosition ? `대기열 ${activeRun.queuePosition}번째입니다 차례가 되면 바로 실행합니다` : "실행 차례를 기다리고 있습니다"
+        ? config.queuePolicy === "TEAM_FIFO"
+          ? queuePosition === 1 ? "다음 실행 차례입니다 준비된 VM을 기다리고 있습니다"
+            : queuePosition ? `대기 ${queuePosition}번째입니다 앞선 ${queuePosition - 1}팀부터 차례로 실행합니다`
+              : "팀 대기열에서 차례를 기다리고 있습니다 대기 순서를 확인하고 있습니다"
+          : queuePosition ? `대기열 ${queuePosition}번째입니다 차례가 되면 바로 실행합니다` : "실행 차례를 기다리고 있습니다"
         : activeRun?.status === "START_UNKNOWN" ? "실행 여부를 확인하고 있습니다 새 요청을 보내지 않고 기존 상태를 조회합니다"
         : activeRun?.status === "CLEANUP_PENDING" || activeRun?.releasePending && activeRun.finishedAt ? "실행 환경을 정리하고 있습니다 출력은 RESULT에서 확인할 수 있습니다"
         : activeRun?.status === "PREPARING" ? "Windows 실행 환경을 준비하고 있습니다"
@@ -329,7 +338,7 @@ export default function RemoteRunPanel({
       {resultRun && (
         <RemoteRunResultModal
           run={resultRun}
-          number={runs.length - runs.indexOf(resultRun)}
+          number={runCount - runs.indexOf(resultRun)}
           onClose={() => setResultId(null)}
         />
       )}

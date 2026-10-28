@@ -12,7 +12,8 @@ import {
   remoteRunSummary,
 } from "../utils/adminRemoteRun.js";
 import { formatFileSize } from "../../challenges/utils/challengeDetailMapper.js";
-import { formatRunDuration } from "../../challenges/utils/remoteRun.js";
+import { currentQueuePosition, formatRunDuration, mapRemoteRun } from "../../challenges/utils/remoteRun.js";
+import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import AdminDialog from "./AdminDialog.jsx";
 import { AdminBadge, AdminStatusMessage } from "./AdminLayout.jsx";
 import { AdminChoiceChips, AdminSwitch } from "./AdminFormParts.jsx";
@@ -134,13 +135,17 @@ function RunOutputDialog({ run, onClose }) {
 }
 
 // 실행 기록: 모든 팀의 원격 실행을 최신순으로 보고 출력을 연다
-function RemoteRunHistory({ challengeId }) {
+function RemoteRunHistory({ challengeId, active }) {
   const [status, setStatus] = useState("");
   const [page, setPage] = useState(1);
   const [opened, setOpened] = useState(null);
   const runs = useAdminResource((config) => getAdminRemoteRuns(challengeId, { status: status || undefined, page, size: PAGE_SIZE }, config),
     [challengeId, status, page], "원격 실행 기록을 불러오지 못했습니다");
   const data = runs.data;
+  useEffect(() => {
+    if (!active) return undefined;
+    return startVisiblePolling(() => runs.reload({ quiet: true }), { intervalMs: 5000, immediate: false });
+  }, [active, runs.reload]);
   const summary = data?.summary;
 
   if (runs.status === "unavailable") {
@@ -161,11 +166,12 @@ function RemoteRunHistory({ challengeId }) {
         <thead><tr><th>실행 시각 (KST)</th><th>팀</th><th>회차</th><th>결과</th><th>걸린 시간</th><th>파일</th><th><span className={styles.srOnly}>출력</span></th></tr></thead>
         <tbody>{(data.runs ?? []).map((run) => {
           const badge = ADMIN_REMOTE_RUN_BADGES[run.status] ?? { label: run.status || "확인 중", tone: "neutral" };
+          const queuePosition = currentQueuePosition(mapRemoteRun(run));
           return <tr key={run.run_id}>
             <td className={styles.time}><time dateTime={run.created_at}>{formatSolveTime(run.created_at)}</time></td>
             <td><span className={styles.title}>{run.team_name ?? "-"}</span>{run.user?.nickname && <span className={styles.secondary}>{run.user.nickname}</span>}</td>
             <td>{run.run_number != null ? `${run.run_number}회차` : <span className={styles.muted}>횟수 제외</span>}</td>
-            <td><AdminBadge tone={badge.tone}>{badge.label}</AdminBadge>{run.exit_code != null && <span className={styles.secondary}>종료 코드 {run.exit_code}</span>}</td>
+            <td><AdminBadge tone={badge.tone}>{badge.label}</AdminBadge>{run.status === "QUEUED" && <span className={styles.secondary}>{queuePosition ? `대기 ${queuePosition}번째` : "순서 확인 중"}</span>}{run.exit_code != null && <span className={styles.secondary}>종료 코드 {run.exit_code}</span>}</td>
             <td>{formatRunDuration(run.duration_ms) ?? <span className={styles.muted}>-</span>}</td>
             <td>{run.payload_sha256 ? <span className={styles.mono}>{run.payload_sha256.slice(0, 12)}</span> : <span className={styles.muted}>-</span>}
               <span className={styles.secondary}>{[run.file_name, run.file_size != null && formatFileSize(run.file_size)].filter(Boolean).join(" · ")}</span></td>
@@ -181,7 +187,7 @@ function RemoteRunHistory({ challengeId }) {
 }
 
 // 원격 실행 탭: 설정 카드와 실행 기록
-export default function AdminRemoteRunPanel({ challenge, onBusyChange, onChanged }) {
+export default function AdminRemoteRunPanel({ challenge, onBusyChange, onChanged, active = true }) {
   const detail = useAdminResource((config) => getAdminChallenge(challenge.challenge_id, config), [challenge.challenge_id], "문제 정보를 불러오지 못했습니다");
   const saved = detail.data?.remote_run ?? challenge.remote_run ?? null;
   async function savedSettings() {
@@ -192,6 +198,6 @@ export default function AdminRemoteRunPanel({ challenge, onBusyChange, onChanged
   return <div className={styles.remotePanel}>
     {detail.status === "error" && <AdminStatusMessage status={detail.status} error={detail.error} onRetry={detail.retry} hasData={Boolean(detail.data)} />}
     <RemoteRunSettings challengeId={challenge.challenge_id} saved={saved} onSaved={savedSettings} onBusyChange={onBusyChange} />
-    <RemoteRunHistory challengeId={challenge.challenge_id} />
+    <RemoteRunHistory challengeId={challenge.challenge_id} active={active} />
   </div>;
 }
