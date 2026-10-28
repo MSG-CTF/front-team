@@ -862,7 +862,7 @@
     align-items: baseline;
     gap: calc(var(--u) * 6);
     margin: 0 0 calc(var(--u) * 4);
-    font-size: max(9px, calc(var(--u) * 12));
+    font-size: max(10px, calc(var(--u) * 12));
     line-height: calc(var(--u) * 18);
     overflow: visible;
   }
@@ -884,10 +884,10 @@
     line-height: calc(var(--u) * 26);
   }
   .personalStats small {
-    font-size: max(9px, calc(var(--u) * 12));
+    font-size: max(10px, calc(var(--u) * 12));
   }
   .personalMessage {
-    font-size: max(9px, calc(var(--u) * 13));
+    font-size: max(10px, calc(var(--u) * 13));
     line-height: calc(var(--u) * 17);
   }
 
@@ -957,7 +957,7 @@
     left: calc(var(--u) * 40);
     top: calc(var(--u) * 162);
     margin: 0;
-    font-size: max(9px, calc(var(--u) * 11));
+    font-size: max(10px, calc(var(--u) * 11));
     line-height: calc(var(--u) * 16);
     gap: 0 calc(var(--u) * 8);
     text-align: left;
