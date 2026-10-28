@@ -66,7 +66,8 @@ export const LEADERBOARD_PREVIEW_TEAMS = import.meta.env.DEV ? PREVIEW_NAMES.sli
 function buildPreviewBreakdown(teamScore, index) {
   const signatureScore = 300 * (1 + index % 4);
   const kothScore = 150 * (index % 4);
-  const jeopardyScore = teamScore - signatureScore - kothScore;
+  const lineScore = 225 * (index % 3);
+  const jeopardyScore = teamScore - signatureScore - kothScore - lineScore;
   const weights = Array.from({ length: 8 }, (_, category) => 1 + (index + category) % 5);
   const weightSum = weights.reduce((sum, value) => sum + value, 0);
   let allocated = 0;
@@ -75,7 +76,7 @@ function buildPreviewBreakdown(teamScore, index) {
     allocated += score;
     return score;
   });
-  return { categoryScores, kothScore, signatureScore };
+  return { categoryScores, kothScore, signatureScore, lineScore };
 }
 
 export const RANKING_PREVIEW_ROWS = import.meta.env.DEV ? PREVIEW_SCORES.map((teamScore, index) => ({

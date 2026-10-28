@@ -14,6 +14,7 @@ test("CLUB은 SIGNATURE 지급 점수 합계를 표시하며 총점에 다시 �
   const [row] = mergeSolveCounts(rankings, teams, true);
   assert.equal(row.signatureScore, 425);
   assert.equal(row.kothScore, 200);
+  assert.equal(row.lineScore, 0);
   assert.equal(row.teamScore, 825);
   assert.equal(row.solveCount, 3);
 });
@@ -23,13 +24,16 @@ test("상위 8팀 밖이거나 조회 총점이 다르면 부스 점수를 0으�
     { team_id: "b", rank: 9, team_score: 100 },
     { team_id: "a", rank: 1, team_score: 900 },
   ] });
-  assert.deepEqual(mergeSolveCounts(rankings, teams, true).map((row) => row.signatureScore), [null, null]);
+  const rows = mergeSolveCounts(rankings, teams, true);
+  assert.deepEqual(rows.map((row) => row.signatureScore), [null, null]);
+  assert.deepEqual(rows.map((row) => row.lineScore), [null, null]);
 });
 test("백엔드가 별도 점수를 제공하면 상위 8팀 밖에서도 그 값을 보존한다", () => {
-  const rankings = adaptRankingRows({ rankings: [{ team_id: "b", rank: 9, team_score: 450, signature_score: 300, koth_score: 50 }] });
+  const rankings = adaptRankingRows({ rankings: [{ team_id: "b", rank: 9, team_score: 450, signature_score: 300, koth_score: 50, line_score: 100 }] });
   const [row] = mergeSolveCounts(rankings, [], true);
   assert.equal(row.signatureScore, 300);
   assert.equal(row.kothScore, 50);
+  assert.equal(row.lineScore, 100);
 });
 test("기록을 온전히 받은 팀의 CLUB 0점과 기록 미제공은 구분한다", () => {
   const teams = adaptLeaderboardTeams({ teams: [
@@ -79,6 +83,7 @@ test("라인 보너스는 총점과 그래프에 포함하고 실제 풀이 수�
   assert.equal(row.teamScore, 1050);
   assert.equal(row.signatureScore, 425);
   assert.equal(row.kothScore, 200);
+  assert.equal(row.lineScore, 225);
   assert.equal(buildScoreSeries(teams).series[0].finalScore, 1050);
 });
 
@@ -105,6 +110,7 @@ test("0점이나 소수 라인 보너스도 풀이 수와 부스 점수를 바�
     const [row] = mergeSolveCounts(adaptRankingRows({ rankings: [team] }), teams, true);
     assert.equal(row.solveCount, 3);
     assert.equal(row.signatureScore, 425);
+    assert.equal(row.lineScore, points);
     assert.equal(buildScoreSeries(teams).series[0].finalScore, team.team_score);
   }
 });
@@ -121,6 +127,7 @@ test("알 수 없는 점수 유형이나 깨진 LINE 기록은 풀이 수를 추
     assert.equal(teams[0].solvesComplete, false);
     assert.equal(row.solveCount, null);
     assert.equal(row.signatureScore, null);
+    assert.equal(row.lineScore, null);
   }
 });
 
