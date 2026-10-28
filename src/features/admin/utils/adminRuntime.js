@@ -136,6 +136,19 @@ export function repositoryEnvStatus(release) {
   return { revision: String(record.revision ?? "").slice(0, 7), files: record.files ?? [], missing, blocked: missing.length > 0 };
 }
 
+// 승인은 '사용 중'과 별개다 approved_at 필드가 아예 없으면 백엔드 미배포로 보고 미지원으로 구분한다
+export function describeApproval(release) {
+  if (!release || !("approved_at" in release)) return { state: "unsupported", approvedAt: null };
+  return release.approved_at ? { state: "approved", approvedAt: release.approved_at } : { state: "unapproved", approvedAt: null };
+}
+
+// 승인 실패는 백엔드 code와 message를 함께 보여준다
+export function approvalErrorMessage(error) {
+  const body = error?.response?.data;
+  const message = body?.message || error?.message || "승인하지 못했습니다";
+  return body?.code ? `${message} (${body.code})` : message;
+}
+
 export function describeRelease(release, releases = []) {
   const origin = releaseOrigin(release);
   const base = release?.derived_from_release_id ? releases.find((item) => item.release_id === release.derived_from_release_id) : null;

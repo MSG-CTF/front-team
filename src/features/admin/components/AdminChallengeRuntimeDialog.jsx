@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, importChallengeRepositoryEnvironment, registerChallengeRelease, registerChallengeRuntimeSecret, configureChallengeReleaseFiles } from "../../../api/admin.js";
+import { activateChallengeRelease, approveChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, importChallengeRepositoryEnvironment, registerChallengeRelease, registerChallengeRuntimeSecret, configureChallengeReleaseFiles } from "../../../api/admin.js";
 import AdminReleaseFilesEditor from "./AdminReleaseFilesEditor.jsx";
 import AdminDeploymentTestPanel from "./AdminDeploymentTestPanel.jsx";
 import AdminImagePreparationPanel from "./AdminImagePreparationPanel.jsx";
@@ -9,7 +9,7 @@ import { isSuccess } from "../../../utils/response.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import { RECENT_LIMIT, latestFirst } from "../utils/adminLists.js";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { buildDerivedSettings, describeRelease, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, repositoryEnvStatus, unboundEnvironmentRules, validateRuntimeSecret, validateReleaseActivationReason } from "../utils/adminRuntime.js";
+import { approvalErrorMessage, buildDerivedSettings, describeApproval, describeRelease, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, repositoryEnvStatus, unboundEnvironmentRules, validateRuntimeSecret, validateReleaseActivationReason } from "../utils/adminRuntime.js";
 import AdminDialog from "./AdminDialog.jsx";
 import AdminEnvironmentFileImporter from "./AdminEnvironmentFileImporter.jsx";
 import AdminRepositoryEnvironmentImporter from "./AdminRepositoryEnvironmentImporter.jsx";
@@ -24,6 +24,15 @@ import { AdminReasonField } from "./AdminFormParts.jsx";
 const BUTTON = styles.button;
 const INPUT = styles.input;
 const MONO_INPUT = `${styles.input} ${styles.inputMono}`;
+
+// '승인됨'은 '사용 중'과 별개이며 이미지 준비나 Runtime 정책 승인을 뜻하지 않는다
+function ApprovalBadge({ release }) {
+  const approval = describeApproval(release);
+  if (approval.state === "approved") {
+    return <AdminBadge tone="blue">승인됨</AdminBadge>;
+  }
+  return <AdminBadge tone="neutral">{approval.state === "unsupported" ? "승인 미지원" : "미승인"}</AdminBadge>;
+}
 
 function UnboundEnvironmentRows({ container, release }) {
   return unboundEnvironmentRules(container, release.repository_env?.missing).map((row) => <tr key={row.name}>
@@ -133,6 +142,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const isRollback = Boolean(currentRelease && selected && selected.version < currentRelease.version);
   const activationReasonError = validateReleaseActivationReason(activationReason);
   const selectedInfo = selected ? describeRelease(selected, releases) : null;
+  const selectedApproval = describeApproval(selected);
   const newerGithub = currentRelease ? describeRelease(currentRelease, releases).newerGithub : null;
   const repoEnv = repositoryEnvStatus(selected);
   const newerEnv = repositoryEnvStatus(newerGithub);
@@ -153,7 +163,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const requirements = upload ? releaseRequirements(upload.artifact, runtime.data?.secrets ?? []) : null;
   const slugMismatch = Boolean(upload && challenge.challenge_slug && upload.artifact.challenge_slug !== challenge.challenge_slug);
 
-  async function mutate(action, success) {
+  async function mutate(action, success, formatError) {
     if (pending.current) return;
     pending.current = true;
     setBusy(true);
@@ -168,7 +178,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       await onChanged?.();
       return response.data.data ?? true;
     } catch (requestError) {
-      setError(requestError?.response?.data?.message || requestError.message || "요청을 처리하지 못했습니다");
+      setError(formatError ? formatError(requestError) : requestError?.response?.data?.message || requestError.message || "요청을 처리하지 못했습니다");
       return false;
     } finally { pending.current = false; setBusy(false); }
   }
@@ -182,6 +192,16 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       isRollback ? "이전 버전으로 되돌렸습니다" : "새 인스턴스에 적용할 설정을 변경했습니다",
     );
     if (saved) setActivationReason("");
+  }
+
+  // 승인만 기록한다 실패해도 /activate로 대신 호출하지 않고, 성공하면 목록을 다시 조회해 승인 시각을 갱신한다
+  async function approveRelease() {
+    if (busy || pending.current || !selected || selectedApproval.state !== "unapproved") return;
+    await mutate(
+      () => approveChallengeRelease(challenge.challenge_id, selected.release_id),
+      "승인 완료, 현재 적용 버전은 변경되지 않음",
+      approvalErrorMessage,
+    );
   }
 
   async function saveSecret(event) {
@@ -256,9 +276,12 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
               <AdminBadge tone={selected.is_current ? "good" : "neutral"}>{selected.is_current ? "새 인스턴스에 적용 중" : "아직 적용 전"}</AdminBadge>
               <AdminBadge tone={selectedInfo.tone}>{selectedInfo.label}{selectedInfo.baseVersion ? ` · v${selectedInfo.baseVersion} 기반` : ""}</AdminBadge>
               {selectedInfo.isLatestGithub && <AdminBadge tone="orange">GitHub 최신</AdminBadge>}
+              <ApprovalBadge release={selected} />
             </div>
             <p className={styles.versionMeta}>{[selected.created_at && `등록 ${formatAdminTime(selected.created_at, { seconds: false })}`,
-              selected.registry_revision > 0 && `발행 #${selected.registry_revision}`, selected.runtime_type, selected.architecture].filter(Boolean).map((part) => <span key={part}>{part}</span>)}</p>
+              selected.registry_revision > 0 && `발행 #${selected.registry_revision}`, selected.runtime_type, selected.architecture].filter(Boolean).map((part) => <span key={part}>{part}</span>)}
+              {selectedApproval.state === "approved" && <span aria-label="승인 시각">승인 <time dateTime={selectedApproval.approvedAt}>{formatAdminTime(selectedApproval.approvedAt, { seconds: false })}</time></span>}
+            </p>
           </> : <>
             <div className={styles.versionTitle}><h3>{challenge.remote_run ? "원격 실행 문제" : "실행 이미지 없음"}</h3></div>
             <p>{challenge.remote_run
@@ -272,6 +295,9 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
             {versionRows.map((release) => <option key={release.release_id} value={release.release_id}>버전 {release.version} · {describeRelease(release, releases).label} · {formatAdminTime(release.created_at, { seconds: false })}{release.is_current ? " · 사용 중" : ""}</option>)}
           </select>}
           <IconButton icon="refresh" label="새로고침" onClick={runtime.retry} disabled={busy || loading} />
+          {selected && selectedApproval.state !== "approved" && <button type="button" className={BUTTON} disabled={busy || loading || selectedApproval.state === "unsupported"}
+            title={selectedApproval.state === "unsupported" ? "서버가 아직 승인 기능을 지원하지 않습니다" : "버전을 적용하지 않고 승인만 기록합니다"}
+            onClick={approveRelease}>{busy ? "처리 중…" : "승인만"}</button>}
           {selected && !selected.is_current && <button type="button" className={styles.primary}
             disabled={busy || !selected.is_deployable || loading || repoEnv?.blocked || selected.containers.some((container) => container.secret_bindings?.some((binding) => binding.status === "missing"))}
             onClick={() => { setActivationReason(""); setError(""); setConfirming(true); }}>이 버전 사용</button>}
@@ -332,6 +358,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
                       <AdminBadge tone={info.tone}>{info.label}{info.baseVersion ? ` · v${info.baseVersion} 기반` : ""}</AdminBadge>
                       {info.isLatestGithub && <AdminBadge tone="orange">GitHub 최신</AdminBadge>}
                       {release.is_current && <AdminBadge tone="good">사용 중</AdminBadge>}
+                      <ApprovalBadge release={release} />
                     </span>
                     <span className={styles.versionRowNote}>{release.note || "메모 없음"}</span>
                   </span>

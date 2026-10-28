@@ -139,3 +139,13 @@ test("저장소 env 로 채운 버전은 반영 커밋과 파일을 보이고 �
   assert.equal(blocked.blocked, true);
   assert.deepEqual(blocked.missing.map((item) => item.label), ["web · FLAG 채점 플래그와 다름", "api env/api.env:3 환경변수 형식을 확인해주세요"]);
 });
+
+test("승인 상태는 사용 중과 별개로 approved_at만 보고 필드가 없으면 미지원이다", async () => {
+  const { describeApproval, approvalErrorMessage } = await import("./adminRuntime.js");
+  assert.deepEqual(describeApproval({ is_current: true, approved_at: null }), { state: "unapproved", approvedAt: null });
+  assert.deepEqual(describeApproval({ is_current: false, approved_at: "2026-10-28T01:00:00Z" }), { state: "approved", approvedAt: "2026-10-28T01:00:00Z" });
+  assert.equal(describeApproval({ is_current: true }).state, "unsupported");
+  assert.equal(describeApproval(undefined).state, "unsupported");
+  assert.equal(approvalErrorMessage({ response: { data: { code: "RELEASE_NOT_DEPLOYABLE", message: "배포할 수 없는 버전입니다" } } }), "배포할 수 없는 버전입니다 (RELEASE_NOT_DEPLOYABLE)");
+  assert.equal(approvalErrorMessage(new Error("네트워크 오류")), "네트워크 오류");
+});

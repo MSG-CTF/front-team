@@ -685,6 +685,10 @@
   .overlay { align-items: flex-end; padding: 8px 8px 0; }
   .dialog { max-height: calc(100% - 8px); border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
   .dialogHeader { padding: 14px 14px 12px 18px; }
+  .dialogHeader { flex-wrap: wrap; gap: 8px; }
+  .dialogHeading { flex-basis: calc(100% - 38px); }
+  .dialogHeader > .badge, .dialogHeader > .headerLink { order: 2; }
+  .dialogHeader > .closeButton { order: 1; }
   .dialogHeader h2 { font-size: 17px; }
   .dialogBody { padding: 16px 18px 22px; }
   .readinessCounts { grid-template-columns: 1fr; }
@@ -913,11 +917,15 @@ dl.group dd.mono { font-size: 12.5px; }
   .sideTabs button { flex: 0 0 auto; width: auto; min-height: 34px; padding: 0 12px 0 5px; }
   .sideTabs button > [aria-hidden="true"] { --size: 20px; }
   .groupColumns { grid-template-columns: minmax(0, 1fr); }
+  .versionHero { flex-wrap: wrap; align-items: flex-start; }
+  .versionText { flex-basis: 10rem; }
+  .versionTitle .badge { max-width: 100%; height: auto; min-height: 22px; white-space: normal; word-break: keep-all; }
+  .versionTools { width: 100%; min-width: 0; flex-wrap: wrap; }
+  .versionTools .versionSelect { flex: 1 1 calc(100% - 40px); width: 0; min-width: 0; max-width: none; }
+  .versionTools > button { flex: 1 1 7rem; min-width: 0; word-break: keep-all; }
+  .versionTools > button[aria-label="새로고침"] { flex: 0 0 32px; }
 }
 @container deploy (max-width: 560px) {
-  .versionHero { flex-wrap: wrap; }
-  .versionTools { width: 100%; }
-  .versionTools .versionSelect { flex: 1; min-width: 0; max-width: none; }
   .secretForm { grid-template-columns: minmax(0, 1fr); }
   .secretTime { display: none; }
   .groupRowBody { padding-left: 14px; }
@@ -925,12 +933,16 @@ dl.group dd.mono { font-size: 12.5px; }
 
 /* ───────── 배포 설정 2: 한 화면 배치와 환경변수 방법 카드 ───────── */
 .dialog.dialogFixed { height: min(900px, 100%); }
+@media (max-height: 480px) {
+  .dialog.dialogFixed { overflow-y: auto; }
+  .dialogFixed .dialogBody { flex-shrink: 0; overflow: visible; }
+}
 .headerLink { display: inline-flex; flex-shrink: 0; align-items: center; height: 28px; padding: 0 12px; border-radius: 14px; background: var(--fill); color: var(--label); font: 600 12.5px/1 var(--font); text-decoration: none; white-space: nowrap; transition: background-color 0.12s ease; }
 .headerLink:hover { background: var(--fill-hover); }
 .versionText { overflow: hidden; }
 .versionText .versionMeta { display: flex; flex-wrap: wrap; margin-left: -14px; }
-.versionMeta > span { white-space: nowrap; }
-.versionMeta > span::before { content: "·"; display: inline-block; width: 14px; color: var(--label-4); text-align: center; }
+.versionMeta > span { position: relative; max-width: 100%; padding-left: 14px; white-space: normal; overflow-wrap: anywhere; }
+.versionMeta > span::before { position: absolute; left: 0; content: "·"; display: inline-block; width: 14px; color: var(--label-4); text-align: center; }
 .panel > .groupColumns:first-child .groupTitle,
 .panel > .callout + .groupColumns .groupTitle { margin-top: 18px; }
 .panel > .groupColumns:first-child > div > .groupTitle:first-child,
