@@ -25,6 +25,12 @@ export function cameraErrorMessage(error) {
   }
 }
 
+// 노트북 웹캠은 초점이 고정이라 폰을 멀리 들게 되고 화면 속 QR이 작다
+// 프레임마다 번갈아 전체 화면은 1280px까지만 줄여 읽고, 가운데 정사각형은 원래 해상도로 읽는다
+// 작은 QR은 줄이면 칸이 뭉개지고, 흐린 화면을 키우면 오히려 덜 읽혀서 둘 다 피한다
+const FULL_FRAME_MAX = 1280;
+const CENTER_FRAME_MAX = 1080;
+
 function browserEnvironment() {
   return {
     secure: globalThis.isSecureContext,
@@ -47,6 +53,7 @@ export function startPaymentQrScanner(
   let decoder;
   let canvas;
   let context;
+  let readCenter = false;
   const endListeners = [];
 
   function stop() {
@@ -73,18 +80,40 @@ export function startPaymentQrScanner(
     onError(cameraErrorMessage(error));
   }
 
+  function captureFrame() {
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    if (readCenter) {
+      const side = Math.min(width, height);
+      const size = Math.min(side, CENTER_FRAME_MAX);
+      canvas.width = size;
+      canvas.height = size;
+      context.drawImage(
+        video,
+        (width - side) / 2,
+        (height - side) / 2,
+        side,
+        side,
+        0,
+        0,
+        size,
+        size,
+      );
+    } else {
+      const scale = Math.min(1, FULL_FRAME_MAX / Math.max(width, height));
+      canvas.width = Math.max(1, Math.round(width * scale));
+      canvas.height = Math.max(1, Math.round(height * scale));
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    }
+    readCenter = !readCenter;
+    return context.getImageData(0, 0, canvas.width, canvas.height);
+  }
+
   function scan() {
     if (stopped) return;
     try {
       if (video.readyState >= 2 && video.videoWidth && video.videoHeight) {
-        const scale = Math.min(
-          1,
-          800 / Math.max(video.videoWidth, video.videoHeight),
-        );
-        canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
-        canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
-        context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const frame = context.getImageData(0, 0, canvas.width, canvas.height);
+        const frame = captureFrame();
         const result = decoder(frame.data, frame.width, frame.height, {
           inversionAttempts: "dontInvert",
         });
@@ -115,8 +144,8 @@ export function startPaymentQrScanner(
         audio: false,
         video: {
           facingMode: { ideal: facingMode },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
         },
       });
       // 권한 창이 열린 사이 닫혔으면 늦게 받은 스트림도 즉시 해제한다
