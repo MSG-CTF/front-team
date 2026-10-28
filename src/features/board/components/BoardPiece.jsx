@@ -2,7 +2,7 @@ import { memo, useRef } from "react";
 import { getBoardCellPosition } from "../utils/boardData.js";
 import styles from "./BoardScreen.module.css";
 
-export default memo(function BoardPiece({ position, transitionMs, perchLift = 0 }) {
+export default memo(function BoardPiece({ position, transitionMs }) {
   const previousPosition = useRef(position);
   const hopCount = useRef(0);
   if (position != null && previousPosition.current !== position) hopCount.current += 1;
@@ -16,7 +16,7 @@ export default memo(function BoardPiece({ position, transitionMs, perchLift = 0 
     alt={`내 팀 말 (현재 ${position}번 칸)`}
     data-board-piece={position}
     draggable={false}
-    style={{ left: `${coordinates.x}%`, top: perchLift ? `calc(${coordinates.y}% - ${perchLift / 1330 * 100}%)` : `${coordinates.y}%`, "--piece-transition": transitionMs == null ? undefined : `${transitionMs}ms` }}
+    style={{ left: `${coordinates.x}%`, top: `${coordinates.y}%`, "--piece-transition": transitionMs == null ? undefined : `${transitionMs}ms` }}
     className={`${styles.boardPiece} ${hopClass}`}
   />;
 });
