@@ -96,7 +96,7 @@ function RemoteRunSettings({ challengeId, saved, onSaved, onBusyChange }) {
           <AdminSwitch checked={draft.enabled} onChange={(value) => change("enabled", value)} label="원격 실행 접수" disabled={busy || (!saved?.can_enable && !draft.enabled)}/>
         </div>
       </div>
-      <p className={styles.helpText}>총 실행 횟수는 제한하지 않습니다 같은 팀의 요청 간격을 확인하고, 이전 실행의 정리가 끝나야 새 실행을 받습니다</p>
+      <p className={styles.helpText}>총 실행 횟수는 제한하지 않습니다 실행이 끝나고 요청 간격이 지나면 준비된 다른 VM에서 다시 실행할 수 있습니다 실행 여부가 불확실하면 확인이 끝날 때까지 기다려주세요</p>
       {invalid && <p role="alert" className={styles.errorNotice}>{invalid}</p>}
       {error && <p role="alert" className={styles.errorNotice}>{error}</p>}
       <div className={styles.basicFooter}>

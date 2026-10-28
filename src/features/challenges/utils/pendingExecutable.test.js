@@ -44,6 +44,17 @@ test("cleanup and uncertain starts continue to block another execution after a t
   assert.equal(isActiveRun(mapRemoteRun({ submission_id: "job", status: "COMPLETED", release_pending: false })), false);
 });
 
+test("confirmed pool results permit the next execution while VM cleanup continues", () => {
+  const completed = { submission_id: "job", status: "CLEANUP_PENDING", release_pending: true,
+    finished_at: "2026-10-28T06:30:16Z", requires_review: false };
+  for (const execution_status of ["COMPLETED", "CRASH", "TIMEOUT", "INFRA_ERROR"])
+    assert.equal(isActiveRun(mapRemoteRun({ ...completed, execution_status })), false);
+  for (const change of [{ requires_review: true }, { requires_review: undefined }, { finished_at: null },
+    { finished_at: "invalid" }, { status: "START_UNKNOWN" }, { status: "RUNNING" },
+    { execution_status: "RUNNING" }, { execution_status: undefined }])
+    assert.equal(isActiveRun(mapRemoteRun({ ...completed, execution_status: "COMPLETED", ...change })), true);
+});
+
 test("real backend output uses submission_id and distinguishes absent output from an empty stream", () => {
   const missing = mapRemoteRun({ submission_id: "job", status: "TIMEOUT", output: null });
   const empty = mapRemoteRun({ submission_id: "job", status: "COMPLETED", output: { stdout: "", stderr: "" } });
