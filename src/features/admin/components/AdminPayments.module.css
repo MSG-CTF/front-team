@@ -685,10 +685,11 @@
 .cameraPreview[hidden] {
   display: none;
 }
+/* 가운데 정사각형만 크게 보여 줘서 스캐너가 키워 읽는 영역에 QR을 맞추게 한다 */
 .cameraPreview video {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 .viewfinder {
   position: absolute;
