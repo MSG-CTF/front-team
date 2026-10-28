@@ -23,6 +23,7 @@ import styles from "../components/AdminWorkspace.module.css";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
 import { remoteRunSummary } from "../utils/adminRemoteRun.js";
 import useAdminResource from "../hooks/useAdminResource.js";
+import AdminPublicationRequestsPanel from "../components/AdminPublicationRequestsPanel.jsx";
 
 const BUTTON = styles.button;
 const SELECT = styles.select;
@@ -133,10 +134,11 @@ export default function AdminChallengesPage() {
   // 대시보드 지표에서 ?tab=instances&status=FAILED 로 바로 들어온다
   const [params] = useSearchParams();
   const initialStatus = Object.values(INSTANCE_STATUS).includes(params.get("status")) ? params.get("status") : "";
-  const [tab, setTab] = useState(params.get("tab") === "instances" ? "instances" : "challenges");
+  const [tab, setTab] = useState(["instances", "publications"].includes(params.get("tab")) ? params.get("tab") : "challenges");
   const [creating, setCreating] = useState(false);
   const [importing, setImporting] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [deletedIds, setDeletedIds] = useState(() => new Set());
   const [page, setPage] = useState(1);
   const [category, setCategory] = useState("");
   const [sort, setSort] = useState("running");
@@ -163,9 +165,9 @@ export default function AdminChallengesPage() {
   }
   return <AdminLayout title="문제 · 인스턴스">
     <AdminTabs idPrefix="challenge-management" label="문제 관리 메뉴" value={tab} onChange={setTab} disabled={busy}
-      items={[{ id: "challenges", label: "문제 목록" }, { id: "instances", label: "인스턴스" }]}/>
+      items={[{ id: "challenges", label: "문제 목록" }, { id: "instances", label: "인스턴스" }, { id: "publications", label: "발행 요청" }]}/>
     <section role="tabpanel" id="challenge-management-panel-challenges" aria-labelledby="challenge-management-tab-challenges" hidden={tab !== "challenges"} className={styles.panel}>
-    <AdminBoardReadiness revision={challenges.data}/>
+    {tab === "challenges" && <AdminBoardReadiness revision={challenges.data}/>}
     <div className={styles.toolbar}>
       <label>분야 <select value={category} className={SELECT} onChange={(event) => { setCategory(event.target.value); setPage(1); }}>
         <option value="">전체</option>{ADMIN_CHALLENGE_CATEGORIES.map((value) => <option key={value}>{value}</option>)}
@@ -183,7 +185,7 @@ export default function AdminChallengesPage() {
     {notice && <p role="status" className={styles.callout}>{notice}</p>}
     {challenges.data && <div className={`${styles.tableWrap} ${styles.challengeStack}`}>
       <table className={styles.table} aria-label="문제 목록"><thead><tr>{["문제", "배점 · 풀이", "인스턴스", "공개 상태", "배포 상태", "관리"].map((text) => <th key={text}>{text}</th>)}</tr></thead>
-        <tbody>{(challenges.data?.challenges ?? []).map((challenge) => <tr key={challenge.challenge_id}>
+        <tbody>{(challenges.data?.challenges ?? []).filter(challenge => !deletedIds.has(challenge.challenge_id)).map((challenge) => <tr key={challenge.challenge_id}>
           <td><span className={styles.title}>{challenge.title}</span><span className={styles.secondary}>{challenge.category} · {challenge.difficulty === "UNASSIGNED" ? "난이도 미정" : challenge.difficulty}</span></td>
           <td>{formatAdminNumber(challenge.score)}점<button type="button" className={styles.solveCountLink} disabled={busy}
             aria-label={`${challenge.title} 풀이 기록 ${challenge.solved_team_count}팀`}
@@ -204,6 +206,9 @@ export default function AdminChallengesPage() {
     </section>
     <section role="tabpanel" id="challenge-management-panel-instances" aria-labelledby="challenge-management-tab-instances" hidden={tab !== "instances"} className={styles.panel}>
       {tab === "instances" && <InstancesSection initialStatus={initialStatus}/>}
+    </section>
+    <section role="tabpanel" id="challenge-management-panel-publications" aria-labelledby="challenge-management-tab-publications" hidden={tab !== "publications"} className={styles.panel}>
+      {tab === "publications" && <AdminPublicationRequestsPanel />}
     </section>
     {selected && <AdminDialog title={selected.is_published ? "비공개로 전환" : "공개로 전환"} onClose={() => setSelected(null)} busy={busy}>
       <p className={styles.dialogLead}><strong>{selected.title}</strong> {selected.is_published
@@ -235,6 +240,6 @@ export default function AdminChallengesPage() {
         setEditing({ challenge, section: challenge.release_id ? "deployment" : "problem", releaseId: challenge.release_id });
       }}/>}
     {editing && <AdminChallengeManageDialog key={editing.challenge.challenge_id} challenge={editing.challenge} initialSection={editing.section} initialReleaseId={editing.releaseId}
-      onClose={() => setEditing(null)} onChanged={challenges.reload}/>}
+      onClose={() => setEditing(null)} onChanged={challenges.reload} onDeleted={async id => { setDeletedIds(ids => new Set([...ids, id])); setEditing(null); setNotice("문제 초안을 삭제했습니다"); if (!await challenges.reload()) setNotice("삭제는 완료됐지만 최신 목록을 조회하지 못했습니다 다시 조회해주세요"); }}/>}
   </AdminLayout>;
 }

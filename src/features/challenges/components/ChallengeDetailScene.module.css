@@ -2514,7 +2514,11 @@
 @container challenge-page (max-width: 260px) {
   .board { padding: 4px; border-width: 6px; }
   .header, .descriptionPanel, .instancePanel, .runPanel, .flagPanel { padding: 12px 8px; }
-  .controls, .sectionNav, .sectionNav:not(:has(> :nth-child(3))) { grid-template-columns: minmax(0, 1fr); }
+  .controls, .runControls, .sectionNav, .sectionNav:not(:has(> :nth-child(3))) { grid-template-columns: minmax(0, 1fr); }
   .submitButton { padding-inline: 0; font-size: 16px; letter-spacing: 0.06em; }
   .pill { min-width: 0; max-width: 100%; min-height: 32px; height: auto; padding-inline: 10px; font-size: 14px; white-space: normal; }
+}
+
+@media (max-width: 1100px), (max-height: 619px) {
+  .runPlaque { min-width: 0; border-inline-width: 12px; border-image-width: 0 12px; letter-spacing: 0.06em; }
 }

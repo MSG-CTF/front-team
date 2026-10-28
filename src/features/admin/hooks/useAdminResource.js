@@ -12,10 +12,10 @@ export default function useAdminResource(fetcher, deps, fallbackMessage) {
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (options) => {
     if (!active.current) return false;
     const request = guard.current.begin();
-    setState((current) => ({ ...current, status: "loading", error: "" }));
+    setState((current) => options?.quiet && current.data ? current : ({ ...current, status: "loading", error: "" }));
     let timer;
     let abortHandler;
     try {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { activateChallengeRelease, approveChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, importChallengeRepositoryEnvironment, registerChallengeRelease, registerChallengeRuntimeSecret, configureChallengeReleaseFiles } from "../../../api/admin.js";
 import AdminReleaseFilesEditor from "./AdminReleaseFilesEditor.jsx";
 import AdminDeploymentTestPanel from "./AdminDeploymentTestPanel.jsx";
@@ -135,6 +136,11 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
     }
   }, [panel]);
   const runtime = useAdminResource((config) => loadRuntime(challenge.challenge_id, config), [challenge.challenge_id], "실행 설정을 불러오지 못했습니다");
+  const activation = runtime.data?.activation;
+  useEffect(() => {
+    if (!active || activation?.status !== "PENDING") return;
+    return startVisiblePolling(() => { if (!pending.current) return runtime.reload({ quiet: true }); }, { intervalMs: 4000, immediate: false });
+  }, [active, activation?.status, runtime.reload]);
   useEffect(() => () => { fileSequence.current += 1; }, []);
   const releases = orderReleasesByPublication(runtime.data?.releases ?? []);
   const selected = releases.find((release) => release.release_id === releaseId) ?? releases.find((release) => release.is_current) ?? releases[0];
@@ -155,7 +161,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const shownVersions = versionRows.slice((shownVersionPage - 1) * VERSION_PAGE, shownVersionPage * VERSION_PAGE);
   const pickRelease = (id) => { setReleaseId(id); setVersionPage(null); setConfirming(false); setActivationReason(""); setShowFlagBindings(false); setEnvironmentMethod(null); };
   const validationError = validateRuntimeSecret(name.trim(), value);
-  const loading = runtime.status === "loading";
+  const loading = runtime.status !== "success";
   const storedSecrets = runtime.data?.secrets ?? [];
   const visibleSecrets = showSecretHistory ? storedSecrets : storedSecrets.filter((secret) => secret.is_latest);
   // 이전 버전까지 펼치면 저장할 때마다 줄이 늘어나므로 최근 20개만 보이고 나머지는 단추로 펼친다
@@ -174,7 +180,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       if (!isSuccess(response.data)) throw new Error(response.data?.message || "요청을 처리하지 못했습니다");
       setConfirming(false);
       const refreshed = await runtime.reload();
-      setNotice(refreshed ? success : "저장은 처리됐지만 최신 상태를 조회하지 못했습니다");
+      setNotice(refreshed ? (typeof success === "function" ? success(response.data.data) : success) : "저장은 처리됐지만 최신 상태를 조회하지 못했습니다");
       await onChanged?.();
       return response.data.data ?? true;
     } catch (requestError) {
@@ -189,7 +195,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
     const reason = activationReason.trim();
     const saved = await mutate(
       () => activateChallengeRelease(challenge.challenge_id, selected.release_id, reason ? { reason } : {}),
-      isRollback ? "이전 버전으로 되돌렸습니다" : "새 인스턴스에 적용할 설정을 변경했습니다",
+      data => data?.activation_status === "PENDING" ? "버전 적용을 예약했습니다 아래에서 이미지 준비와 적용 상태를 확인해주세요" : isRollback ? "이전 버전으로 되돌렸습니다" : "새 인스턴스에 적용할 설정을 변경했습니다",
     );
     if (saved) setActivationReason("");
   }
@@ -266,7 +272,13 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
     <AdminStatusMessage status={runtime.status} error={runtime.error} onRetry={runtime.retry}/>
     {error && <p role="alert" className={styles.callout} data-tone="bad">{error}</p>}
     {notice && <p role="status" className={styles.notice}>{notice}</p>}
-    {runtime.status === "success" && <>
+    {activation && <div role="status" className={styles.callout} data-tone={activation.status === "FAILED" ? "bad" : undefined}>
+      {activation.status === "PENDING" ? "이미지 준비 후 버전 적용을 기다리고 있습니다 현재 사용 중인 버전은 준비가 끝날 때까지 유지됩니다" :
+        activation.status === "FAILED" ? "버전 적용에 실패했습니다 이미지 준비에서 실패한 노드와 오류를 확인해주세요" :
+        activation.status === "SUPERSEDED" ? "이 적용 예약은 다른 버전 요청으로 대체됐습니다" : activation.status === "ACTIVATED" ? "버전 적용이 완료됐습니다 현재 사용 중인 버전을 확인해주세요" : "적용 상태를 확인하지 못했습니다 새로고침해주세요"}
+      <span className={styles.secondary} style={{ overflowWrap: "anywhere" }}>요청 {activation.request_id}</span>
+    </div>}
+    {runtime.data && <>
       <section className={styles.versionHero} aria-label="배포 버전">
         <AppIcon name="version" tone={selected?.is_current ? "blue" : "gray"} size={42} />
         <div className={styles.versionText}>

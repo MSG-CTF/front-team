@@ -10,8 +10,10 @@ import AdminRemoteRunPanel from "./AdminRemoteRunPanel.jsx";
 import { AdminBadge } from "./AdminLayout.jsx";
 import { Glyph } from "./AdminGlyph.jsx";
 import styles from "./AdminWorkspace.module.css";
+import { deleteAdminChallenge } from "../../../api/admin.js";
+import AdminActionDialog from "./AdminActionDialog.jsx";
 
-export default function AdminChallengeManageDialog({ challenge, initialSection = "problem", initialReleaseId, onClose, onChanged }) {
+export default function AdminChallengeManageDialog({ challenge, initialSection = "problem", initialReleaseId, onClose, onChanged, onDeleted }) {
   const [section, setSection] = useState(initialSection);
   const [opened, setOpened] = useState(() => new Set([initialSection]));
   const [title, setTitle] = useState(challenge.title);
@@ -19,11 +21,13 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
   const [deploymentBusy, setDeploymentBusy] = useState(false);
   const [remoteBusy, setRemoteBusy] = useState(false);
   const [submissionBusy, setSubmissionBusy] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
   // 실행 파일을 내서 검증 VM에서 돌리는 문제는 원격 실행 탭에서 설정과 실행 기록을 본다
   const remote = Boolean(challenge.remote_run);
   // 기본 정보의 파일 카드에서 배포 설정의 참가자 파일 칸으로 바로 넘긴다
   const [deploymentFocus, setDeploymentFocus] = useState(null);
-  const busy = problemBusy || deploymentBusy || remoteBusy || submissionBusy;
+  const busy = problemBusy || deploymentBusy || remoteBusy || submissionBusy || deleteBusy;
 
   function selectSection(next) {
     if (busy) return;
@@ -54,6 +58,7 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
     <section role="tabpanel" id="challenge-workspace-panel-problem" aria-labelledby="challenge-workspace-tab-problem" hidden={section !== "problem"} className={styles.panel}>
       {opened.has("problem") && <AdminChallengeSettingsDialog challenge={challenge} embedded active={section === "problem"}
         onBusyChange={setProblemBusy} onSaved={savedProblem} onOpenFiles={() => { setDeploymentFocus({ panel: "files", at: Date.now() }); selectSection("deployment"); }}/>}
+      {!challenge.is_published && <div className={styles.formActions}><button type="button" className={`${styles.button} ${styles.danger}`} disabled={busy} onClick={() => setDeleting(true)}>비공개 초안 삭제</button></div>}
     </section>
     <section role="tabpanel" id="challenge-workspace-panel-deployment" aria-labelledby="challenge-workspace-tab-deployment" hidden={section !== "deployment"} className={styles.panel}>
       {opened.has("deployment") && <AdminChallengeRuntimeDialog challenge={challenge} initialReleaseId={initialReleaseId} embedded active={section === "deployment"}
@@ -68,5 +73,10 @@ export default function AdminChallengeManageDialog({ challenge, initialSection =
     <section role="tabpanel" id="challenge-workspace-panel-submissions" aria-labelledby="challenge-workspace-tab-submissions" hidden={section !== "submissions"} className={styles.panel}>
       {opened.has("submissions") && <AdminChallengeSubmissionsPanel key={challenge.challenge_id} challengeId={challenge.challenge_id} challengeTitle={title} onBusyChange={setSubmissionBusy}/>}
     </section>
+    {deleting && <AdminActionDialog title="문제 초안 삭제" confirmLabel="삭제 확정" danger onBusyChange={setDeleteBusy}
+      onClose={() => setDeleting(false)} action={() => deleteAdminChallenge(challenge.challenge_id)}
+      onDone={() => { setDeleting(false); if (onDeleted) onDeleted(challenge.challenge_id); else onClose(); }}>
+      <p className={styles.callout}><strong>{title}</strong> 초안을 영구 삭제합니다 공개 중이거나 사용 기록이 있는 문제는 삭제할 수 없습니다</p>
+    </AdminActionDialog>}
   </AdminDialog>;
 }

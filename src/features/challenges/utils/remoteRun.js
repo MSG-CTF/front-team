@@ -48,6 +48,14 @@ const date = (value) =>
   typeof value === "string" && Number.isFinite(Date.parse(value)) ? value : null;
 const count = (value) => (Number.isInteger(value) && value >= 0 ? value : null);
 
+export function remoteRetryDeadline(response, now = Date.now()) {
+  const seconds = Number(response?.data?.data?.retry_after_seconds);
+  const header = response?.headers?.["retry-after"];
+  const headerSeconds = header == null ? NaN : Number(header);
+  const fromHeader = Number.isFinite(headerSeconds) ? now + Math.max(0, headerSeconds) * 1000 : Date.parse(header);
+  return Math.max(now, Number.isFinite(seconds) ? now + Math.max(0, seconds) * 1000 : now, Number.isFinite(fromHeader) ? fromHeader : now);
+}
+
 export function mapRemoteRun(run) {
   if (!run || typeof run !== "object" || (run.submission_id ?? run.run_id) == null) return null;
   const status = { TIMEOUT: "TIMED_OUT", CRASH: "CRASHED", INFRA_ERROR: "FAILED" }[run.status] ?? run.status;

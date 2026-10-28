@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { createAdminSignature, getAdminSignatures, publishAdminSignature, updateAdminSignature } from "../../../api/admin.js";
+import { createAdminSignature, getAdminSignatures, publishAdminSignature, updateAdminSignature, deleteAdminSignature } from "../../../api/admin.js";
 import { getKothClubs } from "../../../api/koth.js";
 import { isSuccess } from "../../../utils/response.js";
 import AdminDialog from "../components/AdminDialog.jsx";
@@ -12,14 +12,21 @@ import { formatAdminNumber } from "../utils/adminNumber.js";
 import { AdminSwitch } from "../components/AdminFormParts.jsx";
 import { Glyph } from "../components/AdminGlyph.jsx";
 import ui from "../components/AdminWorkspace.module.css";
+import AdminActionDialog from "../components/AdminActionDialog.jsx";
+import AdminChallengeSubmissionsPanel from "../components/AdminChallengeSubmissionsPanel.jsx";
+import AdminPagination from "../components/AdminPagination.jsx";
 
 const EMPTY_FORM = { clubId: "", title: "", description: "", flag: "", score: "300" };
 const MISSING_FIELD_LABELS = { title: "제목", description: "지문", flag: "플래그" };
 
 export default function AdminSignaturesPage() {
-  const signatures = useAdminResource(getAdminSignatures, [], "시그니처 목록을 불러오지 못했습니다");
+  const [page, setPage] = useState(1);
+  const signatures = useAdminResource(config => getAdminSignatures({ ...config, params: { page, size: 50 } }), [page], "시그니처 목록을 불러오지 못했습니다");
   const clubs = useAdminResource(getKothClubs, [], "동아리 목록을 불러오지 못했습니다");
   const [dialog, setDialog] = useState(null);
+  const [history, setHistory] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [deletedIds, setDeletedIds] = useState(() => new Set());
   const [form, setForm] = useState(EMPTY_FORM);
   const [scoreConfirmed, setScoreConfirmed] = useState(false);
   const [notice, setNotice] = useState("");
@@ -30,8 +37,8 @@ export default function AdminSignaturesPage() {
   const draft = editing && !dialog.entry.is_published;
   const scoreChanged = editing && Number(form.score) !== Number(dialog.entry.score);
   const availableClubs = (clubs.data?.clubs ?? []).filter((club) =>
-    !(signatures.data?.signatures ?? []).some((entry) => entry.club_id === club.club_id));
-  const rows = signatures.data?.signatures ?? [];
+    !(signatures.data?.signatures ?? []).some((entry) => !deletedIds.has(entry.signature_id) && entry.club_id === club.club_id));
+  const rows = (signatures.data?.signatures ?? []).filter(entry => !deletedIds.has(entry.signature_id));
 
   function openEditor(entry) {
     setError("");
@@ -115,6 +122,8 @@ export default function AdminSignaturesPage() {
             </td>
             <td><div className={ui.rowActions}>
               <button type="button" className={`${ui.button} ${ui.small}`} disabled={busy} aria-label={`${entry.club_name} 문제 수정`} onClick={() => openEditor(entry)}>수정</button>
+              <button type="button" className={`${ui.button} ${ui.small}`} disabled={busy} aria-label={`${entry.club_name} 제출 기록`} onClick={() => setHistory(entry)}>제출 기록</button>
+              {!entry.is_published && <button type="button" className={`${ui.button} ${ui.danger} ${ui.small}`} disabled={busy} onClick={() => setDeleting(entry)} aria-label={`${entry.club_name} 초안 삭제`}>삭제</button>}
               <Link className={ui.fileLink} to={`/admin/signatures/${entry.signature_id}/preview`} target="_blank" rel="noreferrer"
                 aria-label={`${entry.club_name} 참가자 화면 미리보기`} title="저장한 내용으로 열립니다">미리보기 ↗</Link>
             </div></td>
@@ -123,6 +132,7 @@ export default function AdminSignaturesPage() {
         </tbody>
       </table>
     </div>}
+    <AdminPagination page={page} totalCount={signatures.data?.total_count} size={50} onChange={setPage} disabled={busy || signatures.status !== "success"} />
     {dialog && <AdminDialog title={dialog.kind === "publish" ? "공개 상태 변경" : editing ? "시그니처 수정" : "시그니처 등록"} busy={busy} onClose={closeDialog}
       headerMeta={editing && dialog.entry && <Link className={ui.headerLink} to={`/admin/signatures/${dialog.entry.signature_id}/preview`} target="_blank" rel="noreferrer"
         aria-label="참가자 화면 미리보기" title="저장한 내용으로 열립니다"><Glyph name="external" size={13} strokeWidth={2.2} /><span>참가자 화면</span></Link>}>
@@ -169,5 +179,13 @@ export default function AdminSignaturesPage() {
         </div>
       </form>
     </AdminDialog>}
+    {history && <AdminDialog title={`${history.club_name} 제출 기록`} onClose={() => setHistory(null)} variant="workspace">
+      <AdminChallengeSubmissionsPanel key={history.signature_id} signatureId={history.signature_id} challengeTitle={history.title} />
+    </AdminDialog>}
+    {deleting && <AdminActionDialog title="시그니처 초안 삭제" confirmLabel="삭제 확정" danger onBusyChange={setBusy}
+      onClose={() => setDeleting(null)} action={() => deleteAdminSignature(deleting.signature_id)}
+      onDone={async () => { setDeletedIds(ids => new Set([...ids, deleting.signature_id])); setDeleting(null); setNotice("시그니처 초안을 삭제했습니다"); if (!await signatures.reload()) setNotice("삭제는 완료됐지만 최신 목록을 조회하지 못했습니다 새로고침해주세요"); }}>
+      <p className={ui.callout}><strong>{deleting.title || deleting.club_name}</strong> 초안을 영구 삭제합니다 공개 중이거나 사용 기록이 있으면 삭제할 수 없습니다</p>
+    </AdminActionDialog>}
   </AdminLayout>;
 }

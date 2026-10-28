@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import AdminLineScores from "../components/AdminLineScores.jsx";
 import { StatStrip, StatTile } from "../components/AdminWidgets.jsx";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -334,6 +335,10 @@ export default function AdminTeamDetailPage() {
             </div>
           </section>
 
+          <section className={ui.card} aria-labelledby="team-line-scores">
+            <header className={ui.cardHeader}><h2 id="team-line-scores" className={ui.cardTitle}>라인 독점 점수</h2></header>
+            <div className={ui.cardBody}><AdminLineScores key={teamId} teamId={teamId} lines={data.line_monopolies} disabled={isMutating} onSaved={detail.reload} onBusyChange={setIsMutating} /></div>
+          </section>
           <section className={ui.card} data-tone="bad" aria-labelledby="team-danger">
             <header className={ui.cardHeader}>
               <h2 id="team-danger" className={ui.cardTitle}>위험 조치</h2>

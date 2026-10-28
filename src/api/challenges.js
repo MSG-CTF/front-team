@@ -59,6 +59,11 @@ export function getExeSubmissions(challengeId, config = {}) {
   return apiClient.get(exeSubmissionPath(challengeId), { timeout: 10000, ...config });
 }
 
+export function getExeSubmission(challengeId, submissionId, config = {}) {
+  if (typeof submissionId !== "string" || !UUID.test(submissionId)) throw new TypeError("실행 기록을 확인해주세요");
+  return apiClient.get(`${exeSubmissionPath(challengeId)}/${submissionId}`, { timeout: 10000, ...config });
+}
+
 export function submitExecutable(challengeId, file, key, config = {}) {
   if (!UUID.test(key)) throw new TypeError("실행 요청을 확인해주세요");
   const body = new FormData();

@@ -175,7 +175,7 @@
 .input:focus-visible, .select:focus-visible, .textarea:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
 .input:disabled, .select:disabled, .textarea:disabled { background-color: var(--surface-sunken); opacity: 0.6; cursor: default; }
 .inputMono { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0; }
-.field { display: grid; align-content: start; gap: 6px; min-width: 0; }
+.field { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 6px; min-width: 0; }
 .field > .select, .field > .input, .unitInput > .input { width: 100%; min-width: 0; }
 .fieldLabel { color: var(--label); font-size: 13px; font-weight: 600; line-height: 18px; }
 .fieldLabel small { margin-left: 6px; color: var(--label-3); font-size: 12px; font-weight: 500; }
@@ -276,7 +276,7 @@
 .formPair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-width: 0; }
 .formStack { display: grid; gap: 16px; }
 .formActions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
-.formActions > p { flex: 1; min-width: 200px; margin: 0; }
+.formActions > p { flex: 1; min-width: min(200px, 100%); margin: 0; overflow-wrap: anywhere; }
 .formFooter { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; border-top: 1px solid var(--hairline); }
 .formFeedback { flex: 1; min-width: 220px; }
 .formFeedback p { margin: 0; }
@@ -354,7 +354,7 @@
 .statusLoading::before { width: 14px; height: 14px; border: 2px solid var(--fill-active); border-top-color: var(--label-3); border-radius: 50%; content: ""; animation: adminSpin 0.8s linear infinite; }
 @keyframes adminSpin { to { transform: rotate(360deg); } }
 .statusError { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin: 0 0 14px; padding: 10px 10px 10px 14px; border-radius: 12px; background: var(--red-tint); color: var(--red-text); font-size: 13.5px; line-height: 20px; overflow-wrap: anywhere; }
-.statusError > span { flex: 1; min-width: 200px; }
+.statusError > span { flex: 1; min-width: min(200px, 100%); overflow-wrap: anywhere; }
 .callout, .notice, .fileNotice { margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: var(--callout-bg, var(--fill)); color: var(--callout-fg, var(--label)); font-size: 13.5px; line-height: 20px; overflow-wrap: anywhere; }
 .callout[data-tone="good"], .notice { --callout-bg: var(--green-tint); --callout-fg: var(--green-text); }
 .callout[data-tone="bad"] { --callout-bg: var(--red-tint); --callout-fg: var(--red-text); }
@@ -418,7 +418,7 @@
 .snapshotText strong { color: var(--label); font-weight: 600; overflow-wrap: anywhere; }
 .snapshotText span { color: var(--label-3); font-size: 12px; line-height: 17px; font-variant-numeric: tabular-nums; }
 .dangerRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
-.dangerRow p { flex: 1; min-width: 200px; margin: 0; color: var(--label-2); font-size: 13px; }
+.dangerRow p { flex: 1; min-width: min(200px, 100%); margin: 0; color: var(--label-2); font-size: 13px; overflow-wrap: anywhere; }
 .reasonInput { width: 168px; }
 .teamModes { display: grid; gap: 2px; min-width: 0; margin: 0; padding: 10px 14px 12px; border: 1px solid var(--separator); border-radius: 12px; background: var(--surface-sunken); }
 .teamModes > legend { margin-left: -4px; padding: 0 4px; color: var(--label); font-size: 13px; font-weight: 600; }
@@ -931,6 +931,7 @@ dl.group dd.mono { font-size: 12.5px; }
   .groupRowBody { padding-left: 14px; }
 }
 
+
 /* ───────── 배포 설정 2: 한 화면 배치와 환경변수 방법 카드 ───────── */
 .dialog.dialogFixed { height: min(900px, 100%); }
 @media (max-height: 480px) {
@@ -1077,6 +1078,11 @@ dl.group dd.mono { font-size: 12.5px; }
   .primaryTabs button { padding: 0 6px; font-size: 13px; white-space: nowrap; }
 }
 
+@container admin-layout (max-width: 300px) {
+  .primaryTabs, .primaryTabs:has(> :nth-child(5)) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr)); grid-auto-flow: row; }
+  .primaryTabs button { min-width: 0; padding: 5px 6px; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
+}
+
 /* ───────── 원격 실행 탭: 설정 카드 한 장과 실행 기록 ───────── */
 .remotePanel { display: grid; gap: 20px; }
 .remoteCard { display: grid; gap: 12px; padding: 18px 20px; }
@@ -1099,4 +1105,9 @@ dl.group dd.mono { font-size: 12.5px; }
 @media (max-width: 720px) {
   .remoteFields { grid-template-columns: minmax(0, 1fr); }
   .remoteWide { grid-column: auto; }
+}
+
+@container deploy (max-width: 260px) {
+  .versionRow { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .versionRowTime { grid-column: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
 }

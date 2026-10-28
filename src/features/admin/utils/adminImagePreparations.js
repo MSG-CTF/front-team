@@ -1,4 +1,4 @@
-import { createAdminIdempotencyKey, createAdminImagePreparation, getAdminImagePreparation, getAdminImagePreparations } from "../../../api/admin.js";
+import { createAdminIdempotencyKey, createAdminImagePreparation, getAdminImagePreparation, getAdminImagePreparations, retryAdminImagePreparation, refreshAdminImagePreparation } from "../../../api/admin.js";
 import { isSuccess } from "../../../utils/response.js";
 
 // Retain only the pending command key, never authentication or image credentials.
@@ -57,10 +57,12 @@ function historyState(data, releaseId, page) {
   return { records: data.results, count: data.count, page: data.page, pageSize: data.page_size, loaded: true };
 }
 
-export function createImagePreparationController({ challengeId, releaseId, onChange }) {
-  const scope = `msgctf:image-preparation:${encodeURIComponent(challengeId)}:${encodeURIComponent(releaseId)}`;
+export function createImagePreparationController({ challengeId, releaseId, userId, onChange }) {
+  const scope = `msgctf:image-preparation:${encodeURIComponent(challengeId)}:${encodeURIComponent(releaseId)}${userId ? `:${encodeURIComponent(userId)}` : ""}`;
+  let retryIntent = null;
+  try { const value = JSON.parse(storedKey(`${scope}:retry`) || "null"); if (value && typeof value.key === "string" && typeof value.requestId === "string" && Array.isArray(value.nodeUids) && value.nodeUids.length && value.nodeUids.every(id => typeof id === "string")) retryIntent = value; } catch { storedKey(`${scope}:retry`, null); }
   let state = { records: [], detail: null, page: 1, count: 0, pageSize: 20, loading: false, submitting: false,
-    loaded: false, error: "", notice: "", ambiguous: Boolean(storedKey(scope)) };
+    loaded: false, error: "", notice: "", ambiguous: Boolean(storedKey(scope)), pendingRetry: retryIntent };
   let disposed = false;
   let generation = 0;
   let reading = null;
@@ -137,6 +139,36 @@ export function createImagePreparationController({ challengeId, releaseId, onCha
         sending = null;
         update({ submitting: false });
       }
+    },
+    async retry(requestId, nodeUids) {
+      if (disposed || state.submitting || (!state.pendingRetry && (!Array.isArray(nodeUids) || !nodeUids.length))) return;
+      const intent = state.pendingRetry || { requestId, nodeUids: [...new Set(nodeUids)].sort(), key: createAdminIdempotencyKey("image-retry") };
+      storedKey(`${scope}:retry`, JSON.stringify(intent));
+      update({ submitting: true, loading: false, error: "", notice: "", pendingRetry: intent });
+      generation += 1; reading?.abort(); sending = new AbortController();
+      try {
+        const data = responseData(await retryAdminImagePreparation(challengeId, intent.requestId, intent.nodeUids, intent.key, { signal: sending.signal }));
+        if (!validRecord(data, releaseId) || data.parent_request_id !== intent.requestId) throw new Error("Invalid retry acknowledgement");
+        storedKey(`${scope}:retry`, null);
+        update({ detail: data, pendingRetry: null, notice: "실패 노드의 이미지 준비를 다시 요청했습니다" });
+        try { update(historyState(responseData(await getAdminImagePreparations(challengeId, releaseId, 1, { signal: sending.signal })), releaseId, 1)); }
+        catch { update({ error: "재시도는 접수됐지만 이력을 조회하지 못했습니다 목록을 새로고침해주세요" }); }
+      } catch (failure) {
+        const code = failure.response?.data?.code;
+        if (["IMAGE_PREPARATION_DISABLED", "IMAGE_PREPARATION_CONFIG_INVALID"].includes(code) || (failure.response && failure.response.status < 500 && code !== "IDEMPOTENCY_KEY_CONFLICT")) { storedKey(`${scope}:retry`, null); update({ pendingRetry: null }); }
+        update({ error: requestError(failure) });
+      } finally { sending = null; update({ submitting: false }); }
+    },
+    async refresh(requestId) {
+      if (disposed || state.submitting) return;
+      update({ submitting: true, loading: false, error: "", notice: "" });
+      generation += 1; reading?.abort(); sending = new AbortController();
+      try {
+        const data = responseData(await refreshAdminImagePreparation(challengeId, requestId, { signal: sending.signal }));
+        if (!validRecord(data, releaseId, requestId)) throw new Error("Invalid refresh acknowledgement");
+        update({ detail: data, notice: "서버에 상태 재조회를 요청했습니다 잠시 후 저장된 상태를 다시 확인해주세요" });
+      } catch (failure) { update({ error: requestError(failure) }); }
+      finally { sending = null; update({ submitting: false }); }
     },
     dispose() {
       disposed = true;

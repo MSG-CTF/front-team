@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getExeSubmissions, submitExecutable } from "../../../api/challenges.js";
+import { getExeSubmissions, getExeSubmission, submitExecutable } from "../../../api/challenges.js";
 import { useAuthenticatedUser } from "../../../routes/AuthenticatedRoute.jsx";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { executableIntent } from "../utils/pendingExecutable.js";
-import { mapRemoteRuns } from "../utils/remoteRun.js";
+import { mapRemoteRuns, remoteRetryDeadline } from "../utils/remoteRun.js";
 
 function unwrap(response) {
   if (response.data?.code !== "SUCCESS") throw new Error(response.data?.message || "실행 정보를 확인하지 못했습니다");
@@ -22,6 +22,7 @@ export default function useRemoteRun(challengeId, config) {
   const pending = useRef(false);
   const generation = useRef(0);
   const requestSequence = useRef(0);
+  const rejectedUntil = useRef(0);
   const enabled = Boolean(config);
   const load = useCallback(async () => {
     if (!enabled || !intent) return;
@@ -29,6 +30,11 @@ export default function useRemoteRun(challengeId, config) {
     const sequence = ++requestSequence.current;
     try {
       const data = unwrap(await getExeSubmissions(challengeId));
+      const active = data.runs?.find(row => ["QUEUED", "PREPARING", "ASSIGNED", "RUNNING", "START_UNKNOWN", "CLEANUP_PENDING"].includes(row.status));
+      if (active?.submission_id) {
+        try { const currentRun = unwrap(await getExeSubmission(challengeId, active.submission_id)); data.runs = data.runs.map(row => row.submission_id === active.submission_id ? currentRun : row); }
+        catch (failure) { if (failure.response?.status !== 404) throw failure; }
+      }
       const previous = intent.read();
       if (previous) {
         const recovered = unwrap(await getExeSubmissions(challengeId, { params: { idempotency_key: previous.key } }));
@@ -39,7 +45,8 @@ export default function useRemoteRun(challengeId, config) {
       }
       if (generation.current !== current || requestSequence.current !== sequence) return;
       setRuns(mapRemoteRuns(data).runs);
-      setRetryAt(Date.now() + (data.remote_run?.retry_after_seconds ?? 0) * 1000);
+      const seconds = data.remote_run?.retry_after_seconds;
+      setRetryAt(Math.max(rejectedUntil.current, seconds > 0 ? Date.now() + seconds * 1000 : 0));
     } catch (failure) {
       if (generation.current === current && requestSequence.current === sequence) setError({ message: failure.response?.data?.message || "실행 상태를 확인하지 못했습니다 연결이 복구되면 다시 확인합니다" });
     }
@@ -47,7 +54,7 @@ export default function useRemoteRun(challengeId, config) {
 
   useEffect(() => {
     generation.current += 1;
-    setRuns([]); setError(null); setRetryAt(0);
+    setRuns([]); setError(null); setRetryAt(0); rejectedUntil.current = 0;
     if (!enabled) return undefined;
     const stop = startVisiblePolling(load, { intervalMs: 5000 });
     const clock = window.setInterval(() => setNow(Date.now()), 1000);
@@ -62,7 +69,7 @@ export default function useRemoteRun(challengeId, config) {
   }, [enabled, load]);
 
   const onSubmit = async (file) => {
-    if (!intent || pending.current || !config?.available) return false;
+    if (!intent || pending.current || !config?.available || Math.max(rejectedUntil.current, retryAt) > Date.now()) return false;
     pending.current = true;
     const current = generation.current;
     let item;
@@ -82,7 +89,8 @@ export default function useRemoteRun(challengeId, config) {
       const status = failure.response?.status;
       if (item && [400, 403, 409, 413, 422, 429].includes(status)) intent.clear(item.key);
       if (generation.current === current) {
-        setRetryAt(Date.now() + (failure.response?.data?.data?.retry_after_seconds ?? 0) * 1000);
+        rejectedUntil.current = remoteRetryDeadline(failure.response);
+        setRetryAt(rejectedUntil.current); setNow(Date.now());
         setError({ message: failure.response?.data?.message || (!failure.isAxiosError && failure.message) || "접수 응답을 받지 못했습니다 같은 파일로 재시도해주세요" });
       }
       await load();
