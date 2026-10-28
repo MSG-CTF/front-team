@@ -38,20 +38,25 @@ const LINK_REASONS = ["출제 저장소 연결", "저장소 최신 커밋 반영
 export function KothScoringRule({ scoring, status, error, onRetry, className }) {
   const divisions = kothScoring(scoring);
   const waiting = !divisions && (status === "loading" || status === "error");
+  // 외부와 내부를 따로 배포하면 팀 있는 부문이 하나라 부문 이름 없이 표 하나만 보인다
+  const named = divisions?.length > 1;
   return <section className={[styles.rule, className].filter(Boolean).join(" ")} aria-label="KoTH 틱 배점">
     <div className={styles.ruleHead}>
       <strong>틱 배점</strong>
-      <span>한 틱은 15분 · 부문마다 정지되지 않은 등록 팀 수의 절반까지 점수를 받습니다</span>
+      <span>한 틱은 15분 · {named ? "부문마다 " : ""}정지되지 않은 등록 팀 수의 절반까지 점수를 받습니다</span>
     </div>
     {waiting && <AdminStatusMessage status={status} error={error} onRetry={onRetry} />}
-    {divisions && <div className={styles.divisions}>
+    {divisions?.length > 0 && <div className={styles.divisions}>
       {divisions.map((division) => <div key={division.key} className={styles.division}>
-        <p className={styles.divisionName}><strong>{division.label}</strong><span>{division.points.length ? `${division.points.length}위까지` : "등록 팀 없음"}</span></p>
-        {division.points.length > 0 && <ol className={styles.points} aria-label={`${division.label} 부문 순위별 점수`}>
+        <p className={styles.divisionName}>{named
+          ? <><strong>{division.label}</strong><span>{division.points.length}위까지</span></>
+          : <strong>{division.points.length}위까지</strong>}</p>
+        <ol className={styles.points} aria-label={named ? `${division.label} 부문 순위별 점수` : "순위별 점수"}>
           {division.points.map((points, index) => <li key={index}><span>{index + 1}위</span><strong>{points}</strong></li>)}
-        </ol>}
+        </ol>
       </div>)}
     </div>}
+    {divisions?.length === 0 && <p className={ui.quietNote}>등록된 팀이 없습니다</p>}
     {!divisions && !waiting && <p className={ui.quietNote}>배점표는 관리자 KoTH API(GET /admin/koth/challenges)가 주면 보입니다</p>}
     <p className={styles.ruleNote}>공동 순위는 차지한 순위 점수의 평균을 내림 · 문제 점수가 0 이하인 팀은 0점 · 테스트 팀도 등록 팀 수에 들어갑니다</p>
   </section>;
@@ -152,10 +157,8 @@ export function KothPeriodsPanel({ challengeId, openedAt, limited, onRetried }) 
             </tr>)}</tbody>
           </table>
         </div>}
-        {/* 순위는 두 부문을 섞은 전체 순위라 환산 점수가 순위 순서대로 줄지 않을 수 있다 백엔드가 옛 규칙으로 다시 만든 틱은 따로 알린다 */}
-        {selected.status === "APPLIED" && rows.length > 0 && <p className={ui.quietNote}>{selected.award_provenance === "RECONSTRUCTED_FROM_RESPONSE"
-          ? "예전 고정 배점으로 반영한 틱입니다"
-          : "순위는 문제 서버가 매긴 전체 순위이고 환산 점수는 내부와 외부 부문 안 순위로 매깁니다"}</p>}
+        {/* 새 배점 전에 반영된 틱은 백엔드가 옛 1~5위 배점으로 다시 만든 기록이라 따로 알린다 */}
+        {selected.status === "APPLIED" && selected.award_provenance === "RECONSTRUCTED_FROM_RESPONSE" && rows.length > 0 && <p className={ui.quietNote}>예전 고정 배점으로 반영한 틱입니다</p>}
         {selected.status === "APPLIED" && rows.length === 0 && <p className={ui.quietNote}>이 틱에는 순위에 든 팀이 없습니다</p>}
       </div>}
     </>}

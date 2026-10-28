@@ -32,15 +32,15 @@ export function periodStatus(status) {
   return PERIOD_STATUS[status] ?? { label: status || "상태 미수집", tone: "neutral" };
 }
 
-// 배점표: GET /admin/koth/challenges 의 scoring.points_by_division 을 부문 순서대로 편다
-// 표가 없으면(구버전 서버, 참가자 API로 채운 목록) null
+// 배점표: GET /admin/koth/challenges 의 scoring.points_by_division 을 부문 순서대로 펴고 팀 없는 부문은 뺀다
+// 외부와 내부를 따로 배포하면 배포마다 부문 하나만 남는다 표가 없으면(구버전 서버, 참가자 API로 채운 목록) null
 export function kothScoring(scoring) {
   const table = scoring?.points_by_division;
   if (!table || typeof table !== "object") return null;
   return KOTH_DIVISIONS.map((division) => ({
     ...division,
     points: Array.isArray(table[division.key]) ? table[division.key].filter((points) => Number.isFinite(points)) : [],
-  }));
+  })).filter((division) => division.points.length > 0);
 }
 
 // 구간 결과 줄: 순위 순서와 공동 순위 표시, 환산 점수는 서버가 반영한 awarded_score 그대로다

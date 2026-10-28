@@ -8,14 +8,17 @@ import {
 
 const row = (team, rank, extra = {}) => ({ team_id: team, team_name: team, period_rank: rank, metric_score: 100 - rank, ...extra });
 
-test("배점표는 서버가 준 부문별 점수를 내부, 외부 순서로 그대로 편다", () => {
+test("배점표는 서버가 준 부문별 점수를 내부, 외부 순서로 그대로 펴고 팀 없는 부문은 뺀다", () => {
   const scoring = { period_minutes: 15, first_place_points: 40, points_by_division: { EXTERNAL: [40, 18, 8, 1], INTERNAL: [40, 1] } };
   assert.deepEqual(kothScoring(scoring), [
     { key: "INTERNAL", label: "내부", points: [40, 1] },
     { key: "EXTERNAL", label: "외부", points: [40, 18, 8, 1] },
   ]);
-  // 팀이 없는 부문은 빈 표, 표가 없는 응답(구버전 서버, 참가자 API 목록)은 null
-  assert.deepEqual(kothScoring({ points_by_division: { INTERNAL: [40] } })[1], { key: "EXTERNAL", label: "외부", points: [] });
+  // 외부와 내부를 따로 배포하면 팀 있는 부문 하나만 남는다
+  assert.deepEqual(kothScoring({ points_by_division: { INTERNAL: [], EXTERNAL: [40, 33, 1] } }), [{ key: "EXTERNAL", label: "외부", points: [40, 33, 1] }]);
+  assert.deepEqual(kothScoring({ points_by_division: { INTERNAL: [40] } }), [{ key: "INTERNAL", label: "내부", points: [40] }]);
+  assert.deepEqual(kothScoring({ points_by_division: { INTERNAL: [], EXTERNAL: [] } }), []);
+  // 표가 없는 응답(구버전 서버, 참가자 API 목록)은 null
   assert.equal(kothScoring({ period_minutes: 15 }), null);
   assert.equal(kothScoring(null), null);
 });
