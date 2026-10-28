@@ -19,8 +19,6 @@ const GoldenKeyPreviewPage = import.meta.env.DEV
   ? lazy(() => import("../features/board/preview/GoldenKeyPreviewPage.jsx")) : null;
 const LineRailPreviewPage = import.meta.env.DEV
   ? lazy(() => import("../features/board/preview/LineRailPreviewPage.jsx")) : null;
-const LandmarkPreviewPage = import.meta.env.DEV
-  ? lazy(() => import("../features/board/preview/LandmarkPreviewPage.jsx")) : null;
 const BoardPage = lazy(() => {
   // 보드 페이지를 받은 뒤에 3D 코드를 찾는 직렬 대기를 줄인다 실패 시 원래 대체 주사위를 쓴다
   void import("../features/board/components/Dice3D.jsx").catch(() => {});
@@ -122,7 +120,6 @@ export default function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         {import.meta.env.DEV && <Route path="/dev/booth-menu-preview" element={<BoothMenuPreviewPage />} />}
         {import.meta.env.DEV && <Route path="/dev/golden-key-preview" element={<GoldenKeyPreviewPage />} />}
-        {import.meta.env.DEV && <Route path="/dev/landmark-preview" element={<LandmarkPreviewPage />} />}
         {import.meta.env.DEV && <Route path="/dev/remote-run-preview" element={<RemoteRunPreviewPage />} />}
         {import.meta.env.DEV && <Route path="/dev/countdown-preview" element={<CountdownPreviewPage />} />}
         <Route element={<AuthenticatedRoute />}>

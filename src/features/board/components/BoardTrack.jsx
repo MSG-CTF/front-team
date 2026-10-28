@@ -5,8 +5,6 @@ import { getBoardSolvedCellIndexes } from "../utils/boardLines.js";
 import { DICE_INTRO_KEY } from "../utils/boardIntro.js";
 import BoardLineOverlay from "./BoardLineOverlay.jsx";
 import BoardSurface from "./BoardSurface.jsx";
-import BoardLandmarks from "./BoardLandmarks.jsx";
-import { getVisibleStage2Landmarks } from "../utils/landmarkStage2.js";
 import BoardCellTarget from "./BoardCellTarget.jsx";
 import BoardCellTooltip from "./BoardCellTooltip.jsx";
 import BoardPiece from "./BoardPiece.jsx";
@@ -69,12 +67,6 @@ export default function BoardTrack({
     return () => window.clearInterval(timerId);
   }, []);
   const renderedPiecePosition = isPiecePositionTest ? previewCell : piecePosition;
-  const [perchLifts, setPerchLifts] = useState({});
-  const onLandmarkPlacement = useCallback((cellIndex, lift) => {
-    setPerchLifts((current) => current[cellIndex] === lift ? current : { ...current, [cellIndex]: lift });
-  }, []);
-  const pieceHasLandmark = getVisibleStage2Landmarks(cells, cellStatesByIndex, consumedCellIndexes)
-    .some((landmark) => landmark.cellIndex === renderedPiecePosition);
   const pieceCoordinates = getBoardCellPosition(renderedPiecePosition);
   const diceRef = useRef(null);
   const rollingRef = useRef(false);
@@ -119,7 +111,6 @@ export default function BoardTrack({
   return (
     <div data-board-layer="track" data-assembly={assembly === "done" ? undefined : assembly} style={{ visibility: isHidden ? "hidden" : undefined }} className={styles.track}>
       <BoardSurface cells={cells} visitedCellIndexes={visitedCellIndexes} />
-      <BoardLandmarks cells={cells} cellStatesByIndex={cellStatesByIndex} consumedCellIndexes={consumedCellIndexes} onPlacement={onLandmarkPlacement} />
       <BoardLineOverlay lines={lines} boardCells={cells} solvedCellIndexes={solvedCellIndexes} spentSpecialCells={spentSpecialCells} selectedLineId={selectedLineId} onSelectLine={onSelectLine}
         isInteractive={!isRolling && !rolling && !trainTravel?.journey && selectableCellIndexes == null} />
       {assembly === "playing" && <>
@@ -131,8 +122,7 @@ export default function BoardTrack({
 
       {trainTravel?.journey
         ? <BoardTrain journey={trainTravel.journey} onComplete={trainTravel.finish} onProgress={trainTravel.onProgress} onStart={trainTravel.onStart} onStop={trainTravel.onStop} />
-        : <BoardPiece position={renderedPiecePosition} transitionMs={pieceTransitionMs}
-          perchLift={pieceHasLandmark ? perchLifts[renderedPiecePosition] ?? 0 : 0} />}
+        : <BoardPiece position={renderedPiecePosition} transitionMs={pieceTransitionMs} />}
 
       {isPiecePositionTest && (
         <>
