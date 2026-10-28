@@ -124,7 +124,7 @@ export default function RemoteRunPanel({
   ].filter(Boolean).join(" · ");
   const errorNote = submitError?.message || fileError || "";
   const hint = errorNote
-    || (!config.available ? lockedReason : retrySeconds > 0 ? `${retrySeconds}초 후 다시 실행할 수 있습니다` : "")
+    || (!config.available ? lockedReason : retrySeconds > 0 && !activeRun && !upload ? `${retrySeconds}초 후 다시 실행할 수 있습니다` : "")
     || (upload ? "파일을 올리고 있습니다"
       : activeRun?.status === REMOTE_RUN_STATUS.QUEUED
         ? config.queuePolicy === "TEAM_FIFO"

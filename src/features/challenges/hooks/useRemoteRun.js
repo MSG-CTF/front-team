@@ -18,6 +18,7 @@ export default function useRemoteRun(challengeId, config) {
   const [totalRuns, setTotalRuns] = useState(0);
   const [upload, setUpload] = useState(null);
   const [error, setError] = useState(null);
+  const [refreshError, setRefreshError] = useState(null);
   const [retryAt, setRetryAt] = useState(0);
   const [now, setNow] = useState(Date.now);
   const pending = useRef(false);
@@ -48,16 +49,17 @@ export default function useRemoteRun(challengeId, config) {
       const history = mapRemoteRuns(data);
       setRuns(history.runs);
       setTotalRuns(history.totalRuns);
+      setRefreshError(null);
       const seconds = data.remote_run?.retry_after_seconds;
       setRetryAt(Math.max(rejectedUntil.current, seconds > 0 ? Date.now() + seconds * 1000 : 0));
     } catch (failure) {
-      if (generation.current === current && requestSequence.current === sequence) setError({ message: failure.response?.data?.message || "실행 상태를 확인하지 못했습니다 연결이 복구되면 다시 확인합니다" });
+      if (generation.current === current && requestSequence.current === sequence) setRefreshError({ message: failure.response?.data?.message || "실행 상태를 확인하지 못했습니다 연결이 복구되면 다시 확인합니다" });
     }
   }, [challengeId, enabled, intent]);
 
   useEffect(() => {
     generation.current += 1;
-    setRuns([]); setTotalRuns(0); setError(null); setRetryAt(0); rejectedUntil.current = 0;
+    setRuns([]); setTotalRuns(0); setError(null); setRefreshError(null); setRetryAt(0); rejectedUntil.current = 0;
     if (!enabled) return undefined;
     const stop = startVisiblePolling(load, { intervalMs: 5000 });
     const clock = window.setInterval(() => setNow(Date.now()), 1000);
@@ -103,5 +105,5 @@ export default function useRemoteRun(challengeId, config) {
       if (generation.current === current) setUpload(null);
     }
   };
-  return { runs, totalRuns, upload, submitError: error, onSubmit, retrySeconds: Math.max(0, Math.ceil((retryAt - now) / 1000)) };
+  return { runs, totalRuns, upload, submitError: error ?? refreshError, onSubmit, retrySeconds: Math.max(0, Math.ceil((retryAt - now) / 1000)) };
 }

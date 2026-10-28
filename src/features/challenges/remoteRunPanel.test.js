@@ -109,6 +109,25 @@ test("최근 20건만 받아도 전체 접수 수로 완료 회차를 표시한�
   }
 });
 
+test("접수한 실행의 순번과 상태는 재요청 간격보다 먼저 안내한다", async () => {
+  const { default: Panel } = await server.ssrLoadModule("/src/features/challenges/components/RemoteRunPanel.jsx");
+  const config = mapRemoteRunConfig({ ...REMOTE, queue_policy: "TEAM_FIFO" });
+  const hint = (props) => renderToStaticMarkup(createElement(Panel, { config, retrySeconds: 30, onSubmit: async () => true, ...props }))
+    .match(/<p id="remote-run-hint"[^>]*>(.*?)<\/p>/)?.[1];
+  for (const [status, expected] of [
+    ["QUEUED", /대기 3번째입니다 앞선 2팀부터 차례로 실행합니다/],
+    ["RUNNING", /검증 VM에서 실행하고 있습니다/],
+    ["START_UNKNOWN", /실행 여부를 확인하고 있습니다/],
+  ]) {
+    const { runs } = mapRemoteRuns({ runs: [{ submission_id: "current", status, queue_policy: "TEAM_FIFO", queue_position: 3, queue_observed_at: new Date().toISOString() }] });
+    const message = hint({ runs });
+    assert.match(message, expected);
+    assert.doesNotMatch(message, /30초 후/);
+  }
+  assert.match(hint({ runs: [], upload: { name: "payload.exe", progress: 0.5 } }), /파일을 올리고 있습니다/);
+  assert.match(hint({ runs: [] }), /30초 후 다시 실행할 수 있습니다/);
+});
+
 test("원격 실행 문제는 인스턴스 판과 같은 짜임으로 그리고 제출 횟수는 보이지 않는다", () => {
   const html = render();
   assert.match(html, /id="challenge-remote-run"/);
