@@ -27,7 +27,7 @@ before(async () => {
 
 after(async () => server?.close());
 
-const REMOTE = { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", max_file_bytes: 10485760, timeout_seconds: 180, max_attempts: 5, used_attempts: 1 };
+const REMOTE = { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", max_file_bytes: 10485760, timeout_seconds: 180, max_attempts: null, used_attempts: 1, rate_limit_seconds: 30, available: true, enabled: true };
 
 function render({ remoteRun, solved = false, readOnly = false, runs } = {}) {
   return renderToStaticMarkup(createElement(Screen, {
@@ -56,9 +56,9 @@ function pe(machine) {
 test("remote_run 이 있으면 인스턴스 대신 원격 실행을 쓰고 빈 값은 문제 파일 기본값으로 채운다", () => {
   const challenge = mapChallengeDetail({ title: "msgdriver", requires_instance: true, remote_run: REMOTE });
   assert.equal(challenge.requiresInstance, false);
-  assert.deepEqual(challenge.remoteRun, { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: 5, usedAttempts: 1 });
+  assert.deepEqual(challenge.remoteRun, { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, usedAttempts: 1, rateLimitSeconds: 30, retryAfterSeconds: 0, available: true, enabled: true, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
   assert.equal(mapChallengeDetail({ title: "웹" }).remoteRun, null);
-  assert.deepEqual(mapRemoteRunConfig({ accept: ["exe", ".EXE"], max_file_bytes: -1 }), { environment: "", accept: [".exe"], executable: "", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: 5, usedAttempts: 0 });
+  assert.deepEqual(mapRemoteRunConfig({ accept: ["exe", ".EXE"], max_file_bytes: -1 }), { environment: "", accept: [".exe"], executable: "", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, usedAttempts: 0, rateLimitSeconds: 30, retryAfterSeconds: 0, available: false, enabled: false, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
 });
 
 test("실행 기록은 최신순으로 두고 모양이 어긋난 기록은 버린다", () => {
@@ -75,7 +75,7 @@ test("실행 기록은 최신순으로 두고 모양이 어긋난 기록은 버�
   assert.equal(runs[0].queuePosition, 2);
   assert.equal(runs[1].sha256, "ab".repeat(32));
   assert.equal(usedAttempts, 1);
-  assert.equal(maxAttempts, 5);
+  assert.equal(maxAttempts, null);
 });
 
 test("실행 파일은 확장자, 크기, x64 PE 머리를 브라우저에서 먼저 본다", async () => {
@@ -101,7 +101,7 @@ test("원격 실행 문제는 인스턴스 판과 같은 짜임으로 그리고 
   for (const name of ["statusSlot", "connect", "endpointRow", "endpointBox", "copyButton", "instanceHint", "ttlValue", "ttlTrack"])
     assert.match(html, new RegExp(`class="[^"]*_${name}_`), name);
   assert.match(html, /<input type="file" accept="\.exe"/);
-  assert.match(html, /id="remote-run-hint"[^>]*>\.exe · 10 MB 이하 · Windows 11 25H2 x64에서 180초 안에 실행</);
+  assert.match(html, /id="remote-run-hint"[^>]*>\.exe · 10 MB 이하 · Windows 11 25H2 x64에서 180초 안에 실행 · 팀별 요청 간격 30초</);
   assert.match(html, /aria-label="실행 시간">--:--</);
   assert.match(html, /<button(?=[^>]*aria-label="원격 실행")(?=[^>]*disabled)[^>]*>RUN<\/button>/);
   assert.match(html, /<button(?=[^>]*aria-label="최근 실행 결과 보기")(?=[^>]*disabled)[^>]*>RESULT<\/button>/);

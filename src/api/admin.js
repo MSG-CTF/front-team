@@ -64,9 +64,9 @@ export function getAdminChallengeSolves(challengeId, { startAt, endAt, hour, sor
 
 // [프론트 요청, 백엔드 PR 대기] 제출 기록: 백엔드 FlagSubmission 에 정답, 오답, 잠김 제출이 모두 저장된다
 // 원문 플래그는 저장하지 않으므로 해시 앞부분만 받는다
-export function getAdminChallengeSubmissions(challengeId, { result, teamId, page = 1, size = 20 } = {}, config) {
+export function getAdminChallengeSubmissions(challengeId, { result, teamId, startAt, endAt, page = 1, size = 20 } = {}, config) {
   return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/submissions`, {
-    ...config, params: { result, team_id: teamId, page, size },
+    ...config, params: { result, team_id: teamId, page, size, ...(startAt ? { start_at: startAt } : {}), ...(endAt ? { end_at: endAt } : {}) },
   });
 }
 
@@ -545,4 +545,51 @@ export function saveAdminKothEnvironment(challengeId, body) {
 export function applyAdminKothEnvironment(challengeId, versionId, requestId) {
   return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(challengeId)}/environment/versions/${encodeURIComponent(versionId)}/apply`,
     { request_id: requestId }, MUTATION_CONFIG);
+}
+
+export function retryAdminImagePreparation(challengeId, requestId, nodeUids, key, config) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/image_preparations/${encodeURIComponent(requestId)}/retry`,
+    nodeUids ? { node_uids: nodeUids } : {}, { ...idKey("image-retry", key), ...config });
+}
+
+export function refreshAdminImagePreparation(challengeId, requestId, config) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/image_preparations/${encodeURIComponent(requestId)}/refresh`, {}, { ...MUTATION_CONFIG, ...config });
+}
+
+export function getAdminSignatureSubmissions(signatureId, { result, teamId, startAt, endAt, page = 1, size = 20 } = {}, config) {
+  return apiClient.get(`/admin/signatures/${encodeURIComponent(signatureId)}/submissions`, {
+    ...config, params: { result, team_id: teamId, page, size, ...(startAt ? { start_at: startAt } : {}), ...(endAt ? { end_at: endAt } : {}) },
+  });
+}
+
+export function deleteAdminChallenge(challengeId) {
+  return apiClient.delete(`/admin/challenges/${encodeURIComponent(challengeId)}`, MUTATION_CONFIG);
+}
+
+export function deleteAdminSignature(signatureId) {
+  return apiClient.delete(`/admin/signatures/${encodeURIComponent(signatureId)}`, MUTATION_CONFIG);
+}
+
+export function updateAdminLineScore(teamId, lineNumber, earnedScore, reason) {
+  return apiClient.patch(`/admin/teams/${encodeURIComponent(teamId)}/line_monopolies/${lineNumber}`, { earned_score: earnedScore, reason }, MUTATION_CONFIG);
+}
+
+export function getPublicationRequests({ challengeSlug, dispatchStatus, page = 1, size = 20 } = {}, config) {
+  return apiClient.get("/admin/publication_requests", { ...config, params: { challenge_slug: challengeSlug, dispatch_status: dispatchStatus, page, size } });
+}
+
+export function getPublicationRequest(requestId, config) {
+  return apiClient.get(`/admin/publication_requests/${encodeURIComponent(requestId)}`, config);
+}
+
+export function createPublicationRequest(body, key) {
+  return apiClient.post("/admin/publication_requests", body, idKey("publication-request", key));
+}
+
+export function dispatchPublicationRequest(requestId) {
+  return apiClient.post(`/admin/publication_requests/${encodeURIComponent(requestId)}/dispatch`, {}, PUBLICATION_CONFIG);
+}
+
+export function syncPublicationRequest(requestId) {
+  return apiClient.post(`/admin/publication_requests/${encodeURIComponent(requestId)}/sync`, {}, PUBLICATION_CONFIG);
 }

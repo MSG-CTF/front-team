@@ -13,6 +13,7 @@ import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { TERMINAL_INSTANCE_STATUSES } from "../../../constants/enums.js";
 import ChallengeDetailScreen from "../components/ChallengeDetailScreen.jsx";
 import useChallengeDetailData from "../hooks/useChallengeDetailData.js";
+import useRemoteRun from "../hooks/useRemoteRun.js";
 import {
   getChallengeSubmissionState,
   getInstanceControlState,
@@ -67,6 +68,7 @@ function ChallengeDetailContent({ challengeId }) {
     () => mapChallengeInstance(detail.instanceData, now),
     [detail.instanceData, now],
   );
+  const remoteRun = useRemoteRun(challengeId, challenge?.remoteRun);
   const otherInstance = useMemo(
     () => mapChallengeInstance(detail.otherInstanceData, now),
     [detail.otherInstanceData, now],
@@ -231,6 +233,7 @@ function ChallengeDetailContent({ challengeId }) {
       refreshing={detail.refreshing}
       instanceError={detail.instanceError}
       challenge={challenge}
+      remoteRun={remoteRun}
       submission={submission}
       instance={instance}
       otherInstance={otherInstance}

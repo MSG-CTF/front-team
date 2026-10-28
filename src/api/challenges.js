@@ -49,3 +49,26 @@ export function getOpenChallenges(config) {
   // GET /board/opened_challenges 가 담당: opened_challenges[], total_count, solved_count, total_score.
   return apiClient.get("/board/opened_challenges", config);
 }
+
+export function exeSubmissionPath(challengeId) {
+  if (typeof challengeId !== "string" || !UUID.test(challengeId)) throw new TypeError("문제 식별자를 확인해주세요");
+  return `/challenges/${challengeId}/exe-submissions`;
+}
+
+export function getExeSubmissions(challengeId, config = {}) {
+  return apiClient.get(exeSubmissionPath(challengeId), { timeout: 10000, ...config });
+}
+
+export function getExeSubmission(challengeId, submissionId, config = {}) {
+  if (typeof submissionId !== "string" || !UUID.test(submissionId)) throw new TypeError("실행 기록을 확인해주세요");
+  return apiClient.get(`${exeSubmissionPath(challengeId)}/${submissionId}`, { timeout: 10000, ...config });
+}
+
+export function submitExecutable(challengeId, file, key, config = {}) {
+  if (!UUID.test(key)) throw new TypeError("실행 요청을 확인해주세요");
+  const body = new FormData();
+  body.append("file", file);
+  return apiClient.post(exeSubmissionPath(challengeId), body, {
+    ...config, timeout: 30000, headers: { "Idempotency-Key": key },
+  });
+}
