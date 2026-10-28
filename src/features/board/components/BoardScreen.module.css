@@ -100,6 +100,7 @@
   .stage .leftPanelCard .diceStatus { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 333 / 146; padding: 0; display: block; }
   .stage .leftPanelCard .diceStatusIcon { display: block; position: absolute; left: 7.4%; top: 54%; width: 3.7%; height: auto; transform: translateY(-50%); }
   .stage .leftPanelCard .diceReadout { position: absolute; left: 15.1%; right: 4.5%; top: 54%; width: auto; transform: translateY(-50%); font-size: clamp(11px, 0.8cqw, 16px); }
+  .stage .leftPanelCard .diceReadout strong { font-size: calc(1em + 1px); line-height: 1; }
   .stage .leftPanelCard .diceChallengeRow { position: absolute; left: auto; right: 4.5%; top: 12%; font-size: clamp(10px, 0.62cqw, 13px); }
   .stage .leftPanelCard .diceStatusMessage { position: absolute; left: 42%; right: 4.5%; top: 27%; width: auto; margin: 0; text-align: right; font-size: clamp(10px, 0.58cqw, 12px); line-height: 1.35; }
   .stage .leftPanelCard .diceGauge { display: block; position: absolute; left: 7.4%; top: 70.4%; width: 88.1%; height: 8.4%; box-sizing: border-box; padding: 0.1cqw 0.14cqw; border-radius: 0.3cqw; }
