@@ -1109,5 +1109,8 @@ dl.group dd.mono { font-size: 12.5px; }
 
 @container deploy (max-width: 260px) {
   .versionRow { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .versionRowText { grid-template-columns: minmax(0, 1fr); }
+  .versionRowTags { min-width: 0; }
+  .versionRowTags > span { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
   .versionRowTime { grid-column: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
 }
