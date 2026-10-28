@@ -775,6 +775,10 @@
   overflow: hidden;
   cursor: pointer;
 }
+.runField .connectEmpty {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
 .runField:hover:not([data-disabled]) {
   border-color: #8b6a3e;
 }
