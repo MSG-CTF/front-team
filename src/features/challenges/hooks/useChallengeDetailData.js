@@ -11,6 +11,7 @@ import {
 export default function useChallengeDetailData(challengeId) {
   const requestSequence = useRef(0);
   const controller = useRef(null);
+  const remoteRunKnown = useRef(false);
   const [state, setState] = useState(INITIAL_DETAIL_STATE);
 
   const load = useCallback(async () => {
@@ -19,19 +20,23 @@ export default function useChallengeDetailData(challengeId) {
     controller.current = new AbortController();
     const config = { signal: controller.current.signal, timeout: 10000 };
     setState((current) => ({ ...current, refreshing: true }));
-    const [detailResult, instanceResult] = await Promise.allSettled([
+    const [detailResult] = await Promise.allSettled([
       getChallengeDetail(challengeId, config),
-      getMyInstances({ ...config, params: { challenge_id: challengeId } }),
     ]);
     if (sequence !== requestSequence.current) return false;
     const detail = readDetailResult(
       detailResult,
       "문제 정보를 새로 불러오지 못했습니다",
     );
-    const instance = readDetailResult(
-      instanceResult,
-      "인스턴스 정보를 불러오지 못했습니다",
-    );
+    if (!detail.error) remoteRunKnown.current = Boolean(detail.data?.remote_run);
+    let instance = { data: { instances: [] }, error: null };
+    if (!remoteRunKnown.current) {
+      const [instanceResult] = await Promise.allSettled([
+        getMyInstances({ ...config, params: { challenge_id: challengeId } }),
+      ]);
+      if (sequence !== requestSequence.current) return false;
+      instance = readDetailResult(instanceResult, "인스턴스 정보를 불러오지 못했습니다");
+    }
     setState((current) =>
       resolveDetailState(current, detail, instance, challengeId),
     );

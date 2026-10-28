@@ -70,7 +70,7 @@ export default function RemoteRunResultModal({ run, number, onClose }) {
           {run.stdout ? (
             <pre className={styles.runResultOutput} tabIndex={0} aria-label={`실행 ${number} 출력`}>{run.stdout}</pre>
           ) : (
-            <p className={`${styles.runResultOutput} ${styles.runResultNone}`}>출력이 없습니다</p>
+            <p className={`${styles.runResultOutput} ${styles.runResultNone}`}>{run.outputAvailable === false ? "출력을 아직 받지 못했습니다" : "출력이 없습니다"}</p>
           )}
           {run.stderr && (
             <details className={styles.runResultErr}>

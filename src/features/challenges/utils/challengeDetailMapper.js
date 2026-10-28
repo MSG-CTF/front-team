@@ -49,7 +49,12 @@ export function mapRemoteRunConfig(value) {
     executable: typeof value.executable === "string" ? value.executable : "",
     maxBytes: positiveInteger(value.max_file_bytes, 10 * 1024 * 1024),
     timeoutSeconds: positiveInteger(value.timeout_seconds, 180),
-    maxAttempts: positiveInteger(value.max_attempts, 5),
+    maxAttempts: null,
+    rateLimitSeconds: positiveInteger(value.rate_limit_seconds, 30),
+    retryAfterSeconds: Number.isInteger(value.retry_after_seconds) ? Math.max(0, value.retry_after_seconds) : 0,
+    available: value.available === true,
+    enabled: value.enabled === true,
+    availabilityMessage: typeof value.availability_message === "string" ? value.availability_message : "실행 환경 연결을 준비하고 있습니다",
     usedAttempts:
       Number.isInteger(value.used_attempts) && value.used_attempts >= 0
         ? value.used_attempts

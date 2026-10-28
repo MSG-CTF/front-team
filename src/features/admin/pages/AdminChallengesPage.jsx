@@ -30,7 +30,7 @@ const SELECT = styles.select;
 // 배포 상태 칸: 버전 알약(초록 점이면 참가자에게 나가는 중), 새 발행본 대기 꼬리표, 실행 환경 한 줄
 // 원격 실행 문제는 이미지 대신 검증 VM 환경과 받는 파일 제한을 보인다
 function DeploymentSummary({ deployment, remoteRun }) {
-  const remote = !deployment && remoteRunSummary(remoteRun);
+  const remote = remoteRunSummary(remoteRun);
   if (remote) return <span className={styles.deployCell}>
     <span className={styles.deployTop}><span className={styles.deployPill} data-state="remote"><i aria-hidden="true" />원격 실행</span></span>
     <span className={styles.deployMeta}>{remote.environment}</span>
