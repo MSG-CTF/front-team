@@ -152,6 +152,14 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .input { width: 100%; }
+/* 날짜 입력은 기기마다 고유 폭이 있어 칸을 밀어내기 쉬우니 칸 폭에 맞춘다 */
+.input[type="datetime-local"], .input[type="date"], .input[type="time"] {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
 .select {
   max-width: 100%;
   padding-right: 32px;
