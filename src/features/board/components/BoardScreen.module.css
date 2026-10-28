@@ -13,6 +13,8 @@
 .chancePanel h2 { font-family: var(--board-label-font); font-weight: 400; }
 .diceReadout strong, .diceChallengeRow strong { font-family: var(--board-body-font); font-weight: 600; }
 .track { position: absolute; left: calc(448 / 1920 * 100%); top: calc(289 / 1080 * 100%); width: calc(951 / 1920 * 100%); aspect-ratio: 1772 / 1330; }
+.landmarkLayer { position: absolute; inset: 0; z-index: 11; pointer-events: none; overflow: visible; }
+.landmarkLayer canvas { pointer-events: none !important; }
 /* 오른쪽 끝을 문제 제한 줄(right 10%)과 같은 90% 선에 맞춘다 */
 .diceReadout { display: grid; gap: 0.2cqw; top: 43%; width: 77.5%; padding-block: 0; font-size: clamp(12px, 0.72cqw, 14px); line-height: 1.4; }
 .diceCountRow { display: flex; align-items: center; justify-content: space-between; gap: 0.3cqw; white-space: nowrap; }
