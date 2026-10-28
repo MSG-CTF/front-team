@@ -55,6 +55,7 @@ function Label({ en, ko, className }) {
 export default function RemoteRunPanel({
   config,
   runs = [],
+  totalRuns,
   retrySeconds = 0,
   upload = null,
   submitError = null,
@@ -87,7 +88,8 @@ export default function RemoteRunPanel({
   const queuePosition = currentQueuePosition(activeRun);
   const finishedIndex = runs.findIndex((run) => run.finishedAt || !isActiveRun(run));
   const finished = finishedIndex >= 0 ? runs[finishedIndex] : null;
-  const finishedNumber = finished ? runs.length - finishedIndex : null;
+  const runCount = Number.isSafeInteger(totalRuns) ? Math.max(totalRuns, runs.length) : runs.length;
+  const finishedNumber = finished ? runCount - finishedIndex : null;
   const locked = disabled || solved || !config.available || retrySeconds > 0;
   const canRun = Boolean(file) && !fileError && !upload && !activeRun && !locked && Boolean(onSubmit);
   const elapsed = useElapsed(activeRun);
@@ -336,7 +338,7 @@ export default function RemoteRunPanel({
       {resultRun && (
         <RemoteRunResultModal
           run={resultRun}
-          number={runs.length - runs.indexOf(resultRun)}
+          number={runCount - runs.indexOf(resultRun)}
           onClose={() => setResultId(null)}
         />
       )}

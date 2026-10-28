@@ -91,6 +91,24 @@ test("실행 파일은 확장자, 크기, x64 PE 머리를 브라우저에서 �
   assert.equal(await checkPayloadMachine(pe(0x014c), { ...config, executable: "" }), null);
 });
 
+test("최근 20건만 받아도 전체 접수 수로 완료 회차를 표시한다", () => {
+  const records = Array.from({ length: 20 }, (_, index) => ({
+    submission_id: `run-${1008 - index}`, status: "COMPLETED", exit_code: 0,
+    created_at: new Date(Date.UTC(2026, 9, 28, 10, 0, 20 - index)).toISOString(),
+    finished_at: "2026-10-28T10:01:00Z",
+  }));
+  const history = mapRemoteRuns({ total_count: 1008, runs: records });
+  assert.equal(history.totalRuns, 1008);
+  assert.match(render({ remoteRun: { ...history, onSubmit: async () => true } }), /1008회차/);
+  records[0].status = "QUEUED";
+  records[0].finished_at = null;
+  const waiting = mapRemoteRuns({ total_count: 1008, runs: records });
+  assert.match(render({ remoteRun: { ...waiting, onSubmit: async () => true } }), /1007회차/);
+  for (const total_count of [undefined, -1, 1, true, "1008", Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(mapRemoteRuns({ total_count, runs: records }).totalRuns, 20);
+  }
+});
+
 test("원격 실행 문제는 인스턴스 판과 같은 짜임으로 그리고 제출 횟수는 보이지 않는다", () => {
   const html = render();
   assert.match(html, /id="challenge-remote-run"/);

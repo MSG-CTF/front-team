@@ -105,6 +105,8 @@ export function mapRemoteRuns(data) {
   runs.sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0));
   return {
     runs,
+    totalRuns: Number.isSafeInteger(data?.total_count) && data.total_count >= runs.length
+      ? data.total_count : runs.length,
     usedAttempts: count(data?.used_attempts),
     maxAttempts: null,
   };
