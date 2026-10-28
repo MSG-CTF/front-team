@@ -1,11 +1,25 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { executableIntent } from "./pendingExecutable.js";
-import { isActiveRun, mapRemoteRun, mapRemoteRuns } from "./remoteRun.js";
+import { currentQueuePosition, isActiveRun, mapRemoteRun, mapRemoteRuns } from "./remoteRun.js";
 import { remoteRunChanges, remoteRunDraft } from "../../admin/utils/adminRemoteRun.js";
 
 const requestId = "5e32b846-2c35-47b4-85bb-4cf089338230";
 const digest = "a".repeat(64);
+
+test("team queue positions expire without changing the active execution slot", () => {
+  const observed = "2026-10-28T07:00:00Z", now = Date.parse(observed);
+  const run = mapRemoteRun({ submission_id: "queued", status: "QUEUED", queue_policy: "TEAM_FIFO", queue_position: 3, queue_observed_at: observed });
+  assert.equal(currentQueuePosition(run, now), 3);
+  assert.equal(currentQueuePosition(run, now + 15000), 3);
+  assert.equal(currentQueuePosition(run, now + 15001), null);
+  assert.equal(currentQueuePosition(run, now - 1), null);
+  assert.equal(currentQueuePosition({ ...run, queueObservedAt: null }, now), null);
+  assert.equal(currentQueuePosition({ ...run, status: "RUNNING" }, now), null);
+  assert.equal(isActiveRun(run), true);
+  for (const queue_position of [true, -1, 0, "3", 1.5])
+    assert.equal(currentQueuePosition(mapRemoteRun({ submission_id: "bad", status: "QUEUED", queue_position }), now), null);
+});
 const store = () => {
   const data = new Map();
   return { getItem: (id) => data.get(id) ?? null, setItem: (id, value) => data.set(id, value), removeItem: (id) => data.delete(id) };

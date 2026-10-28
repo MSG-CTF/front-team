@@ -56,9 +56,9 @@ function pe(machine) {
 test("remote_run 이 있으면 인스턴스 대신 원격 실행을 쓰고 빈 값은 문제 파일 기본값으로 채운다", () => {
   const challenge = mapChallengeDetail({ title: "msgdriver", requires_instance: true, remote_run: REMOTE });
   assert.equal(challenge.requiresInstance, false);
-  assert.deepEqual(challenge.remoteRun, { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, usedAttempts: 1, rateLimitSeconds: 30, retryAfterSeconds: 0, available: true, enabled: true, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
+  assert.deepEqual(challenge.remoteRun, { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, queuePolicy: null, usedAttempts: 1, rateLimitSeconds: 30, retryAfterSeconds: 0, available: true, enabled: true, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
   assert.equal(mapChallengeDetail({ title: "웹" }).remoteRun, null);
-  assert.deepEqual(mapRemoteRunConfig({ accept: ["exe", ".EXE"], max_file_bytes: -1 }), { environment: "", accept: [".exe"], executable: "", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, usedAttempts: 0, rateLimitSeconds: 30, retryAfterSeconds: 0, available: false, enabled: false, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
+  assert.deepEqual(mapRemoteRunConfig({ accept: ["exe", ".EXE"], max_file_bytes: -1 }), { environment: "", accept: [".exe"], executable: "", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, queuePolicy: null, usedAttempts: 0, rateLimitSeconds: 30, retryAfterSeconds: 0, available: false, enabled: false, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
 });
 
 test("실행 기록은 최신순으로 두고 모양이 어긋난 기록은 버린다", () => {

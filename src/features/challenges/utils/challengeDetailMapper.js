@@ -50,6 +50,7 @@ export function mapRemoteRunConfig(value) {
     maxBytes: positiveInteger(value.max_file_bytes, 10 * 1024 * 1024),
     timeoutSeconds: positiveInteger(value.timeout_seconds, 180),
     maxAttempts: null,
+    queuePolicy: value.queue_policy === "TEAM_FIFO" ? "TEAM_FIFO" : null,
     rateLimitSeconds: positiveInteger(value.rate_limit_seconds, 30),
     retryAfterSeconds: Number.isInteger(value.retry_after_seconds) ? Math.max(0, value.retry_after_seconds) : 0,
     available: value.available === true,

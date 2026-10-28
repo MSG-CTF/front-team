@@ -44,6 +44,16 @@ export function isActiveRun(run) {
   return ACTIVE_STATUSES.has(run?.status) || run?.releasePending === true || run?.requiresReview === true;
 }
 
+// 연결이 끊긴 동안 예전 순서를 현재 순서처럼 계속 보이지 않는다
+export function currentQueuePosition(run, now = Date.now()) {
+  if (run?.status !== REMOTE_RUN_STATUS.QUEUED) return null;
+  if (run.queuePolicy === "TEAM_FIFO") {
+    const observed = Date.parse(run.queueObservedAt);
+    if (!Number.isFinite(observed) || observed > now || now - observed > 15000) return null;
+  }
+  return Number.isInteger(run.queuePosition) && run.queuePosition > 0 ? run.queuePosition : null;
+}
+
 const text = (value) => (typeof value === "string" ? value : "");
 const date = (value) =>
   typeof value === "string" && Number.isFinite(Date.parse(value)) ? value : null;
@@ -71,6 +81,8 @@ export function mapRemoteRun(run) {
       && ["COMPLETED", "CRASH", "TIMEOUT", "INFRA_ERROR"].includes(run.execution_status),
     outputAvailable: output != null || typeof run.stdout === "string" || typeof run.stderr === "string",
     counted: run.counted === true,
+    queuePolicy: run.queue_policy === "TEAM_FIFO" ? "TEAM_FIFO" : null,
+    queueObservedAt: date(run.queue_observed_at),
     queuePosition:
       Number.isInteger(run.queue_position) && run.queue_position > 0 ? run.queue_position : null,
     fileName: text(run.file_name) || "payload.exe",

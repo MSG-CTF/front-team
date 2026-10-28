@@ -34,7 +34,8 @@ export function remoteRunSummary(value) {
       `${config.timeoutSeconds}초`,
       `요청 간격 ${config.rateLimitSeconds}초`,
       "총 횟수 제한 없음",
-    ].join(" · "),
+      config.queuePolicy === "TEAM_FIFO" ? "팀별 순서 대기 · 팀당 1건" : null,
+    ].filter(Boolean).join(" · "),
   };
 }
 
