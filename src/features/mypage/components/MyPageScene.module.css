@@ -224,6 +224,9 @@
   color: #9a8668;
   cursor: not-allowed;
 }
+.qrIssueButton:disabled span {
+  color: color-mix(in srgb, #9a8668 90%, var(--brown));
+}
 .qrLoading {
   margin: 0;
   color: #644420;
@@ -233,7 +236,7 @@
   max-width: 260px;
   min-height: 1.5em;
   margin: 0;
-  color: #775b33;
+  color: #6f532e;
   font-size: 12px;
   line-height: 1.5;
   overflow-wrap: anywhere;
@@ -241,7 +244,7 @@
 }
 .qrHint {
   margin: 0;
-  color: #775b33;
+  color: #6f532e;
   font-size: 15px;
   line-height: 1.4;
   text-align: center;
@@ -525,6 +528,9 @@
 }
 .cellPoints {
   color: var(--gold);
+}
+.mileageHistory .historyTable {
+  color: color-mix(in srgb, var(--ink-soft) 85%, var(--brown));
 }
 .historyEmpty {
   height: 102px;
