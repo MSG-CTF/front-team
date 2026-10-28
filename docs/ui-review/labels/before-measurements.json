@@ -1,0 +1,937 @@
+{
+  "phase": "before",
+  "kind": "labels",
+  "measurements": [
+    {
+      "name": "1920",
+      "width": 1920,
+      "height": 1080,
+      "scrollWidth": 1920,
+      "scrollHeight": 1080,
+      "data": {
+        "teamCard": {
+          "x": 125,
+          "y": 165,
+          "w": 470,
+          "h": 800,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "TEAMMAPLELEAF결제할 때 QR을 발급하세요결제 QR 발급MEMBERSTEST LEADERTEST MEMBERPERSONAL RANK · TEST USER순위8 위개인 점수800 pts해결3 문제"
+        },
+        "qrSlot": {
+          "x": 274,
+          "y": 431,
+          "w": 172,
+          "h": 172,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "결제 QR 발급"
+        },
+        "qrHint": {
+          "x": 160,
+          "y": 397,
+          "w": 400,
+          "h": 24,
+          "font": "19px",
+          "color": "rgb(119, 91, 51)",
+          "text": "결제할 때 QR을 발급하세요"
+        },
+        "qrStatus": {
+          "x": 250,
+          "y": 585,
+          "w": 220,
+          "h": 19.5,
+          "font": "13px",
+          "color": "rgb(119, 91, 51)",
+          "text": ""
+        },
+        "qrIssueButton": {
+          "x": 284,
+          "y": 441,
+          "w": 152,
+          "h": 152,
+          "font": "16px",
+          "color": "rgb(154, 134, 104)",
+          "text": "결제 QR 발급"
+        },
+        "mileageHistory": {
+          "x": 636,
+          "y": 387,
+          "w": 1150,
+          "h": 270,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "MILEAGE HISTORYDATEREASONCHANGEBALANCE07-29 18:23Use At a Store-300140007-29 13:12Problem Solved Successfully+500170007-29 09:11Problem Solved Successfully+7001200"
+        },
+        "personalRank": {
+          "x": 195,
+          "y": 823,
+          "w": 330,
+          "h": 60,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "PERSONAL RANK · TEST USER순위8 위개인 점수800 pts해결3 문제"
+        },
+        "personalStats": {
+          "x": 227,
+          "y": 854,
+          "w": 298,
+          "h": 29,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "순위8 위개인 점수800 pts해결3 문제"
+        },
+        "breakdown": {
+          "x": 676,
+          "y": 327,
+          "w": 476,
+          "h": 16,
+          "font": "11px",
+          "color": "rgb(184, 157, 110)",
+          "text": "JEOPARDY -KoTH -SIGNATURE -LINE -"
+        },
+        "historyNote": {
+          "x": 1006,
+          "y": 734.59375,
+          "w": 590,
+          "h": 15,
+          "font": "12px",
+          "color": "rgb(138, 94, 46)",
+          "text": "POINTS는 풀이 당시 획득 점수입니다 · 현재 점수는 총점에 반영됩니다"
+        },
+        "text": [
+          {
+            "text": "PERSONAL RANK · TEST USER",
+            "font": "12px",
+            "color": "rgb(138, 94, 46)",
+            "w": 298
+          },
+          {
+            "text": " · TEST USER",
+            "font": "12px",
+            "color": "rgb(138, 94, 46)",
+            "w": 67.734375
+          },
+          {
+            "text": " 위",
+            "font": "12px",
+            "color": "rgb(97, 61, 21)",
+            "w": 13.390625
+          },
+          {
+            "text": " pts",
+            "font": "12px",
+            "color": "rgb(97, 61, 21)",
+            "w": 19.875
+          },
+          {
+            "text": " 문제",
+            "font": "12px",
+            "color": "rgb(97, 61, 21)",
+            "w": 23.765625
+          },
+          {
+            "text": "JEOPARDY -",
+            "font": "11px",
+            "color": "rgb(184, 157, 110)",
+            "w": 66.796875
+          },
+          {
+            "text": "KoTH -",
+            "font": "11px",
+            "color": "rgb(184, 157, 110)",
+            "w": 39.8125
+          },
+          {
+            "text": "SIGNATURE -",
+            "font": "11px",
+            "color": "rgb(184, 157, 110)",
+            "w": 71.78125
+          },
+          {
+            "text": "LINE -",
+            "font": "11px",
+            "color": "rgb(184, 157, 110)",
+            "w": 30.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "stress-1920",
+      "width": 1920,
+      "height": 1080,
+      "scrollWidth": 1920,
+      "scrollHeight": 1080,
+      "data": {
+        "teamCard": {
+          "x": 125,
+          "y": 165,
+          "w": 470,
+          "h": 800,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "TEAMMAPLELEAF결제할 때 QR을 발급하세요결제 QR 발급MEMBERSTEST LEADERTEST MEMBERPERSONAL RANK · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ순위8 위개인 점수999,999.99 pts해결3 문제"
+        },
+        "qrSlot": {
+          "x": 274,
+          "y": 431,
+          "w": 172,
+          "h": 172,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "결제 QR 발급"
+        },
+        "qrHint": {
+          "x": 160,
+          "y": 397,
+          "w": 400,
+          "h": 24,
+          "font": "19px",
+          "color": "rgb(119, 91, 51)",
+          "text": "결제할 때 QR을 발급하세요"
+        },
+        "qrStatus": {
+          "x": 250,
+          "y": 585,
+          "w": 220,
+          "h": 19.5,
+          "font": "13px",
+          "color": "rgb(119, 91, 51)",
+          "text": ""
+        },
+        "qrIssueButton": {
+          "x": 284,
+          "y": 441,
+          "w": 152,
+          "h": 152,
+          "font": "16px",
+          "color": "rgb(154, 134, 104)",
+          "text": "결제 QR 발급"
+        },
+        "mileageHistory": {
+          "x": 636,
+          "y": 387,
+          "w": 1150,
+          "h": 270,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "MILEAGE HISTORYDATEREASONCHANGEBALANCE07-29 18:23Use At a Store-300140007-29 13:12Problem Solved Successfully+500170007-29 09:11Problem Solved Successfully+7001200"
+        },
+        "personalRank": {
+          "x": 195,
+          "y": 823,
+          "w": 330,
+          "h": 60,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "PERSONAL RANK · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ순위8 위개인 점수999,999.99 pts해결3 문제"
+        },
+        "personalStats": {
+          "x": 227,
+          "y": 854,
+          "w": 298,
+          "h": 29,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "순위8 위개인 점수999,999.99 pts해결3 문제"
+        },
+        "breakdown": {
+          "x": 676,
+          "y": 327,
+          "w": 476,
+          "h": 16,
+          "font": "11px",
+          "color": "rgb(184, 157, 110)",
+          "text": "JEOPARDY -KoTH -SIGNATURE -LINE -"
+        },
+        "historyNote": {
+          "x": 1006,
+          "y": 734.59375,
+          "w": 590,
+          "h": 15,
+          "font": "12px",
+          "color": "rgb(138, 94, 46)",
+          "text": "POINTS는 풀이 당시 획득 점수입니다 · 현재 점수는 총점에 반영됩니다"
+        },
+        "text": [
+          {
+            "text": "PERSONAL RANK · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            "font": "12px",
+            "color": "rgb(138, 94, 46)",
+            "w": 298
+          },
+          {
+            "text": " · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            "font": "12px",
+            "color": "rgb(138, 94, 46)",
+            "w": 164.546875
+          },
+          {
+            "text": " 위",
+            "font": "12px",
+            "color": "rgb(97, 61, 21)",
+            "w": 13.390625
+          },
+          {
+            "text": " pts",
+            "font": "12px",
+            "color": "rgb(97, 61, 21)",
+            "w": 19.875
+          },
+          {
+            "text": " 문제",
+            "font": "12px",
+            "color": "rgb(97, 61, 21)",
+            "w": 23.765625
+          },
+          {
+            "text": "JEOPARDY -",
+            "font": "11px",
+            "color": "rgb(184, 157, 110)",
+            "w": 66.796875
+          },
+          {
+            "text": "KoTH -",
+            "font": "11px",
+            "color": "rgb(184, 157, 110)",
+            "w": 39.8125
+          },
+          {
+            "text": "SIGNATURE -",
+            "font": "11px",
+            "color": "rgb(184, 157, 110)",
+            "w": 71.78125
+          },
+          {
+            "text": "LINE -",
+            "font": "11px",
+            "color": "rgb(184, 157, 110)",
+            "w": 30.21875
+          }
+        ]
+      }
+    },
+    {
+      "name": "1366",
+      "width": 1366,
+      "height": 768,
+      "scrollWidth": 1366,
+      "scrollHeight": 768,
+      "data": {
+        "teamCard": {
+          "x": 89.203125,
+          "y": 117.328125,
+          "w": 334.21875,
+          "h": 568.875,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "TEAMMAPLELEAF결제할 때 QR을 발급하세요결제 QR 발급MEMBERSTEST LEADERTEST MEMBERPERSONAL RANK · TEST USER순위8 위개인 점수800 pts해결3 문제"
+        },
+        "qrSlot": {
+          "x": 195.15625,
+          "y": 306.46875,
+          "w": 122.296875,
+          "h": 122.296875,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "결제 QR 발급"
+        },
+        "qrHint": {
+          "x": 114.078125,
+          "y": 282.296875,
+          "w": 284.4375,
+          "h": 17.0625,
+          "font": "13.5111px",
+          "color": "rgb(119, 91, 51)",
+          "text": "결제할 때 QR을 발급하세요"
+        },
+        "qrStatus": {
+          "x": 178.078125,
+          "y": 415.984375,
+          "w": 156.4375,
+          "h": 13.859375,
+          "font": "9.24441px",
+          "color": "rgb(119, 91, 51)",
+          "text": ""
+        },
+        "qrIssueButton": {
+          "x": 202.125,
+          "y": 313.4375,
+          "w": 108.359375,
+          "h": 108.359375,
+          "font": "11.3777px",
+          "color": "rgb(154, 134, 104)",
+          "text": "결제 QR 발급"
+        },
+        "mileageHistory": {
+          "x": 452.578125,
+          "y": 275.1875,
+          "w": 817.765625,
+          "h": 191.984375,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "MILEAGE HISTORYDATEREASONCHANGEBALANCE07-29 18:23Use At a Store-300140007-29 13:12Problem Solved Successfully+500170007-29 09:11Problem Solved Successfully+7001200"
+        },
+        "personalRank": {
+          "x": 138.96875,
+          "y": 585.234375,
+          "w": 234.65625,
+          "h": 42.8125,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "PERSONAL RANK · TEST USER순위8 위개인 점수800 pts해결3 문제"
+        },
+        "personalStats": {
+          "x": 161.71875,
+          "y": 607.5625,
+          "w": 211.90625,
+          "h": 20.484375,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "순위8 위개인 점수800 pts해결3 문제"
+        },
+        "breakdown": {
+          "x": 481.015625,
+          "y": 232.515625,
+          "w": 338.5,
+          "h": 11.375,
+          "font": "9px",
+          "color": "rgb(184, 157, 110)",
+          "text": "JEOPARDY -KoTH -SIGNATURE -LINE -"
+        },
+        "historyNote": {
+          "x": 715.6875,
+          "y": 520.984375,
+          "w": 419.546875,
+          "h": 12.5,
+          "font": "10px",
+          "color": "rgb(138, 94, 46)",
+          "text": "POINTS는 풀이 당시 획득 점수입니다 · 현재 점수는 총점에 반영됩니다"
+        },
+        "text": [
+          {
+            "text": "PERSONAL RANK · TEST USER",
+            "font": "9px",
+            "color": "rgb(138, 94, 46)",
+            "w": 211.90625
+          },
+          {
+            "text": " · TEST USER",
+            "font": "9px",
+            "color": "rgb(138, 94, 46)",
+            "w": 50.796875
+          },
+          {
+            "text": " 위",
+            "font": "9px",
+            "color": "rgb(97, 61, 21)",
+            "w": 10.046875
+          },
+          {
+            "text": " pts",
+            "font": "9px",
+            "color": "rgb(97, 61, 21)",
+            "w": 14.90625
+          },
+          {
+            "text": " 문제",
+            "font": "9px",
+            "color": "rgb(97, 61, 21)",
+            "w": 17.828125
+          },
+          {
+            "text": "JEOPARDY -",
+            "font": "9px",
+            "color": "rgb(184, 157, 110)",
+            "w": 54.65625
+          },
+          {
+            "text": "KoTH -",
+            "font": "9px",
+            "color": "rgb(184, 157, 110)",
+            "w": 32.578125
+          },
+          {
+            "text": "SIGNATURE -",
+            "font": "9px",
+            "color": "rgb(184, 157, 110)",
+            "w": 58.734375
+          },
+          {
+            "text": "LINE -",
+            "font": "9px",
+            "color": "rgb(184, 157, 110)",
+            "w": 24.734375
+          }
+        ]
+      }
+    },
+    {
+      "name": "stress-1366",
+      "width": 1366,
+      "height": 768,
+      "scrollWidth": 1366,
+      "scrollHeight": 768,
+      "data": {
+        "teamCard": {
+          "x": 89.203125,
+          "y": 117.328125,
+          "w": 334.21875,
+          "h": 568.875,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "TEAMMAPLELEAF결제할 때 QR을 발급하세요결제 QR 발급MEMBERSTEST LEADERTEST MEMBERPERSONAL RANK · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ순위8 위개인 점수999,999.99 pts해결3 문제"
+        },
+        "qrSlot": {
+          "x": 195.15625,
+          "y": 306.46875,
+          "w": 122.296875,
+          "h": 122.296875,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "결제 QR 발급"
+        },
+        "qrHint": {
+          "x": 114.078125,
+          "y": 282.296875,
+          "w": 284.4375,
+          "h": 17.0625,
+          "font": "13.5111px",
+          "color": "rgb(119, 91, 51)",
+          "text": "결제할 때 QR을 발급하세요"
+        },
+        "qrStatus": {
+          "x": 178.078125,
+          "y": 415.984375,
+          "w": 156.4375,
+          "h": 13.859375,
+          "font": "9.24441px",
+          "color": "rgb(119, 91, 51)",
+          "text": ""
+        },
+        "qrIssueButton": {
+          "x": 202.125,
+          "y": 313.4375,
+          "w": 108.359375,
+          "h": 108.359375,
+          "font": "11.3777px",
+          "color": "rgb(154, 134, 104)",
+          "text": "결제 QR 발급"
+        },
+        "mileageHistory": {
+          "x": 452.578125,
+          "y": 275.1875,
+          "w": 817.765625,
+          "h": 191.984375,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "MILEAGE HISTORYDATEREASONCHANGEBALANCE07-29 18:23Use At a Store-300140007-29 13:12Problem Solved Successfully+500170007-29 09:11Problem Solved Successfully+7001200"
+        },
+        "personalRank": {
+          "x": 138.96875,
+          "y": 585.234375,
+          "w": 234.65625,
+          "h": 42.8125,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "PERSONAL RANK · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ순위8 위개인 점수999,999.99 pts해결3 문제"
+        },
+        "personalStats": {
+          "x": 161.71875,
+          "y": 607.5625,
+          "w": 211.90625,
+          "h": 20.484375,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "순위8 위개인 점수999,999.99 pts해결3 문제"
+        },
+        "breakdown": {
+          "x": 481.015625,
+          "y": 232.515625,
+          "w": 338.5,
+          "h": 11.375,
+          "font": "9px",
+          "color": "rgb(184, 157, 110)",
+          "text": "JEOPARDY -KoTH -SIGNATURE -LINE -"
+        },
+        "historyNote": {
+          "x": 715.6875,
+          "y": 520.984375,
+          "w": 419.546875,
+          "h": 12.5,
+          "font": "10px",
+          "color": "rgb(138, 94, 46)",
+          "text": "POINTS는 풀이 당시 획득 점수입니다 · 현재 점수는 총점에 반영됩니다"
+        },
+        "text": [
+          {
+            "text": "PERSONAL RANK · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            "font": "9px",
+            "color": "rgb(138, 94, 46)",
+            "w": 211.90625
+          },
+          {
+            "text": " · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            "font": "9px",
+            "color": "rgb(138, 94, 46)",
+            "w": 112.046875
+          },
+          {
+            "text": " 위",
+            "font": "9px",
+            "color": "rgb(97, 61, 21)",
+            "w": 10.046875
+          },
+          {
+            "text": " pts",
+            "font": "9px",
+            "color": "rgb(97, 61, 21)",
+            "w": 14.90625
+          },
+          {
+            "text": " 문제",
+            "font": "9px",
+            "color": "rgb(97, 61, 21)",
+            "w": 17.828125
+          },
+          {
+            "text": "JEOPARDY -",
+            "font": "9px",
+            "color": "rgb(184, 157, 110)",
+            "w": 54.65625
+          },
+          {
+            "text": "KoTH -",
+            "font": "9px",
+            "color": "rgb(184, 157, 110)",
+            "w": 32.578125
+          },
+          {
+            "text": "SIGNATURE -",
+            "font": "9px",
+            "color": "rgb(184, 157, 110)",
+            "w": 58.734375
+          },
+          {
+            "text": "LINE -",
+            "font": "9px",
+            "color": "rgb(184, 157, 110)",
+            "w": 24.734375
+          }
+        ]
+      }
+    },
+    {
+      "name": "390",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 1931,
+      "data": {
+        "teamCard": {
+          "x": 30,
+          "y": 183,
+          "w": 330,
+          "h": 601.984375,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "TEAMMAPLELEAF결제할 때 QR을 발급하세요결제 QR 발급MEMBERSTEST LEADERTEST MEMBERPERSONAL RANK · TEST USER순위8 위개인 점수800 pts해결3 문제"
+        },
+        "qrSlot": {
+          "x": 107,
+          "y": 335.984375,
+          "w": 176,
+          "h": 176,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "결제 QR 발급"
+        },
+        "qrHint": {
+          "x": 114.515625,
+          "y": 306.984375,
+          "w": 160.96875,
+          "h": 21,
+          "font": "15px",
+          "color": "rgb(119, 91, 51)",
+          "text": "결제할 때 QR을 발급하세요"
+        },
+        "qrStatus": {
+          "x": 195,
+          "y": 519.984375,
+          "w": 0,
+          "h": 21,
+          "font": "14px",
+          "color": "rgb(97, 61, 21)",
+          "text": ""
+        },
+        "qrIssueButton": {
+          "x": 116,
+          "y": 344.984375,
+          "w": 158,
+          "h": 158,
+          "font": "14px",
+          "color": "rgb(154, 134, 104)",
+          "text": "결제 QR 발급"
+        },
+        "mileageHistory": {
+          "x": 30,
+          "y": 1205.078125,
+          "w": 330,
+          "h": 346.0625,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "MILEAGE HISTORYDATEREASONCHANGEBALANCE07-29 18:23Use At a Store-300140007-29 13:12Problem Solved Successfully+500170007-29 09:11Problem Solved Successfully+7001200"
+        },
+        "personalRank": {
+          "x": 54,
+          "y": 692.984375,
+          "w": 282,
+          "h": 66,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "PERSONAL RANK · TEST USER순위8 위개인 점수800 pts해결3 문제"
+        },
+        "personalStats": {
+          "x": 54,
+          "y": 728.984375,
+          "w": 282,
+          "h": 30,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "순위8 위개인 점수800 pts해결3 문제"
+        },
+        "breakdown": {
+          "x": 54,
+          "y": 921.28125,
+          "w": 282,
+          "h": 19.5,
+          "font": "13px",
+          "color": "rgb(184, 157, 110)",
+          "text": "JEOPARDY -KoTH -SIGNATURE -LINE -"
+        },
+        "historyNote": {
+          "x": 54,
+          "y": 1824.59375,
+          "w": 282,
+          "h": 36,
+          "font": "12px",
+          "color": "rgb(104, 67, 22)",
+          "text": "POINTS는 풀이 당시 획득 점수입니다 · 현재 점수는 총점에 반영됩니다"
+        },
+        "text": [
+          {
+            "text": "PERSONAL RANK · TEST USER",
+            "font": "14px",
+            "color": "rgb(104, 67, 22)",
+            "w": 282
+          },
+          {
+            "text": " · TEST USER",
+            "font": "14px",
+            "color": "rgb(104, 67, 22)",
+            "w": 82.53125
+          },
+          {
+            "text": " 위",
+            "font": "13px",
+            "color": "rgb(97, 61, 21)",
+            "w": 14.5
+          },
+          {
+            "text": " pts",
+            "font": "13px",
+            "color": "rgb(97, 61, 21)",
+            "w": 21.53125
+          },
+          {
+            "text": " 문제",
+            "font": "13px",
+            "color": "rgb(97, 61, 21)",
+            "w": 25.734375
+          },
+          {
+            "text": "JEOPARDY -",
+            "font": "13px",
+            "color": "rgb(184, 157, 110)",
+            "w": 78.9375
+          },
+          {
+            "text": "KoTH -",
+            "font": "13px",
+            "color": "rgb(184, 157, 110)",
+            "w": 47.046875
+          },
+          {
+            "text": "SIGNATURE -",
+            "font": "13px",
+            "color": "rgb(184, 157, 110)",
+            "w": 84.828125
+          },
+          {
+            "text": "LINE -",
+            "font": "13px",
+            "color": "rgb(184, 157, 110)",
+            "w": 35.703125
+          }
+        ]
+      }
+    },
+    {
+      "name": "stress-390",
+      "width": 390,
+      "height": 844,
+      "scrollWidth": 390,
+      "scrollHeight": 1973,
+      "data": {
+        "teamCard": {
+          "x": 30,
+          "y": 183,
+          "w": 330,
+          "h": 643.984375,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "TEAMMAPLELEAF결제할 때 QR을 발급하세요결제 QR 발급MEMBERSTEST LEADERTEST MEMBERPERSONAL RANK · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ순위8 위개인 점수999,999.99 pts해결3 문제"
+        },
+        "qrSlot": {
+          "x": 107,
+          "y": 335.984375,
+          "w": 176,
+          "h": 176,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "결제 QR 발급"
+        },
+        "qrHint": {
+          "x": 114.515625,
+          "y": 306.984375,
+          "w": 160.96875,
+          "h": 21,
+          "font": "15px",
+          "color": "rgb(119, 91, 51)",
+          "text": "결제할 때 QR을 발급하세요"
+        },
+        "qrStatus": {
+          "x": 195,
+          "y": 519.984375,
+          "w": 0,
+          "h": 21,
+          "font": "14px",
+          "color": "rgb(97, 61, 21)",
+          "text": ""
+        },
+        "qrIssueButton": {
+          "x": 116,
+          "y": 344.984375,
+          "w": 158,
+          "h": 158,
+          "font": "14px",
+          "color": "rgb(154, 134, 104)",
+          "text": "결제 QR 발급"
+        },
+        "mileageHistory": {
+          "x": 30,
+          "y": 1247.078125,
+          "w": 330,
+          "h": 346.0625,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "MILEAGE HISTORYDATEREASONCHANGEBALANCE07-29 18:23Use At a Store-300140007-29 13:12Problem Solved Successfully+500170007-29 09:11Problem Solved Successfully+7001200"
+        },
+        "personalRank": {
+          "x": 54,
+          "y": 692.984375,
+          "w": 282,
+          "h": 108,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "PERSONAL RANK · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ순위8 위개인 점수999,999.99 pts해결3 문제"
+        },
+        "personalStats": {
+          "x": 54,
+          "y": 770.984375,
+          "w": 282,
+          "h": 30,
+          "font": "16px",
+          "color": "rgb(97, 61, 21)",
+          "text": "순위8 위개인 점수999,999.99 pts해결3 문제"
+        },
+        "breakdown": {
+          "x": 54,
+          "y": 963.28125,
+          "w": 282,
+          "h": 19.5,
+          "font": "13px",
+          "color": "rgb(184, 157, 110)",
+          "text": "JEOPARDY -KoTH -SIGNATURE -LINE -"
+        },
+        "historyNote": {
+          "x": 54,
+          "y": 1866.59375,
+          "w": 282,
+          "h": 36,
+          "font": "12px",
+          "color": "rgb(104, 67, 22)",
+          "text": "POINTS는 풀이 당시 획득 점수입니다 · 현재 점수는 총점에 반영됩니다"
+        },
+        "text": [
+          {
+            "text": "PERSONAL RANK · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            "font": "14px",
+            "color": "rgb(104, 67, 22)",
+            "w": 282
+          },
+          {
+            "text": " · 아주긴닉네임을사용하는탐험가_ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+            "font": "14px",
+            "color": "rgb(104, 67, 22)",
+            "w": 280.28125
+          },
+          {
+            "text": " 위",
+            "font": "13px",
+            "color": "rgb(97, 61, 21)",
+            "w": 14.5
+          },
+          {
+            "text": " pts",
+            "font": "13px",
+            "color": "rgb(97, 61, 21)",
+            "w": 21.53125
+          },
+          {
+            "text": " 문제",
+            "font": "13px",
+            "color": "rgb(97, 61, 21)",
+            "w": 25.734375
+          },
+          {
+            "text": "JEOPARDY -",
+            "font": "13px",
+            "color": "rgb(184, 157, 110)",
+            "w": 78.9375
+          },
+          {
+            "text": "KoTH -",
+            "font": "13px",
+            "color": "rgb(184, 157, 110)",
+            "w": 47.046875
+          },
+          {
+            "text": "SIGNATURE -",
+            "font": "13px",
+            "color": "rgb(184, 157, 110)",
+            "w": 84.828125
+          },
+          {
+            "text": "LINE -",
+            "font": "13px",
+            "color": "rgb(184, 157, 110)",
+            "w": 35.703125
+          }
+        ]
+      }
+    }
+  ],
+  "errors": []
+}
