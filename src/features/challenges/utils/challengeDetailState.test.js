@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   INITIAL_DETAIL_STATE,
+  needsInstanceLookup,
   readDetailResult,
   resolveDetailState,
 } from "./challengeDetailState.js";
@@ -16,6 +17,17 @@ const activeInstance = {
   challenge_id: "current",
   status: "RUNNING",
 };
+
+test("정적 문제와 Windows 원격 실행은 인스턴스 조회 없이 표시한다", () => {
+  assert.equal(needsInstanceLookup({ requires_instance: false, instance: null }), false);
+  assert.equal(needsInstanceLookup({ requires_instance: false, remote_run: { available: true } }), false);
+});
+
+test("실행형과 구버전 응답, 실행 중인 구버전 인스턴스는 조회를 유지한다", () => {
+  assert.equal(needsInstanceLookup({ requires_instance: true }), true);
+  assert.equal(needsInstanceLookup({}), true);
+  assert.equal(needsInstanceLookup({ requires_instance: false, instance: activeInstance }), true);
+});
 const previous = {
   ...INITIAL_DETAIL_STATE,
   status: "success",

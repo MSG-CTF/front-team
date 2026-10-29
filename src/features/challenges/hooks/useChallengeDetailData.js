@@ -4,6 +4,7 @@ import { getMyInstances } from "../../../api/instances.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import {
   INITIAL_DETAIL_STATE,
+  needsInstanceLookup,
   readDetailResult,
   resolveDetailState,
 } from "../utils/challengeDetailState.js";
@@ -11,7 +12,7 @@ import {
 export default function useChallengeDetailData(challengeId) {
   const requestSequence = useRef(0);
   const controller = useRef(null);
-  const remoteRunKnown = useRef(false);
+  const instanceLookupRequired = useRef(true);
   const [state, setState] = useState(INITIAL_DETAIL_STATE);
 
   const load = useCallback(async () => {
@@ -28,9 +29,9 @@ export default function useChallengeDetailData(challengeId) {
       detailResult,
       "문제 정보를 새로 불러오지 못했습니다",
     );
-    if (!detail.error) remoteRunKnown.current = Boolean(detail.data?.remote_run);
+    if (!detail.error) instanceLookupRequired.current = needsInstanceLookup(detail.data);
     let instance = { data: { instances: [] }, error: null };
-    if (!remoteRunKnown.current) {
+    if (instanceLookupRequired.current) {
       const [instanceResult] = await Promise.allSettled([
         getMyInstances({ ...config, params: { challenge_id: challengeId } }),
       ]);

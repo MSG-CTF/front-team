@@ -3,6 +3,12 @@ import {
   findOtherInstance,
 } from "./challengeDetailMapper.js";
 
+export function needsInstanceLookup(challenge) {
+  return !challenge?.remote_run && (
+    challenge?.requires_instance !== false || challenge?.instance != null
+  );
+}
+
 export const INITIAL_DETAIL_STATE = {
   status: "loading",
   challengeData: null,

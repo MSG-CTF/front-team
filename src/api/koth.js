@@ -1,4 +1,5 @@
 import apiClient from "./client.js";
+import { downloadFile } from "./fileDownload.js";
 
 // KOTH endpoint를 한 곳에서 관리한다.
 // 성공 여부는 각 호출부에서 공통 응답 envelope의 code === "SUCCESS"로 판정한다.
@@ -36,12 +37,8 @@ export function getKothLeaderboard(challengeId, config) {
   return apiClient.get("/koth/leaderboard", { ...config, params: { koth_challenge_id: challengeId } });
 }
 
-export function downloadKothFile(kothChallengeId, { signal } = {}) {
+export function downloadKothFile(kothChallengeId, { signal, onDownloadProgress } = {}) {
   // GET /koth/challenges/{id}/file (Bearer, 프론트 요청 계약)
   // 저장소 prob/for_user 를 묶은 zip 하나 문제가 파일을 주지 않으면 404
-  return apiClient.get(`/koth/challenges/${encodeURIComponent(kothChallengeId)}/file`, {
-    responseType: "blob",
-    timeout: 60000,
-    signal,
-  });
+  return downloadFile(`/koth/challenges/${encodeURIComponent(kothChallengeId)}/file`, { signal, onDownloadProgress });
 }

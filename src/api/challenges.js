@@ -1,4 +1,5 @@
 import apiClient from "./client.js";
+import { downloadFile } from "./fileDownload.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -9,13 +10,9 @@ export function challengeFilePath(challengeId, fileId) {
   return `/challenges/${challengeId}/files/${fileId}/download`;
 }
 
-export function downloadChallengeFile(challengeId, fileId, { signal } = {}) {
+export function downloadChallengeFile(challengeId, fileId, { signal, onDownloadProgress } = {}) {
   // 응답의 임의 URL에 Bearer를 붙이지 않고 현재 문제의 고정 경로만 요청한다
-  return apiClient.get(challengeFilePath(challengeId, fileId), {
-    responseType: "blob",
-    timeout: 60000,
-    signal,
-  });
+  return downloadFile(challengeFilePath(challengeId, fileId), { signal, onDownloadProgress });
 }
 
 // 문제 관련 조회/제출. 경로와 스키마는 README.md "3. 문제 상세 페이지",

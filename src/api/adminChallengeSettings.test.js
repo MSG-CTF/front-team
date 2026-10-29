@@ -63,9 +63,9 @@ test("challenge settings use admin routes, explicit flag reveal, and cancellatio
     assert.equal(requests[3].timeout, 15000);
     assert.equal(requests[4].timeout, 15000);
     assert.equal(requests[5].timeout, 15000);
-    assert.equal(requests[7].timeout, 60000);
+    assert.equal(requests[7].timeout, 0);
     assert.equal(requests[7].responseType, "blob");
-    assert.equal(requests[7].signal, signal);
+    assert.equal(requests[7].signal.aborted, false);
     assert.deepEqual(requests[8].params, { page: 2, release_id: "release-c" });
     assert.equal(requests[8].signal, signal);
     assert.equal(requests[9].headers.get("Idempotency-Key"), "files-retry-key");
