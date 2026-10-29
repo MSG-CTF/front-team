@@ -1,4 +1,5 @@
 import apiClient from "./client.js";
+import { downloadFile } from "./fileDownload.js";
 
 const MUTATION_CONFIG = { timeout: 15000, timeoutErrorMessage: "요청 결과를 확인하지 못했습니다. 최신 상태를 조회한 뒤 확인하세요" };
 const PUBLICATION_CONFIG = { timeout: 120000, timeoutErrorMessage: "발행본 처리 결과를 확인하지 못했습니다 같은 요청으로 다시 시도해주세요" };
@@ -122,9 +123,7 @@ export function getAdminChallengeRepositoryFiles(challengeId, config) {
 }
 
 export function downloadAdminChallengeFile(challengeId, fileId, config) {
-  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/files/${encodeURIComponent(fileId)}/download`, {
-    ...config, responseType: "blob", timeout: 60000,
-  });
+  return downloadFile(`/admin/challenges/${encodeURIComponent(challengeId)}/files/${encodeURIComponent(fileId)}/download`, config);
 }
 
 // 마일리지 지급·회수와 배포 파일 저장은 재시도할 때 같은 키를 넘긴다.
@@ -437,9 +436,7 @@ export function getAdminKothFiles(kothChallengeId, config) {
 
 // 참가자가 받는 zip 을 관리자가 먼저 받아 본다
 export function downloadAdminKothFiles(kothChallengeId, config) {
-  return apiClient.get(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/files/download`, {
-    ...config, responseType: "blob", timeout: 60000,
-  });
+  return downloadFile(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/files/download`, config);
 }
 
 export function updateAdminKothFiles(kothChallengeId, { mode, reason }) {

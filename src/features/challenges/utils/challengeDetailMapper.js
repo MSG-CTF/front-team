@@ -89,6 +89,7 @@ export function mapChallengeDetail(data) {
             name: typeof file.file_name === "string" && file.file_name ? file.file_name : "첨부파일",
             url: getAttachmentUrl(file.download_url),
             sizeLabel: formatFileSize(file.file_size),
+            sizeBytes: Number.isFinite(file.file_size) && file.file_size >= 0 ? file.file_size : null,
           }))
       : [],
   };

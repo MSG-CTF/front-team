@@ -1,4 +1,15 @@
 import { challengeFilePath } from "../../../api/challenges.js";
+import { formatFileSize } from "./challengeDetailMapper.js";
+
+export function fileDownloadProgress(event, expectedSize) {
+  const loaded = Number.isFinite(event?.loaded) && event.loaded >= 0 ? event.loaded : 0;
+  const total = Number.isFinite(event?.total) && event.total > 0 ? event.total : expectedSize;
+  if (Number.isFinite(total) && total > 0) {
+    const percent = Math.min(100, Math.floor((loaded / total) * 100));
+    return `파일을 받는 중입니다 · ${percent}% (${formatFileSize(loaded)} / ${formatFileSize(total)})`;
+  }
+  return `파일을 받는 중입니다 · ${formatFileSize(loaded)} 받음`;
+}
 
 export function getAttachmentDownload(
   attachment,
@@ -71,6 +82,8 @@ export async function validateFileBlob(blob) {
 }
 
 export function fileDownloadError(error) {
+  if (error?.code === "DOWNLOAD_STALLED")
+    return "한동안 파일 데이터를 받지 못했습니다 연결을 확인한 뒤 다시 받아주세요";
   const code = error?.response?.data?.code;
   if (["TOKEN_EXPIRED", "TOKEN_INVALID", "TOKEN_MISSING"].includes(code))
     return "로그인이 만료됐습니다 다시 로그인한 뒤 받아주세요";
