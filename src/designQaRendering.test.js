@@ -231,6 +231,20 @@ test("3D를 쓸 수 없어도 대체 주사위는 전달받은 두 눈만 표시
   assert.match(render("DiceFallback", { result: { diceA: 0, diceB: 8 } }), /\/assets\/board\/dice.webp/);
 });
 
+test("3D 주사위 준비 전에도 굴릴 수 있고 받아 둔 눈은 3D가 뜨는 즉시 3D로 굴린다", () => {
+  const track = readFileSync(new URL("./features/board/components/BoardTrack.jsx", import.meta.url), "utf8");
+  assert.match(track, /disabled=\{\(!canRoll && !diceAnimationTest\) \|\| rolling\}/);
+  assert.match(track, /if \(\(!canRoll && !diceAnimationTest\) \|\| rollingRef\.current\) return;/);
+  assert.match(track, /if \(!diceReadyRef\.current\) await new Promise\(\(resolve\) => diceWaiters\.current\.push\(resolve\)\);\s*return diceRef\.current\?\.startRoll\(result\);/);
+  // 3D가 준비되거나 화면을 떠나면 기다리던 굴림을 모두 푼다
+  assert.equal(track.match(/diceWaiters\.current\.splice\(0\)\.forEach\(\(resolve\) => resolve\(\)\)/g)?.length, 2);
+  // 평면 주사위는 3D를 못 쓸 때만 쓰고 준비 전에는 원래 주사위 그림을 둔다
+  assert.equal(track.match(/<DiceFallback /g)?.length, 1);
+  assert.match(track, /\{!diceReady && <img src="\/assets\/board\/dice\.webp" alt="" /);
+  // 3D 캔버스는 보이는 크기를 재므로 준비 전에도 display 대신 visibility로만 숨긴다
+  assert.match(track, /style=\{diceReady \? undefined : \{ visibility: "hidden" \}\}/);
+});
+
 test("넓어진 주사위 3D 캔버스는 주변 보드 칸의 클릭을 가로채지 않는다", () => {
   const html = render("Dice3D");
   assert.match(html, /data-dice-visual="true"/);
