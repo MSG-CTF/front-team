@@ -581,10 +581,10 @@
   border-radius: 6px;
   background: linear-gradient(#150e08, #1d130b);
 }
+/* 폰 폭에서 세 칸으로 나누면 단계 이름이 말줄임이 되므로 한 줄에 한 단계씩 쌓는다 PC는 세 칸으로 둔다 */
 .createSteps {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -2226,6 +2226,7 @@
     overflow: hidden;
   }
   .createSteps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     flex: 1 1 auto;
     min-width: 0;
     gap: calc(var(--u) * 6);
