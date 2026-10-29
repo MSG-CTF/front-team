@@ -303,6 +303,8 @@ test("첫 화면은 경량 로고를 우선 받고 글꼴 원본과 무거운 �
   const css = readFileSync(new URL("./intro.css", import.meta.url), "utf8");
   assert.doesNotMatch(css, /background-plaza.png|format\("truetype"\)/);
   assert.match(css, /hero-plaza-mobile.webp/);
-  assert.match(css, /GamtanRoadBatang-Regular.woff2/);
-  assert.match(css, /font-display: swap/);
+  const fonts = readFileSync(new URL("./intro-fonts.generated.css", import.meta.url), "utf8");
+  assert.match(fonts, /gamtan-road-batang\/GamtanRoadBatang-Regular.woff2/);
+  assert.match(fonts, /font-display: swap/);
+  assert.doesNotMatch(css, /@font-face/);
 });
