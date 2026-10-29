@@ -1,5 +1,4 @@
-@font-face { font-family: "Booth Menu Body"; src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2") format("woff2"); font-display: swap; }
-@font-face { font-family: "Booth Menu Title"; src: url("/assets/intro/fonts/chungju-kimsaeng/ChungjuKimSaeng.woff2") format("woff2"); font-display: swap; }
+@import "./booth-fonts.generated.css";
 .overlay { position: fixed; inset: 0; z-index: 100; display: flex; overflow-y: auto; padding: max(24px, env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom)); background: rgb(30 16 6 / 42%); backdrop-filter: blur(2px); container-type: size; }
 /* 위 자리는 3:4 메뉴판과 제출 칸(--below)이 화면 가운데 오도록 정해 두고 메뉴판은 아래로만 늘어난다
    그래서 메뉴를 바꾸거나 불러오는 동안, 정답을 낸 뒤에도 메뉴판과 메뉴 단추가 제자리에 있다 */

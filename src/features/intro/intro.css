@@ -1,36 +1,5 @@
 /* MSG artwork and a compact event-site layout informed by the CCE reference */
-@font-face {
-  font-family: "MSG Intro Body";
-  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Thin.woff2")
-    format("woff2");
-  font-weight: 100;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "MSG Intro Body";
-  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Regular.woff2")
-    format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "MSG Intro Body";
-  src: url("/assets/intro/fonts/gamtan-road-batang/GamtanRoadBatang-Bold.woff2")
-    format("woff2");
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: "MSG Intro Title";
-  src: url("/assets/intro/fonts/chungju-kimsaeng/ChungjuKimSaeng.woff2")
-    format("woff2");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
+/* 글꼴은 intro-fonts.generated.css 에서 원본 다음에 서브셋을 둬 서브셋이 먼저 쓰인다 */
 .msg-intro {
   --bg: #181715;
   --fg: #f6f2e9;
