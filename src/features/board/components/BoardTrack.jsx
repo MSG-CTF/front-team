@@ -69,9 +69,18 @@ export default function BoardTrack({
   const renderedPiecePosition = isPiecePositionTest ? previewCell : piecePosition;
   const pieceCoordinates = getBoardCellPosition(renderedPiecePosition);
   const diceRef = useRef(null);
+  const diceReadyRef = useRef(false);
+  const diceWaiters = useRef([]);
   const rollingRef = useRef(false);
   const [rolling, setRolling] = useState(false);
   const [diceReady, setDiceReady] = useState(false);
+  const markDiceReady = useCallback(() => {
+    diceReadyRef.current = true;
+    setDiceReady(true);
+    diceWaiters.current.splice(0).forEach((resolve) => resolve());
+  }, []);
+  // 화면을 떠나면 3D를 기다리던 굴림을 풀어 준다
+  useEffect(() => () => diceWaiters.current.splice(0).forEach((resolve) => resolve()), []);
   const [showIntro, setShowIntro] = useState(() => {
     try { return sessionStorage.getItem(DICE_INTRO_KEY) === "1"; } catch { return false; }
   });
@@ -89,18 +98,23 @@ export default function BoardTrack({
   const startPosition = getBoardCellPosition(1);
 
   const handleRollDice = async () => {
-    if ((!canRoll && !diceAnimationTest) || !diceReady || rollingRef.current) return;
+    if ((!canRoll && !diceAnimationTest) || rollingRef.current) return;
     rollingRef.current = true;
     setRolling(true);
     try { sessionStorage.removeItem(DICE_INTRO_KEY); } catch { /* 저장 불가 시 현재 화면에서만 숨김 */ }
     setShowIntro(false);
+    // 3D가 아직이면 서버가 준 눈을 받아 둔 채 기다렸다가 3D가 뜨는 즉시 그 눈으로 굴린다
+    const showRoll = async (result) => {
+      if (!diceReadyRef.current) await new Promise((resolve) => diceWaiters.current.push(resolve));
+      return diceRef.current?.startRoll(result);
+    };
     try {
       if (diceAnimationTest) {
         const diceA = Math.floor(Math.random() * 6) + 1;
         const diceB = Math.floor(Math.random() * 6) + 1;
-        await diceRef.current?.startRoll({ diceA, diceB });
+        await showRoll({ diceA, diceB });
       } else {
-        await onRollDice({ onDiceResult: (result) => diceRef.current?.startRoll(result) });
+        await onRollDice({ onDiceResult: showRoll });
       }
     } finally {
       rollingRef.current = false;
@@ -140,16 +154,20 @@ export default function BoardTrack({
       <button
         type="button"
         onClick={handleRollDice}
-        disabled={(!canRoll && !diceAnimationTest) || !diceReady || rolling}
+        disabled={(!canRoll && !diceAnimationTest) || rolling}
         aria-label={isRolling || rolling ? "주사위 처리 중" : "주사위 굴리기"}
         data-board-dice="true"
         className="absolute left-[28%] top-[31%] z-20 w-[44%] h-[32%] border-0 bg-transparent p-0 cursor-pointer transition-[filter] duration-150 hover:brightness-110 active:brightness-95 disabled:cursor-not-allowed disabled:brightness-90"
       >
-        <DiceErrorBoundary fallback={<DiceFallback ref={diceRef} onReady={() => setDiceReady(true)} />}>
-          <Suspense fallback={<img src="/assets/board/dice.webp" alt="" className="absolute left-[15.91%] top-1/4 w-[68.18%] h-1/2 object-contain" />}>
-            <Dice3D ref={diceRef} onReady={() => setDiceReady(true)} />
-          </Suspense>
-        </DiceErrorBoundary>
+        {/* 3D 캔버스는 보이는 크기를 재므로 준비 전에는 숨기기만 하고 크기는 그대로 둔다 */}
+        <span style={diceReady ? undefined : { visibility: "hidden" }}>
+          <DiceErrorBoundary fallback={<DiceFallback ref={diceRef} onReady={markDiceReady} />}>
+            <Suspense fallback={null}>
+              <Dice3D ref={diceRef} onReady={markDiceReady} />
+            </Suspense>
+          </DiceErrorBoundary>
+        </span>
+        {!diceReady && <img src="/assets/board/dice.webp" alt="" className="absolute left-[15.91%] top-1/4 w-[68.18%] h-1/2 object-contain" />}
         {showIntro && canRoll && diceReady && !isRolling && !rolling && assembly === "done" && (
           <span aria-hidden="true" className={styles.diceIntro}>
             <span className={styles.diceIntroCircle} />
