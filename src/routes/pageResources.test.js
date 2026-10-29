@@ -35,6 +35,11 @@ test("게임 화면 진입과 재방문은 기존 글꼴 CSS를 한 번만 붙�
   assert.ok([...document.links.values()].every(link => link.attributes.rel === "stylesheet"));
 });
 
+test("삼성 인터넷·크롬 강제 다크모드가 양피지 화면을 뒤집지 않게 밝은 화면만 쓴다고 알린다", () => {
+  const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
+  assert.match(html, /<meta name="color-scheme" content="only light" \/>/);
+});
+
 test("로그인 화면만 열 때에는 외부 게임 글꼴을 요청하지 않는다", () => {
   const document = mockDocument();
   ensureGameFonts(document, "/login");
