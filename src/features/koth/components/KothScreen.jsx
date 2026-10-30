@@ -104,8 +104,8 @@ export default function KothScreen({
         <KothMapFooter />
 
         {requestStatus === "success" && unmappedChallengeCount > 0 && (
-          <p className={styles.mappingWarning} role="alert">
-            표시 위치가 확정되지 않은 KoTH 문제 {unmappedChallengeCount}개가 있습니다
+          <p className={styles.mappingWarning} role="status">
+            아직 지도에 올리지 않은 KoTH 문제가 {unmappedChallengeCount}개 있습니다
           </p>
         )}
 

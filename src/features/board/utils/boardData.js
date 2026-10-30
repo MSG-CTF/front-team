@@ -36,9 +36,11 @@ export function unwrapBoardResponse(response) {
 
 export function getBoardError(error) {
   const envelope = error?.response?.data;
+  // 응답 없이 끊긴 요청은 axios의 영어 문장("Network Error") 대신 연결 안내를 보인다
+  const lostConnection = !error?.response && (error?.isAxiosError === true || ["ERR_NETWORK", "ECONNABORTED", "ETIMEDOUT"].includes(error?.code));
   return {
     code: envelope?.code || error?.code || "BOARD_REQUEST_FAILED",
-    message: envelope?.message || error?.message || "보드 요청에 실패했습니다",
+    message: envelope?.message || (lostConnection ? "서버와 연결하지 못했습니다 잠시 후 다시 시도해주세요" : error?.message) || "보드 요청에 실패했습니다",
   };
 }
 

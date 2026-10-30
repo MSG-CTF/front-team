@@ -29,9 +29,9 @@ function getLegendTextBoxes(teamCount) {
 }
 
 const STATUS_MESSAGE = {
-  loading: "LOADING TEAMS",
-  empty: "NO TEAMS",
-  error: "TEAM DATA UNAVAILABLE",
+  loading: "순위를 불러오는 중입니다",
+  empty: "아직 등록된 팀이 없습니다",
+  error: "팀 점수를 불러오지 못했습니다",
 };
 
 function toTextBoxStyle(box) {

@@ -1,5 +1,5 @@
 // Figma node 555:342 "기차여행"(안내 문구 555:366) - Airport(기차 칸)에 도착하면 보드 가운데에
-// "가고 싶은 장소를 골라주세요!" 안내가 뜨고, 참가자는 보드 칸을 직접 눌러 목적지를
+// "가고 싶은 장소를 골라주세요" 안내가 뜨고, 참가자는 보드 칸을 직접 눌러 목적지를
 // 고른다. 고른 뒤에는 작은 확인 패널에서 이동을 확정한다(POST /board/airport/move, 팀장만).
 // 팀당 1회만 쓸 수 있고, 아직 소모하지 않은 칸만 고를 수 있다.
 import styles from "./BoardScreen.module.css";
@@ -15,7 +15,7 @@ export default function AirportTravelOverlay({ destination, isMutating, onConfir
           // 마지막 글자 뒤 자간만큼 왼쪽을 채워 잉크 중심을 맞춘다
           className={`${styles.airportHint} pointer-events-none absolute left-[48.099%] top-[46.85%] z-30 m-0 -translate-x-1/2 whitespace-nowrap pl-[0.319cqw] font-pretendard text-[1.875cqw] font-bold leading-none tracking-[0.319cqw] text-[#e5dccc] [text-shadow:0_0.08cqw_0.4cqw_rgba(0,0,0,0.75)]`}
         >
-          가고 싶은 장소를 골라주세요!
+          가고 싶은 장소를 골라주세요
         </p>
       )}
 

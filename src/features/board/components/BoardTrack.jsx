@@ -171,7 +171,7 @@ export default function BoardTrack({
         {showIntro && canRoll && diceReady && !isRolling && !rolling && assembly === "done" && (
           <span aria-hidden="true" className={styles.diceIntro}>
             <span className={styles.diceIntroCircle} />
-            <span className={styles.diceIntroText}>주사위를 눌러 시작하세요!</span>
+            <span className={styles.diceIntroText}>주사위를 눌러 시작하세요</span>
           </span>
         )}
         <span className="sr-only">주사위 굴리기</span>

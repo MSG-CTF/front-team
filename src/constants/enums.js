@@ -36,6 +36,22 @@ export const INSTANCE_STATUS = {
   CLEANED: "CLEANED",
 };
 
+// 관리자 화면의 인스턴스 상태 이름 참가자 화면과 달리 모든 상태를 한국어로 구분한다
+export const ADMIN_INSTANCE_STATUS_LABEL = {
+  [INSTANCE_STATUS.REQUESTED]: "요청됨",
+  [INSTANCE_STATUS.SCHEDULING]: "배정 중",
+  [INSTANCE_STATUS.PROVISIONING]: "준비 중",
+  [INSTANCE_STATUS.RUNNING]: "실행 중",
+  [INSTANCE_STATUS.RESTARTING]: "재시작 중",
+  [INSTANCE_STATUS.RESETTING]: "초기화 중",
+  [INSTANCE_STATUS.STOPPING]: "종료 중",
+  [INSTANCE_STATUS.STOPPED]: "종료됨",
+  [INSTANCE_STATUS.FAILED]: "실패",
+  [INSTANCE_STATUS.EXPIRED]: "만료",
+  [INSTANCE_STATUS.CLEANUP_PENDING]: "정리 대기",
+  [INSTANCE_STATUS.CLEANED]: "정리됨",
+};
+
 // "활성(active)" / "종료(terminal)" 분류 — README.md "인스턴스 상태" 참고.
 // host/port/expires_at/remaining_seconds는 RUNNING일 때만 유효.
 export const ACTIVE_INSTANCE_STATUSES = [
@@ -73,6 +89,15 @@ export const CELL_TYPE = {
   CHANCE: "CHANCE",
   AIRPORT: "AIRPORT",
   ROULETTE: "ROULETTE",
+};
+
+// 화면에 보이는 칸 종류 이름 게임 규칙 화면과 같은 말을 쓴다
+export const CELL_TYPE_LABEL = {
+  [CELL_TYPE.START]: "출발 칸",
+  [CELL_TYPE.CHALLENGE]: "문제 칸",
+  [CELL_TYPE.CHANCE]: "찬스 칸",
+  [CELL_TYPE.AIRPORT]: "기차 칸",
+  [CELL_TYPE.ROULETTE]: "룰렛 칸",
 };
 
 // 프론트는 알 수 없는 상태값을 받으면 "준비 중"으로 처리하고 폴링을 계속한다.
