@@ -94,7 +94,7 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
         {submission.solved ? <p className={styles.solved} role="status">풀이 완료 ✓</p> : <>
           <label htmlFor={flagId}>플래그 제출</label>
           <div className={styles.row}>
-            <input id={flagId} type="text" placeholder="MSG{...}" autoComplete="off" autoCapitalize="off" spellCheck={false}
+            <input id={flagId} type="text" placeholder="msgctf2026{...}" autoComplete="off" autoCapitalize="off" spellCheck={false}
               value={submission.flag} maxLength={512} disabled={submission.busy}
               onChange={event => submission.setFlag(event.target.value)}
               aria-invalid={["INCORRECT_FLAG", "INVALID_REQUEST"].includes(submission.feedback?.code) || undefined} />
