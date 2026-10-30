@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   INITIAL_DETAIL_STATE,
+  isInstanceChanging,
   needsInstanceLookup,
   readDetailResult,
   resolveDetailState,
@@ -17,6 +18,16 @@ const activeInstance = {
   challenge_id: "current",
   status: "RUNNING",
 };
+
+test("생성·정리 중만 빠른 조회를 사용하고 실행·종료 후에는 멈춘다", () => {
+  for (const status of ["REQUESTED", "SCHEDULING", "PROVISIONING", "STOPPING", "STOPPED", "CLEANUP_PENDING", "EXPIRED"]) {
+    assert.equal(isInstanceChanging({ status }), true, status);
+  }
+  for (const status of ["RUNNING", "CLEANED", "FAILED", undefined]) {
+    assert.equal(isInstanceChanging({ status }), false, status);
+  }
+  assert.equal(isInstanceChanging(null), false);
+});
 
 test("정적 문제와 Windows 원격 실행은 인스턴스 조회 없이 표시한다", () => {
   assert.equal(needsInstanceLookup({ requires_instance: false, instance: null }), false);
