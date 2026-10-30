@@ -8,6 +8,7 @@ import { activeTestFromFailure, deploymentTestStatus, deploymentTestSteps } from
 import { AdminBadge } from "./AdminLayout.jsx";
 import styles from "./AdminWorkspace.module.css";
 import InstanceConnectionDetails from "../../challenges/components/InstanceConnectionDetails.jsx";
+import { isInstanceChanging } from "../../challenges/utils/challengeDetailState.js";
 import { endpointConnectionDetails, endpointCopyText, endpointTerminalConnection } from "../../challenges/utils/instanceConnectionDetails.js";
 
 const RUNNING_STATES = ["REQUESTED", "SCHEDULING", "PROVISIONING"];
@@ -43,6 +44,7 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
   const generation = useRef(0);
   const request = useRef(null);
   const controller = useRef(null);
+  const fastPolling = !loadError && isInstanceChanging(data?.active_test);
 
   const load = useCallback(async () => {
     if (fetching.current || pending.current || !mounted.current) return;
@@ -60,9 +62,11 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
 
   useEffect(() => {
     mounted.current = true;
-    const stopPolling = startVisiblePolling(load, { intervalMs: 4000 });
+    const stopPolling = startVisiblePolling(load, {
+      intervalMs: fastPolling ? 1500 : 4000,
+    });
     return () => { stopPolling(); mounted.current = false; generation.current += 1; controller.current?.abort(); };
-  }, [load]);
+  }, [load, fastPolling]);
   useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
   // 진행 중에는 1초마다 경과 시간을 다시 그린다
   const ticking = Boolean(data?.active_test && !data.active_test.finished_at);

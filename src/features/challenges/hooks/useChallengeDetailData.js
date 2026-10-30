@@ -4,6 +4,7 @@ import { getMyInstances } from "../../../api/instances.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import {
   INITIAL_DETAIL_STATE,
+  isInstanceChanging,
   needsInstanceLookup,
   readDetailResult,
   resolveDetailState,
@@ -14,6 +15,7 @@ export default function useChallengeDetailData(challengeId) {
   const controller = useRef(null);
   const instanceLookupRequired = useRef(true);
   const [state, setState] = useState(INITIAL_DETAIL_STATE);
+  const fastPolling = !state.instanceError && isInstanceChanging(state.instanceData);
 
   const load = useCallback(async () => {
     const sequence = ++requestSequence.current;
@@ -82,12 +84,14 @@ export default function useChallengeDetailData(challengeId) {
   }, [invalidateRequest]);
 
   useEffect(() => {
-    const stopPolling = startVisiblePolling(load, { intervalMs: 5000 });
+    const stopPolling = startVisiblePolling(load, {
+      intervalMs: fastPolling ? 1500 : 5000,
+    });
     return () => {
       stopPolling();
       invalidateRequest();
     };
-  }, [load, invalidateRequest]);
+  }, [load, invalidateRequest, fastPolling]);
 
   return { ...state, retry: load, refresh: load, applyInstance, applySolved };
 }
