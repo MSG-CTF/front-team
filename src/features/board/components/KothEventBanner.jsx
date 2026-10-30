@@ -4,7 +4,7 @@ import { preloadGameArtwork } from "../../../routes/pageResources.js";
 import styles from "./BoardScreen.module.css";
 
 // Figma node 5:26 "버튼 없 배너"(339x627) + 5:32 "라운드 버튼"(213x168).
-// 우측 세로 배너 + 그 아래 "N ROUND" 버튼. 제목/일러스트/라운드 숫자가 그림에
+// 우측 세로 배너 + 그 아래 "N ROUND" 버튼. 배너 어디를 눌러도 KoTH 로 이동한다(키보드는 라운드 버튼). 제목/일러스트/라운드 숫자가 그림에
 // 이미 그려져 있어 여기서는 배치와 클릭 영역만 담당한다.
 //
 // ⚠️ 이벤트 제목, 라운드 숫자는 banner/button 그림에 구워진 값이다(현재 "KING OF
@@ -21,7 +21,10 @@ export default function KothEventBanner() {
       <img
         src="/assets/board/banner-koth-event.webp"
         alt="KOTH 이벤트 배너"
-        className={`${styles.kothBanner} absolute left-[81.45%] top-[26.48%] w-[17.66%] h-[58.06%] object-contain pointer-events-none`}
+        onPointerEnter={() => preloadGameArtwork(document, ROUTES.koth)}
+        onPointerDown={() => preloadGameArtwork(document, ROUTES.koth)}
+        onClick={() => navigate(ROUTES.koth)}
+        className={`${styles.kothBanner} absolute left-[81.45%] top-[26.48%] w-[17.66%] h-[58.06%] cursor-pointer object-contain transition-[filter] duration-150 hover:brightness-105`}
       />
 
       <button

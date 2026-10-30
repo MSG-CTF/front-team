@@ -1,4 +1,5 @@
 import apiClient from "./client.js";
+import { downloadFile } from "./fileDownload.js";
 
 // KOTH endpoint를 한 곳에서 관리한다.
 // 성공 여부는 각 호출부에서 공통 응답 envelope의 code === "SUCCESS"로 판정한다.
@@ -26,21 +27,18 @@ export function getMyKothProgress(config) {
   return apiClient.get("/koth/me", config);
 }
 
-export function getKothTeamToken(config) {
-  // GET /koth/team_token (Bearer)
+export function getKothTeamToken(kothChallengeId, config) {
+  // GET /koth/team_token?koth_challenge_id= (Bearer)
   // 외부 KOTH 문제 서버에 입력할 팀 토큰이며 로그인 JWT와는 별도 값이다.
-  return apiClient.get("/koth/team_token", config);
+  // 토큰은 문제별로 달라 문제 ID 없이 요청하면 400 KOTH_CHALLENGE_ID_REQUIRED
+  return apiClient.get("/koth/team_token", { ...config, params: { koth_challenge_id: kothChallengeId } });
 }
 export function getKothLeaderboard(challengeId, config) {
   return apiClient.get("/koth/leaderboard", { ...config, params: { koth_challenge_id: challengeId } });
 }
 
-export function downloadKothFile(kothChallengeId, { signal } = {}) {
+export function downloadKothFile(kothChallengeId, { signal, onDownloadProgress } = {}) {
   // GET /koth/challenges/{id}/file (Bearer, 프론트 요청 계약)
   // 저장소 prob/for_user 를 묶은 zip 하나 문제가 파일을 주지 않으면 404
-  return apiClient.get(`/koth/challenges/${encodeURIComponent(kothChallengeId)}/file`, {
-    responseType: "blob",
-    timeout: 60000,
-    signal,
-  });
+  return downloadFile(`/koth/challenges/${encodeURIComponent(kothChallengeId)}/file`, { signal, onDownloadProgress });
 }

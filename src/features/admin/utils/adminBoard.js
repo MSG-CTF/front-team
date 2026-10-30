@@ -29,34 +29,42 @@ export function validateBoardPositionMove({ position, reason }) {
   return "";
 }
 
-// 관리자 이벤트 필터에 릴리스 활성화 감사 로그를 포함한다
+// 백엔드 AdminEvent.EventType 30종 전부 필터와 표시에 쓴다
 export const ADMIN_EVENT_TYPES = [
+  { value: "SUBMISSION_DELETED", label: "제출 기록 삭제 / 정답 회수" },
   { value: "TEAM_BANNED", label: "팀 밴" },
   { value: "TEAM_UNBANNED", label: "팀 밴 해제" },
-  { value: "MILEAGE_ADJUSTED", label: "마일리지 조정" },
-  { value: "PAYMENT_REFUNDED", label: "결제 환불" },
-  { value: "INSTANCE_FAILED", label: "인스턴스 실패" },
-  { value: "INSTANCE_FORCED", label: "인스턴스 강제 조작" },
-  { value: "CHALLENGE_VISIBILITY_CHANGED", label: "문제 공개 전환" },
-  { value: "SETTINGS_CHANGED", label: "설정 변경" },
-  { value: "DICE_ADJUSTED", label: "주사위 지급/회수" },
-  { value: "BOARD_POSITION_MOVED", label: "말 위치 이동" },
-  { value: "CELL_STATUS_CHANGED", label: "칸 상태 변경" },
-  { value: "CHALLENGE_RELEASE_ACTIVATED", label: "배포 버전 전환" },
-];
-
-// Notion 명세(2026-09-24): 아래 5종은 백엔드 PR 대기 중. 머지 전 필터로 보내면 400이므로
-// 필터에서는 따로 묶어 보여주고, 라벨 표시는 미리 해둔다.
-export const ADMIN_EVENT_TYPES_PENDING = [
   { value: "TEAM_UPDATED", label: "팀 정보 수정" },
   { value: "TEAM_DELETED", label: "팀 삭제" },
   { value: "ACCOUNT_CREATED", label: "계정 등록" },
+  { value: "MILEAGE_ADJUSTED", label: "마일리지 조정" },
   { value: "PAYMENT_PROCESSED", label: "결제 처리" },
+  { value: "PAYMENT_REFUNDED", label: "결제 환불" },
+  { value: "INSTANCE_FAILED", label: "인스턴스 실패" },
+  { value: "INSTANCE_FORCED", label: "인스턴스 강제 조작" },
   { value: "CHALLENGE_CREATED", label: "문제 등록" },
+  { value: "CHALLENGE_UPDATED", label: "문제 수정" },
+  { value: "CHALLENGE_DELETED", label: "문제 삭제" },
+  { value: "CHALLENGE_VISIBILITY_CHANGED", label: "문제 공개 전환" },
+  { value: "CHALLENGE_FLAG_REVEALED", label: "정답 플래그 열람" },
+  { value: "CHALLENGE_RELEASE_APPROVED", label: "배포 버전 승인" },
+  { value: "CHALLENGE_RELEASE_ACTIVATED", label: "배포 버전 전환" },
+  { value: "SIGNATURE_CREATED", label: "시그니처 문제 등록" },
+  { value: "SIGNATURE_UPDATED", label: "시그니처 문제 수정" },
+  { value: "SIGNATURE_DELETED", label: "시그니처 문제 삭제" },
+  { value: "SIGNATURE_VISIBILITY_CHANGED", label: "시그니처 문제 공개 전환" },
+  { value: "SIGNATURE_SOLVED", label: "시그니처 정답" },
+  { value: "SETTINGS_CHANGED", label: "설정 변경" },
+  { value: "RESOURCE_ACCOUNT_UPDATED", label: "클라우드 계정 수정" },
+  { value: "DICE_ADJUSTED", label: "주사위 지급/회수" },
+  { value: "BOARD_POSITION_MOVED", label: "말 위치 이동" },
+  { value: "CELL_STATUS_CHANGED", label: "칸 상태 변경" },
+  { value: "LINE_MONOPOLIZED", label: "라인 독점" },
+  { value: "LINE_MONOPOLY_SCORE_CHANGED", label: "라인 독점 점수 수정" },
 ];
 
 export function getAdminEventTypeLabel(type) {
-  return [...ADMIN_EVENT_TYPES, ...ADMIN_EVENT_TYPES_PENDING].find((item) => item.value === type)?.label ?? type ?? "-";
+  return ADMIN_EVENT_TYPES.find((item) => item.value === type)?.label ?? type ?? "-";
 }
 
 // severity는 네 가지만 온다. 명세 초안의 ERROR는 없는 값(CRITICAL로 정정됨).

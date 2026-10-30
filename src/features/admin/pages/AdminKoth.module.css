@@ -14,16 +14,22 @@
 .tabsBar > [role="tablist"] { margin: 0; }
 .scoreWarning { color: var(--orange-text); font-size: 12.5px; font-weight: 600; }
 
-/* ───── 점수 환산 카드 ───── */
-.rule { display: grid; gap: 10px; margin: 0 0 16px; padding: 14px 16px; border-radius: var(--radius-lg); background: var(--surface-sunken); box-shadow: inset 0 0 0 0.5px var(--hairline); }
+/* ───── 틱 배점 카드: 부문마다 순위별 점수 칸 ───── */
+.rule { display: grid; gap: 12px; margin: 0 0 16px; padding: 14px 16px; border-radius: var(--radius-lg); background: var(--surface-sunken); box-shadow: inset 0 0 0 0.5px var(--hairline); }
+.listRule { margin: 0; }
 .ruleHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
 .ruleHead strong { color: var(--label); font-size: 14px; font-weight: 700; }
 .ruleHead span { color: var(--label-3); font-size: 12.5px; }
-.points { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 1px; margin: 0; padding: 0; overflow: hidden; border-radius: var(--radius-md); background: var(--hairline); list-style: none; }
-.points li { display: grid; justify-items: center; gap: 2px; padding: 8px 4px; background: var(--surface); }
-.points span { color: var(--label-3); font-size: 12px; font-weight: 600; }
-.points strong { color: var(--label); font: 700 20px/24px var(--font); font-variant-numeric: tabular-nums; }
-.points li:last-child strong { color: var(--label-4); }
+.divisions { display: grid; gap: 10px; }
+/* 두 부문의 칸 폭이 같아 같은 순위가 위아래로 맞는다 */
+.division { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: start; gap: 12px; }
+.divisionName { display: grid; gap: 2px; margin: 0; padding-top: 7px; }
+.divisionName strong { color: var(--label); font-size: 13.5px; font-weight: 700; }
+.divisionName span { color: var(--label-3); font-size: 12px; font-variant-numeric: tabular-nums; }
+.points { display: grid; grid-template-columns: repeat(auto-fill, minmax(46px, 1fr)); gap: 4px; margin: 0; padding: 0; list-style: none; }
+.points li { display: grid; justify-items: center; gap: 1px; padding: 6px 2px 7px; border-radius: var(--radius-sm); background: var(--surface); box-shadow: inset 0 0 0 0.5px var(--hairline); }
+.points span { color: var(--label-3); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.points strong { color: var(--label); font: 700 17px/22px var(--font); font-variant-numeric: tabular-nums; }
 .ruleNote { margin: 0; color: var(--label-3); font-size: 12.5px; line-height: 18px; }
 
 /* ───── 틱 기록: 번호 칸 줄과 고른 틱의 결과 ───── */
@@ -171,7 +177,9 @@
   .periodTable :global(table) :is(th, td), .leaderboard :global(table) :is(th, td) { padding-right: 8px; padding-left: 8px; }
   .periodTable td:nth-child(2), .leaderboard td:nth-child(2) { white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
   .rank { width: 64px; }
-  .points { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .division { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .divisionName { display: flex; align-items: baseline; gap: 8px; padding-top: 0; }
+  .points { grid-template-columns: repeat(auto-fill, minmax(42px, 1fr)); }
   .linkedFacts { grid-template-columns: minmax(0, 1fr); }
   /* KoTH 목록은 폰에서 가로 스크롤 없이 카드로 쌓는다 순번은 왼쪽 칸, 제목과 상태가 첫 줄 */
   .listStack :global(table) { min-width: 0; }

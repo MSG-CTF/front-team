@@ -1,4 +1,5 @@
 import apiClient from "./client.js";
+import { downloadFile } from "./fileDownload.js";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -9,13 +10,9 @@ export function challengeFilePath(challengeId, fileId) {
   return `/challenges/${challengeId}/files/${fileId}/download`;
 }
 
-export function downloadChallengeFile(challengeId, fileId, { signal } = {}) {
+export function downloadChallengeFile(challengeId, fileId, { signal, onDownloadProgress } = {}) {
   // 응답의 임의 URL에 Bearer를 붙이지 않고 현재 문제의 고정 경로만 요청한다
-  return apiClient.get(challengeFilePath(challengeId, fileId), {
-    responseType: "blob",
-    timeout: 60000,
-    signal,
-  });
+  return downloadFile(challengeFilePath(challengeId, fileId), { signal, onDownloadProgress });
 }
 
 // 문제 관련 조회/제출. 경로와 스키마는 README.md "3. 문제 상세 페이지",
@@ -48,4 +45,27 @@ export function getOpenChallenges(config) {
   // "열린 문제 목록 페이지"는 전용 엔드포인트가 없다(Notion DB 비어 있음).
   // GET /board/opened_challenges 가 담당: opened_challenges[], total_count, solved_count, total_score.
   return apiClient.get("/board/opened_challenges", config);
+}
+
+export function exeSubmissionPath(challengeId) {
+  if (typeof challengeId !== "string" || !UUID.test(challengeId)) throw new TypeError("문제 식별자를 확인해주세요");
+  return `/challenges/${challengeId}/exe-submissions`;
+}
+
+export function getExeSubmissions(challengeId, config = {}) {
+  return apiClient.get(exeSubmissionPath(challengeId), { timeout: 10000, ...config });
+}
+
+export function getExeSubmission(challengeId, submissionId, config = {}) {
+  if (typeof submissionId !== "string" || !UUID.test(submissionId)) throw new TypeError("실행 기록을 확인해주세요");
+  return apiClient.get(`${exeSubmissionPath(challengeId)}/${submissionId}`, { timeout: 10000, ...config });
+}
+
+export function submitExecutable(challengeId, file, key, config = {}) {
+  if (!UUID.test(key)) throw new TypeError("실행 요청을 확인해주세요");
+  const body = new FormData();
+  body.append("file", file);
+  return apiClient.post(exeSubmissionPath(challengeId), body, {
+    ...config, timeout: 30000, headers: { "Idempotency-Key": key },
+  });
 }

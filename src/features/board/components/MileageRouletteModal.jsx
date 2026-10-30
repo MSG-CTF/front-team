@@ -148,10 +148,10 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
   };
 
   const message = showResult
-    ? <><strong className={styles.reward}>+{mileageGained} M</strong><span>마일리지를 받았어요</span><span className={styles.total}>보유 마일리지 {event.result?.totalMileage ?? "-"} M</span></>
+    ? <><strong className={styles.reward}>+{mileageGained} MI</strong><span>마일리지를 받았습니다</span><span className={styles.total}>보유 마일리지 {event.result?.totalMileage ?? "-"} MI</span></>
     : isBusy
       ? "룰렛이 돌아가는 중입니다"
-      : spinError || errorMessage || "룰렛을 돌려 마일리지를 받아보세요";
+      : spinError || errorMessage || "룰렛을 돌리면 마일리지를 받습니다";
 
   const view = (
     <div className={styles.backdrop} role="presentation">
@@ -217,7 +217,7 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
             </button>}
         </div>
         <p className={`${styles.luck}${showResult ? ` ${styles.luckResult}` : ""}`} aria-hidden="true">
-          {showResult ? `보유 마일리지 ${event.result?.totalMileage ?? "-"} M` : "Try your Luck"}
+          {showResult ? `보유 마일리지 ${event.result?.totalMileage ?? "-"} MI` : "50 · 100 · 150 · 200 MI 중 하나"}
         </p>
       </section>
     </div>

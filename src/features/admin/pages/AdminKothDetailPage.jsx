@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { getAdminKothChallenge } from "../../../api/admin.js";
+import { getAdminKothChallenge, getAdminKothChallenges } from "../../../api/admin.js";
 import { getKothLeaderboard } from "../../../api/koth.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { isSuccess } from "../../../utils/response.js";
@@ -51,6 +51,8 @@ export default function AdminKothDetailPage() {
   const { kothChallengeId } = useParams();
   const detail = useAdminResource((config) => loadKothDetail(kothChallengeId, config), [kothChallengeId], "KoTH 문제를 불러오지 못했습니다");
   const leaderboard = useAdminResource((config) => getKothLeaderboard(kothChallengeId, config), [kothChallengeId], "누적 순위를 불러오지 못했습니다");
+  // 부문별 배점표는 목록 응답의 scoring 에만 있다
+  const scoring = useAdminResource(getAdminKothChallenges, [], "배점표를 불러오지 못했습니다");
   // 등록 창에서 넘어오면 넘겨받은 탭(문제 정보, 저장소 연결)부터 연다
   const location = useLocation();
   const [tab, setTab] = useState(() => TABS.some((item) => item.id === location.state?.tab) ? location.state.tab : "edit");
@@ -61,7 +63,7 @@ export default function AdminKothDetailPage() {
   const status = kothStatus(challenge?.status);
   const last = challenge?.last_period;
 
-  const refresh = useCallback(() => Promise.all([detail.reload(), leaderboard.reload()]), [detail.reload, leaderboard.reload]);
+  const refresh = useCallback(() => Promise.all([detail.reload(), leaderboard.reload(), scoring.reload()]), [detail.reload, leaderboard.reload, scoring.reload]);
   // 저장소의 info.yaml 지문을 편집 칸에 채우고 문제 정보 탭으로 넘긴다 제목은 그대로 둔다
   const applyDraft = useCallback((next) => { setDraft({ description: next.description ?? "", at: Date.now() }); setTab("edit"); }, []);
 
@@ -102,7 +104,7 @@ export default function AdminKothDetailPage() {
             {tab === "periods" && <KothPeriodsPanel challengeId={kothChallengeId} openedAt={challenge.opened_at} limited={limited} onRetried={refresh} />}
           </div>
           <div role="tabpanel" id="koth-detail-panel-ranking" aria-labelledby="koth-detail-tab-ranking" hidden={tab !== "ranking"}>
-            {tab === "ranking" && <KothLeaderboardPanel leaderboard={leaderboard} />}
+            {tab === "ranking" && <KothLeaderboardPanel leaderboard={leaderboard} scoring={scoring} />}
           </div>
           <div role="tabpanel" id="koth-detail-panel-edit" aria-labelledby="koth-detail-tab-edit" hidden={tab !== "edit"}>
             {tab === "edit" && <KothEditorPanel key={`${challenge.updated_at ?? ""}:${draft?.at ?? ""}`} challenge={challenge} limited={limited}

@@ -19,9 +19,10 @@ export function getMyInstances(config) {
   return apiClient.get("/teams/me/instances", config);
 }
 
-export function createInstance({ challengeId }) {
-  // POST /instances - 202. 기존 RUNNING은 자동 교체(replaced_instance_id).
-  return apiClient.post("/instances", { challenge_id: challengeId }, idKey("instance-create"));
+export function createInstance({ challengeId, replaceInstanceId }) {
+  const body = { challenge_id: challengeId };
+  if (replaceInstanceId) body.replace_instance_id = replaceInstanceId;
+  return apiClient.post("/instances", body, idKey("instance-create"));
 }
 
 export function resetInstance(instanceId) {

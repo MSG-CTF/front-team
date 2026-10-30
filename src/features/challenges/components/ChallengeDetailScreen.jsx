@@ -6,9 +6,9 @@ import ChallengeDescriptionPanel from "./ChallengeDescriptionPanel.jsx";
 import InstancePanel from "./InstancePanel.jsx";
 import InstanceControls from "./InstanceControls.jsx";
 import InstanceActionDialog from "./InstanceActionDialog.jsx";
+import InstanceNotice from "./InstanceNotice.jsx";
 import RemoteRunPanel from "./RemoteRunPanel.jsx";
 import FlagSubmitPanel from "./FlagSubmitPanel.jsx";
-import RequestFeedback from "./RequestFeedback.jsx";
 import { formatRemaining } from "../../../utils/time.js";
 import styles from "./ChallengeDetailScene.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
@@ -48,15 +48,13 @@ export default function ChallengeDetailScreen({
   // 파일을 내서 운영 VM에서 돌리는 문제는 인스턴스 대신 원격 실행 칸을 같은 자리에 둔다
   const showRemoteRun = Boolean(challenge?.remoteRun);
   const showInstance = !showRemoteRun && (challenge?.requiresInstance || instance != null);
+  // 인스턴스도 원격 실행도 없는 문제는 그 자리에 마스코트를 둬 빈 칸처럼 보이지 않게 한다
+  const showMascot = !showRemoteRun && !showInstance;
   const showDock =
     challenge &&
     !loading &&
     !pageError &&
-    (refreshError ||
-      instanceError ||
-      instanceFeedback ||
-      retrySeconds > 0 ||
-      showBonus);
+    (refreshError || retrySeconds > 0 || showBonus);
   return (
     <div className={styles.page}>
       <div className={styles.stage}>
@@ -131,7 +129,20 @@ export default function ChallengeDetailScreen({
                         pendingAction={pendingAction}
                         onAction={onInstanceAction}
                       />
+                      <InstanceNotice
+                        feedback={instanceFeedback}
+                        error={instanceError}
+                        refreshing={refreshing}
+                        onRetry={onRetry}
+                      />
                     </>
+                  )}
+                  {showMascot && (
+                    <div className={styles.mascotPanel}>
+                      <img src="/assets/challenge-detail/mascot-squirrel.webp" alt="" aria-hidden="true" width="360" height="490" decoding="async" />
+                      {/* 인스턴스도 원격 실행도 없는 문제에만 보이므로 그 사실을 알린다 */}
+                      <p className={styles.mascotCaption}>서버 없이 푸는 문제</p>
+                    </div>
                   )}
                   <FlagSubmitPanel
                     value={flagValue}
@@ -171,20 +182,6 @@ export default function ChallengeDetailScreen({
                       </button>
                     </div>
                   )}
-                  {instanceError && (
-                    <div className={styles.errorMessage}>
-                      <p role="alert">{instanceError.message}</p>
-                      <button
-                        type="button"
-                        className={styles.noticeButton}
-                        onClick={onRetry}
-                        disabled={refreshing}
-                      >
-                        {refreshing ? "확인 중…" : "다시 조회"}
-                      </button>
-                    </div>
-                  )}
-                  <RequestFeedback feedback={instanceFeedback} />
                   {retrySeconds > 0 && (
                     <p id="flag-retry" className={styles.retryNotice}>
                       <strong>{retrySeconds}초</strong> 후 다시 제출할 수

@@ -1,0 +1,12 @@
+.fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 12px; }
+.field { display: grid; gap: 6px; min-width: 0; }
+.field input, .field select { min-width: 0; width: 100%; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.long { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+.stack { display: grid; gap: 16px; min-width: 0; }
+.nodes { display: grid; gap: 8px; padding: 0; list-style: none; }
+.node { display: flex; gap: 8px; align-items: flex-start; min-width: 0; }
+.node input { flex: 0 0 auto; margin-top: 5px; }
+.table { overflow-x: auto; max-width: 100%; }
+.selection { min-width: 0; padding: 12px; border: 1px solid var(--separator, #ddd8cf); border-radius: 12px; }
+.selection legend { padding: 0 6px; font-size: 13px; color: var(--label-2); }

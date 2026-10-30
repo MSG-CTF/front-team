@@ -1,3 +1,4 @@
+@import "../../../styles/pretendard/detail.generated.css";
 /* Figma: "MSG-CTF 프론트 개발", node 192:137 (Rules Page, 1920x1080). */
 
 /* 배경은 메인(보드) 페이지와 같은 Figma 467:345 원본 한 장. 예전에는 무대 안에 풍경+보드가 함께 그려진
@@ -99,7 +100,7 @@
 }
 
 .ruleTitle {
-  font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+  font-family: "Detail Pretendard", "Pretendard", "Apple SD Gothic Neo", sans-serif;
   font-size: clamp(16px, 1.25cqw, 24px);
   font-weight: 700;
   line-height: 1.2917;
@@ -107,7 +108,7 @@
 
 .ruleDescription {
   margin-top: 0.5208cqw;
-  font-family: "IM FELL English", "Pretendard", "Apple SD Gothic Neo", serif;
+  font-family: "Detail Pretendard", "Pretendard", "Apple SD Gothic Neo", sans-serif;
   font-size: clamp(16px, 1.1cqw, 22px);
   font-weight: 400;
   line-height: 1.6;
@@ -149,7 +150,7 @@
   .background, .rulesPanelImage { display: none; }
   .logo { position: static; width: 160px; height: 130px; margin: -16px auto 12px; object-fit: contain; }
   .rulesPanel { position: static; width: 100%; height: auto; overflow: visible; }
-  .rulesPanel h1 { position: static; width: auto; height: auto; margin: 0 0 24px; clip: auto; overflow: visible; text-align: center; font: 24px/1.5 "Song Myung", serif; color: #613d15; }
+  .rulesPanel h1 { position: static; width: auto; height: auto; margin: 0 0 24px; clip: auto; overflow: visible; text-align: center; font: 700 24px/1.5 "Detail Pretendard", "Pretendard", "Apple SD Gothic Neo", sans-serif; color: #613d15; }
   .rulesList { position: static; overflow: visible; gap: 24px; padding: 0; -webkit-mask-image: none; mask-image: none; }
   .ruleTitle { font-size: 18px; }
   .ruleDescription { margin-top: 8px; font-size: 16px; }

@@ -16,6 +16,7 @@ function setup({ decode = () => null, getMedia } = {}) {
     scheduled: [],
     cancelled: [],
     requests: [],
+    draws: [],
   };
   const track = {
     stop: () => state.stopped++,
@@ -35,11 +36,11 @@ function setup({ decode = () => null, getMedia } = {}) {
     width: 0,
     height: 0,
     getContext: () => ({
-      drawImage() {},
-      getImageData: () => ({
+      drawImage: (...args) => state.draws.push(args.slice(1)),
+      getImageData: (x, y, width, height) => ({
         data: new Uint8ClampedArray(4),
-        width: 1,
-        height: 1,
+        width,
+        height,
       }),
     }),
   };
@@ -99,6 +100,47 @@ test("QR을 읽으면 스트림을 끄고 토큰 한 번만 전달한다", async
   assert.deepEqual(fixture.state.scheduled, []);
   assert.equal(fixture.state.requests[0].audio, false);
   assert.equal(fixture.state.requests[0].video.facingMode.ideal, "environment");
+  assert.equal(fixture.state.requests[0].video.width.ideal, 1920);
+  assert.equal(fixture.state.requests[0].video.height.ideal, 1080);
+});
+
+function recordFrames(fixture) {
+  const frames = [];
+  fixture.environment.loadDecoder = async () => (data, width, height) => {
+    frames.push([width, height]);
+    return null;
+  };
+  return frames;
+}
+
+test("웹캠 화면은 전체를 1280px까지만 줄여 읽고 다음 프레임은 가운데를 원래 해상도로 읽는다", async () => {
+  const fixture = setup();
+  const frames = recordFrames(fixture);
+  fixture.video.videoWidth = 1920;
+  fixture.video.videoHeight = 1080;
+  const scanner = fixture.start();
+  await scanner.ready;
+  fixture.state.scheduled.shift()();
+  assert.deepEqual(frames, [
+    [1280, 720],
+    [1080, 1080],
+  ]);
+  assert.deepEqual(fixture.state.draws[1], [420, 0, 1080, 1080, 0, 0, 1080, 1080]);
+  scanner.stop();
+});
+
+test("작은 카메라 화면은 키우지 않고 그대로 읽는다", async () => {
+  const fixture = setup();
+  const frames = recordFrames(fixture);
+  const scanner = fixture.start();
+  await scanner.ready;
+  fixture.state.scheduled.shift()();
+  assert.deepEqual(frames, [
+    [640, 480],
+    [480, 480],
+  ]);
+  assert.deepEqual(fixture.state.draws[1], [80, 0, 480, 480, 0, 0, 480, 480]);
+  scanner.stop();
 });
 
 test("다른 QR은 안전한 안내만 표시하고 결제 토큰으로 넘기지 않는다", async () => {

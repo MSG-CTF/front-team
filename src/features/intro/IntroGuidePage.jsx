@@ -3,7 +3,7 @@ import { ROUTES } from "../../routes/routePaths.js";
 import { eventConfig } from "./config/eventConfig.js";
 import { getEventLabels } from "./utils/eventData.js";
 import ApplyLink from "./components/ApplyLink.jsx";
-import { PrizeTotal, PrizeList, RankAwards, SpecialAwards } from "./components/Prizes.jsx";
+import { PrizeTotal, PrizeList, SpecialAwards } from "./components/Prizes.jsx";
 
 export default function IntroGuidePage() {
   const labels = getEventLabels(eventConfig.event);
@@ -113,9 +113,8 @@ export default function IntroGuidePage() {
         </p>
         <div className="guide-prizes">
           <p>
-            총상금 <PrizeTotal as="strong" />
+            대회 상금 <PrizeTotal as="strong" />
           </p>
-          <RankAwards />
           <SpecialAwards />
           <PrizeList table />
         </div>

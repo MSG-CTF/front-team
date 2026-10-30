@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { downloadChallengeFile } from "../../../api/challenges.js";
 import {
   fileDownloadError,
+  fileDownloadProgress,
   getAttachmentDownload,
   safeDownloadName,
   validateFileBlob,
@@ -35,7 +36,15 @@ export default function ChallengeAttachment({ attachment, downloadFile = downloa
       const response = await downloadFile(
         target.challengeId,
         target.fileId,
-        { signal: controller.signal },
+        {
+          signal: controller.signal,
+          onDownloadProgress(event) {
+            if (request.current !== controller || controller.signal.aborted) return;
+            const message = fileDownloadProgress(event, attachment.sizeBytes);
+            setState((current) => current.status === "loading" && current.message !== message
+              ? { status: "loading", message } : current);
+          },
+        },
       );
       if (controller.signal.aborted) return;
       const blob = await validateFileBlob(response.data);

@@ -281,7 +281,7 @@
   .refreshControls svg { width: 16px; height: 16px; }
   .mobileTableHint { display: block; margin: 12px 0 8px; font: 14px/1.6 "Pretendard", sans-serif; color: #402510; }
   .tableContainer { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin; scrollbar-color: #a98550 transparent; }
-  .rankingGrid { min-width: 960px; font-size: 14px; }
+  .rankingGrid { min-width: 1036px; font-size: 14px; }
   .rankingGrid thead th { font-size: 15px; height: 44px; }
   .rankingGrid tbody tr { height: 48px; }
   .rankingGrid .rankCell { font-size: 22px; }
@@ -294,12 +294,12 @@
 }
 
 @media (max-width: 1100px) {
-  .rankingGrid col { width: 54px; }
+  .rankingGrid col { width: 60px; }
   .rankingGrid col:first-child { width: 48px; }
   .rankingGrid col:nth-child(2) { width: 152px; }
   .rankingGrid col:nth-child(3) { width: 84px; }
   .rankingGrid col:nth-child(4) { width: 56px; }
-  .rankingGrid col:nth-last-child(-n + 2) { width: 72px; }
+  .rankingGrid col:nth-last-child(-n + 3) { width: 72px; }
   .rankingGrid thead th { white-space: nowrap; }
 }
 

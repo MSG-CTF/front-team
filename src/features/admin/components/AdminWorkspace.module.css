@@ -152,6 +152,14 @@
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .input { width: 100%; }
+/* 날짜 입력은 기기마다 고유 폭이 있어 칸을 밀어내기 쉬우니 칸 폭에 맞춘다 */
+.input[type="datetime-local"], .input[type="date"], .input[type="time"] {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
 .select {
   max-width: 100%;
   padding-right: 32px;
@@ -175,7 +183,7 @@
 .input:focus-visible, .select:focus-visible, .textarea:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--focus-ring); }
 .input:disabled, .select:disabled, .textarea:disabled { background-color: var(--surface-sunken); opacity: 0.6; cursor: default; }
 .inputMono { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0; }
-.field { display: grid; align-content: start; gap: 6px; min-width: 0; }
+.field { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 6px; min-width: 0; }
 .field > .select, .field > .input, .unitInput > .input { width: 100%; min-width: 0; }
 .fieldLabel { color: var(--label); font-size: 13px; font-weight: 600; line-height: 18px; }
 .fieldLabel small { margin-left: 6px; color: var(--label-3); font-size: 12px; font-weight: 500; }
@@ -276,7 +284,7 @@
 .formPair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-width: 0; }
 .formStack { display: grid; gap: 16px; }
 .formActions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
-.formActions > p { flex: 1; min-width: 200px; margin: 0; }
+.formActions > p { flex: 1; min-width: min(200px, 100%); margin: 0; overflow-wrap: anywhere; }
 .formFooter { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; border-top: 1px solid var(--hairline); }
 .formFeedback { flex: 1; min-width: 220px; }
 .formFeedback p { margin: 0; }
@@ -354,7 +362,7 @@
 .statusLoading::before { width: 14px; height: 14px; border: 2px solid var(--fill-active); border-top-color: var(--label-3); border-radius: 50%; content: ""; animation: adminSpin 0.8s linear infinite; }
 @keyframes adminSpin { to { transform: rotate(360deg); } }
 .statusError { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; margin: 0 0 14px; padding: 10px 10px 10px 14px; border-radius: 12px; background: var(--red-tint); color: var(--red-text); font-size: 13.5px; line-height: 20px; overflow-wrap: anywhere; }
-.statusError > span { flex: 1; min-width: 200px; }
+.statusError > span { flex: 1; min-width: min(200px, 100%); overflow-wrap: anywhere; }
 .callout, .notice, .fileNotice { margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: var(--callout-bg, var(--fill)); color: var(--callout-fg, var(--label)); font-size: 13.5px; line-height: 20px; overflow-wrap: anywhere; }
 .callout[data-tone="good"], .notice { --callout-bg: var(--green-tint); --callout-fg: var(--green-text); }
 .callout[data-tone="bad"] { --callout-bg: var(--red-tint); --callout-fg: var(--red-text); }
@@ -418,7 +426,7 @@
 .snapshotText strong { color: var(--label); font-weight: 600; overflow-wrap: anywhere; }
 .snapshotText span { color: var(--label-3); font-size: 12px; line-height: 17px; font-variant-numeric: tabular-nums; }
 .dangerRow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 16px; }
-.dangerRow p { flex: 1; min-width: 200px; margin: 0; color: var(--label-2); font-size: 13px; }
+.dangerRow p { flex: 1; min-width: min(200px, 100%); margin: 0; color: var(--label-2); font-size: 13px; overflow-wrap: anywhere; }
 .reasonInput { width: 168px; }
 .teamModes { display: grid; gap: 2px; min-width: 0; margin: 0; padding: 10px 14px 12px; border: 1px solid var(--separator); border-radius: 12px; background: var(--surface-sunken); }
 .teamModes > legend { margin-left: -4px; padding: 0 4px; color: var(--label); font-size: 13px; font-weight: 600; }
@@ -685,6 +693,10 @@
   .overlay { align-items: flex-end; padding: 8px 8px 0; }
   .dialog { max-height: calc(100% - 8px); border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
   .dialogHeader { padding: 14px 14px 12px 18px; }
+  .dialogHeader { flex-wrap: wrap; gap: 8px; }
+  .dialogHeading { flex-basis: calc(100% - 38px); }
+  .dialogHeader > .badge, .dialogHeader > .headerLink { order: 2; }
+  .dialogHeader > .closeButton { order: 1; }
   .dialogHeader h2 { font-size: 17px; }
   .dialogBody { padding: 16px 18px 22px; }
   .readinessCounts { grid-template-columns: 1fr; }
@@ -913,24 +925,33 @@ dl.group dd.mono { font-size: 12.5px; }
   .sideTabs button { flex: 0 0 auto; width: auto; min-height: 34px; padding: 0 12px 0 5px; }
   .sideTabs button > [aria-hidden="true"] { --size: 20px; }
   .groupColumns { grid-template-columns: minmax(0, 1fr); }
+  .versionHero { flex-wrap: wrap; align-items: flex-start; }
+  .versionText { flex-basis: 10rem; }
+  .versionTitle .badge { max-width: 100%; height: auto; min-height: 22px; white-space: normal; word-break: keep-all; }
+  .versionTools { width: 100%; min-width: 0; flex-wrap: wrap; }
+  .versionTools .versionSelect { flex: 1 1 calc(100% - 40px); width: 0; min-width: 0; max-width: none; }
+  .versionTools > button { flex: 1 1 7rem; min-width: 0; word-break: keep-all; }
+  .versionTools > button[aria-label="새로고침"] { flex: 0 0 32px; }
 }
 @container deploy (max-width: 560px) {
-  .versionHero { flex-wrap: wrap; }
-  .versionTools { width: 100%; }
-  .versionTools .versionSelect { flex: 1; min-width: 0; max-width: none; }
   .secretForm { grid-template-columns: minmax(0, 1fr); }
   .secretTime { display: none; }
   .groupRowBody { padding-left: 14px; }
 }
 
+
 /* ───────── 배포 설정 2: 한 화면 배치와 환경변수 방법 카드 ───────── */
 .dialog.dialogFixed { height: min(900px, 100%); }
+@media (max-height: 480px) {
+  .dialog.dialogFixed { overflow-y: auto; }
+  .dialogFixed .dialogBody { flex-shrink: 0; overflow: visible; }
+}
 .headerLink { display: inline-flex; flex-shrink: 0; align-items: center; height: 28px; padding: 0 12px; border-radius: 14px; background: var(--fill); color: var(--label); font: 600 12.5px/1 var(--font); text-decoration: none; white-space: nowrap; transition: background-color 0.12s ease; }
 .headerLink:hover { background: var(--fill-hover); }
 .versionText { overflow: hidden; }
 .versionText .versionMeta { display: flex; flex-wrap: wrap; margin-left: -14px; }
-.versionMeta > span { white-space: nowrap; }
-.versionMeta > span::before { content: "·"; display: inline-block; width: 14px; color: var(--label-4); text-align: center; }
+.versionMeta > span { position: relative; max-width: 100%; padding-left: 14px; white-space: normal; overflow-wrap: anywhere; }
+.versionMeta > span::before { position: absolute; left: 0; content: "·"; display: inline-block; width: 14px; color: var(--label-4); text-align: center; }
 .panel > .groupColumns:first-child .groupTitle,
 .panel > .callout + .groupColumns .groupTitle { margin-top: 18px; }
 .panel > .groupColumns:first-child > div > .groupTitle:first-child,
@@ -1065,6 +1086,11 @@ dl.group dd.mono { font-size: 12.5px; }
   .primaryTabs button { padding: 0 6px; font-size: 13px; white-space: nowrap; }
 }
 
+@container admin-layout (max-width: 300px) {
+  .primaryTabs, .primaryTabs:has(> :nth-child(5)) { grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr)); grid-auto-flow: row; }
+  .primaryTabs button { min-width: 0; padding: 5px 6px; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
+}
+
 /* ───────── 원격 실행 탭: 설정 카드 한 장과 실행 기록 ───────── */
 .remotePanel { display: grid; gap: 20px; }
 .remoteCard { display: grid; gap: 12px; padding: 18px 20px; }
@@ -1087,4 +1113,12 @@ dl.group dd.mono { font-size: 12.5px; }
 @media (max-width: 720px) {
   .remoteFields { grid-template-columns: minmax(0, 1fr); }
   .remoteWide { grid-column: auto; }
+}
+
+@container deploy (max-width: 260px) {
+  .versionRow { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .versionRowText { grid-template-columns: minmax(0, 1fr); }
+  .versionRowTags { min-width: 0; }
+  .versionRowTags > span { max-width: 100%; white-space: normal; overflow-wrap: anywhere; }
+  .versionRowTime { grid-column: 1; min-width: 0; white-space: normal; overflow-wrap: anywhere; }
 }

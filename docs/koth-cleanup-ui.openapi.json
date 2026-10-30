@@ -1,0 +1,208 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "KOTH collection and admin cleanup UI",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/v1/koth/me": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Each data.challenges entry includes collection_state fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "challenges": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/collection_state"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/koth/leaderboard": {
+      "get": {
+        "parameters": [
+          {
+            "name": "koth_challenge_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "data includes collection_state fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/collection_state"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/instances/{instance_id}/retry-cleanup": {
+      "post": {
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "instance_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Retry accepted, not evidence of cleanup or reservation release",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "const": "SUCCESS"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/cleanup_acknowledgement"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Admin role required"
+          },
+          "404": {
+            "description": "Missing backend or scheduler instance; do not infer cleanup"
+          },
+          "409": {
+            "description": "State no longer accepts a cleanup retry; reload the row"
+          },
+          "503": {
+            "description": "Scheduler unavailable or acknowledgement unknown; reload before a manual retry"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearer_auth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "collection_state": {
+        "type": "object",
+        "properties": {
+          "collection_status": {
+            "enum": [
+              "NOT_COLLECTED",
+              "PENDING",
+              "FAILED",
+              "COLLECTED"
+            ]
+          },
+          "is_stale": {
+            "type": "boolean"
+          },
+          "collection_period_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "last_collected_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "cleanup_acknowledgement": {
+        "type": "object",
+        "required": [
+          "instance_id",
+          "status",
+          "requested_by",
+          "requested_at"
+        ],
+        "properties": {
+          "instance_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "const": "CLEANUP_PENDING"
+          },
+          "requested_by": {
+            "type": "string"
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  }
+}

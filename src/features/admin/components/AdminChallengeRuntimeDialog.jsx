@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { activateChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, importChallengeRepositoryEnvironment, registerChallengeRelease, registerChallengeRuntimeSecret, configureChallengeReleaseFiles } from "../../../api/admin.js";
+import { startVisiblePolling } from "../../../utils/visiblePolling.js";
+import { activateChallengeRelease, approveChallengeRelease, deriveChallengeRelease, getChallengeReleases, getChallengeRuntimeSecrets, importChallengeEnvironmentFile, importChallengeRepositoryEnvironment, registerChallengeRelease, registerChallengeRuntimeSecret, configureChallengeReleaseFiles } from "../../../api/admin.js";
 import AdminReleaseFilesEditor from "./AdminReleaseFilesEditor.jsx";
 import AdminDeploymentTestPanel from "./AdminDeploymentTestPanel.jsx";
+import AdminImagePreparationPanel from "./AdminImagePreparationPanel.jsx";
 import AdminCollectedFilesPanel, { RepositoryFilesDetails } from "./AdminCollectedFilesPanel.jsx";
 import AdminActiveFlagBindings from "./AdminActiveFlagBindings.jsx";
 import { isSuccess } from "../../../utils/response.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import { RECENT_LIMIT, latestFirst } from "../utils/adminLists.js";
 import useAdminResource from "../hooks/useAdminResource.js";
-import { buildDerivedSettings, describeRelease, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, repositoryEnvStatus, unboundEnvironmentRules, validateRuntimeSecret, validateReleaseActivationReason } from "../utils/adminRuntime.js";
+import { approvalErrorMessage, buildDerivedSettings, describeApproval, describeRelease, orderReleasesByPublication, parseReleaseFile, releaseRequirements, releaseSettingsDraft, repositoryEnvStatus, unboundEnvironmentRules, validateRuntimeSecret, validateReleaseActivationReason } from "../utils/adminRuntime.js";
 import AdminDialog from "./AdminDialog.jsx";
 import AdminEnvironmentFileImporter from "./AdminEnvironmentFileImporter.jsx";
 import AdminRepositoryEnvironmentImporter from "./AdminRepositoryEnvironmentImporter.jsx";
@@ -23,6 +25,15 @@ import { AdminReasonField } from "./AdminFormParts.jsx";
 const BUTTON = styles.button;
 const INPUT = styles.input;
 const MONO_INPUT = `${styles.input} ${styles.inputMono}`;
+
+// '승인됨'은 '사용 중'과 별개이며 이미지 준비나 Runtime 정책 승인을 뜻하지 않는다
+function ApprovalBadge({ release }) {
+  const approval = describeApproval(release);
+  if (approval.state === "approved") {
+    return <AdminBadge tone="blue">승인됨</AdminBadge>;
+  }
+  return <AdminBadge tone="neutral">{approval.state === "unsupported" ? "승인 미지원" : "미승인"}</AdminBadge>;
+}
 
 function UnboundEnvironmentRows({ container, release }) {
   return unboundEnvironmentRules(container, release.repository_env?.missing).map((row) => <tr key={row.name}>
@@ -109,7 +120,8 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const [error, setError] = useState("");
   const [saving, setBusy] = useState(false);
   const [testBusy, setTestBusy] = useState(false);
-  const busy = saving || testBusy;
+  const [preparationBusy, setPreparationBusy] = useState(false);
+  const busy = saving || testBusy || preparationBusy;
   useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
   const [confirming, setConfirming] = useState(false);
   const [activationReason, setActivationReason] = useState("");
@@ -124,6 +136,11 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
     }
   }, [panel]);
   const runtime = useAdminResource((config) => loadRuntime(challenge.challenge_id, config), [challenge.challenge_id], "실행 설정을 불러오지 못했습니다");
+  const activation = runtime.data?.activation;
+  useEffect(() => {
+    if (!active || activation?.status !== "PENDING") return;
+    return startVisiblePolling(() => { if (!pending.current) return runtime.reload({ quiet: true }); }, { intervalMs: 4000, immediate: false });
+  }, [active, activation?.status, runtime.reload]);
   useEffect(() => () => { fileSequence.current += 1; }, []);
   const releases = orderReleasesByPublication(runtime.data?.releases ?? []);
   const selected = releases.find((release) => release.release_id === releaseId) ?? releases.find((release) => release.is_current) ?? releases[0];
@@ -131,6 +148,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const isRollback = Boolean(currentRelease && selected && selected.version < currentRelease.version);
   const activationReasonError = validateReleaseActivationReason(activationReason);
   const selectedInfo = selected ? describeRelease(selected, releases) : null;
+  const selectedApproval = describeApproval(selected);
   const newerGithub = currentRelease ? describeRelease(currentRelease, releases).newerGithub : null;
   const repoEnv = repositoryEnvStatus(selected);
   const newerEnv = repositoryEnvStatus(newerGithub);
@@ -143,7 +161,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const shownVersions = versionRows.slice((shownVersionPage - 1) * VERSION_PAGE, shownVersionPage * VERSION_PAGE);
   const pickRelease = (id) => { setReleaseId(id); setVersionPage(null); setConfirming(false); setActivationReason(""); setShowFlagBindings(false); setEnvironmentMethod(null); };
   const validationError = validateRuntimeSecret(name.trim(), value);
-  const loading = runtime.status === "loading";
+  const loading = runtime.status !== "success";
   const storedSecrets = runtime.data?.secrets ?? [];
   const visibleSecrets = showSecretHistory ? storedSecrets : storedSecrets.filter((secret) => secret.is_latest);
   // 이전 버전까지 펼치면 저장할 때마다 줄이 늘어나므로 최근 20개만 보이고 나머지는 단추로 펼친다
@@ -151,7 +169,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const requirements = upload ? releaseRequirements(upload.artifact, runtime.data?.secrets ?? []) : null;
   const slugMismatch = Boolean(upload && challenge.challenge_slug && upload.artifact.challenge_slug !== challenge.challenge_slug);
 
-  async function mutate(action, success) {
+  async function mutate(action, success, formatError) {
     if (pending.current) return;
     pending.current = true;
     setBusy(true);
@@ -162,11 +180,11 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       if (!isSuccess(response.data)) throw new Error(response.data?.message || "요청을 처리하지 못했습니다");
       setConfirming(false);
       const refreshed = await runtime.reload();
-      setNotice(refreshed ? success : "저장은 처리됐지만 최신 상태를 조회하지 못했습니다");
+      setNotice(refreshed ? (typeof success === "function" ? success(response.data.data) : success) : "저장은 처리됐지만 최신 상태를 조회하지 못했습니다");
       await onChanged?.();
       return response.data.data ?? true;
     } catch (requestError) {
-      setError(requestError?.response?.data?.message || requestError.message || "요청을 처리하지 못했습니다");
+      setError(formatError ? formatError(requestError) : requestError?.response?.data?.message || requestError.message || "요청을 처리하지 못했습니다");
       return false;
     } finally { pending.current = false; setBusy(false); }
   }
@@ -177,9 +195,19 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
     const reason = activationReason.trim();
     const saved = await mutate(
       () => activateChallengeRelease(challenge.challenge_id, selected.release_id, reason ? { reason } : {}),
-      isRollback ? "이전 버전으로 되돌렸습니다" : "새 인스턴스에 적용할 설정을 변경했습니다",
+      data => data?.activation_status === "PENDING" ? "버전 적용을 예약했습니다 아래에서 이미지 준비와 적용 상태를 확인해주세요" : isRollback ? "이전 버전으로 되돌렸습니다" : "새 인스턴스에 적용할 설정을 변경했습니다",
     );
     if (saved) setActivationReason("");
+  }
+
+  // 승인만 기록한다 실패해도 /activate로 대신 호출하지 않고, 성공하면 목록을 다시 조회해 승인 시각을 갱신한다
+  async function approveRelease() {
+    if (busy || pending.current || !selected || selectedApproval.state !== "unapproved") return;
+    await mutate(
+      () => approveChallengeRelease(challenge.challenge_id, selected.release_id),
+      "승인 완료, 현재 적용 버전은 변경되지 않음",
+      approvalErrorMessage,
+    );
   }
 
   async function saveSecret(event) {
@@ -244,7 +272,13 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
     <AdminStatusMessage status={runtime.status} error={runtime.error} onRetry={runtime.retry}/>
     {error && <p role="alert" className={styles.callout} data-tone="bad">{error}</p>}
     {notice && <p role="status" className={styles.notice}>{notice}</p>}
-    {runtime.status === "success" && <>
+    {activation && <div role="status" className={styles.callout} data-tone={activation.status === "FAILED" ? "bad" : undefined}>
+      {activation.status === "PENDING" ? "이미지 준비 후 버전 적용을 기다리고 있습니다 현재 사용 중인 버전은 준비가 끝날 때까지 유지됩니다" :
+        activation.status === "FAILED" ? "버전 적용에 실패했습니다 이미지 준비에서 실패한 노드와 오류를 확인해주세요" :
+        activation.status === "SUPERSEDED" ? "이 적용 예약은 다른 버전 요청으로 대체됐습니다" : activation.status === "ACTIVATED" ? "버전 적용이 완료됐습니다 현재 사용 중인 버전을 확인해주세요" : "적용 상태를 확인하지 못했습니다 새로고침해주세요"}
+      <span className={styles.secondary} style={{ overflowWrap: "anywhere" }}>요청 {activation.request_id}</span>
+    </div>}
+    {runtime.data && <>
       <section className={styles.versionHero} aria-label="배포 버전">
         <AppIcon name="version" tone={selected?.is_current ? "blue" : "gray"} size={42} />
         <div className={styles.versionText}>
@@ -254,9 +288,12 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
               <AdminBadge tone={selected.is_current ? "good" : "neutral"}>{selected.is_current ? "새 인스턴스에 적용 중" : "아직 적용 전"}</AdminBadge>
               <AdminBadge tone={selectedInfo.tone}>{selectedInfo.label}{selectedInfo.baseVersion ? ` · v${selectedInfo.baseVersion} 기반` : ""}</AdminBadge>
               {selectedInfo.isLatestGithub && <AdminBadge tone="orange">GitHub 최신</AdminBadge>}
+              <ApprovalBadge release={selected} />
             </div>
             <p className={styles.versionMeta}>{[selected.created_at && `등록 ${formatAdminTime(selected.created_at, { seconds: false })}`,
-              selected.registry_revision > 0 && `발행 #${selected.registry_revision}`, selected.runtime_type, selected.architecture].filter(Boolean).map((part) => <span key={part}>{part}</span>)}</p>
+              selected.registry_revision > 0 && `발행 #${selected.registry_revision}`, selected.runtime_type, selected.architecture].filter(Boolean).map((part) => <span key={part}>{part}</span>)}
+              {selectedApproval.state === "approved" && <span aria-label="승인 시각">승인 <time dateTime={selectedApproval.approvedAt}>{formatAdminTime(selectedApproval.approvedAt, { seconds: false })}</time></span>}
+            </p>
           </> : <>
             <div className={styles.versionTitle}><h3>{challenge.remote_run ? "원격 실행 문제" : "실행 이미지 없음"}</h3></div>
             <p>{challenge.remote_run
@@ -270,6 +307,9 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
             {versionRows.map((release) => <option key={release.release_id} value={release.release_id}>버전 {release.version} · {describeRelease(release, releases).label} · {formatAdminTime(release.created_at, { seconds: false })}{release.is_current ? " · 사용 중" : ""}</option>)}
           </select>}
           <IconButton icon="refresh" label="새로고침" onClick={runtime.retry} disabled={busy || loading} />
+          {selected && selectedApproval.state !== "approved" && <button type="button" className={BUTTON} disabled={busy || loading || selectedApproval.state === "unsupported"}
+            title={selectedApproval.state === "unsupported" ? "서버가 아직 승인 기능을 지원하지 않습니다" : "버전을 적용하지 않고 승인만 기록합니다"}
+            onClick={approveRelease}>{busy ? "처리 중…" : "승인만"}</button>}
           {selected && !selected.is_current && <button type="button" className={styles.primary}
             disabled={busy || !selected.is_deployable || loading || repoEnv?.blocked || selected.containers.some((container) => container.secret_bindings?.some((binding) => binding.status === "missing"))}
             onClick={() => { setActivationReason(""); setError(""); setConfirming(true); }}>이 버전 사용</button>}
@@ -330,6 +370,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
                       <AdminBadge tone={info.tone}>{info.label}{info.baseVersion ? ` · v${info.baseVersion} 기반` : ""}</AdminBadge>
                       {info.isLatestGithub && <AdminBadge tone="orange">GitHub 최신</AdminBadge>}
                       {release.is_current && <AdminBadge tone="good">사용 중</AdminBadge>}
+                      <ApprovalBadge release={release} />
                     </span>
                     <span className={styles.versionRowNote}>{release.note || "메모 없음"}</span>
                   </span>
@@ -365,6 +406,8 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
               </div>
             </div>
           </div>
+          {active && panel === "overview" && <AdminImagePreparationPanel key={selected.release_id}
+            challengeId={challenge.challenge_id} release={selected} busy={busy} onBusyChange={setPreparationBusy}/>}
           <h4 className={styles.groupTitle}>컨테이너</h4>
           <div className={styles.group}>
             {selected.containers.map((container) => <details key={container.name} className={styles.groupRow}>

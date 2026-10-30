@@ -328,6 +328,9 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+  /* 긴 선택창이 있어도 흰 창 폭을 넘지 않게 한다 */
+  min-width: 0;
+  max-width: 100%;
 }
 .content {
   flex: 1 0 auto;

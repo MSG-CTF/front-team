@@ -59,7 +59,7 @@ export default function IntroHeader({ guide = false }) {
           ))}
         </nav>
         <div className="header-actions">
-          <ApplyLink className="header-apply" arrow={false} />
+          <ApplyLink className="header-apply" arrow={false} whenClosed={null} />
           <Link className="header-login" to={ROUTES.login}>
             LOGIN
           </Link>

@@ -1,5 +1,6 @@
 import test, { before, after } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { createServer } from "vite";
@@ -24,7 +25,7 @@ after(async () => server?.close());
 
 const driveUrl = "https://drive.google.com/drive/folders/1dXQ_Td4J-vK8BAJh7mHFe6oVh9F1WCQN";
 
-function renderDetail(requiresInstance, readOnly = false) {
+function renderDetail(requiresInstance, readOnly = false, overrides = {}) {
   return renderToStaticMarkup(createElement(Screen, {
     loading: false,
     pageError: null,
@@ -47,6 +48,7 @@ function renderDetail(requiresInstance, readOnly = false) {
     submitDisabled: false,
     instanceUnavailable: false,
     readOnly,
+    ...overrides,
   }));
 }
 
@@ -70,6 +72,27 @@ test("실행형 문제는 인스턴스 작업을 계속 보여준다", () => {
   const html = renderDetail(true);
   assert.match(html, /인스턴스 생성/);
   assert.match(html, /href="#challenge-instance"/);
+});
+
+test("인스턴스 작업 알림과 조회 오류는 화면 아래 독이 아니라 인스턴스 버튼 바로 뒤에 둔다", () => {
+  const html = renderDetail(true, false, {
+    instanceFeedback: { type: "success", message: "인스턴스 생성 요청을 접수했습니다" },
+    instanceError: { message: "인스턴스 정보를 불러오지 못했습니다" },
+  });
+  const controls = html.indexOf('aria-label="인스턴스 작업"');
+  const flag = html.indexOf('id="challenge-flag"');
+  for (const text of ["인스턴스 생성 요청을 접수했습니다", "인스턴스 정보를 불러오지 못했습니다", ">다시 조회<"]) {
+    const at = html.indexOf(text);
+    assert.ok(controls < at && at < flag, text);
+  }
+  assert.doesNotMatch(html, /_dock_/);
+});
+
+test("인스턴스 성공 알림만 몇 초 뒤 지우고 오류는 남긴다", () => {
+  const source = readFileSync(new URL("./components/InstanceNotice.jsx", import.meta.url), "utf8");
+  assert.match(source, /if \(feedback\?\.type !== "success"\) return undefined;/);
+  assert.match(source, /setTimeout\(\(\) => setHidden\(feedback\), SUCCESS_NOTICE_MS\)/);
+  assert.doesNotMatch(source, /setHidden\(error/);
 });
 
 test("구버전 백엔드 응답에서는 인스턴스 작업을 유지한다", () => {

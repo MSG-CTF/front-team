@@ -1,7 +1,6 @@
 import { formatFileSize } from "./challengeDetailMapper.js";
 
-// 원격 실행 기록. 경로는 GET·POST /challenges/{id}/remote_runs (api/challenges.js)
-// 실행이 실제로 시작된 기록만 제출 횟수에 들어간다(counted) 운영 오류와 파일 거절은 횟수를 쓰지 않는다
+// 실행 기록은 /challenges/{id}/exe-submissions 에서 조회한다
 export const REMOTE_RUN_STATUS = {
   QUEUED: "QUEUED",
   RUNNING: "RUNNING",
@@ -10,6 +9,9 @@ export const REMOTE_RUN_STATUS = {
   CRASHED: "CRASHED",
   FAILED: "FAILED",
   REJECTED: "REJECTED",
+  PREPARING: "PREPARING",
+  CLEANUP_PENDING: "CLEANUP_PENDING",
+  START_UNKNOWN: "START_UNKNOWN",
 };
 
 export const REMOTE_RUN_LABEL = {
@@ -20,20 +22,59 @@ export const REMOTE_RUN_LABEL = {
   CRASHED: "VM 중단",
   FAILED: "실행 실패",
   REJECTED: "파일 거절",
+  PREPARING: "실행 준비 중",
+  CLEANUP_PENDING: "정리 중",
+  START_UNKNOWN: "실행 확인 중",
 };
 
 // 결과 출력 위에 한 줄로 붙이는 안내 완료는 출력만 보인다
 export const REMOTE_RUN_NOTICE = {
   TIMED_OUT: "제한 시간 안에 끝나지 않아 멈췄습니다 멈추기 전까지의 출력입니다",
   CRASHED: "실행 중 VM이 멈춰 초기화했습니다",
-  FAILED: "운영 환경 문제로 실행하지 못했습니다 다시 실행해 주세요",
+  FAILED: "실행 환경에서 오류가 발생했습니다 정리가 끝나면 다시 실행할 수 있습니다",
+  START_UNKNOWN: "실행 여부를 확인하고 있습니다 확인이 끝날 때까지 새 실행을 막아두었습니다",
+  CLEANUP_PENDING: "실행은 끝났고 환경을 정리하고 있습니다",
   REJECTED: "실행 파일 검사에서 거절됐습니다",
 };
 
-const ACTIVE_STATUSES = new Set([REMOTE_RUN_STATUS.QUEUED, REMOTE_RUN_STATUS.RUNNING]);
+// 접수·조회 오류 코드별 안내 백엔드가 영어로 보내는 코드만 한국어로 바꾼다
+const REMOTE_RUN_ERROR = {
+  INVALID_EXECUTABLE: "Windows에서 실행할 수 있는 .exe 파일인지 확인해주세요",
+  PAYLOAD_TOO_LARGE: "10MB 이하 .exe 파일만 올릴 수 있습니다",
+  INVALID_REQUEST: "파일을 다시 골라 올려주세요",
+  ALREADY_SOLVED: "이미 해결한 문제입니다",
+  CHALLENGE_LOCKED: "지금은 실행할 수 없는 문제입니다",
+  CHALLENGE_NOT_FOUND: "문제를 찾지 못했습니다",
+  SUBMISSION_NOT_FOUND: "실행 기록을 찾지 못했습니다",
+  EXE_SUBMISSIONS_DISABLED: "지금은 원격 실행을 받지 않습니다",
+  SUBMISSION_UNAVAILABLE: "지금은 원격 실행을 받을 수 없습니다 운영진에게 알려주세요",
+  TEAM_BANNED: "참가할 수 없는 팀입니다",
+  USER_HAS_NO_TEAM: "팀 배정을 확인해주세요",
+  IDEMPOTENCY_KEY_CONFLICT: "같은 접수가 다른 파일로 이미 진행 중입니다 파일을 다시 골라주세요",
+};
+
+// 백엔드 문구가 한국어면 더 구체적이라 그대로 쓰고, 영어면 코드별 안내로 바꾼다
+export function remoteRunErrorMessage(failure, fallback) {
+  const data = failure?.response?.data;
+  if (/[가-힣]/.test(data?.message ?? "")) return data.message;
+  return REMOTE_RUN_ERROR[data?.code] ?? fallback;
+}
+
+const ACTIVE_STATUSES = new Set(["QUEUED", "PREPARING", "RUNNING", "CLEANUP_PENDING", "START_UNKNOWN"]);
 
 export function isActiveRun(run) {
-  return ACTIVE_STATUSES.has(run?.status);
+  if (run?.canStartNext === true) return false;
+  return ACTIVE_STATUSES.has(run?.status) || run?.releasePending === true || run?.requiresReview === true;
+}
+
+// 연결이 끊긴 동안 예전 순서를 현재 순서처럼 계속 보이지 않는다
+export function currentQueuePosition(run, now = Date.now()) {
+  if (run?.status !== REMOTE_RUN_STATUS.QUEUED) return null;
+  if (run.queuePolicy === "TEAM_FIFO") {
+    const observed = Date.parse(run.queueObservedAt);
+    if (!Number.isFinite(observed) || observed > now || now - observed > 15000) return null;
+  }
+  return Number.isInteger(run.queuePosition) && run.queuePosition > 0 ? run.queuePosition : null;
 }
 
 const text = (value) => (typeof value === "string" ? value : "");
@@ -41,24 +82,42 @@ const date = (value) =>
   typeof value === "string" && Number.isFinite(Date.parse(value)) ? value : null;
 const count = (value) => (Number.isInteger(value) && value >= 0 ? value : null);
 
+export function remoteRetryDeadline(response, now = Date.now()) {
+  const seconds = Number(response?.data?.data?.retry_after_seconds);
+  const header = response?.headers?.["retry-after"];
+  const headerSeconds = header == null ? NaN : Number(header);
+  const fromHeader = Number.isFinite(headerSeconds) ? now + Math.max(0, headerSeconds) * 1000 : Date.parse(header);
+  return Math.max(now, Number.isFinite(seconds) ? now + Math.max(0, seconds) * 1000 : now, Number.isFinite(fromHeader) ? fromHeader : now);
+}
+
 export function mapRemoteRun(run) {
-  if (!run || typeof run !== "object" || run.run_id == null) return null;
+  if (!run || typeof run !== "object" || (run.submission_id ?? run.run_id) == null) return null;
+  const status = { TIMEOUT: "TIMED_OUT", CRASH: "CRASHED", INFRA_ERROR: "FAILED" }[run.status] ?? run.status;
+  const output = run.output;
   return {
-    id: String(run.run_id),
-    status: typeof run.status === "string" ? run.status : "",
+    id: String(run.submission_id ?? run.run_id),
+    status: typeof status === "string" ? status : "",
+    releasePending: run.release_pending === true,
+    requiresReview: run.requires_review === true,
+    canStartNext: run.requires_review === false && Boolean(date(run.finished_at))
+      && ["CLEANUP_PENDING", "COMPLETED", "CRASH", "TIMEOUT", "INFRA_ERROR"].includes(run.status)
+      && ["COMPLETED", "CRASH", "TIMEOUT", "INFRA_ERROR"].includes(run.execution_status),
+    outputAvailable: output != null || typeof run.stdout === "string" || typeof run.stderr === "string",
     counted: run.counted === true,
+    queuePolicy: run.queue_policy === "TEAM_FIFO" ? "TEAM_FIFO" : null,
+    queueObservedAt: date(run.queue_observed_at),
     queuePosition:
       Number.isInteger(run.queue_position) && run.queue_position > 0 ? run.queue_position : null,
     fileName: text(run.file_name) || "payload.exe",
     fileSize: Number.isFinite(run.file_size) && run.file_size >= 0 ? run.file_size : null,
     sha256: /^[0-9a-f]{64}$/i.test(text(run.payload_sha256)) ? run.payload_sha256.toLowerCase() : null,
-    createdAt: date(run.created_at),
+    createdAt: date(run.submitted_at ?? run.created_at),
     startedAt: date(run.started_at),
     finishedAt: date(run.finished_at),
     durationMs: Number.isFinite(run.duration_ms) && run.duration_ms >= 0 ? run.duration_ms : null,
     exitCode: Number.isInteger(run.exit_code) ? run.exit_code : null,
-    stdout: text(run.stdout),
-    stderr: text(run.stderr),
+    stdout: text(output?.stdout ?? run.stdout),
+    stderr: text(output?.stderr ?? run.stderr),
     message: text(run.message).trim(),
   };
 }
@@ -69,8 +128,10 @@ export function mapRemoteRuns(data) {
   runs.sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0));
   return {
     runs,
+    totalRuns: Number.isSafeInteger(data?.total_count) && data.total_count >= runs.length
+      ? data.total_count : runs.length,
     usedAttempts: count(data?.used_attempts),
-    maxAttempts: count(data?.max_attempts) || null,
+    maxAttempts: null,
   };
 }
 

@@ -5,6 +5,8 @@ const venueMapQuery = encodeURIComponent(venueAddress);
 export const eventConfig = Object.freeze({
   event: { date: "2026-11-08", startsAt: "2026-11-08T10:00:00+09:00" },
   registrationPeriod: "10월 12일 ~ 10월 25일",
+  // 이 시각이 지나면 신청 버튼 대신 마감 상태를 보인다
+  registrationClosesAt: "2026-10-25T23:59:59+09:00",
   registrationUrl: "https://hspace.io/u/2026-msgctf",
   contactEmail: "msgctf@gmail.com",
   venue: `${venueName} 2층`,
@@ -33,11 +35,10 @@ export const eventConfig = Object.freeze({
   participationFee: "무료",
   prizes: {
     confirmed: true,
-    totalKrw: 2000000,
-    rankAwards: ["HSPACE상", "시야인사이트상", "안랩상"],
+    totalKrw: 1500000,
     tracks: [
-      { label: "외부 트랙", amounts: [700000, 400000, 200000] },
-      { label: "내부 트랙", amounts: [400000, 200000, 100000] },
+      { label: "외부 트랙", amounts: [500000, 300000, 100000] },
+      { label: "내부 트랙", amounts: [300000, 200000, 100000] },
     ],
     specialAwards: [],
   },

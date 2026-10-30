@@ -5,7 +5,7 @@ import {
 import { isSuccess } from "../../../utils/response.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import {
-  KOTH_POINTS, KOTH_STATUS, KOTH_STATUS_ORDER, buildKothPatch, kothEditForm, numberTicks, periodRange, periodRows, periodStatus,
+  KOTH_STATUS, KOTH_STATUS_ORDER, buildKothPatch, kothEditForm, kothScoring, numberTicks, periodRange, periodRows, periodStatus,
   repositoryFreshness, retryablePeriod, statusGoesBack, suggestRepository, tickLabel, validateKothEdit,
 } from "../utils/adminKoth.js";
 import { shiftKstInput } from "../utils/adminContestTime.js";
@@ -33,18 +33,32 @@ async function loadPeriodPages(challengeId, pages, config) {
 const EDIT_REASONS = ["지문 오타 수정", "접속 주소 변경", "공개 일정 조정", "저장소 지문 반영"];
 const LINK_REASONS = ["출제 저장소 연결", "저장소 최신 커밋 반영", "폴더 이름 변경 반영"];
 
-// 점수 환산 규칙 카드: 백엔드 PERIOD_POINTS 와 같은 표
-export function KothScoringRule() {
-  return <section className={styles.rule} aria-label="KoTH 점수 환산">
+// 틱 배점 카드: 백엔드가 부문별 등록 팀 수로 만든 표(scoring.points_by_division)를 그대로 보인다
+// scoring 을 따로 불러오는 화면은 status, error, onRetry 를 넘겨 불러오는 중과 실패를 표 자리에 보인다
+export function KothScoringRule({ scoring, status, error, onRetry, className }) {
+  const divisions = kothScoring(scoring);
+  const waiting = !divisions && (status === "loading" || status === "error");
+  // 외부와 내부를 따로 배포하면 팀 있는 부문이 하나라 부문 이름 없이 표 하나만 보인다
+  const named = divisions?.length > 1;
+  return <section className={[styles.rule, className].filter(Boolean).join(" ")} aria-label="KoTH 틱 배점">
     <div className={styles.ruleHead}>
-      <strong>점수 환산</strong>
-      <span>한 틱은 15분이고, 틱마다 문제 서버가 준 순위를 플랫폼 점수로 바꿔 쌓습니다</span>
+      <strong>틱 배점</strong>
+      <span>한 틱은 15분 · {named ? "부문마다 " : ""}정지되지 않은 등록 팀 수의 절반까지 점수를 받습니다</span>
     </div>
-    <ol className={styles.points}>
-      {KOTH_POINTS.map((points, index) => <li key={points}><span>{index + 1}위</span><strong>{points}</strong></li>)}
-      <li><span>6위부터</span><strong>0</strong></li>
-    </ol>
-    <p className={styles.ruleNote}>공동 순위는 차지한 순위의 점수를 합쳐 팀 수로 나누고 소수점은 버립니다 · 공동 1위 두 팀은 (40 + 25) ÷ 2 = 32점씩</p>
+    {waiting && <AdminStatusMessage status={status} error={error} onRetry={onRetry} />}
+    {divisions?.length > 0 && <div className={styles.divisions}>
+      {divisions.map((division) => <div key={division.key} className={styles.division}>
+        <p className={styles.divisionName}>{named
+          ? <><strong>{division.label}</strong><span>{division.points.length}위까지</span></>
+          : <strong>{division.points.length}위까지</strong>}</p>
+        <ol className={styles.points} aria-label={named ? `${division.label} 부문 순위별 점수` : "순위별 점수"}>
+          {division.points.map((points, index) => <li key={index}><span>{index + 1}위</span><strong>{points}</strong></li>)}
+        </ol>
+      </div>)}
+    </div>}
+    {divisions?.length === 0 && <p className={ui.quietNote}>등록된 팀이 없습니다</p>}
+    {!divisions && !waiting && <p className={ui.quietNote}>아직 배점표가 없습니다</p>}
+    <p className={styles.ruleNote}>공동 순위는 차지한 순위 점수의 평균을 내림 · 문제 점수가 0 이하인 팀은 0점 · 테스트 팀도 등록 팀 수에 들어갑니다</p>
   </section>;
 }
 
@@ -88,7 +102,7 @@ export function KothPeriodsPanel({ challengeId, openedAt, limited, onRetried }) 
   }
 
   if (limited || periods.status === "unavailable") {
-    return <p className={ui.quietNote}>틱 기록은 관리자 KoTH API(GET /admin/koth/challenges/&#123;id&#125;/periods)가 백엔드에 반영되면 보입니다</p>;
+    return <p className={ui.quietNote}>이 서버에서는 틱 기록을 볼 수 없습니다</p>;
   }
   return <div className={styles.periods}>
     <AdminStatusMessage status={periods.status} error={periods.error} onRetry={periods.retry} hasData={Boolean(periods.data)} />
@@ -143,6 +157,8 @@ export function KothPeriodsPanel({ challengeId, openedAt, limited, onRetried }) 
             </tr>)}</tbody>
           </table>
         </div>}
+        {/* 새 배점 전에 반영된 틱은 백엔드가 옛 1~5위 배점으로 다시 만든 기록이라 따로 알린다 */}
+        {selected.status === "APPLIED" && selected.award_provenance === "RECONSTRUCTED_FROM_RESPONSE" && rows.length > 0 && <p className={ui.quietNote}>예전 고정 배점으로 반영한 틱입니다</p>}
         {selected.status === "APPLIED" && rows.length === 0 && <p className={ui.quietNote}>이 틱에는 순위에 든 팀이 없습니다</p>}
       </div>}
     </>}
@@ -150,10 +166,11 @@ export function KothPeriodsPanel({ challengeId, openedAt, limited, onRetried }) 
 }
 
 // 누적 순위: 문제 하나 안의 팀별 누적 KoTH 점수 (GET /koth/leaderboard 구현 완료)
-export function KothLeaderboardPanel({ leaderboard }) {
+// 배점표는 목록 API에만 있어 상세는 scoring 을 따로 받아 넘긴다
+export function KothLeaderboardPanel({ leaderboard, scoring }) {
   const rows = leaderboard.data?.leaderboard ?? [];
   return <div className={styles.leaderboard}>
-    <KothScoringRule />
+    <KothScoringRule scoring={scoring.data?.scoring} status={scoring.status} error={scoring.error} onRetry={scoring.retry} />
     <AdminStatusMessage status={leaderboard.status} error={leaderboard.error} onRetry={leaderboard.retry} hasData={Boolean(leaderboard.data)} />
     {leaderboard.data && <div className={ui.tableWrap}>
       <table className={ui.table} aria-label="누적 순위">
@@ -254,7 +271,7 @@ export function KothEditorPanel({ challenge, limited, draft, onDraftUsed, onSave
   }
 
   return <form onSubmit={save} className={styles.editor}>
-    {limited && <p className={ui.callout}>지문 수정은 관리자 KoTH API(PATCH /admin/koth/challenges/&#123;id&#125;)가 백엔드에 반영되면 열립니다</p>}
+    {limited && <p className={ui.callout}>이 서버에서는 지문을 고칠 수 없습니다</p>}
     {draft && <p className={ui.callout} data-tone="good">저장소 info.yaml 내용을 불러왔습니다 확인한 뒤 저장해주세요</p>}
     <fieldset disabled={busy || limited} className={styles.editorFields}>
       <div className={styles.editorTop}>
@@ -359,7 +376,7 @@ export function KothRepositoryPanel({ challenge, limited, onLinked, onUseDraft }
   }
 
   if (limited || repository.status === "unavailable") {
-    return <p className={ui.quietNote}>저장소 연결은 관리자 KoTH API(GET /admin/koth/repository)가 백엔드에 반영되면 열립니다 출제 폴더는 MSG-CTF/2026_MSG_CTF 의 koth-* 폴더입니다</p>;
+    return <p className={ui.quietNote}>이 서버에서는 저장소를 연결할 수 없습니다 출제 폴더는 MSG-CTF/2026_MSG_CTF 저장소의 koth-* 폴더입니다</p>;
   }
   return <div className={styles.repository}>
     <AdminStatusMessage status={repository.status} error={repository.error} onRetry={repository.retry} hasData={Boolean(repository.data)} />

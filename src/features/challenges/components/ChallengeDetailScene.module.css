@@ -15,8 +15,8 @@
   font-display: swap;
 }
 /* 1u = Figma 1920×1080 캔버스의 1px. 좁은 화면에서는 1px로 돌아가 일반 흐름 레이아웃이 된다 */
-.page {
-  container: challenge-page / inline-size;
+.page,
+.resultOverlay {
   --u: 1px;
   --brown: #613d15;
   --brown-soft: #8a5e2e;
@@ -28,17 +28,24 @@
   --sans: "Detail Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   --mono: "Kode Mono", "Detail Pretendard", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
   --asset: "/assets/challenge-detail";
+  font-family: var(--sans);
+}
+.page {
+  container: challenge-page / inline-size;
   min-height: 100dvh;
   padding: 12px 10px 24px;
   color: var(--brown);
-  font-family: var(--sans);
   background:
     linear-gradient(#20170e55, #20170e88),
     url("/assets/challenge-detail/bg-forest.webp") center / cover fixed;
 }
 .page *,
 .page *::before,
-.page *::after {
+.page *::after,
+.resultOverlay,
+.resultOverlay *,
+.resultOverlay *::before,
+.resultOverlay *::after {
   box-sizing: border-box;
 }
 
@@ -121,6 +128,33 @@
   border-radius: 6px;
   color: #e4dbd1;
   background: linear-gradient(135deg, #35291b, #1f170f);
+}
+.mascotPanel {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 4px 0;
+}
+.mascotPanel img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: clamp(150px, 30vw, 220px);
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px #0009);
+  pointer-events: none;
+  user-select: none;
+}
+/* 한국어 안내라 본문 글꼴과 좁은 자간을 쓴다 */
+.mascotCaption {
+  margin: 0;
+  color: #7a4a14;
+  font-family: var(--sans);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 0 #f6e3bc;
 }
 .bakedLabel {
   margin: 0 0 6px;
@@ -421,6 +455,10 @@
   background: none;
 }
 .endpointName {
+  display: flex;
+  align-items: baseline;
+  gap: 4px 6px;
+  min-width: 0;
   color: #b7a07a;
   font-family: var(--sans);
   font-size: 11px;
@@ -429,8 +467,14 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.endpointLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .endpointName small {
-  margin-left: 6px;
+  flex-shrink: 0;
+  white-space: nowrap;
   font-family: var(--mono);
   font-size: 10px;
 }
@@ -537,10 +581,10 @@
   border-radius: 6px;
   background: linear-gradient(#150e08, #1d130b);
 }
+/* 폰 폭에서 세 칸으로 나누면 단계 이름이 말줄임이 되므로 한 줄에 한 단계씩 쌓는다 PC는 세 칸으로 둔다 */
 .createSteps {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: 6px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -619,6 +663,22 @@
   background: linear-gradient(90deg, transparent, #e59f29d9, transparent);
   animation: instance-gleam 1.6s ease-in-out infinite;
 }
+.loadingDots {
+  display: inline-block;
+  width: 1.4em;
+  text-align: left;
+  letter-spacing: 0.05em;
+}
+.loadingDots > span {
+  animation: instance-dot 1.2s steps(1, end) infinite;
+  opacity: 0;
+}
+.loadingDots > span:nth-child(2) { animation-delay: 0.3s; }
+.loadingDots > span:nth-child(3) { animation-delay: 0.6s; }
+@keyframes instance-dot {
+  0%, 100% { opacity: 0; }
+  25%, 90% { opacity: 1; }
+}
 @keyframes instance-spin {
   to { transform: rotate(360deg); }
 }
@@ -637,6 +697,10 @@
   .statusBadge[data-waiting="true"] i,
   .ttlTrack[data-waiting="true"]::after {
     animation: none;
+  }
+  .loadingDots > span {
+    animation: none;
+    opacity: 1;
   }
   .createSteps li[data-state="active"] i,
   .waitingBusy i {
@@ -710,6 +774,10 @@
   position: relative;
   overflow: hidden;
   cursor: pointer;
+}
+.runField .connectEmpty {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 .runField:hover:not([data-disabled]) {
   border-color: #8b6a3e;
@@ -828,11 +896,14 @@
 .runResult {
   position: relative;
   isolation: isolate;
-  container-type: inline-size;
+  container: run-result / inline-size;
+  display: flex;
+  flex-direction: column;
   width: min(600px, 100%);
+  max-height: 100%;
   color: #e4dbd1;
   text-align: left;
-  filter: drop-shadow(0 18px 40px #0a0604b0);
+  box-shadow: 0 18px 40px #0a0604b0;
 }
 .runResult::before {
   content: "";
@@ -845,8 +916,14 @@
 }
 .runResultBody {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: max-content;
+  align-content: start;
   gap: 10px;
   padding: 0 calc(100cqw * 35 / 640) max(20px, calc(100cqw * 30 / 640));
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 .runResultHead {
   display: flex;
@@ -990,6 +1067,13 @@
   outline: 2px solid #e59f29;
   outline-offset: 2px;
 }
+@container run-result (max-width: 320px) {
+  .runResultHead { flex-wrap: wrap; height: auto; min-height: 44px; gap: 8px; padding-top: 10px; }
+  .runResultTitle { flex-basis: 100%; overflow: visible; white-space: normal; word-break: keep-all; overflow-wrap: anywhere; }
+  .runResultLabelRow { flex-wrap: wrap; gap: 6px; }
+  .runResultActions { grid-template-columns: minmax(0, 1fr); }
+  .runResultActions .runPlaque { min-width: 0; border-inline-width: 12px; border-image-width: 0 12px; font-size: 18px; }
+}
 /* 상태 알약의 점만 결과 색으로 바꾼다 끝난 실행은 초록, 시간 초과와 VM 중단은 붉은색, 횟수를 쓰지 않은 실패는 흐리게 */
 .statusBadge[data-run="COMPLETED"] i {
   background: #8cc56f;
@@ -1128,6 +1212,19 @@
 }
 .dock > * {
   max-width: 100%;
+}
+/* 인스턴스 작업 알림은 독 대신 버튼 줄 바로 아래 흐름에 둔다 */
+.instanceNotices {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+/* 다시 조회 단추는 새로고침 알림처럼 글 옆에 두어 알림 높이를 줄인다 */
+.instanceNotices .errorMessage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
 }
 .notice,
 .errorMessage,
@@ -1408,8 +1505,13 @@
 }
 
 .confirmDialog {
-  width: min(460px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
+  container: instance-dialog / inline-size;
+  box-sizing: border-box;
+  position: fixed;
+  inset: 0;
+  width: min(460px, calc(100% - 32px));
+  height: fit-content;
+  max-height: calc(100% - 32px);
   margin: auto;
   padding: 28px;
   border: 3px double var(--line);
@@ -1430,18 +1532,26 @@
 .confirmDialog h2 {
   margin: 0 0 14px;
   font-family: var(--serif);
-  font-size: 24px;
+  font-size: clamp(20px, 20cqi, 24px);
   font-weight: 400;
   line-height: 1.4;
-  overflow-wrap: anywhere;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  text-wrap: balance;
 }
-.confirmDialog h2 + p {
-  margin: 0;
+.confirmDescription {
   color: #6b4a22;
   font-size: 14px;
   line-height: 1.8;
   word-break: keep-all;
   overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+.confirmDescription p {
+  margin: 0;
+}
+.confirmDescription p + p {
+  margin-top: 0.75em;
 }
 .dialogActions {
   display: flex;
@@ -1457,6 +1567,7 @@
 }
 .instancePanel :is(button, a, [tabindex]):focus-visible,
 .controls :is(button):focus-visible,
+.instanceNotices :is(button):focus-visible,
 .dock :is(button):focus-visible {
   outline-color: #f2c975;
 }
@@ -1583,6 +1694,7 @@
   .endpointName,
   .endpointCompact .endpointName {
     max-width: none;
+    flex-wrap: wrap;
     white-space: normal;
     overflow-wrap: anywhere;
   }
@@ -1596,6 +1708,17 @@
   }
   .endpointCompact .copyButton {
     min-height: 44px;
+  }
+  .connect {
+    container-type: inline-size;
+  }
+  @container (max-width: 240px) {
+    .endpointRow {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .copyButton {
+      justify-self: end;
+    }
   }
   .copyButton {
     align-self: start;
@@ -1620,17 +1743,18 @@
     margin-top: 0;
   }
   .confirmDialog {
-    box-sizing: border-box;
     padding: 20px 16px;
-    max-height: calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-height: calc(100% - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
     overscroll-behavior: contain;
   }
   .dialogActions {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
   }
   .dialogActions button {
     padding-inline: 8px;
+    word-break: keep-all;
+    overflow-wrap: normal;
   }
 }
 
@@ -1642,6 +1766,7 @@
 
 /* ───────── 데스크톱: 1920×1080 Figma 캔버스를 화면 높이/너비에 맞춰 한 화면에 고정 ───────── */
 @media (min-width: 1101px) and (min-height: 620px) {
+  /* 캔버스가 줄어드는 노트북(1280 폭)에서도 라벨과 짧은 안내는 11px, 오류·안내 문장은 12px 아래로 내려가지 않는다 */
   .page {
     display: grid;
     place-items: center;
@@ -1742,7 +1867,7 @@
     left: calc(var(--u) * 29);
     top: calc(var(--u) * 17);
     margin: 0;
-    font-size: max(9px, calc(var(--u) * 13));
+    font-size: max(11px, calc(var(--u) * 13));
   }
   .title {
     position: absolute;
@@ -1769,7 +1894,7 @@
     height: calc(var(--u) * 32);
     padding: 0 calc(var(--u) * 20);
     border-width: 0 calc(var(--u) * 8);
-    font-size: max(9px, calc(var(--u) * 16));
+    font-size: max(11px, calc(var(--u) * 16));
   }
   .pillCategory {
     border-image-width: 0 calc(var(--u) * 8);
@@ -1865,7 +1990,7 @@
     min-width: calc(var(--u) * 28);
     padding: 0 calc(var(--u) * 8);
     border-radius: calc(var(--u) * 12);
-    font-size: max(9px, calc(var(--u) * 16));
+    font-size: max(11px, calc(var(--u) * 16));
     line-height: calc(var(--u) * 22);
   }
   .attachmentList {
@@ -1907,11 +2032,11 @@
   }
   .attachmentInfo .fileSize,
   .downloadError {
-    font-size: max(9px, calc(var(--u) * 12));
+    font-size: max(12px, calc(var(--u) * 12));
     line-height: calc(var(--u) * 14);
   }
   .downloadCancel {
-    font-size: max(10px, calc(var(--u) * 14));
+    font-size: max(11px, calc(var(--u) * 14));
   }
   .downloadIcon {
     font-size: calc(var(--u) * 22);
@@ -1938,6 +2063,24 @@
     border-radius: 0;
     background: url("/assets/challenge-detail/panel-instance-base.webp") center / 100% 100% no-repeat;
   }
+  /* 인스턴스 판과 컨트롤 줄이 있던 640x382 자리 가운데에 배경 없이 마스코트와 문구만 둔다 아래 끝은 플래그 판 위 735에서 20 뗀다 */
+  .mascotPanel {
+    position: absolute;
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 333);
+    width: calc(var(--u) * 640);
+    height: calc(var(--u) * 382);
+    /* 마스코트 아래 끝(290)과 플래그 판 위(402) 사이의 한가운데에 문구를 둔다 */
+    align-content: start;
+    gap: calc(var(--u) * 39);
+    padding: calc(var(--u) * 40) 0 0;
+  }
+  .mascotPanel img {
+    height: calc(var(--u) * 250);
+  }
+  .mascotCaption {
+    font-size: max(14px, calc(var(--u) * 22));
+  }
   .statusSlot {
     position: absolute;
     left: calc(var(--u) * 437);
@@ -1949,13 +2092,20 @@
     width: 100%;
     height: 100%;
   }
+  /* 대기 중 배지도 RUNNING 그림과 같은 슬롯 크기 한 줄에 가둬 판의 선을 넘지 않게 한다 */
   .statusBadge {
+    box-sizing: border-box;
+    flex-wrap: nowrap;
     width: 100%;
     min-width: 0;
     height: 100%;
-    gap: calc(var(--u) * 8);
+    min-height: 0;
+    gap: calc(var(--u) * 6);
+    padding: 0 calc(var(--u) * 8);
+    overflow: hidden;
+    white-space: nowrap;
     border-radius: calc(var(--u) * 20);
-    font-size: max(10px, calc(var(--u) * 15));
+    font-size: max(11px, calc(var(--u) * 15));
   }
   .statusBadge i {
     width: calc(var(--u) * 8);
@@ -2003,10 +2153,10 @@
     line-height: calc(var(--u) * 24);
   }
   .endpointName {
-    font-size: max(9px, calc(var(--u) * 11));
+    font-size: max(11px, calc(var(--u) * 11));
   }
   .endpointName small {
-    font-size: max(8px, calc(var(--u) * 10));
+    font-size: max(11px, calc(var(--u) * 10));
   }
   .endpoint a,
   .connectionText {
@@ -2022,20 +2172,21 @@
     height: calc(var(--u) * 47);
     padding: 0;
     border-radius: calc(var(--u) * 6);
-    font-size: max(10px, calc(var(--u) * 15));
+    font-size: max(11px, calc(var(--u) * 15));
   }
   .copyError {
-    font-size: max(9px, calc(var(--u) * 12));
+    font-size: max(12px, calc(var(--u) * 12));
   }
   .instanceHint {
     position: absolute;
     left: calc(var(--u) * 35);
     top: calc(var(--u) * 164);
     width: calc(var(--u) * 570);
-    max-height: calc(var(--u) * 28);
+    /* 글자 바닥에 맞춰 줄 높이와 두 줄 높이도 함께 바닥을 둔다 */
+    max-height: max(24px, calc(var(--u) * 28));
     overflow: hidden;
-    font-size: max(9px, calc(var(--u) * 11.5));
-    line-height: calc(var(--u) * 14);
+    font-size: max(11px, calc(var(--u) * 11.5));
+    line-height: max(12px, calc(var(--u) * 14));
   }
   .ttlValue {
     position: absolute;
@@ -2061,54 +2212,59 @@
     position: absolute;
     left: calc(var(--u) * 127);
     top: calc(var(--u) * 264);
-    font-size: max(9px, calc(var(--u) * 15));
+    font-size: max(11px, calc(var(--u) * 15));
     line-height: calc(var(--u) * 16);
   }
   /* 기다리는 동안은 접속 주소 칸과 같은 47 높이 한 줄에 단계와 경과 시간을 둔다 */
   .waiting {
     display: flex;
     align-items: center;
-    gap: calc(var(--u) * 14);
+    box-sizing: border-box;
+    gap: calc(var(--u) * 10);
     width: calc(var(--u) * 570);
     height: calc(var(--u) * 47);
-    padding: 0 calc(var(--u) * 14);
+    padding: 0 calc(var(--u) * 12);
     border-radius: calc(var(--u) * 6);
+    overflow: hidden;
   }
   .createSteps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     flex: 1 1 auto;
-    gap: calc(var(--u) * 10);
+    min-width: 0;
+    gap: calc(var(--u) * 6);
   }
   .createSteps li,
   .waitingBusy {
     flex: 1 1 auto;
-    gap: calc(var(--u) * 8);
-    font-size: max(11px, calc(var(--u) * 16));
+    gap: calc(var(--u) * 5);
+    font-size: max(11px, calc(var(--u) * 14));
   }
   .createSteps li i,
   .waitingBusy i {
-    width: calc(var(--u) * 18);
-    height: calc(var(--u) * 18);
-    border-width: max(1.5px, calc(var(--u) * 2));
+    width: calc(var(--u) * 12);
+    height: calc(var(--u) * 12);
+    border-width: max(1.5px, calc(var(--u) * 1.5));
   }
   .createSteps li[data-state="done"] i::after {
-    left: calc(var(--u) * 4.5);
-    top: calc(var(--u) * 1.5);
-    width: calc(var(--u) * 4.5);
-    height: calc(var(--u) * 9);
-    border-width: 0 max(1.5px, calc(var(--u) * 2)) max(1.5px, calc(var(--u) * 2)) 0;
+    left: calc(var(--u) * 2.5);
+    top: calc(var(--u) * 0.5);
+    width: calc(var(--u) * 3);
+    height: calc(var(--u) * 6);
+    border-width: 0 max(1.5px, calc(var(--u) * 1.5)) max(1.5px, calc(var(--u) * 1.5)) 0;
   }
   .waitingElapsed {
     flex: none;
-    font-size: max(10px, calc(var(--u) * 13));
+    font-size: max(12px, calc(var(--u) * 12));
   }
   .expiryTimes {
     position: absolute;
     left: calc(var(--u) * 215);
-    top: calc(var(--u) * 258);
+    /* 두 줄을 게이지와 판 아래 테두리 사이 가운데에 둔다 노트북에서 줄 높이 바닥이 커져도 가운데를 지킨다 */
+    top: calc(var(--u) * 272 - max(12px, calc(var(--u) * 14)));
     width: calc(var(--u) * 390);
     gap: 0;
-    font-size: max(8px, calc(var(--u) * 11));
-    line-height: calc(var(--u) * 14);
+    font-size: max(11px, calc(var(--u) * 11));
+    line-height: max(12px, calc(var(--u) * 14));
     text-align: right;
   }
   .expiryTimes p {
@@ -2132,7 +2288,7 @@
     width: calc(var(--u) * 154);
     height: calc(var(--u) * 62);
     padding: 0 0 calc(var(--u) * 4) 0.1em;
-    font-size: max(10px, calc(var(--u) * 20));
+    font-size: max(11px, calc(var(--u) * 20));
   }
   .controlHints {
     position: absolute;
@@ -2140,8 +2296,24 @@
     top: calc(var(--u) * 716);
     width: calc(var(--u) * 640);
     gap: 0 calc(var(--u) * 12);
-    font-size: max(9px, calc(var(--u) * 12));
+    font-size: max(12px, calc(var(--u) * 12));
     line-height: calc(var(--u) * 15);
+  }
+  /* 버튼 줄 바로 위에 띄워 판 아래 가장자리만 덮는다 아래 끝은 버튼 위 653에서 4 뗀 649다 */
+  .instanceNotices {
+    position: absolute;
+    z-index: 1;
+    left: calc(var(--u) * 1146);
+    bottom: calc(var(--u) * 431);
+    width: calc(var(--u) * 640);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(var(--u) * 6);
+    pointer-events: none;
+  }
+  .instanceNotices > * {
+    pointer-events: auto;
   }
 
   /* 원격 실행: 인스턴스 판과 같은 640x300 자리와 높이다 라벨은 인스턴스 그림의 CONNECT, TIME TO LIVE, EXTENDS 자리에 둔다 */
@@ -2167,7 +2339,7 @@
   .runLabel {
     position: absolute;
     left: calc(var(--u) * 35);
-    font-size: max(9px, calc(var(--u) * 14));
+    font-size: max(11px, calc(var(--u) * 14));
     line-height: calc(var(--u) * 16);
     color: #926f43;
   }
@@ -2202,7 +2374,7 @@
     position: absolute;
     left: calc(var(--u) * 160);
     top: calc(var(--u) * 262);
-    font-size: max(9px, calc(var(--u) * 15));
+    font-size: max(11px, calc(var(--u) * 15));
     line-height: calc(var(--u) * 18);
     color: #d8c7a6;
   }
@@ -2210,7 +2382,7 @@
     position: absolute;
     right: calc(var(--u) * 35);
     top: calc(var(--u) * 264);
-    font-size: max(8px, calc(var(--u) * 11));
+    font-size: max(11px, calc(var(--u) * 11));
     line-height: calc(var(--u) * 14);
   }
   .runUpload {
@@ -2229,7 +2401,7 @@
     padding: 0 0 calc(var(--u) * 4) 0.1em;
     border-width: 0 calc(var(--u) * 46);
     border-image-width: 0 calc(var(--u) * 46);
-    font-size: max(10px, calc(var(--u) * 20));
+    font-size: max(11px, calc(var(--u) * 20));
   }
 
   /* 플래그 제출 */
@@ -2274,8 +2446,8 @@
     left: calc(var(--u) * 36);
     top: calc(var(--u) * 153);
     width: calc(var(--u) * 320);
-    font-size: max(10px, calc(var(--u) * 14));
-    line-height: calc(var(--u) * 18);
+    font-size: max(12px, calc(var(--u) * 14));
+    line-height: max(15px, calc(var(--u) * 18));
   }
   .submitButton {
     position: absolute;
@@ -2313,14 +2485,14 @@
   }
   .bonusNotice p,
   .refreshNotice span {
-    font-size: max(10px, calc(var(--u) * 13));
+    font-size: max(12px, calc(var(--u) * 13));
   }
   .rewards dd {
     font-size: max(12px, calc(var(--u) * 20));
   }
   .noticeButton {
     min-height: calc(var(--u) * 32);
-    font-size: max(10px, calc(var(--u) * 14));
+    font-size: max(11px, calc(var(--u) * 14));
   }
 
   /* 로딩 · 오류 */
@@ -2373,7 +2545,11 @@
 @container challenge-page (max-width: 260px) {
   .board { padding: 4px; border-width: 6px; }
   .header, .descriptionPanel, .instancePanel, .runPanel, .flagPanel { padding: 12px 8px; }
-  .controls, .sectionNav, .sectionNav:not(:has(> :nth-child(3))) { grid-template-columns: minmax(0, 1fr); }
+  .controls, .runControls, .sectionNav, .sectionNav:not(:has(> :nth-child(3))) { grid-template-columns: minmax(0, 1fr); }
   .submitButton { padding-inline: 0; font-size: 16px; letter-spacing: 0.06em; }
   .pill { min-width: 0; max-width: 100%; min-height: 32px; height: auto; padding-inline: 10px; font-size: 14px; white-space: normal; }
+}
+
+@media (max-width: 1100px), (max-height: 619px) {
+  .runPlaque { min-width: 0; border-inline-width: 12px; border-image-width: 0 12px; letter-spacing: 0.06em; }
 }

@@ -4,6 +4,7 @@ import MileageRouletteModal from "./MileageRouletteModal.jsx";
 import GoldenKeyCard from "./GoldenKeyCard.jsx";
 import ChallengeSelection, { ReopenBoardEvent, ReopenChallengeSelection } from "./ChallengeSelection.jsx";
 import { isChallengeSelectionEmpty } from "../utils/challengeSelection.js";
+import { chanceCardKey } from "../utils/boardData.js";
 import styles from "./BoardScreen.module.css";
 
 const OFFSET_OPTIONS = [-3, -2, -1, 1, 2, 3];
@@ -61,11 +62,11 @@ function PendingRollActions({
       {postRollCards.length > 0 && (
         <ul className={styles.sheetChoices}>
           {postRollCards.map((card) => (
-            <li key={card.cardId} className={`${styles.eventCardRow} ${styles.sheetChoice}`}>
+            <li key={chanceCardKey(card)} className={`${styles.eventCardRow} ${styles.sheetChoice}`}>
               <span className={styles.sheetChoiceText}><strong>{card.name || card.cardId}</strong></span>
               {card.cardId === "card_move_offset" && <OffsetSelect value={offset} disabled={isMutating} onChange={setOffset} />}
               <ActionButton quiet disabled={isMutating}
-                onClick={() => onUseChanceCard(card.cardId, card.cardId === "card_move_offset" ? { offset } : undefined)}>
+                onClick={() => onUseChanceCard(chanceCardKey(card), card.cardId === "card_move_offset" ? { offset } : undefined)}>
                 카드 사용
               </ActionButton>
             </li>
@@ -92,10 +93,10 @@ function ChanceChoice({ choice, isMutating, onConfirmChance }) {
 }
 
 function DiscardChanceCard({ cards, isMutating, onDiscardChance }) {
-  const [cardId, setCardId] = useState(cards[0]?.cardId ?? "");
+  const [cardId, setCardId] = useState(chanceCardKey(cards[0]) ?? "");
 
   useEffect(() => {
-    setCardId(cards[0]?.cardId ?? "");
+    setCardId(chanceCardKey(cards[0]) ?? "");
   }, [cards]);
 
   return (
@@ -103,9 +104,9 @@ function DiscardChanceCard({ cards, isMutating, onDiscardChance }) {
       <p className={styles.sheetText}>보유 한도를 초과했습니다 다른 행동 전에 한 장을 선택해 폐기해주세요</p>
       <div className={styles.sheetChoices} role="radiogroup" aria-label="버릴 찬스카드">
         {cards.map((card) => (
-          <label key={card.cardId} className={`${styles.eventCardRow} ${styles.sheetChoice}`} data-checked={cardId === card.cardId || undefined}>
-            <input type="radio" name="discard-card" value={card.cardId} checked={cardId === card.cardId} disabled={isMutating}
-              onChange={() => setCardId(card.cardId)} />
+          <label key={chanceCardKey(card)} className={`${styles.eventCardRow} ${styles.sheetChoice}`} data-checked={cardId === chanceCardKey(card) || undefined}>
+            <input type="radio" name="discard-card" value={chanceCardKey(card)} checked={cardId === chanceCardKey(card)} disabled={isMutating}
+              onChange={() => setCardId(chanceCardKey(card))} />
             <span className={styles.sheetChoiceText}>
               <strong>{card.name || card.cardId}</strong>
               {card.description && <span>{card.description}</span>}

@@ -35,6 +35,20 @@ test("게임 화면 진입과 재방문은 기존 글꼴 CSS를 한 번만 붙�
   assert.ok([...document.links.values()].every(link => link.attributes.rel === "stylesheet"));
 });
 
+test("게임 화면 Pretendard는 CDN 통파일 대신 우리 서버의 조각 글꼴 CSS를 쓴다", () => {
+  assert.ok(GAME_FONT_STYLESHEETS.every(href => !/jsdelivr|pretendard\.min\.css/.test(href)));
+  const local = GAME_FONT_STYLESHEETS.find(href => href.startsWith("/assets/fonts/pretendard/"));
+  assert.ok(local);
+  const css = readFileSync(new URL(`../../public${local}`, import.meta.url), "utf8");
+  assert.match(css, /font-family: "Pretendard";/);
+  assert.match(css, /\/assets\/fonts\/pretendard\/subsets\/common\.woff2/);
+});
+
+test("삼성 인터넷·크롬 강제 다크모드가 양피지 화면을 뒤집지 않게 밝은 화면만 쓴다고 알린다", () => {
+  const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
+  assert.match(html, /<meta name="color-scheme" content="only light" \/>/);
+});
+
 test("로그인 화면만 열 때에는 외부 게임 글꼴을 요청하지 않는다", () => {
   const document = mockDocument();
   ensureGameFonts(document, "/login");

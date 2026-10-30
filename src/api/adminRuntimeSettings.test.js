@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import apiClient from "./client.js";
-import { getChallengeReleases, getChallengeRuntimeSecrets, registerChallengeRuntimeSecret, registerChallengeRelease, activateChallengeRelease, deriveChallengeRelease } from "./admin.js";
+import { getChallengeReleases, getChallengeRuntimeSecrets, registerChallengeRuntimeSecret, registerChallengeRelease, activateChallengeRelease, approveChallengeRelease, deriveChallengeRelease } from "./admin.js";
 
 test("admin runtime settings use the selected challenge and preserve cancellation and request fields", async () => {
   const originalAdapter = apiClient.defaults.adapter;
@@ -35,6 +35,17 @@ test("admin runtime settings use the selected challenge and preserve cancellatio
     assert.equal(requests[6].url, "/admin/challenges/challenge-a/releases/release-b/activate");
     assert.deepEqual(JSON.parse(requests[6].data), { reason: "접속 오류로 복구" });
     for (const request of requests.slice(2)) assert.equal(request.timeout, 15000);
+    await approveChallengeRelease("challenge-a", "release-c");
+    await approveChallengeRelease("challenge-a", "release-d", { reason: "검토 완료" });
+    const [approve, approveWithReason] = requests.slice(-2);
+    assert.equal(approve.url, "/admin/challenges/challenge-a/releases/release-c/approve");
+    assert.equal(approve.method, "post");
+    assert.deepEqual(JSON.parse(approve.data), {});
+    assert.deepEqual(JSON.parse(approveWithReason.data), { reason: "검토 완료" });
+    for (const request of [approve, approveWithReason]) {
+      assert.equal(request.headers["Idempotency-Key"], undefined);
+      assert.doesNotMatch(request.url, /activate/);
+    }
   } finally {
     apiClient.defaults.adapter = originalAdapter;
     if (originalStorage) Object.defineProperty(globalThis, "localStorage", originalStorage);

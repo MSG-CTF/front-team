@@ -4,12 +4,13 @@ import styles from "./LeaderboardScreen.module.css";
 const CATEGORIES = ["MISC", "WEB", "FOR", "REV", "PWN", "CRY", "OSINT", "WEB3"];
 const COLUMNS = [
   { key: "rank", label: "Rank", width: 4 },
-  { key: "teamName", label: "Team", width: 22 },
+  { key: "teamName", label: "Team", width: 20 },
   { key: "teamScore", label: "Point", width: 9 },
   { key: "solveCount", label: "Solves", width: 5 },
   ...CATEGORIES.map((label, index) => ({ key: "category" + index, label, width: 5.5 })),
-  { key: "kothScore", label: "KoTH", width: 8 },
-  { key: "signatureScore", label: "CLUB", width: 8, title: "동아리 부스 시그니처 점수" },
+  { key: "kothScore", label: "KoTH", width: 6 },
+  { key: "signatureScore", label: "CLUB", width: 6, title: "동아리 부스 시그니처 점수" },
+  { key: "lineScore", label: "LINE", width: 6, title: "보드 라인 독점 점수" },
 ];
 const STATUS = { loading: "순위를 불러오는 중", empty: "아직 등록된 팀이 없습니다", error: "순위를 불러오지 못했습니다" };
 const formatValue = (value) => value == null ? "-" : new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(value);
@@ -31,10 +32,10 @@ export default function RankingTable({ rankings, status }) {
             <span className={styles.cellValue} tabIndex={0} aria-label={ranking.teamName}>{ranking.teamName}</span>
           </th>
           {[ranking.teamScore, ranking.solveCount, ...CATEGORIES.map((_, index) => ranking.categoryScores?.[index] ?? null),
-            ranking.kothScore ?? ranking.categoryScores?.[8] ?? null, ranking.signatureScore].map((value, index) => <td
+            ranking.kothScore ?? ranking.categoryScores?.[8] ?? null, ranking.signatureScore, ranking.lineScore].map((value, index) => <td
             key={COLUMNS[index + 2].key} data-column={COLUMNS[index + 2].key} role="cell"
             className={index === 0 ? styles.pointCell : undefined}
-            title={value == null ? "서버에서 아직 제공하지 않는 값" : formatValue(value)}>
+            title={value == null ? "점수 없음" : formatValue(value)}>
             <span className={styles.mobileCellLabel} aria-hidden="true">{COLUMNS[index + 2].label}</span>
             <span className={styles.cellValue}>{formatValue(value)}</span>
           </td>)}

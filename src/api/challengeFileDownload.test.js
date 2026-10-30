@@ -81,8 +81,8 @@ test("파일은 고정된 API 경로에 Bearer와 취소 신호를 붙여 Blob�
   assert.equal(request.baseURL, "/api/v1");
   assert.equal(request.headers.Authorization, "Bearer old-access");
   assert.equal(request.responseType, "blob");
-  assert.equal(request.signal, controller.signal);
-  assert.equal(request.timeout, 60000);
+  assert.equal(request.signal.aborted, false);
+  assert.equal(request.timeout, 0);
   for (const invalid of [
     "../other",
     "https://outside.invalid",

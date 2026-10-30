@@ -6,7 +6,7 @@ export function scheduleBoardDeadlineRefresh(deadlines, diceStatus, refresh, {
   onError = () => {},
   onRecovered = () => {},
   retryDelays = [1000, 2500, 5000],
-  now = Date.now,
+  now = () => performance.now(),
   setTimer = (callback, delay) => window.setTimeout(callback, delay),
   clearTimer = timer => window.clearTimeout(timer),
   visibility = document,

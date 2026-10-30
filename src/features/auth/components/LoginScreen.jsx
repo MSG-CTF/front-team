@@ -10,6 +10,7 @@ export default function LoginScreen({
   onLogin,
   submitting = false,
   checkingSession = false,
+  locked = false,
   feedback = null,
 }) {
   const [username, setUsername] = useState("");
@@ -18,7 +19,8 @@ export default function LoginScreen({
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (busy) return;
+    // 시도 제한 중에는 입력은 두고 제출만 막는다
+    if (busy || locked) return;
     onLogin({ username, password });
   };
 
@@ -88,7 +90,7 @@ export default function LoginScreen({
             </div>
             <button
               type="submit"
-              disabled={busy}
+              disabled={busy || locked}
               aria-label="로그인"
               aria-busy={busy}
               className={styles.loginButton}
@@ -106,7 +108,7 @@ export default function LoginScreen({
             </button>
             {busy && (
               <p className={styles.feedback} role="status">
-                {checkingSession ? "로그인 상태를 확인하고 있어요" : "로그인 중"}
+                {checkingSession ? "로그인 상태를 확인하고 있습니다" : "로그인 중"}
               </p>
             )}
             {feedback && (

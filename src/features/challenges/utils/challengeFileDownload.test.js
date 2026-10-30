@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   fileDownloadError,
+  fileDownloadProgress,
   getAttachmentDownload,
   safeDownloadName,
   validateFileBlob,
@@ -63,4 +64,13 @@ test("다운로드 실패는 권한, 파일 교체와 연결 지연을 구분한
   assert.match(fileDownloadError({ response: { status: 403 } }), /권한/);
   assert.match(fileDownloadError({ response: { status: 404 } }), /교체/);
   assert.match(fileDownloadError({ code: "ECONNABORTED" }), /초과/);
+  assert.match(fileDownloadError({ code: "DOWNLOAD_STALLED" }), /데이터를 받지 못/);
+});
+
+test("전체 길이 헤더가 없어도 파일 메타데이터로 다운로드 진행률을 표시한다", () => {
+  assert.match(fileDownloadProgress({ loaded: 50 }, 100), /50%/);
+  assert.match(fileDownloadProgress({ loaded: 200 }, 100), /100%/);
+  assert.match(fileDownloadProgress({ loaded: 50, total: 200 }, 100), /25%/);
+  assert.match(fileDownloadProgress({ loaded: 50 }), /받음/);
+  assert.doesNotMatch(fileDownloadProgress({ loaded: NaN, total: -1 }), /NaN|Infinity/);
 });

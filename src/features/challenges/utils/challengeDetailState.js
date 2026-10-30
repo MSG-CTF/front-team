@@ -3,6 +3,20 @@ import {
   findOtherInstance,
 } from "./challengeDetailMapper.js";
 
+const CHANGING_INSTANCE_STATES = new Set([
+  "REQUESTED", "SCHEDULING", "PROVISIONING", "STOPPING", "STOPPED", "CLEANUP_PENDING", "EXPIRED",
+]);
+
+export function isInstanceChanging(instance) {
+  return CHANGING_INSTANCE_STATES.has(instance?.status);
+}
+
+export function needsInstanceLookup(challenge) {
+  return !challenge?.remote_run && (
+    challenge?.requires_instance !== false || challenge?.instance != null
+  );
+}
+
 export const INITIAL_DETAIL_STATE = {
   status: "loading",
   challengeData: null,

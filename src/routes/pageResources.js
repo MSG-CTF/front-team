@@ -1,7 +1,8 @@
 // 게임 글꼴은 홍보 페이지의 첫 표시를 기다리게 하지 않는다
+// Pretendard는 CDN 통파일 대신 화면 글자가 든 조각만 받는 우리 서버 글꼴을 쓴다 (scripts/subset-game-fonts.py)
 export const GAME_FONT_STYLESHEETS = [
   "https://fonts.googleapis.com/css2?family=Abyssinica+SIL&family=IM+Fell+English&family=Inria+Serif&family=Kode+Mono&family=Song+Myung&display=swap",
-  "https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css",
+  "/assets/fonts/pretendard/pretendard.generated.css",
 ];
 
 export function isIntroPath(pathname) {

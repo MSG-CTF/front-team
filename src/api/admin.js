@@ -1,7 +1,24 @@
 import apiClient from "./client.js";
+import { downloadFile } from "./fileDownload.js";
 
 const MUTATION_CONFIG = { timeout: 15000, timeoutErrorMessage: "요청 결과를 확인하지 못했습니다. 최신 상태를 조회한 뒤 확인하세요" };
 const PUBLICATION_CONFIG = { timeout: 120000, timeoutErrorMessage: "발행본 처리 결과를 확인하지 못했습니다 같은 요청으로 다시 시도해주세요" };
+
+export function getAdminImagePreparations(challengeId, releaseId, page = 1, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/releases/${encodeURIComponent(releaseId)}/image_preparations`,
+    { timeout: 10000, ...config, params: { page } });
+}
+
+export function createAdminImagePreparation(challengeId, releaseId, idempotencyKey, config) {
+  if (typeof idempotencyKey !== "string" || !idempotencyKey.trim()) throw new Error("Idempotency-Key가 필요합니다");
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/releases/${encodeURIComponent(releaseId)}/image_preparations`,
+    {}, { ...MUTATION_CONFIG, ...config, headers: { "Idempotency-Key": idempotencyKey } });
+}
+
+export function getAdminImagePreparation(challengeId, requestId, config) {
+  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/image_preparations/${encodeURIComponent(requestId)}`,
+    { timeout: 10000, ...config });
+}
 
 export function getPublishedChallenges(page = 1, config) {
   return apiClient.get("/admin/published_challenges", { ...PUBLICATION_CONFIG, ...config, params: { page } });
@@ -48,9 +65,17 @@ export function getAdminChallengeSolves(challengeId, { startAt, endAt, hour, sor
 
 // [프론트 요청, 백엔드 PR 대기] 제출 기록: 백엔드 FlagSubmission 에 정답, 오답, 잠김 제출이 모두 저장된다
 // 원문 플래그는 저장하지 않으므로 해시 앞부분만 받는다
-export function getAdminChallengeSubmissions(challengeId, { result, teamId, page = 1, size = 20 } = {}, config) {
+export function getAdminChallengeSubmissions(challengeId, { result, teamId, startAt, endAt, page = 1, size = 20 } = {}, config) {
   return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/submissions`, {
-    ...config, params: { result, team_id: teamId, page, size },
+    ...config, params: { result, team_id: teamId, page, size, ...(startAt ? { start_at: startAt } : {}), ...(endAt ? { end_at: endAt } : {}) },
+  });
+}
+
+export function deleteAdminChallengeSubmission(challengeId, submissionId, reason) {
+  const trimmed = reason.trim();
+  if (!trimmed || Array.from(trimmed).length > 500) throw new Error("사유는 1~500자로 입력하세요");
+  return apiClient.delete(`/admin/challenges/${encodeURIComponent(challengeId)}/submissions/${encodeURIComponent(submissionId)}`, {
+    ...MUTATION_CONFIG, data: { reason: trimmed },
   });
 }
 
@@ -98,9 +123,7 @@ export function getAdminChallengeRepositoryFiles(challengeId, config) {
 }
 
 export function downloadAdminChallengeFile(challengeId, fileId, config) {
-  return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/files/${encodeURIComponent(fileId)}/download`, {
-    ...config, responseType: "blob", timeout: 60000,
-  });
+  return downloadFile(`/admin/challenges/${encodeURIComponent(challengeId)}/files/${encodeURIComponent(fileId)}/download`, config);
 }
 
 // 마일리지 지급·회수와 배포 파일 저장은 재시도할 때 같은 키를 넘긴다.
@@ -207,19 +230,6 @@ export function adjustMileage(teamId, { amount, reason, idempotencyKey }) {
 }
 
 // ── 팀 강제 개입 (Notion API명세서 2026-09-07 스냅샷 기준 상태 개별 표기) ──
-export function getTeamSnapshots(teamId, config) {
-  // [백엔드: 시작 전] GET /admin/teams/{id}/snapshots - 롤백 지점 목록
-  return apiClient.get(`/admin/teams/${teamId}/snapshots`, config);
-}
-
-export function rollbackTeam(teamId, { snapshotId, reason }) {
-  // [백엔드: 시작 전] POST /admin/teams/{id}/rollback - reason 1~500자
-  return apiClient.post(`/admin/teams/${teamId}/rollback`, {
-    snapshot_id: snapshotId,
-    reason,
-  }, MUTATION_CONFIG);
-}
-
 export function updateBoardCell(teamId, cellIndex, { status, reason }) {
   // [백엔드: 완료(머지)] PATCH .../board/cells/{cell_index} - cell_index 1~36(0번 칸 없음).
   // status: UNVISITED|CONSUMED|OPENED|CLEARED. 점수 미변경.
@@ -262,6 +272,10 @@ export function forceResetInstance(instanceId) {
 export function forceStopInstance(instanceId) {
   // [백엔드: 완료] 202 Accepted, status: "STOPPING"
   return apiClient.delete(`/admin/instances/${instanceId}`, MUTATION_CONFIG);
+}
+
+export function retryInstanceCleanup(instanceId) {
+  return apiClient.post(`/admin/instances/${encodeURIComponent(instanceId)}/retry-cleanup`, {}, MUTATION_CONFIG);
 }
 
 // ── 문제 / 릴리스 ──────────────────────────────────────────────────────────
@@ -309,6 +323,12 @@ export function getChallengeReleases(challengeId, config) {
 
 export function activateChallengeRelease(challengeId, releaseId, { reason } = {}) {
   return apiClient.post(`/admin/challenges/${challengeId}/releases/${releaseId}/activate`, reason === undefined ? {} : { reason }, MUTATION_CONFIG);
+}
+
+// 활성화 없이 승인만 기록한다 현재 적용 버전은 바뀌지 않으며 Idempotency-Key가 필요 없다
+export function approveChallengeRelease(challengeId, releaseId, { reason } = {}) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/releases/${encodeURIComponent(releaseId)}/approve`,
+    reason === undefined ? {} : { reason }, MUTATION_CONFIG);
 }
 
 export function deriveChallengeRelease(challengeId, releaseId, settings) {
@@ -400,6 +420,10 @@ export function testAdminKothConnection(kothChallengeId, { challengeUrl, scoreAp
   }, MUTATION_CONFIG);
 }
 
+export function startAdminKothPreview(kothChallengeId) {
+  return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/preview_sessions`, {}, MUTATION_CONFIG);
+}
+
 // 반영되지 못한 틱을 문제 서버에서 다시 불러와 반영한다 이미 반영된 틱은 그대로 둔다
 export function retryAdminKothPeriod(kothChallengeId, periodId) {
   return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/periods/${encodeURIComponent(periodId)}/retry`, null, MUTATION_CONFIG);
@@ -412,9 +436,7 @@ export function getAdminKothFiles(kothChallengeId, config) {
 
 // 참가자가 받는 zip 을 관리자가 먼저 받아 본다
 export function downloadAdminKothFiles(kothChallengeId, config) {
-  return apiClient.get(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/files/download`, {
-    ...config, responseType: "blob", timeout: 60000,
-  });
+  return downloadFile(`/admin/koth/challenges/${encodeURIComponent(kothChallengeId)}/files/download`, config);
 }
 
 export function updateAdminKothFiles(kothChallengeId, { mode, reason }) {
@@ -520,4 +542,51 @@ export function saveAdminKothEnvironment(challengeId, body) {
 export function applyAdminKothEnvironment(challengeId, versionId, requestId) {
   return apiClient.post(`/admin/koth/challenges/${encodeURIComponent(challengeId)}/environment/versions/${encodeURIComponent(versionId)}/apply`,
     { request_id: requestId }, MUTATION_CONFIG);
+}
+
+export function retryAdminImagePreparation(challengeId, requestId, nodeUids, key, config) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/image_preparations/${encodeURIComponent(requestId)}/retry`,
+    nodeUids ? { node_uids: nodeUids } : {}, { ...idKey("image-retry", key), ...config });
+}
+
+export function refreshAdminImagePreparation(challengeId, requestId, config) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/image_preparations/${encodeURIComponent(requestId)}/refresh`, {}, { ...MUTATION_CONFIG, ...config });
+}
+
+export function getAdminSignatureSubmissions(signatureId, { result, teamId, startAt, endAt, page = 1, size = 20 } = {}, config) {
+  return apiClient.get(`/admin/signatures/${encodeURIComponent(signatureId)}/submissions`, {
+    ...config, params: { result, team_id: teamId, page, size, ...(startAt ? { start_at: startAt } : {}), ...(endAt ? { end_at: endAt } : {}) },
+  });
+}
+
+export function deleteAdminChallenge(challengeId) {
+  return apiClient.delete(`/admin/challenges/${encodeURIComponent(challengeId)}`, MUTATION_CONFIG);
+}
+
+export function deleteAdminSignature(signatureId) {
+  return apiClient.delete(`/admin/signatures/${encodeURIComponent(signatureId)}`, MUTATION_CONFIG);
+}
+
+export function updateAdminLineScore(teamId, lineNumber, earnedScore, reason) {
+  return apiClient.patch(`/admin/teams/${encodeURIComponent(teamId)}/line_monopolies/${lineNumber}`, { earned_score: earnedScore, reason }, MUTATION_CONFIG);
+}
+
+export function getPublicationRequests({ challengeSlug, dispatchStatus, page = 1, size = 20 } = {}, config) {
+  return apiClient.get("/admin/publication_requests", { ...config, params: { challenge_slug: challengeSlug, dispatch_status: dispatchStatus, page, size } });
+}
+
+export function getPublicationRequest(requestId, config) {
+  return apiClient.get(`/admin/publication_requests/${encodeURIComponent(requestId)}`, config);
+}
+
+export function createPublicationRequest(body, key) {
+  return apiClient.post("/admin/publication_requests", body, idKey("publication-request", key));
+}
+
+export function dispatchPublicationRequest(requestId) {
+  return apiClient.post(`/admin/publication_requests/${encodeURIComponent(requestId)}/dispatch`, {}, PUBLICATION_CONFIG);
+}
+
+export function syncPublicationRequest(requestId) {
+  return apiClient.post(`/admin/publication_requests/${encodeURIComponent(requestId)}/sync`, {}, PUBLICATION_CONFIG);
 }

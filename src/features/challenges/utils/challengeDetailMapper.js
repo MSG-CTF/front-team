@@ -49,7 +49,13 @@ export function mapRemoteRunConfig(value) {
     executable: typeof value.executable === "string" ? value.executable : "",
     maxBytes: positiveInteger(value.max_file_bytes, 10 * 1024 * 1024),
     timeoutSeconds: positiveInteger(value.timeout_seconds, 180),
-    maxAttempts: positiveInteger(value.max_attempts, 5),
+    maxAttempts: null,
+    queuePolicy: value.queue_policy === "TEAM_FIFO" ? "TEAM_FIFO" : null,
+    rateLimitSeconds: positiveInteger(value.rate_limit_seconds, 30),
+    retryAfterSeconds: Number.isInteger(value.retry_after_seconds) ? Math.max(0, value.retry_after_seconds) : 0,
+    available: value.available === true,
+    enabled: value.enabled === true,
+    availabilityMessage: typeof value.availability_message === "string" ? value.availability_message : "실행 환경 연결을 준비하고 있습니다",
     usedAttempts:
       Number.isInteger(value.used_attempts) && value.used_attempts >= 0
         ? value.used_attempts
@@ -69,6 +75,8 @@ export function mapChallengeDetail(data) {
     solved: data.is_solved === true,
     accessStatus: data.status ?? null,
     openedAt: data.opened_at ?? null,
+    // 제한시간은 관리자 설정으로 달라질 수 있어 서버가 준 마감을 쓴다 opened_at + 15분은 구버전 응답용 대체값이다
+    solveDeadlineAt: data.solve_deadline_at ?? null,
     description: typeof data.description === "string" ? data.description : "",
     requiresInstance: !remoteRun && data.requires_instance !== false,
     remoteRun,
@@ -81,13 +89,14 @@ export function mapChallengeDetail(data) {
             name: typeof file.file_name === "string" && file.file_name ? file.file_name : "첨부파일",
             url: getAttachmentUrl(file.download_url),
             sizeLabel: formatFileSize(file.file_size),
+            sizeBytes: Number.isFinite(file.file_size) && file.file_size >= 0 ? file.file_size : null,
           }))
       : [],
   };
 }
 
 export function getChallengeSubmissionState(challenge, now = Date.now()) {
-  const deadline = getChallengeDeadline(challenge?.openedAt);
+  const deadline = getChallengeDeadline(challenge?.openedAt, challenge?.solveDeadlineAt);
   const remainingSeconds =
     deadline == null
       ? null
@@ -169,7 +178,7 @@ export function mapInstanceEndpoints(data) {
     try {
       const url = new URL(endpoint.service_url);
       if (
-        !["http:", "https:", "tcp:"].includes(url.protocol) ||
+        !["http:", "https:", "tcp:", "tls:"].includes(url.protocol) ||
         url.username ||
         url.password
       )
@@ -178,11 +187,16 @@ export function mapInstanceEndpoints(data) {
       const healthcheck = ["http:", "https:"].includes(url.protocol)
         && typeof healthPath === "string" && /^\/(?!\/)[^\s\\?#]*$/.test(healthPath);
       if (healthcheck) url.pathname = healthPath;
+      const connection = {};
+      for (const field of ["hostname", "connection_port", "tls", "server_name"]) {
+        if (Object.hasOwn(endpoint, field)) connection[field] = endpoint[field];
+      }
       return [
         {
           name: `${endpoint.container_name || "서비스"}${healthcheck ? " · 상태 확인" : ""}`,
           url: healthcheck ? url.href : endpoint.service_url,
           isWeb: ["http:", "https:"].includes(url.protocol),
+          ...connection,
         },
       ];
     } catch {

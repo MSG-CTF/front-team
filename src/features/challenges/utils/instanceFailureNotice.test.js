@@ -3,6 +3,16 @@ import assert from "node:assert/strict";
 import { mapChallengeInstance } from "./challengeDetailMapper.js";
 import { getInstanceFailureNotice } from "./instanceFailureNotice.js";
 
+test("생성에 실패한 정리 이력을 정상 종료로 표시하지 않는다", () => {
+  for (const status of ["FAILED", "CLEANUP_PENDING", "CLEANED"]) {
+    const notice = getInstanceFailureNotice(mapChallengeInstance({ status, delete_reason: "CREATE_FAILED_CLEANUP" }));
+    assert.equal(notice.title, "인스턴스를 생성하지 못했습니다");
+    assert.match(notice.message, status === "CLEANUP_PENDING" ? /정리/ : /운영진/);
+  }
+  assert.equal(getInstanceFailureNotice({ status: "CLEANED", deleteReason: "USER_REQUESTED" }), null);
+  assert.equal(getInstanceFailureNotice({ status: "RUNNING", deleteReason: "CREATE_FAILED_CLEANUP" }), null);
+});
+
 test("서버가 TTL 만료로 확정한 초기화 실패는 새로고침 후에도 사유와 재생성 안내를 보여준다", () => {
   const payload = { instance_id: "replacement", status: "FAILED", replaced_instance_id: "original", delete_reason: "TTL_EXPIRED" };
   const notice = getInstanceFailureNotice(mapChallengeInstance(payload));

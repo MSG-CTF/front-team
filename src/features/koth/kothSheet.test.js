@@ -56,6 +56,43 @@ function render(overrides = {}) {
   return renderToStaticMarkup(createElement(MemoryRouter, null, createElement(KothScreen, props)));
 }
 
+test("failed collection labels the ranking and keeps a zero row unranked", () => {
+  const html=render({problemRanking:{status:"success",data:{collection_status:"FAILED",is_stale:true,
+    last_collected_at:null,leaderboard:[{team_id:MY_TEAM,team_name:"우리 팀",rank:null,earned_score:0}]}}});
+  assert.match(html,/role="alert">순위 수집에 실패했습니다/);
+  assert.match(html,/아래는 저장된 누적 점수입니다/);
+  assert.match(html,/<td>—<\/td>/);
+  assert.doesNotMatch(html,/data-top="true"/);
+});
+
+test("an empty uncollected ranking is distinct from a successfully collected empty ranking", () => {
+  for(const status of ["NOT_COLLECTED","PENDING","FAILED"]) {
+    const html=render({problemRanking:{status:"success",data:{collection_status:status,leaderboard:[]}}});
+    assert.doesNotMatch(html,/아직 득점한 팀이 없습니다/);
+    assert.match(html,status==="FAILED"?/순위 수집에 실패했습니다/:/순위 수집을 기다리고 있습니다/);
+  }
+  assert.match(render({problemRanking:{status:"success",data:{collection_status:"COLLECTED",is_stale:false,leaderboard:[]}}}),/아직 득점한 팀이 없습니다/);
+});
+
+test("recovered collection shows its successful timestamp and a real zero score", () => {
+  const at="2026-10-27T04:30:00Z";
+  const selected={...createKothChallengeViewModels(KOTH_CHALLENGE_VISUALS,clubs,progress)[2],
+    collection:"ready",lastCollectedAt:at,earnedScore:0,rank:null,solvedAt:null};
+  const html=render({selectedChallenge:selected,problemRanking:{status:"success",data:{
+    collection_status:"COLLECTED",last_collected_at:at,leaderboard:[]}}});
+  assert.match(html,/수집 결과 0점/);
+  assert.equal((html.match(/dateTime="2026-10-27T04:30:00Z"/gi)||[]).length,2);
+  assert.doesNotMatch(html,/수집에 실패했습니다/);
+});
+
+test("team progress request failure does not present cached rank and score as current", () => {
+  const html=render({progressError:"내 팀 점수를 갱신하지 못했습니다"});
+  const standing=/<dl[^>]*>([\s\S]*?)<\/dl>/.exec(html)?.[1]??"";
+  assert.match(standing,/조회 실패/);
+  assert.match(standing,/내 팀 점수를 갱신하지 못했습니다/);
+  assert.doesNotMatch(standing,/22위/);
+});
+
 test("문제를 고르면 왼쪽에 지도에서 고른 우표 카드를 크게 두고 가운데에 동아리, 제목, 지도의 라운드 리본, 진행 상태를 둔다", () => {
   const html = render();
   const dialog = /<section[^>]*role="dialog"[^>]*>/.exec(html)?.[0] ?? "";
@@ -124,15 +161,19 @@ test("순위표는 득점한 팀을 모두 그리고 1위에 왕관, 우리 팀 
   assert.doesNotMatch(html, /전체 \d+팀 보기/);
 });
 
-test("팀 요약은 이름과 점수를 한 줄로, 팀 토큰과 새로고침은 명판 단추로 둔다", () => {
+test("팀 요약은 이름과 점수를 한 줄로, 새로고침은 명판 단추로 둔다", () => {
   const html = render();
   const summary = /<aside[^>]*aria-label="내 팀 KoTH 점수"[^>]*>([\s\S]*?)<\/aside>/.exec(html)?.[1] ?? "";
   assert.match(summary, /<strong>도토리묵사발<\/strong>/);
   assert.match(summary, /<b>537<\/b>/);
-  assert.equal((summary.match(/<button /g) || []).length, 2);
+  assert.equal((summary.match(/<button /g) || []).length, 1);
   assert.match(summary, /data-tone="quiet"[^>]*>새로고침</);
-  const signedOut = render({ authenticated: false, selectedChallenge: null });
-  assert.match(signedOut, /<button type="button" class="[^"]+" disabled="">\s*팀 토큰/);
+});
+
+test("팀 토큰 단추는 문제를 선택해 시트가 열렸고 로그인했을 때만 시트 안에 나온다", () => {
+  assert.match(render(), /<button type="button" class="[^"]+">팀 토큰<\/button>/);
+  assert.doesNotMatch(render({ authenticated: false }), />팀 토큰</);
+  assert.doesNotMatch(render({ selectedChallenge: null }), />팀 토큰</);
 });
 
 test("시트는 문제 상세 화면의 판 그림을 쓰고 지도 크기를 따라 줄되 기준 글자 14px 아래로 내려가지 않는다", () => {
@@ -180,4 +221,12 @@ test("우표 카드 이름 줄에는 출제 동아리 이름을, 지도 카드 �
   // 문제 시트의 큰 카드도 최신 상세의 동아리 이름을 쓴다
   const sheet = /<section[^>]*role="dialog"[^>]*>[\s\S]*<\/section>/.exec(html)?.[0] ?? "";
   assert.match(sheet, /data-round="2" style="--name-scale:1">Y-CERT<\/span>/);
+});
+
+test("정지된 팀은 KoTH 갱신 실패 대신 정지 이유를 본다", async () => {
+  const { readFileSync } = await import("node:fs");
+  const hook = readFileSync(new URL("./hooks/useKothData.js", import.meta.url), "utf8");
+  assert.match(hook, /error\?\.response\?\.data\?\.code === "TEAM_BANNED"/);
+  assert.match(hook, /error: state\.banned \? TEAM_BANNED_MESSAGE : state\.clubsStale/);
+  assert.match(hook, /정지된 팀이라 KoTH 정보를 볼 수 없습니다/);
 });

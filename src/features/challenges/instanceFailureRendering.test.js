@@ -26,7 +26,7 @@ test("다시 생성한 요청에는 이전 만료 실패 안내를 남기지 않
   const html = renderToStaticMarkup(createElement(Panel, { instance }));
   assert.doesNotMatch(html, /초기화 중 사용 시간이 만료/);
   assert.match(html, /준비가 끝나면 접속 주소와 남은 시간이 바로 표시됩니다/);
-  assert.match(html, /<li data-state="active"><i aria-hidden="true"><\/i><span>요청 접수<\/span>/);
+  assert.match(html, /<li data-state="active"><i aria-hidden="true"><\/i><span>요청 접수<span[^>]*aria-hidden="true">/);
 });
 
 test("생성 단계는 지난 칸을 체크하고 지금 칸에서 돌며, 실패한 인스턴스에서 다시 생성해도 기다리는 화면을 먼저 보인다", () => {

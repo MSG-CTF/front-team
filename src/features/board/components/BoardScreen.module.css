@@ -1,5 +1,6 @@
 .desktopOnly, .boardViewport, .boardArea, .boardTools, .boardScene, .leftPanel, .leftPanelCard { display: contents; }
 .panelToggleSection { display: none; }
+.navCaption { position: absolute; left: 50%; transform: translateX(-50%); z-index: 1; pointer-events: none; white-space: nowrap; color: #d9c08e; font: 600 clamp(11px, 0.74cqw, 14px)/1 "Pretendard", var(--board-body-font); letter-spacing: 0.06em; text-shadow: 0 1px 2px #000b; }
 .mobileNav, .boardControls, .boardHint, .sceneBackdrop, .mobileCellInfo { display: none; }
 .frame {
   --board-label-font: "Song Myung", "Batang", serif;
@@ -95,11 +96,12 @@
   .stage .leftPanel .panelToggleSection::after { inset: 4px; background-image: url("/assets/board/plates/plate-open-line.svg"); background-size: 100.44% 103%; background-position: center; }
   /* Figma 5:19 주사위판(333×146)을 너비 100%로 놓고 값은 시안 좌표를 퍼센트로 바꿔 겹친다 */
   .stage .leftPanelCard .diceStatus { position: relative; inset: auto; width: 100%; height: auto; aspect-ratio: 333 / 146; padding: 0; display: block; }
-  .stage .leftPanelCard .diceStatusIcon { display: block; position: absolute; left: 7.4%; top: 52.7%; width: 3.7%; height: auto; transform: translateY(-50%); }
-  .stage .leftPanelCard .diceReadout { position: absolute; left: 15.1%; right: 4.5%; top: 52.7%; width: auto; transform: translateY(-50%); font-size: clamp(11px, 0.8cqw, 16px); }
-  .stage .leftPanelCard .diceChallengeRow { position: absolute; left: auto; right: 4.5%; top: 22%; font-size: clamp(10px, 0.62cqw, 13px); }
-  .stage .leftPanelCard .diceStatusMessage { position: absolute; left: 42%; right: 4.5%; top: 34%; width: auto; margin: 0; text-align: right; font-size: clamp(10px, 0.58cqw, 12px); line-height: 1.35; }
-  .stage .leftPanelCard .diceGauge { display: block; position: absolute; left: 7.4%; top: 59.4%; width: 88.1%; height: 8.4%; box-sizing: border-box; padding: 0.1cqw 0.14cqw; border-radius: 0.3cqw; }
+  .stage .leftPanelCard .diceStatusIcon { display: block; position: absolute; left: 7.4%; top: 54%; width: 3.7%; height: auto; transform: translateY(-50%); }
+  .stage .leftPanelCard .diceReadout { position: absolute; left: 15.1%; right: 4.5%; top: 54%; width: auto; transform: translateY(-50%); font-size: clamp(11px, 0.8cqw, 16px); }
+  .stage .leftPanelCard .diceReadout strong { font-size: calc(1em + 1px); line-height: 1; }
+  .stage .leftPanelCard .diceChallengeRow { position: absolute; left: auto; right: 4.5%; top: 12%; font-size: clamp(11px, 0.62cqw, 13px); }
+  .stage .leftPanelCard .diceStatusMessage { position: absolute; left: 42%; right: 4.5%; top: 27%; width: auto; margin: 0; text-align: right; font-size: clamp(11px, 0.58cqw, 12px); line-height: 1.35; }
+  .stage .leftPanelCard .diceGauge { display: block; position: absolute; left: 7.4%; top: 70.4%; width: 88.1%; height: 8.4%; box-sizing: border-box; padding: 0.1cqw 0.14cqw; border-radius: 0.3cqw; }
   .diceGauge span { display: block; height: 100%; min-width: 0; border-radius: 0.2cqw; background: linear-gradient(#fbbb35, #fbb934 38%, #d3861f); box-shadow: 0 0 0.3cqw #f4a8286b; transition: width 1s linear; }
   .diceGauge[data-idle="true"] span { opacity: .45; box-shadow: none; }
   .stage .leftPanelCard .chancePanel {
@@ -197,14 +199,10 @@
 .openToggleCount {
   margin-left: auto;
   display: inline-grid; place-items: center; min-width: 1.35cqw; height: 1.35cqw; padding-inline: 0.3cqw; border-radius: 999px;
-  background: #8a6236; color: #f8ead0; font: 600 0.75cqw/1 var(--board-body-font); font-variant-numeric: tabular-nums;
+  background: #8a6236; color: #f8ead0; font: 600 max(11px, 0.75cqw)/1 var(--board-body-font); font-variant-numeric: tabular-nums;
 }
 .lineOverlay { position: absolute; inset: 0; z-index: 12; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
 /* 풀이 상태는 유지하고 독점은 칸 바깥의 연속선으로만 구분한다 */
-.solvedCells { --line-accent: #a8c8ae; }
-.spentSpecialCells { --line-accent: #bd9c68; }
-.lineCellOutline { fill: none; stroke: var(--line-accent); stroke-width: 3px; opacity: 0.85; }
-.lineCellOutline[data-outline-state="spent"] { opacity: 0.75; }
 .lineAccent { pointer-events: none; }
 .lineAccentControl { cursor: pointer; outline: none; }
 .lineAccentHitArea { fill: transparent; pointer-events: fill; }
@@ -356,20 +354,21 @@
 .openPanel .openRow:focus-visible { outline: none; }
 .openRow:focus-visible::before { background: #f8ecd2a6; box-shadow: inset 0 0 0 2px #825725; }
 /* 번호 도장은 Figma 배지의 적갈색 단색 원, 푼 문제는 옅은 초록 원에 체크로 물러나게 한다 */
-.openRowNo { flex: none; display: grid; place-items: center; width: 2.45em; height: 2.45em; border-radius: 50%; background: #871f13; color: #fff6e6; font: 700 0.72em/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
+.openRowNo { flex: none; display: grid; place-items: center; width: 2.45em; height: 2.45em; border-radius: 50%; background: #871f13; color: #fff6e6; font: 700 max(10px, 0.72em)/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
 .openRowNo svg { width: 1.5em; height: 1.5em; }
 .openChallengeList li[data-solved="true"] .openRowNo { background: #dde5c4; color: #557636; }
 .openRowText { flex: 1 1 auto; min-width: 0; }
 /* 긴 제목은 낱말 단위로 두 줄까지 보이고 그 뒤만 줄인다 */
 .openRowText strong { display: -webkit-box; overflow: hidden; color: var(--open-ink); font-size: 1em; font-weight: 600; line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
 .openChallengeList li[data-solved="true"] .openRowText strong { color: #6a5136; font-weight: 500; }
-.openRowMeta { display: flex; align-items: center; gap: 0.6em; min-width: 0; margin-top: 0.2em; color: var(--open-soft); font: 500 0.82em/1.3 "Pretendard", sans-serif; letter-spacing: 0.02em; white-space: nowrap; }
+.openRowMeta { display: flex; align-items: center; gap: 0.6em; min-width: 0; margin-top: 0.2em; color: var(--open-soft); font: 500 max(11px, 0.82em)/1.3 "Pretendard", sans-serif; letter-spacing: 0.02em; white-space: nowrap; }
 .openRowMeta > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .openRowChevron { flex: none; width: 0.56em; height: 1em; color: #9a774a; }
-.openGroupLabel { margin: 1em 0 0.2em; color: var(--open-faint); font: 600 0.8em/1.3 "Pretendard", sans-serif; letter-spacing: 0.02em; }
+/* 묶음 이름도 읽히도록 보조 글자색과 11px 바닥을 쓴다 */
+.openGroupLabel { margin: 1em 0 0.2em; color: var(--open-soft); font: 600 max(11px, 0.8em)/1.3 "Pretendard", sans-serif; letter-spacing: 0.02em; }
 .openChallengeList > li + li:has(> .openGroupLabel) { border-top: 0; }
 /* 내 인스턴스: 작은 점과 상태 글자 실행 중이면 초록, 아니면 갈색 */
-.openLive { display: inline-flex; flex: none; align-items: center; gap: 0.4em; color: var(--open-soft); font: 600 1em/1 "Pretendard", sans-serif; letter-spacing: 0; white-space: nowrap; }
+.openLive { display: inline-flex; flex: none; align-items: center; gap: 0.4em; color: var(--open-soft); font: 600 max(11px, 1em)/1 "Pretendard", sans-serif; letter-spacing: 0; white-space: nowrap; }
 .openLive i { flex: none; width: 0.46em; height: 0.46em; border-radius: 50%; background: currentColor; }
 .openLive[data-tone="running"] { color: #4f7a35; }
 .openLive[data-tone="running"] i { box-shadow: 0 0 0 0.2em #4f7a3524; }
@@ -451,14 +450,14 @@ label.sheetChoice { align-items: flex-start; cursor: pointer; }
 .lineList > li + li { background: linear-gradient(var(--open-rule), var(--open-rule)) top / 100% 1px no-repeat; }
 .lineList > li[data-selected="true"]::before { content: ""; position: absolute; inset: 0 -0.45em; z-index: -1; border-radius: 0.35em; background: #f8ecd2c7; box-shadow: inset 3px 0 0 var(--line-accent); }
 .lineRow { display: flex; align-items: center; gap: var(--open-gap); min-height: 3.6em; padding: 0.6em 0; }
-.lineSeal { flex: none; display: grid; place-items: center; width: 2.45em; height: 2.45em; border-radius: 50%; background: var(--gem-mid); color: #fff6e6; font: 700 0.72em/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
+.lineSeal { flex: none; display: grid; place-items: center; width: 2.45em; height: 2.45em; border-radius: 50%; background: var(--gem-mid); color: #fff6e6; font: 700 max(10px, 0.72em)/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
 .lineText { flex: 1 1 auto; min-width: 0; }
 /* 라인 이름은 문제 제목과 같은 글자, 대상 칸은 분야 자리에 쓰고 푼 칸만 보석색으로 진하게 */
 .lineName { display: block; min-width: 0; color: var(--open-ink); font-size: 1em; font-weight: 600; line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere; }
-.lineCells { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.5em; margin-top: 0.2em; color: var(--open-soft); font: 500 0.82em/1.3 "Pretendard", sans-serif; }
+.lineCells { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 0.5em; margin-top: 0.2em; color: var(--open-soft); font: 500 max(11px, 0.82em)/1.3 "Pretendard", sans-serif; }
 .lineCells span { color: var(--open-faint); font-variant-numeric: tabular-nums; }
 .lineCells span[data-solved="true"] { color: var(--gem-mid); font-weight: 700; }
-.lineScores { display: flex; flex-wrap: wrap; gap: 0.15em 0.9em; margin-top: 0.25em; color: var(--open-soft); font: 500 0.82em/1.4 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
+.lineScores { display: flex; flex-wrap: wrap; gap: 0.15em 0.9em; margin-top: 0.25em; color: var(--open-soft); font: 500 max(11px, 0.82em)/1.4 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
 /* 상태 태그는 문제 상세의 OPEN, MEDIUM 태그처럼 각진 칸으로 둔다 */
 .lineBadge { flex: none; padding: 0.38em 0.6em 0.34em; border: 1px solid transparent; border-radius: 0.2em; font: 600 0.76em/1 "Pretendard", sans-serif; letter-spacing: 0.02em; white-space: nowrap; }
 .lineBadge[data-tone="count"] { padding: 0; border: 0; color: var(--open-soft); font: 600 0.88em/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
@@ -474,7 +473,7 @@ label.sheetChoice { align-items: flex-start; cursor: pointer; }
   .frame .stage {
     position: relative;
     inset: auto;
-    width: min(100%, 900px);
+    width: 100%;
     height: auto;
     min-height: 100svh;
     margin: auto;
@@ -535,7 +534,7 @@ label.sheetChoice { align-items: flex-start; cursor: pointer; }
   .boardViewport::-webkit-scrollbar { display: none; }
   /* 원본 무대의 x=448, y=120, 951×960 영역을 같은 비율로 표시한다
      원판의 원본 위치(448, 289)도 이 장면 안에 고정해 바닥 문양에서 미끄러지지 않게 한다 */
-  .boardScene { display: block; position: relative; width: min(100%, calc(1100px * 951 / 1920), calc(100dvh * 951 / 1080)); margin-inline: auto; aspect-ratio: 951 / 960; overflow: hidden; isolation: isolate; }
+  .boardScene { display: block; position: relative; width: 100%; margin-inline: auto; aspect-ratio: 951 / 960; overflow: hidden; isolation: isolate; }
   .sceneBackdrop { display: block; position: absolute; left: -47.1083%; top: -12.5%; width: 201.8927%; height: 112.5%; max-width: none; pointer-events: none; user-select: none; }
   .stage .track { inset: auto; left: 0; top: calc(169 / 960 * 100%); width: 100%; }
   .boardViewport[data-zoomed="true"] { overflow-x: auto; overscroll-behavior-x: contain; }

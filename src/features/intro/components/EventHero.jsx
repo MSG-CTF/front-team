@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { ROUTES } from "../../../routes/routePaths.js";
 import { eventConfig } from "../config/eventConfig.js";
-import { getEventLabels } from "../utils/eventData.js";
+import { getEventLabels, isRegistrationOpen } from "../utils/eventData.js";
 import ApplyLink from "./ApplyLink.jsx";
 import Countdown from "./Countdown.jsx";
 import AutumnLeaves from "./AutumnLeaves.jsx";
@@ -9,6 +9,7 @@ import { MotionControl } from "./MotionProvider.jsx";
 
 export default function EventHero() {
   const labels = getEventLabels(eventConfig.event);
+  const registrationOpen = isRegistrationOpen(eventConfig.registrationClosesAt);
   return (
     <section className="cover" aria-labelledby="event-title">
       <AutumnLeaves />
@@ -31,9 +32,10 @@ export default function EventHero() {
           <span>{labels.startTime}</span>
         </p>
         <Countdown />
-        <ApplyLink className="apply-button hero-apply" />
+        {/* 모집이 끝나면 첫 화면 버튼은 참가 안내로 보낸다 */}
+        <ApplyLink className="apply-button hero-apply" whenClosed="guide" />
         <p className="hero-recruitment">
-          모집 <span>{eventConfig.registrationPeriod}</span>
+          {registrationOpen ? "모집" : "모집 마감"} <span>{eventConfig.registrationPeriod}</span>
         </p>
       </div>
       <Link

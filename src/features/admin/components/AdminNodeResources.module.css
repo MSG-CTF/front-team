@@ -136,8 +136,8 @@
 
 /* 검색과 계정 선택 한 줄, 그 아래 플랫폼 · 운영체제 칩 줄 이름 칸 폭을 같게 둬 칩이 같은 세로선에서 시작한다 */
 .filters { display: grid; gap: 10px; }
-.toolbar { display: flex; flex-wrap: wrap; gap: 10px; }
-.search { flex: 1 1 320px; min-width: 0; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; min-width: 0; max-width: 100%; }
+.search { flex: 1 1 min(320px, 100%); min-width: 0; max-width: 100%; text-overflow: ellipsis; }
 .toolbar > .search + select { flex: 0 1 280px; min-width: 0; }
 .facet { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .facetLabel { flex: 0 0 60px; color: var(--label-3); font-size: 12px; font-weight: 600; line-height: 30px; }

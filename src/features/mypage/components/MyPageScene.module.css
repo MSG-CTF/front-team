@@ -224,6 +224,9 @@
   color: #9a8668;
   cursor: not-allowed;
 }
+.qrIssueButton:disabled span {
+  color: color-mix(in srgb, #9a8668 90%, var(--brown));
+}
 .qrLoading {
   margin: 0;
   color: #644420;
@@ -233,9 +236,18 @@
   max-width: 260px;
   min-height: 1.5em;
   margin: 0;
-  color: #775b33;
+  color: #6f532e;
   font-size: 12px;
   line-height: 1.5;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+.qrHint {
+  margin: 0;
+  color: #6f532e;
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
   overflow-wrap: anywhere;
 }
 .qrStatus strong {
@@ -245,23 +257,55 @@
 .qrError {
   color: #893c2c;
 }
-.logoutButton {
-  min-height: 36px;
-  padding: 4px 12px;
-  border: 0;
-  background: transparent;
-  color: #605145;
-  font-family: var(--sans);
-  font-size: 14px;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-  cursor: pointer;
+/* 새로고침과 로그아웃은 한 묶음으로 오른쪽 끝에 붙여 좁은 화면에서 멀어지지 않게 한다 */
+.statusActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
-.logoutButton:disabled {
+.logoutCoin {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+.logoutCoin svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.logoutCoin:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+.logoutCoin:active:not(:disabled) {
+  filter: brightness(0.95);
+}
+.logoutCoin:disabled {
   opacity: 0.6;
+  cursor: not-allowed;
+}
+.logoutCoin:focus-visible {
+  outline: 2px solid #f1e4c8;
+  outline-offset: 2px;
+}
+.membersRegion {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  place-items: center;
 }
 .members {
-  width: 100%;
+  width: max-content;
+  max-width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -485,6 +529,9 @@
 .cellPoints {
   color: var(--gold);
 }
+.mileageHistory .historyTable {
+  color: color-mix(in srgb, var(--ink-soft) 85%, var(--brown));
+}
 .historyEmpty {
   height: 102px;
   color: var(--brown-soft);
@@ -606,7 +653,8 @@
   /* 상태줄: 보드판 위 여백 오른쪽 */
   .statusBar {
     position: absolute;
-    right: calc(var(--u) * 134);
+    /* 로그아웃 동전의 오른쪽 끝이 마이페이지 박스 오른쪽 끝(무대 98+1720=1818 -> 오른쪽에서 102)에 닿고, 상태줄은 동전 폭 64와 간격 24만큼 왼쪽으로 민다 */
+    right: calc(var(--u) * 190);
     top: calc(var(--u) * 58);
     max-width: calc(var(--u) * 1300);
     min-height: calc(var(--u) * 46);
@@ -620,6 +668,15 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  .statusActions { display: contents; }
+  .logoutCoin {
+    position: absolute;
+    left: calc(100% + var(--u) * 24);
+    top: 50%;
+    width: calc(var(--u) * 64);
+    height: calc(var(--u) * 64);
+    transform: translateY(-50%);
   }
   .refreshButton {
     flex: none;
@@ -649,6 +706,18 @@
     padding: 0;
     clip: rect(0, 0, 0, 0);
   }
+  /* 원본은 보존한다. 파생 이미지의 종이 질감만 두 글머리표 주변에 부드럽게 합성한다.
+     나머지 리본·글자·테두리·장식은 원본 픽셀을 그대로 표시한다. */
+  .teamCard::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: url("/assets/mypage/team-info-card-member-texture.png") center / 100% 100% no-repeat;
+    mask-image:
+      radial-gradient(circle at calc(var(--u) * 84.5) calc(var(--u) * 580.5), #000 calc(var(--u) * 9), transparent calc(var(--u) * 15)),
+      radial-gradient(circle at calc(var(--u) * 84.5) calc(var(--u) * 632.5), #000 calc(var(--u) * 9), transparent calc(var(--u) * 15));
+  }
   .teamName {
     position: absolute;
     left: calc(var(--u) * 35);
@@ -661,10 +730,19 @@
   .qrBlock {
     display: contents;
   }
+  /* 팀 이름(172~232)과 QR 틀 사이 팀 이름과 같은 가운데 선(235)에 둔다 */
+  .qrHint {
+    position: absolute;
+    left: calc(var(--u) * 35);
+    top: calc(var(--u) * 232);
+    width: calc(var(--u) * 400);
+    font-size: max(11px, calc(var(--u) * 19));
+    line-height: calc(var(--u) * 24);
+  }
   .qrSlot {
     position: absolute;
     left: calc(var(--u) * 149);
-    top: calc(var(--u) * 245);
+    top: calc(var(--u) * 266);
     width: calc(var(--u) * 172);
     height: calc(var(--u) * 172);
     padding: calc(var(--u) * 7);
@@ -685,9 +763,10 @@
   }
   .qrStatus {
     position: absolute;
-    left: calc(var(--u) * 60);
-    top: calc(var(--u) * 419);
-    width: calc(var(--u) * 290);
+    /* QR 중심 149 + 172 / 2 = 235. 오른쪽 끝은 로그아웃(x350) 앞에서 멈춘다. */
+    left: calc(var(--u) * 125);
+    top: calc(var(--u) * 420);
+    width: calc(var(--u) * 220);
     max-width: none;
     max-height: calc(var(--u) * 26);
     overflow: hidden;
@@ -696,54 +775,62 @@
     text-align: center;
   }
   /* Figma 451:300 로그아웃: 무대 x481 y616 → 카드 x356 y421 */
-  /* 같은 줄의 QR 안내 문구와 기준선을 맞추려고 3 올린다 */
-  .logoutButton {
+  /* 원화 MEMBERS 하단(y490)과 PERSONAL RANK 상단(y658) 사이의 공통 좌표계 */
+  .membersRegion {
     position: absolute;
-    left: calc(var(--u) * 350);
-    top: calc(var(--u) * 410);
-    min-height: 0;
-    height: calc(var(--u) * 30);
-    padding: 0 calc(var(--u) * 6);
-    font-size: max(10px, calc(var(--u) * 15));
+    left: calc(var(--u) * 70);
+    top: calc(var(--u) * 490);
+    width: calc(var(--u) * 330);
+    height: calc(var(--u) * 168);
+    display: grid;
+    place-items: center;
   }
   .members {
-    position: absolute;
-    left: calc(var(--u) * 102);
-    top: calc(var(--u) * 567);
-    width: calc(var(--u) * 300);
+    width: max-content;
+    max-width: 100%;
+    display: grid;
+    row-gap: calc(var(--u) * 22);
   }
-  /* 카드 그림의 마름모 글머리표 간격(52)과 같은 줄 간격 */
+  /* 글머리표와 이름을 한 행으로 묶어 회원 수와 무관하게 목록 전체를 중앙 정렬 */
   .members li {
-    height: calc(var(--u) * 52);
-    padding: 0;
+    height: calc(var(--u) * 30);
+    min-width: 0;
+    padding: 0 0 0 calc(var(--u) * 26);
     font-size: calc(var(--u) * 24);
     line-height: calc(var(--u) * 30);
   }
   .members li::before {
-    display: none;
+    display: block;
+    left: calc(var(--u) * 2);
+    width: calc(var(--u) * 9);
+    height: calc(var(--u) * 9);
   }
   /* 카드 그림의 글머리표는 두 줄뿐이라 셋째 팀원부터 접는다 */
   .members:not([data-expanded]) li:nth-child(n + 3) {
     display: none;
   }
-  /* 펼치면 MEMBERS 아래부터 아래 구분선(725) 위까지 종이 판을 띄워 모두 보인다 */
+  /* 펼친 목록도 같은 구간 안에서만 스크롤하여 아래 순위 영역을 가리지 않는다 */
   .members[data-expanded] {
+    position: absolute;
     z-index: 2;
-    left: calc(var(--u) * 56);
-    top: calc(var(--u) * 500);
-    width: calc(var(--u) * 358);
-    max-height: calc(var(--u) * 222);
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-height: 100%;
     padding: calc(var(--u) * 8) calc(var(--u) * 14);
     overflow-y: auto;
     border: calc(var(--u) * 1) solid #b99a66;
     background: #efdcb8;
     box-shadow: 0 calc(var(--u) * 8) calc(var(--u) * 24) rgb(60 40 20 / 28%);
+    row-gap: 0;
   }
   .members[data-expanded] li {
     height: auto;
     padding: calc(var(--u) * 4) 0 calc(var(--u) * 4) calc(var(--u) * 28);
     font-size: calc(var(--u) * 20);
     line-height: calc(var(--u) * 26);
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   .members[data-expanded] li::before {
     display: block;
@@ -760,20 +847,30 @@
     top: calc(var(--u) * 468);
     height: calc(var(--u) * 28);
     padding: 0 calc(var(--u) * 6);
-    font-size: max(10px, calc(var(--u) * 15));
+    font-size: max(11px, calc(var(--u) * 15));
   }
   .personalRank {
     position: absolute;
     left: calc(var(--u) * 70);
-    top: calc(var(--u) * 663);
+    top: calc(var(--u) * 658);
     width: calc(var(--u) * 330);
-    padding: calc(var(--u) * 6) 0 0;
+    padding: calc(var(--u) * 8) 0 0 calc(var(--u) * 32);
     border-top: calc(var(--u) * 1) dashed #b99a66;
   }
   .personalRank h2 {
-    margin: 0 0 calc(var(--u) * 2);
-    font-size: max(9px, calc(var(--u) * 12));
-    line-height: calc(var(--u) * 16);
+    display: flex;
+    align-items: baseline;
+    gap: calc(var(--u) * 6);
+    margin: 0 0 calc(var(--u) * 4);
+    font-size: max(11px, calc(var(--u) * 12));
+    line-height: calc(var(--u) * 18);
+    overflow: visible;
+  }
+  .personalRank h2 span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .personalStats {
     flex-wrap: nowrap;
@@ -784,13 +881,13 @@
   }
   .personalStats dd {
     font-size: calc(var(--u) * 22);
-    line-height: calc(var(--u) * 30);
+    line-height: calc(var(--u) * 26);
   }
   .personalStats small {
-    font-size: max(9px, calc(var(--u) * 12));
+    font-size: max(11px, calc(var(--u) * 12));
   }
   .personalMessage {
-    font-size: max(9px, calc(var(--u) * 13));
+    font-size: max(11px, calc(var(--u) * 13));
     line-height: calc(var(--u) * 17);
   }
 
@@ -860,7 +957,7 @@
     left: calc(var(--u) * 40);
     top: calc(var(--u) * 162);
     margin: 0;
-    font-size: max(9px, calc(var(--u) * 11));
+    font-size: max(11px, calc(var(--u) * 11));
     line-height: calc(var(--u) * 16);
     gap: 0 calc(var(--u) * 8);
     text-align: left;
@@ -874,7 +971,7 @@
     left: calc(var(--u) * 370);
     right: calc(var(--u) * 190);
     top: calc(var(--u) * 51 - 0.95em);
-    font-size: max(10px, calc(var(--u) * 12));
+    font-size: max(11px, calc(var(--u) * 12));
     line-height: 1.25;
   }
 
@@ -951,7 +1048,7 @@
     right: calc(var(--u) * 40);
     top: calc(var(--u) * 27.5);
     gap: calc(var(--u) * 8);
-    font-size: max(10px, calc(var(--u) * 16));
+    font-size: max(11px, calc(var(--u) * 16));
   }
   .historyPagination button {
     width: calc(var(--u) * 36);
@@ -1013,7 +1110,6 @@
   .teamCard { grid-row: span 2; }
 }
 
-@media (max-width: 1100px), (max-height: 619px) { .logoutButton { min-height: 44px; } }
 
 @media (max-width: 1100px), (max-height: 619px) {
   .teamName { white-space: normal; overflow: visible; overflow-wrap: anywhere; font-size: clamp(24px, 7vw, 30px); }
@@ -1029,7 +1125,7 @@
   .teamCard > h2 { position: static; width: 100%; height: auto; margin: 4px 0; padding-top: 16px; overflow: visible; clip: auto; border-top: 1px solid #ac8c5c66; font: 15px/1.4 var(--label); font-weight: 400; letter-spacing: .16em; color: var(--brown-soft); white-space: normal; overflow-wrap: anywhere; }
   .page { --brown-soft: #684316; --ink-soft: #684316; --gold: #6f3e0c; --minus: #7b302b; }
   .statusBar, .qrStatus, .personalRank h2, .personalMessage, .historyPagination { font-size: 14px; }
-  .qrStatus, .logoutButton { color: var(--brown); }
+  .qrStatus { color: var(--brown); }
   .breakdown, .personalStats small { font-size: 13px; }
   .historyTable thead .bakedLabel { color: var(--brown-soft); font-size: 14px; white-space: nowrap; overflow: visible; }
 }

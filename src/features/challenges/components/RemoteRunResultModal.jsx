@@ -70,7 +70,7 @@ export default function RemoteRunResultModal({ run, number, onClose }) {
           {run.stdout ? (
             <pre className={styles.runResultOutput} tabIndex={0} aria-label={`실행 ${number} 출력`}>{run.stdout}</pre>
           ) : (
-            <p className={`${styles.runResultOutput} ${styles.runResultNone}`}>출력이 없습니다</p>
+            <p className={`${styles.runResultOutput} ${styles.runResultNone}`}>{run.outputAvailable === false ? "출력을 아직 받지 못했습니다" : "출력이 없습니다"}</p>
           )}
           {run.stderr && (
             <details className={styles.runResultErr}>
@@ -97,7 +97,7 @@ export default function RemoteRunResultModal({ run, number, onClose }) {
       </div>
     </div>
   );
-  // 플래그 결과 창처럼 무대 밖 페이지 바로 아래에 둔다 글꼴과 색 변수는 페이지에 있어 body 로 올리면 잃는다
+  // 확대된 WebKit에서도 판이 그려지도록 페이지의 컨테이너 밖에 연다 테마 변수는 overlay와 공유한다
   if (typeof document === "undefined") return content;
-  return createPortal(content, document.querySelector(`.${styles.page}`) ?? document.body);
+  return createPortal(content, document.body);
 }

@@ -15,6 +15,7 @@ export default function KothScreen({
   requestStatus,
   requestError,
   authenticated, clubsStale, problemRanking,
+  progressError,
   challenges,
   isEmpty,
   unmappedChallengeCount,
@@ -29,7 +30,9 @@ export default function KothScreen({
   onSelectChallenge,
   onCloseChallenge,
   onOpenTeamToken,
+  onRetryTeamToken,
   onCloseTeamToken,
+  downloadFile,
 }) {
   const detailReady = clubDetail.status === "success";
   const connection = clubsStale || !detailReady ? null : getKothConnection(selectedChallenge);
@@ -55,9 +58,6 @@ export default function KothScreen({
               <span><small>KoTH</small> <b>{formatValue(totalKothScore)}</b> <small>pts</small></span>
             </p>
             <div className={styles.teamActions}>
-              <button type="button" className={styles.summaryAction} onClick={onOpenTeamToken} disabled={!authenticated}>
-                팀 토큰
-              </button>
               <button type="button" className={styles.summaryAction} data-tone="quiet" onClick={onRetry}>새로고침</button>
             </div>
             {!authenticated && <span className={styles.summaryNote}>로그인 후 팀 점수와 토큰 확인</span>}
@@ -104,8 +104,8 @@ export default function KothScreen({
         <KothMapFooter />
 
         {requestStatus === "success" && unmappedChallengeCount > 0 && (
-          <p className={styles.mappingWarning} role="alert">
-            표시 위치가 확정되지 않은 KoTH 문제 {unmappedChallengeCount}개가 있습니다
+          <p className={styles.mappingWarning} role="status">
+            아직 지도에 올리지 않은 KoTH 문제가 {unmappedChallengeCount}개 있습니다
           </p>
         )}
 
@@ -120,8 +120,11 @@ export default function KothScreen({
           ranking={problemRanking}
           stale={clubsStale}
           authenticated={authenticated}
+          progressError={progressError}
           teamId={teamId}
+          onOpenTeamToken={onOpenTeamToken}
           onClose={onCloseChallenge}
+          downloadFile={downloadFile}
         />
       )}
 
@@ -131,7 +134,7 @@ export default function KothScreen({
           data={teamToken.data}
           error={teamToken.error}
           teamName={teamName}
-          onRetry={teamToken.requestTeamToken}
+          onRetry={onRetryTeamToken}
           onClose={onCloseTeamToken}
         />
       )}

@@ -17,6 +17,15 @@ function optionalScore(value) {
 const CHALLENGE_SOURCE_TYPES = Object.freeze(["JEOPARDY", "KOTH", "SIGNATURE"]);
 const SCORE_SOURCE_TYPES = Object.freeze([...CHALLENGE_SOURCE_TYPES, "LINE"]);
 
+
+const RANKING_CATEGORY_KEYS = Object.freeze(["MISC", "WEB", "FORENSIC", "REV", "PWN", "CRYPTO", "OSINT", "WEB3"]);
+
+function adaptCategoryScores(value) {
+  if (!value || typeof value !== "object") return null;
+  return RANKING_CATEGORY_KEYS.map((key) => optionalScore(value[key]) ?? 0);
+}
+
+
 export function adaptLeaderboardTeams(data) {
   if (!Array.isArray(data?.teams)) return [];
 
@@ -57,9 +66,15 @@ export function adaptRankingRows(data) {
     solveCount: null,
     signatureScore: optionalScore(ranking.signature_score),
     kothScore: optionalScore(ranking.koth_score),
-    categoryScores: null,
+    lineScore: optionalScore(ranking.line_score),
+    categoryScores: adaptCategoryScores(ranking.category_scores),
     isPreview: false,
   }));
+}
+
+function sourceTotal(team, sourceType) {
+  if (!team.solvesComplete) return null;
+  return team.solves.filter((solve) => solve.sourceType === sourceType).reduce((sum, solve) => sum + solve.points, 0);
 }
 
 export function mergeSolveCounts(rankings, teams, hasApiLeaderboard) {
@@ -73,8 +88,9 @@ export function mergeSolveCounts(rankings, teams, hasApiLeaderboard) {
           ? team.solves.filter((solve) => CHALLENGE_SOURCE_TYPES.includes(solve.sourceType)).length
           : null,
         teamScore: team.teamScore,
-        signatureScore: team.solvesComplete ? team.solves.filter((solve) => solve.sourceType === "SIGNATURE").reduce((sum, solve) => sum + solve.points, 0) : null,
-        kothScore: team.solvesComplete ? team.solves.filter((solve) => solve.sourceType === "KOTH").reduce((sum, solve) => sum + solve.points, 0) : null,
+        signatureScore: sourceTotal(team, "SIGNATURE"),
+        kothScore: sourceTotal(team, "KOTH"),
+        lineScore: sourceTotal(team, "LINE"),
       }]),
   );
 
@@ -86,6 +102,7 @@ export function mergeSolveCounts(rankings, teams, hasApiLeaderboard) {
       solveCount: detail?.solveCount ?? null,
       signatureScore: ranking.signatureScore ?? (sameTotal ? detail.signatureScore : null),
       kothScore: ranking.kothScore ?? (sameTotal ? detail.kothScore : null),
+      lineScore: ranking.lineScore ?? (sameTotal ? detail.lineScore : null),
     };
   });
 }

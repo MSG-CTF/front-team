@@ -29,7 +29,8 @@ export function getAdminRequestError(error, fallbackMessage) {
   const code = error?.response?.data?.code;
   const unavailable = [405, 501].includes(status) || (status === 404 && (!code || code === "NOT_FOUND"));
   // 리소스 브로커/Scheduler 연결 실패(GET /admin/resources, 인스턴스 강제 조작)
-  if (code === "SCHEDULER_UNAVAILABLE" || status === 503) {
+  // KoTH 저장소나 파일 저장소처럼 다른 이유의 503은 백엔드가 보낸 문구를 그대로 보인다
+  if (code === "SCHEDULER_UNAVAILABLE" || (status === 503 && !error?.response?.data?.message)) {
     return { status: "error", error: "리소스 브로커(Scheduler)에 연결하지 못했습니다 잠시 후 다시 시도하세요" };
   }
   return {

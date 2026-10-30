@@ -112,6 +112,26 @@ main 의 메뉴판은 3:4 로 고정이라 데스크톱 300px 폭에서는 설�
 
 ![인스턴스 생성 대기](images/game/instance-waiting.jpg)
 
+## 2026-10-26 · 인스턴스 작업 알림
+
+CREATE, SWITCH, EXTEND, RESTART, STOP 결과와 인스턴스 조회 오류가 판 아래 독에 떠서 PC에서는 화면 맨 아래 가운데, 휴대폰에서는 화면 밖에 있었다 이제 인스턴스 단추 옆에 뜬다 전 그림은 main 7092736 이다
+
+- PC는 단추 줄 바로 위에 띄운다 아래 끝이 단추 위 4u 라 인스턴스 판 아래 테두리만 잠깐 덮고 EXTENDS 와 종료 예정 시각은 가리지 않는다
+- 휴대폰은 단추 바로 아래 흐름에 넣는다
+- 성공 알림은 4초 뒤 사라지고 오류는 다시 시도할 때까지 남는다
+- 조회 오류의 다시 조회 단추는 새로고침 알림처럼 글 옆에 둔다
+- 플래그 재제출 대기, 보상 시간, 새로고침 알림은 그대로 독에 있다
+
+| 1920x1080 전 | 1920x1080 후 |
+| --- | --- |
+| <img src="images/game/instance-notice-1920-before.jpg" width="440"> | <img src="images/game/instance-notice-1920-after.jpg" width="440"> |
+
+| 390x844 전 | 390x844 후 | 390x844 조회 오류 |
+| --- | --- | --- |
+| <img src="images/game/instance-notice-390-before.jpg" width="220"> | <img src="images/game/instance-notice-390-after.jpg" width="220"> | <img src="images/game/instance-notice-error-390.jpg" width="220"> |
+
+![1920x1080 조회 오류](images/game/instance-notice-error-1920.jpg)
+
 ## 검사
 
 scripts/qa-board-guides.js 가 1920x1080, 1366x768, 1280x1024, 2560x1080 에서 보이는 끝선을 재고 선을 그린 캡처를 남긴다 왼쪽 열, 오른쪽 열, 위 여백선, 두 열 위선, 아래 여백선 중 한 묶음 안에서 1px 넘게 어긋나면 실패한다

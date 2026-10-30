@@ -27,7 +27,7 @@ before(async () => {
 
 after(async () => server?.close());
 
-const REMOTE = { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", max_file_bytes: 10485760, timeout_seconds: 180, max_attempts: 5, used_attempts: 1 };
+const REMOTE = { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", max_file_bytes: 10485760, timeout_seconds: 180, max_attempts: null, used_attempts: 1, rate_limit_seconds: 30, available: true, enabled: true };
 
 function render({ remoteRun, solved = false, readOnly = false, runs } = {}) {
   return renderToStaticMarkup(createElement(Screen, {
@@ -56,9 +56,9 @@ function pe(machine) {
 test("remote_run 이 있으면 인스턴스 대신 원격 실행을 쓰고 빈 값은 문제 파일 기본값으로 채운다", () => {
   const challenge = mapChallengeDetail({ title: "msgdriver", requires_instance: true, remote_run: REMOTE });
   assert.equal(challenge.requiresInstance, false);
-  assert.deepEqual(challenge.remoteRun, { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: 5, usedAttempts: 1 });
+  assert.deepEqual(challenge.remoteRun, { environment: "Windows 11 25H2 x64", accept: [".exe"], executable: "pe-amd64", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, queuePolicy: null, usedAttempts: 1, rateLimitSeconds: 30, retryAfterSeconds: 0, available: true, enabled: true, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
   assert.equal(mapChallengeDetail({ title: "웹" }).remoteRun, null);
-  assert.deepEqual(mapRemoteRunConfig({ accept: ["exe", ".EXE"], max_file_bytes: -1 }), { environment: "", accept: [".exe"], executable: "", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: 5, usedAttempts: 0 });
+  assert.deepEqual(mapRemoteRunConfig({ accept: ["exe", ".EXE"], max_file_bytes: -1 }), { environment: "", accept: [".exe"], executable: "", maxBytes: 10485760, timeoutSeconds: 180, maxAttempts: null, queuePolicy: null, usedAttempts: 0, rateLimitSeconds: 30, retryAfterSeconds: 0, available: false, enabled: false, availabilityMessage: "실행 환경 연결을 준비하고 있습니다" });
 });
 
 test("실행 기록은 최신순으로 두고 모양이 어긋난 기록은 버린다", () => {
@@ -75,7 +75,7 @@ test("실행 기록은 최신순으로 두고 모양이 어긋난 기록은 버�
   assert.equal(runs[0].queuePosition, 2);
   assert.equal(runs[1].sha256, "ab".repeat(32));
   assert.equal(usedAttempts, 1);
-  assert.equal(maxAttempts, 5);
+  assert.equal(maxAttempts, null);
 });
 
 test("실행 파일은 확장자, 크기, x64 PE 머리를 브라우저에서 먼저 본다", async () => {
@@ -91,6 +91,43 @@ test("실행 파일은 확장자, 크기, x64 PE 머리를 브라우저에서 �
   assert.equal(await checkPayloadMachine(pe(0x014c), { ...config, executable: "" }), null);
 });
 
+test("최근 20건만 받아도 전체 접수 수로 완료 회차를 표시한다", () => {
+  const records = Array.from({ length: 20 }, (_, index) => ({
+    submission_id: `run-${1008 - index}`, status: "COMPLETED", exit_code: 0,
+    created_at: new Date(Date.UTC(2026, 9, 28, 10, 0, 20 - index)).toISOString(),
+    finished_at: "2026-10-28T10:01:00Z",
+  }));
+  const history = mapRemoteRuns({ total_count: 1008, runs: records });
+  assert.equal(history.totalRuns, 1008);
+  assert.match(render({ remoteRun: { ...history, onSubmit: async () => true } }), /1008회차/);
+  records[0].status = "QUEUED";
+  records[0].finished_at = null;
+  const waiting = mapRemoteRuns({ total_count: 1008, runs: records });
+  assert.match(render({ remoteRun: { ...waiting, onSubmit: async () => true } }), /1007회차/);
+  for (const total_count of [undefined, -1, 1, true, "1008", Infinity, Number.MAX_SAFE_INTEGER + 1]) {
+    assert.equal(mapRemoteRuns({ total_count, runs: records }).totalRuns, 20);
+  }
+});
+
+test("접수한 실행의 순번과 상태는 재요청 간격보다 먼저 안내한다", async () => {
+  const { default: Panel } = await server.ssrLoadModule("/src/features/challenges/components/RemoteRunPanel.jsx");
+  const config = mapRemoteRunConfig({ ...REMOTE, queue_policy: "TEAM_FIFO" });
+  const hint = (props) => renderToStaticMarkup(createElement(Panel, { config, retrySeconds: 30, onSubmit: async () => true, ...props }))
+    .match(/<p id="remote-run-hint"[^>]*>(.*?)<\/p>/)?.[1];
+  for (const [status, expected] of [
+    ["QUEUED", /대기 3번째입니다 앞선 2팀부터 차례로 실행합니다/],
+    ["RUNNING", /검증 VM에서 실행하고 있습니다/],
+    ["START_UNKNOWN", /실행 여부를 확인하고 있습니다/],
+  ]) {
+    const { runs } = mapRemoteRuns({ runs: [{ submission_id: "current", status, queue_policy: "TEAM_FIFO", queue_position: 3, queue_observed_at: new Date().toISOString() }] });
+    const message = hint({ runs });
+    assert.match(message, expected);
+    assert.doesNotMatch(message, /30초 후/);
+  }
+  assert.match(hint({ runs: [], upload: { name: "payload.exe", progress: 0.5 } }), /파일을 올리고 있습니다/);
+  assert.match(hint({ runs: [] }), /30초 후 다시 실행할 수 있습니다/);
+});
+
 test("원격 실행 문제는 인스턴스 판과 같은 짜임으로 그리고 제출 횟수는 보이지 않는다", () => {
   const html = render();
   assert.match(html, /id="challenge-remote-run"/);
@@ -101,7 +138,7 @@ test("원격 실행 문제는 인스턴스 판과 같은 짜임으로 그리고 
   for (const name of ["statusSlot", "connect", "endpointRow", "endpointBox", "copyButton", "instanceHint", "ttlValue", "ttlTrack"])
     assert.match(html, new RegExp(`class="[^"]*_${name}_`), name);
   assert.match(html, /<input type="file" accept="\.exe"/);
-  assert.match(html, /id="remote-run-hint"[^>]*>\.exe · 10 MB 이하 · Windows 11 25H2 x64에서 180초 안에 실행</);
+  assert.match(html, /id="remote-run-hint"[^>]*>\.exe · 10 MB 이하 · Windows 11 25H2 x64에서 180초 안에 실행 · 팀별 요청 간격 30초</);
   assert.match(html, /aria-label="실행 시간">--:--</);
   assert.match(html, /<button(?=[^>]*aria-label="원격 실행")(?=[^>]*disabled)[^>]*>RUN<\/button>/);
   assert.match(html, /<button(?=[^>]*aria-label="최근 실행 결과 보기")(?=[^>]*disabled)[^>]*>RESULT<\/button>/);
@@ -158,4 +195,15 @@ test("원격 실행 미리보기는 개발 서버에서만 열리고 API 를 부
   assert.doesNotMatch(page, /from ["'].*\/api\//);
   const routes = readFileSync(new URL("../../routes/AppRoutes.jsx", import.meta.url), "utf8");
   assert.match(routes, /import.meta.env.DEV && <Route path="\/dev\/remote-run-preview"/);
+});
+
+test("원격 실행 오류는 영어 문구 대신 코드별 한국어 안내를 보이고 백엔드 한국어 문구는 그대로 쓴다", async () => {
+  const { remoteRunErrorMessage } = await import("./utils/remoteRun.js");
+  const english = { response: { data: { code: "INVALID_EXECUTABLE", message: "The file is not a supported executable." } } };
+  assert.equal(remoteRunErrorMessage(english, "fallback"), "Windows에서 실행할 수 있는 .exe 파일인지 확인해주세요");
+  const korean = { response: { data: { code: "INVALID_EXECUTABLE", message: "설정한 크기의 .exe 파일을 선택해주세요" } } };
+  assert.equal(remoteRunErrorMessage(korean, "fallback"), "설정한 크기의 .exe 파일을 선택해주세요");
+  assert.equal(remoteRunErrorMessage({ response: { data: { code: "ALREADY_SOLVED", message: "The challenge is already solved." } } }, "x"), "이미 해결한 문제입니다");
+  assert.equal(remoteRunErrorMessage({ response: { data: { code: "UNKNOWN", message: "Something" } } }, "다시 시도해주세요"), "다시 시도해주세요");
+  assert.equal(remoteRunErrorMessage(new Error("network"), "접수 응답을 받지 못했습니다"), "접수 응답을 받지 못했습니다");
 });

@@ -1,5 +1,6 @@
 import { isSuccess } from "../../../utils/response.js";
 import { getChallengeDeadline } from "../../../utils/time.js";
+import { validScore } from "../../../utils/scoreJson.js";
 
 export const BOARD_CELL_COUNT = 36;
 
@@ -35,9 +36,11 @@ export function unwrapBoardResponse(response) {
 
 export function getBoardError(error) {
   const envelope = error?.response?.data;
+  // 응답 없이 끊긴 요청은 axios의 영어 문장("Network Error") 대신 연결 안내를 보인다
+  const lostConnection = !error?.response && (error?.isAxiosError === true || ["ERR_NETWORK", "ECONNABORTED", "ETIMEDOUT"].includes(error?.code));
   return {
     code: envelope?.code || error?.code || "BOARD_REQUEST_FAILED",
-    message: envelope?.message || error?.message || "보드 요청에 실패했습니다",
+    message: envelope?.message || (lostConnection ? "서버와 연결하지 못했습니다 잠시 후 다시 시도해주세요" : error?.message) || "보드 요청에 실패했습니다",
   };
 }
 
@@ -57,8 +60,28 @@ export function adaptBoardDefinition(data) {
   };
 }
 
+function adaptLineMonopolies(rows) {
+  if (!Array.isArray(rows)) return null;
+  const seen = new Set();
+  const result = [];
+  for (const row of rows) {
+    if (!row || !Number.isInteger(row.line_number) || row.line_number < 1 || row.line_number > 6 ||
+        seen.has(row.line_number) || validScore(row.earned_score) === null ||
+        (typeof row.earned_score === "number" && Number.isInteger(row.earned_score) && !Number.isSafeInteger(row.earned_score)) ||
+        typeof row.is_category_bonus !== "boolean") return null;
+    seen.add(row.line_number);
+    result.push({ lineNumber: row.line_number, earnedScore: row.earned_score, isCategoryBonus: row.is_category_bonus });
+  }
+  return result;
+}
+
 export function adaptMyBoard(data) {
   return {
+    pendingChanceChoice: data?.pending_chance_choice === undefined
+      ? undefined
+      : data.pending_chance_choice === null
+        ? null
+        : adaptChanceAction(data.pending_chance_choice),
     position: data?.position ?? null,
     type: data?.type ?? null,
     diceRollsLeft: data?.dice_rolls_left ?? 0,
@@ -67,6 +90,8 @@ export function adaptMyBoard(data) {
     airportMoveUsed: data?.airport_move_used === true,
     hasPassedStart: data?.has_passed_start === true,
     boardCompleted: data?.board_completed === true,
+    // null은 구버전·미확인 응답, []는 지급 기록이 없다는 서버 확인이다
+    lineMonopolies: adaptLineMonopolies(data?.line_monopolies),
     consumedCellIndexes: Array.isArray(data?.consumed_cell_indexes)
       ? data.consumed_cell_indexes
       : [],
@@ -80,6 +105,8 @@ export function adaptMyBoard(data) {
     chanceCards: Array.isArray(data?.chance_cards)
       ? data.chance_cards.map((card) => ({
           cardId: card.card_id,
+          // 같은 종류 카드를 두 장 가질 수 있어 보유 카드마다 따로 주어지는 UUID 를 보존한다
+          teamCardId: card.team_card_id ?? null,
           used: card.used === true,
           discarded: card.discarded === true,
           usableNow: card.usable_now === true,
@@ -110,7 +137,8 @@ export function adaptDiceStatus(data) {
     pendingConfirmRequestKey: data?.pending_confirm_request_key,
     serverTime: data?.server_time ?? null,
     nextDiceResetAt: data?.next_dice_reset_at ?? null,
-    receivedAt: Date.now(),
+    // 기기 시계를 바꿔도 남은 시간이 흔들리지 않게 단조 시계(performance.now)로 받은 시각을 잰다
+    receivedAt: performance.now(),
   };
 }
 
@@ -160,6 +188,7 @@ export function adaptChanceDraw(data) {
 
 export function adaptChanceAction(data) {
   return {
+    teamCardId: data?.team_card_id ?? null,
     cardId: data?.card_id ?? null,
     effect: data?.effect ?? null,
     fromIndex: data?.from_index ?? null,
@@ -230,6 +259,11 @@ export function adaptOpenedChallenges(data) {
     : [];
 }
 
+// 렌더 키·선택·사용/폐기 요청에서 카드 한 장을 가리키는 값 UUID 가 없는 구버전 응답은 종류 id 로 대신한다
+export function chanceCardKey(card) {
+  return card?.teamCardId ?? card?.cardId ?? null;
+}
+
 export function mergeOwnedChanceCards(chanceCards, catalog) {
   return chanceCards
     .filter((card) => !card.used && !card.discarded)
@@ -239,7 +273,7 @@ export function mergeOwnedChanceCards(chanceCards, catalog) {
     }));
 }
 
-export function getRemainingSeconds(targetIso, diceStatus, now = Date.now()) {
+export function getRemainingSeconds(targetIso, diceStatus, now = performance.now()) {
   if (!targetIso || !diceStatus?.serverTime) return null;
 
   const targetAt = Date.parse(targetIso);

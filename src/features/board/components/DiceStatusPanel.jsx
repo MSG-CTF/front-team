@@ -50,7 +50,7 @@ export default function DiceStatusPanel({
       <img src="/assets/board/dice.webp" className={styles.mobileDiceIcon} alt="" aria-hidden="true" />
       {/* Figma 5:19 주사위판. 숫자와 게이지 채움을 지운 원본 조각이라 실제 값은 아래에서 겹쳐 그린다 */}
       <svg viewBox="0 0 333 146" className={styles.dicePanelArtwork} aria-hidden="true" focusable="false">
-        <image href="/assets/board/panel-dice-status-v2.webp" width="333" height="146" />
+        <image href="/assets/board/panel-dice-status-v3.webp" width="333" height="146" />
       </svg>
       <svg viewBox="0 0 16 16" className={styles.diceStatusIcon} aria-hidden="true" focusable="false">
         <rect x="1.5" y="1.5" width="13" height="13" rx="3" fill="#f3e6c8" />

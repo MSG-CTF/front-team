@@ -13,6 +13,7 @@ import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { TERMINAL_INSTANCE_STATUSES } from "../../../constants/enums.js";
 import ChallengeDetailScreen from "../components/ChallengeDetailScreen.jsx";
 import useChallengeDetailData from "../hooks/useChallengeDetailData.js";
+import useRemoteRun from "../hooks/useRemoteRun.js";
 import {
   getChallengeSubmissionState,
   getInstanceControlState,
@@ -67,6 +68,7 @@ function ChallengeDetailContent({ challengeId }) {
     () => mapChallengeInstance(detail.instanceData, now),
     [detail.instanceData, now],
   );
+  const remoteRun = useRemoteRun(challengeId, challenge?.remoteRun);
   const otherInstance = useMemo(
     () => mapChallengeInstance(detail.otherInstanceData, now),
     [detail.otherInstanceData, now],
@@ -128,7 +130,7 @@ function ChallengeDetailContent({ challengeId }) {
     }
   };
 
-  const runInstanceAction = async (action) => {
+  const runInstanceAction = async (action, replaceInstanceId) => {
     if (
       actionInFlight.current || unavailable || detail.status !== "success" ||
       (challenge?.requiresInstance === false && !instance)
@@ -147,7 +149,7 @@ function ChallengeDetailContent({ challengeId }) {
     setConfirmation(null);
     try {
       const requests = {
-        create: () => createInstance({ challengeId }),
+        create: () => createInstance({ challengeId, replaceInstanceId }),
         extend: () => extendInstance(instance.instanceId),
         restart: () => resetInstance(instance.instanceId),
         stop: () => stopInstance(instance.instanceId),
@@ -162,6 +164,9 @@ function ChallengeDetailContent({ challengeId }) {
       );
       if (isSuccess(response.data)) detail.applyInstance(response.data.data);
     } catch (error) {
+      if (["INSTANCE_REPLACEMENT_REQUIRED", "INSTANCE_STATE_CHANGED"].includes(error?.response?.data?.code)) {
+        await detail.refresh();
+      }
       if (mounted.current)
         setInstanceFeedback(
           feedbackFromEnvelope(
@@ -214,7 +219,10 @@ function ChallengeDetailContent({ challengeId }) {
       });
       return;
     }
-    runInstanceAction(confirmation.action);
+    runInstanceAction(
+      confirmation.action,
+      confirmation.action === "create" ? confirmation.instanceId : undefined,
+    );
   };
 
   return (
@@ -225,6 +233,7 @@ function ChallengeDetailContent({ challengeId }) {
       refreshing={detail.refreshing}
       instanceError={detail.instanceError}
       challenge={challenge}
+      remoteRun={remoteRun}
       submission={submission}
       instance={instance}
       otherInstance={otherInstance}

@@ -43,7 +43,7 @@ test("다섯 화면의 조회는 /api/v1과 최신 경로, Bearer 계약을 쓴�
     [() => getSignatures(config), "/signatures"],
     [() => getSignature("signature-1", config), "/signatures/signature-1"],
     [() => getMyKothProgress(config), "/koth/me"],
-    [() => getKothTeamToken(config), "/koth/team_token"],
+    [() => getKothTeamToken("koth-1", config), "/koth/team_token"],
     [() => getAdminTeamDetail("team-1", {}, config), "/admin/teams/team-1"],
     [() => getAdminSignatures(config), "/admin/signatures"],
     [() => getAdminKothChallenges(config), "/admin/koth/challenges"],
@@ -60,6 +60,8 @@ test("다섯 화면의 조회는 /api/v1과 최신 경로, Bearer 계약을 쓴�
     assert.equal(request.headers.Authorization, "Bearer local-contract-token");
     assert.equal(request.signal, controller.signal);
   }
+  await getKothTeamToken("koth-1", config);
+  assert.deepEqual(calls.at(-1).params, { koth_challenge_id: "koth-1" });
 });
 
 test("참가자 시그니처 제출은 flag만 보내며 공백, 취소 신호와 제한 시간을 유지한다", async () => {
@@ -102,9 +104,13 @@ test("랭킹과 관리자 내역은 페이지와 snake_case 필터를 그대로 
   }
 });
 
-test("인스턴스 생성은 challenge_id만 보내고 제어 요청은 서버 계약을 따른다", async () => {
+test("인스턴스 생성은 확인한 교체 대상만 보내고 제어 요청은 서버 계약을 따른다", async () => {
   await createInstance({ challengeId: "challenge-1" });
   assert.deepEqual(JSON.parse(calls.at(-1).data), { challenge_id: "challenge-1" });
+  await createInstance({ challengeId: "challenge-1", replaceInstanceId: "confirmed-instance" });
+  assert.deepEqual(JSON.parse(calls.at(-1).data), {
+    challenge_id: "challenge-1", replace_instance_id: "confirmed-instance",
+  });
   for (const operation of [resetInstance, extendInstance]) {
     await operation("instance-1");
     const request = calls.at(-1);

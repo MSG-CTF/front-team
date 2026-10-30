@@ -7,6 +7,9 @@ import { mapInstanceEndpoints } from "../../challenges/utils/challengeDetailMapp
 import { activeTestFromFailure, deploymentTestStatus, deploymentTestSteps } from "../utils/adminDeploymentTests.js";
 import { AdminBadge } from "./AdminLayout.jsx";
 import styles from "./AdminWorkspace.module.css";
+import InstanceConnectionDetails from "../../challenges/components/InstanceConnectionDetails.jsx";
+import { isInstanceChanging } from "../../challenges/utils/challengeDetailState.js";
+import { endpointConnectionDetails, endpointCopyText, endpointTerminalConnection } from "../../challenges/utils/instanceConnectionDetails.js";
 
 const RUNNING_STATES = ["REQUESTED", "SCHEDULING", "PROVISIONING"];
 
@@ -15,6 +18,16 @@ function elapsedLabel(fromIso, now) {
   if (!Number.isFinite(start)) return "";
   const seconds = Math.max(0, Math.floor((now - start) / 1000));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+}
+
+export function AdminDeploymentEndpoint({ endpoint, copied, onCopy }) {
+  const terminal = endpointTerminalConnection(endpoint);
+  const copyText = endpointCopyText(endpoint);
+  return <div className={styles.testEndpoint}>
+    <div><strong>{endpoint.name}{terminal ? ` (${terminal.label})` : ""}</strong><code title={endpoint.url}>{terminal?.command ?? endpoint.url}</code><InstanceConnectionDetails endpoint={endpoint} /></div>
+    <div>{endpoint.isWeb && <a href={endpoint.url} target="_blank" rel="noopener noreferrer" className={styles.button}>접속하기</a>}
+      <button type="button" className={styles.button} disabled={!copyText} onClick={() => { if (copyText) onCopy(endpoint); }}>{copied === endpoint.url ? "복사됨" : terminal ? "명령어 복사" : endpointConnectionDetails(endpoint).length ? "접속 정보 복사" : "주소 복사"}</button></div>
+  </div>;
 }
 
 // 배포 테스트: 고른 버전을 참가자 버전과 따로 띄워 본다 적용 전 시험과 언인텐 패치 확인에 쓴다
@@ -31,6 +44,7 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
   const generation = useRef(0);
   const request = useRef(null);
   const controller = useRef(null);
+  const fastPolling = !loadError && isInstanceChanging(data?.active_test);
 
   const load = useCallback(async () => {
     if (fetching.current || pending.current || !mounted.current) return;
@@ -48,9 +62,11 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
 
   useEffect(() => {
     mounted.current = true;
-    const stopPolling = startVisiblePolling(load, { intervalMs: 4000 });
+    const stopPolling = startVisiblePolling(load, {
+      intervalMs: fastPolling ? 1500 : 4000,
+    });
     return () => { stopPolling(); mounted.current = false; generation.current += 1; controller.current?.abort(); };
-  }, [load]);
+  }, [load, fastPolling]);
   useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
   // 진행 중에는 1초마다 경과 시간을 다시 그린다
   const ticking = Boolean(data?.active_test && !data.active_test.finished_at);
@@ -93,7 +109,9 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
   }
 
   async function copy(endpoint) {
-    try { await navigator.clipboard.writeText(endpoint.url); setCopied(endpoint.url); }
+    const copyText = endpointCopyText(endpoint);
+    if (!copyText) return;
+    try { await navigator.clipboard.writeText(copyText); setCopied(endpoint.url); }
     catch { setError("주소를 복사하지 못했습니다 접속 주소를 직접 선택해 복사해주세요"); }
   }
 
@@ -171,11 +189,7 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
           <button type="button" className={styles.primary} disabled={busy} onClick={onUseVersion}>이 버전 사용</button>
         </div>}
         {endpoints.length === 0 && <p className={styles.testHint}>접속 주소가 아직 없습니다 상태를 다시 확인해주세요</p>}
-        {endpoints.map((endpoint) => <div key={endpoint.url} className={styles.testEndpoint}>
-          <div><strong>{endpoint.name}</strong><code>{endpoint.url}</code></div>
-          <div>{endpoint.isWeb && <a href={endpoint.url} target="_blank" rel="noopener noreferrer" className={styles.button}>접속하기</a>}
-            <button type="button" className={styles.button} onClick={() => copy(endpoint)}>{copied === endpoint.url ? "복사됨" : "주소 복사"}</button></div>
-        </div>)}
+        {endpoints.map((endpoint) => <AdminDeploymentEndpoint key={endpoint.url} endpoint={endpoint} copied={copied} onCopy={copy} />)}
       </>}
       {latest.status === "PROVISIONING" && <p className={styles.helpText}>이미지를 내려받고 컨테이너를 준비하고 있습니다 준비가 끝나면 접속하거나 종료할 수 있습니다</p>}
     </section> : data && <p className={styles.empty}>이 버전의 테스트 기록이 없습니다</p>}

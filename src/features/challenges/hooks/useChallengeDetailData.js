@@ -4,6 +4,8 @@ import { getMyInstances } from "../../../api/instances.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import {
   INITIAL_DETAIL_STATE,
+  isInstanceChanging,
+  needsInstanceLookup,
   readDetailResult,
   resolveDetailState,
 } from "../utils/challengeDetailState.js";
@@ -11,7 +13,9 @@ import {
 export default function useChallengeDetailData(challengeId) {
   const requestSequence = useRef(0);
   const controller = useRef(null);
+  const instanceLookupRequired = useRef(true);
   const [state, setState] = useState(INITIAL_DETAIL_STATE);
+  const fastPolling = !state.instanceError && isInstanceChanging(state.instanceData);
 
   const load = useCallback(async () => {
     const sequence = ++requestSequence.current;
@@ -19,19 +23,23 @@ export default function useChallengeDetailData(challengeId) {
     controller.current = new AbortController();
     const config = { signal: controller.current.signal, timeout: 10000 };
     setState((current) => ({ ...current, refreshing: true }));
-    const [detailResult, instanceResult] = await Promise.allSettled([
+    const [detailResult] = await Promise.allSettled([
       getChallengeDetail(challengeId, config),
-      getMyInstances({ ...config, params: { challenge_id: challengeId } }),
     ]);
     if (sequence !== requestSequence.current) return false;
     const detail = readDetailResult(
       detailResult,
       "문제 정보를 새로 불러오지 못했습니다",
     );
-    const instance = readDetailResult(
-      instanceResult,
-      "인스턴스 정보를 불러오지 못했습니다",
-    );
+    if (!detail.error) instanceLookupRequired.current = needsInstanceLookup(detail.data);
+    let instance = { data: { instances: [] }, error: null };
+    if (instanceLookupRequired.current) {
+      const [instanceResult] = await Promise.allSettled([
+        getMyInstances({ ...config, params: { challenge_id: challengeId } }),
+      ]);
+      if (sequence !== requestSequence.current) return false;
+      instance = readDetailResult(instanceResult, "인스턴스 정보를 불러오지 못했습니다");
+    }
     setState((current) =>
       resolveDetailState(current, detail, instance, challengeId),
     );
@@ -76,12 +84,14 @@ export default function useChallengeDetailData(challengeId) {
   }, [invalidateRequest]);
 
   useEffect(() => {
-    const stopPolling = startVisiblePolling(load, { intervalMs: 5000 });
+    const stopPolling = startVisiblePolling(load, {
+      intervalMs: fastPolling ? 1500 : 5000,
+    });
     return () => {
       stopPolling();
       invalidateRequest();
     };
-  }, [load, invalidateRequest]);
+  }, [load, invalidateRequest, fastPolling]);
 
   return { ...state, retry: load, refresh: load, applyInstance, applySolved };
 }
