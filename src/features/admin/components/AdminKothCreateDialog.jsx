@@ -14,7 +14,7 @@ import ui from "./AdminWorkspace.module.css";
 import styles from "../pages/AdminKoth.module.css";
 
 const CREATE_REASONS = ["새 KoTH 문제 등록", "출제 저장소에서 등록", "동아리 문제 추가"];
-const UNAVAILABLE = "KoTH 등록은 관리자 KoTH API(POST /admin/koth/challenges)가 백엔드에 반영되면 열립니다";
+const UNAVAILABLE = "이 서버에서는 KoTH 문제를 등록할 수 없습니다";
 const NO_FOLDERS = async () => ({ data: { code: "SUCCESS", data: null } });
 
 // KoTH 문제 등록: 제오파디의 직접 등록과 GitHub 가져오기처럼 직접 쓰거나 저장소 koth 폴더에서 채운다

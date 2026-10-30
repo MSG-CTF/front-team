@@ -79,7 +79,7 @@ export default function AdminKothFilesPanel({ challenge, limited, onSaved, onOpe
   }
 
   if (limited || files.status === "unavailable") {
-    return <p className={ui.quietNote}>참가자 파일은 GET /admin/koth/challenges/&#123;id&#125;/files 가 백엔드에 반영되면 고를 수 있습니다 저장소 prob/for_user 폴더를 zip 하나로 묶어 주는 계약입니다</p>;
+    return <p className={ui.quietNote}>이 서버에서는 참가자 파일을 고를 수 없습니다 저장소의 prob/for_user 폴더가 zip 하나로 묶여 참가자에게 내려갑니다</p>;
   }
   if (!data) return <AdminStatusMessage status={files.status} error={files.error} onRetry={files.retry} hasData={false} />;
 

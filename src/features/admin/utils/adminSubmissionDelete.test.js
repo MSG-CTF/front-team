@@ -9,7 +9,7 @@ test("deletion reason trims and validates 1–500 unicode characters", () => {
 });
 test("wrong and locked deletion do not invent revocation", () => {
   for (const result of ["INCORRECT", "TOO_MANY_ATTEMPTS"]) {
-    assert.equal(submissionDeleteMessage({ result, revoked: null }), "제출 기록이 삭제되었습니다.");
+    assert.equal(submissionDeleteMessage({ result, revoked: null }), "제출 기록을 삭제했습니다");
   }
 });
 test("revocation displays actual zero and fractional score, mileage and optional line", () => {
@@ -19,7 +19,7 @@ test("revocation displays actual zero and fractional score, mileage and optional
   assert.doesNotMatch(submissionDeleteMessage({ revoked: { score: 450, mileage: 30, line_monopoly: null } }), /라인/);
 });
 test("deletion errors distinguish input, missing row, authentication and permission", () => {
-  for (const [status, text] of [[400, "사유"], [404, "다시 조회"], [401, "로그인"], [403, "권한"]]) {
+  for (const [status, text] of [[400, "사유"], [404, "다시 불러오세요"], [401, "로그인"], [403, "권한"]]) {
     assert.ok(submissionDeleteError({ response: { status } }).includes(text));
   }
   assert.match(submissionDeleteError(new Error("timeout")), /상태를 확인/);

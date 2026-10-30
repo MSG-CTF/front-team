@@ -43,7 +43,7 @@ export function AdminImagePreparationView({ release, state, busy = false, onSubm
     </div>
     {state.records.length > 0 ? <div className={panelStyles.history}>
       <table className={styles.settingsTable} aria-label="이미지 준비 요청 이력">
-        <thead><tr><th>요청 · 접수 시각</th><th>Backend 전송</th><th>과거 작업 상태</th><th>조회</th></tr></thead>
+        <thead><tr><th>요청 · 접수 시각</th><th>전송 상태</th><th>과거 작업 상태</th><th>조회</th></tr></thead>
         <tbody>{state.records.map((row) => <tr key={row.request_id}>
           <td><code className={panelStyles.identifier}>{row.request_id}</code><div className={styles.secondary}>{formatAdminTime(row.created_at)}</div></td>
           <td>{row.delivery_status}</td><td>{row.operation_status || "작업 상태 없음"}{row.requires_review && <div className={styles.errorText}>운영 확인 필요</div>}</td>
@@ -57,7 +57,7 @@ export function AdminImagePreparationView({ release, state, busy = false, onSubm
       <dl className={styles.detailList}>
         <dt>요청 ID</dt><dd className={panelStyles.identifier}>{detail.request_id}</dd>
         <dt>작업 ID</dt><dd className={panelStyles.identifier}>{detail.operation_id || "아직 없음"}</dd>
-        <dt>Backend 전송</dt><dd>{detail.delivery_status}</dd>
+        <dt>전송 상태</dt><dd>{detail.delivery_status}</dd>
         <dt>과거 작업 상태</dt><dd>{detail.operation_status || "아직 없음"}{detail.requires_review && " · 운영 확인 필요"}</dd>
         <dt>Backend 마지막 확인</dt><dd>{detail.last_checked_at ? formatAdminTime(detail.last_checked_at) : "아직 없음"}</dd>
         <dt>오류 코드</dt><dd className={panelStyles.identifier}>{detail.last_error_code || "없음"}</dd>

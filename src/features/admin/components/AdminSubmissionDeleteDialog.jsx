@@ -48,13 +48,13 @@ export default function AdminSubmissionDeleteDialog({ challengeId, challengeTitl
       </dl>
       <AdminReasonField label="삭제 사유" value={reason} onChange={setReason} multiline required disabled={busy || warning}
         maxLength={10000} hint={`${Array.from(reason.trim()).length}/500자 · ${validation || "사유가 기록됩니다"}`} />
-      {warning && <p className={styles.callout} role="alert">정답 기록을 삭제하면 해당 팀의 문제 점수와 지급된 마일리지가 회수됩니다. 라인 독점 보너스도 취소될 수 있으며, 동적 점수 재계산으로 다른 팀의 점수가 변경될 수 있습니다. 재풀이 가능 여부는 서버의 권한·게임 상태에 따라 결정됩니다. 정말 정답을 회수하시겠습니까?</p>}
+      {warning && <p className={styles.callout} role="alert">정답 기록을 지우면 이 팀의 문제 점수와 받은 마일리지를 회수합니다<br />라인 독점 보너스가 취소되고 동적 점수 때문에 다른 팀 점수도 바뀔 수 있습니다</p>}
       {error && <p className={styles.errorText} role="alert">{error}</p>}
       <div className={styles.formActions}>
         <button type="button" className={styles.button} disabled={busy} onClick={onClose}>취소</button>
         {warning && <button type="button" className={styles.button} disabled={busy} onClick={() => setWarning(false)}>사유 수정</button>}
         <button type="submit" className={styles.dangerSolid} disabled={busy || Boolean(validation)}>
-          {busy ? "처리 중…" : warning ? "정답 회수 확정" : row.result === "CORRECT" ? "정답 회수 경고 확인" : "삭제 확정"}
+          {busy ? "처리 중…" : warning ? "정답 회수 확정" : row.result === "CORRECT" ? "회수 내용 확인" : "삭제 확정"}
         </button>
       </div>
       {error && <button type="button" className={styles.button} disabled={busy} onClick={() => { notifyAdminResourceChanged(); onClose(); }}>목록 다시 조회</button>}
