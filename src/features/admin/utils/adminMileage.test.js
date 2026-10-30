@@ -111,3 +111,14 @@ test("백엔드가 유형 묶음을 거절하면 같은 쪽을 유형 없이 다
   const failing = async () => { throw Object.assign(new Error("down"), { response: { status: 503 } }); };
   await assert.rejects(loadMileageHistory(failing, { filter: "ops", page: 1 }), /down/);
 });
+
+test("낮은 화면용 폼 위치 보정은 넓은 화면의 붙는 폼에만 걸려 폰에서 지급 버튼을 가리지 않는다", async () => {
+  const { readFileSync } = await import("node:fs");
+  const css = readFileSync(new URL("../pages/AdminMileagePage.module.css", import.meta.url), "utf8");
+  const wide = css.slice(css.indexOf("@container admin-layout (min-width: 1101px)"));
+  assert.match(wide, /^@container admin-layout \(min-width: 1101px\) \{[\s\S]*@media \(max-height: 820px\) \{\s*\.grant \{ top: 64px; \}\s*\}\s*\}/);
+  // 컨테이너 조건 밖에는 .grant 위치를 바꾸는 규칙이 없다
+  const outside = css.slice(0, css.indexOf("@container admin-layout (min-width: 1101px)"));
+  assert.doesNotMatch(outside, /\.grant/);
+  assert.equal((css.match(/\.grant \{ top: 64px; \}/g) || []).length, 1);
+});
