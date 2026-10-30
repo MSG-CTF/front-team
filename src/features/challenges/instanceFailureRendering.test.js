@@ -56,3 +56,15 @@ test("정리가 완료된 이력은 준비 중으로 표시하거나 계속 기�
   assert.match(html, /다시 사용하려면 새 인스턴스를 생성해 주세요/);
   assert.doesNotMatch(html, /준비 중|상태가 바뀌면 자동으로 갱신됩니다/);
 });
+
+test("아직 켜지 않은 인스턴스 칸과 전환 확인창은 한 사람당 1개 제한을 알린다", () => {
+  const idle = renderToStaticMarkup(createElement(Panel, { instance: null }));
+  assert.match(idle, /인스턴스는 팀장·팀원 각자 1개씩 켤 수 있습니다/);
+  // 다른 문제에서 켜 둔 인스턴스가 있으면 칸에는 전환 안내만 남긴다
+  const other = renderToStaticMarkup(createElement(Panel, { instance: null, otherInstance: { challengeTitle: "가을 축제 티켓 발매기" } }));
+  assert.match(other, /가을 축제 티켓 발매기<\/strong>에서 사용 중인/);
+  assert.doesNotMatch(other, /각자 1개씩/);
+  const dialog = renderToStaticMarkup(createElement(Dialog, { action: "create", otherInstance: { challengeTitle: "가을 축제 티켓 발매기" } }));
+  const lines = [...dialog.matchAll(/<p>([^<]+)<\/p>/g)].map((match) => match[1]);
+  assert.deepEqual(lines, ["인스턴스는 한 사람당 1개만 켤 수 있습니다", "가을 축제 티켓 발매기에서 사용 중인 인스턴스를 종료하고 새로 생성합니다", "기존 작업 내용은 유지되지 않습니다"]);
+});

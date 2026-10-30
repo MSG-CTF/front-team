@@ -225,7 +225,8 @@ export default function InstancePanel({ instance, otherInstance, error, pendingA
         ? null
         : status
           ? "상태가 바뀌면 자동으로 갱신됩니다"
-          : "생성이 완료되면 접속 주소와 남은 시간이 표시됩니다";
+          // 아직 켜지 않았을 때 스케줄러의 1인 1개 제한을 먼저 알린다 (팀 전체는 최대 2개)
+          : "인스턴스는 팀장·팀원 각자 1개씩 켤 수 있습니다";
 
   return (
     <section
