@@ -71,7 +71,7 @@ export function AdminTeamEditDialog({ team, onClose, onSaved }) {
         <label className={ui.field}>
           <span className={ui.fieldLabel}>무소속 참가자 추가 <small>user_id</small></span>
           <textarea className={ui.textarea} rows={2} value={addUserIds} disabled={busy} onChange={(event) => setAddUserIds(event.target.value)} placeholder="UUID를 쉼표 또는 줄바꿈으로 구분" />
-          <span className={ui.fieldHint}>참가자 목록 조회 API가 없어 user_id를 직접 입력합니다 다른 팀 소속 계정은 기존 팀에서 먼저 제외해야 합니다</span>
+          <span className={ui.fieldHint}>추가할 계정의 user_id를 넣어주세요 다른 팀 소속 계정은 기존 팀에서 먼저 빼야 합니다</span>
         </label>
         <label className={ui.field}>
           <span className={ui.fieldLabel}>변경 후 팀장</span>

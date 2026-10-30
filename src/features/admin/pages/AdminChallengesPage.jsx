@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { forceResetInstance, forceStopInstance, retryInstanceCleanup, getAdminChallenges, getAdminInstances, setChallengeVisibility } from "../../../api/admin.js";
-import { INSTANCE_STATUS } from "../../../constants/enums.js";
+import { ADMIN_INSTANCE_STATUS_LABEL, INSTANCE_STATUS } from "../../../constants/enums.js";
 import { isSuccess } from "../../../utils/response.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { formatAdminTime } from "../utils/adminTime.js";
@@ -96,7 +96,7 @@ function InstancesSection({ initialStatus = "" }) {
   return <section>
     <div className={styles.toolbar}>
       <label>상태 <select value={filter} disabled={busy} onChange={(event) => { setFilter(event.target.value); setPage(1); }} className={SELECT}>
-        <option value="">전체</option>{Object.values(INSTANCE_STATUS).map((status) => <option key={status} value={status}>{status}</option>)}
+        <option value="">전체</option>{Object.values(INSTANCE_STATUS).map((status) => <option key={status} value={status}>{ADMIN_INSTANCE_STATUS_LABEL[status]}</option>)}
       </select></label>
       <button type="button" onClick={instances.retry} disabled={busy || instances.status === "loading"} className={BUTTON}>인스턴스 새로고침</button><span className={styles.cardMeta}>10초마다 자동 갱신</span>
     </div>
@@ -106,7 +106,7 @@ function InstancesSection({ initialStatus = "" }) {
       <table className={styles.table} aria-label="인스턴스 목록"><thead><tr>{["팀", "문제", "상태", "만료 (KST)", "조치"].map((text) => <th key={text}>{text}</th>)}</tr></thead>
         <tbody>{(instances.data?.instances ?? []).map((instance) => <tr key={instance.instance_id}>
           <td><span className={styles.title}>{instance.team_name}</span><details className={styles.secondary}><summary className={styles.idSummary}>인스턴스 ID</summary><span className={`${styles.mono} ${styles.idValue}`}>{instance.instance_id}</span></details></td>
-          <td className={styles.wrap}>{instance.challenge_title}</td><td><AdminBadge tone={instance.status === "FAILED" ? "bad" : instance.status === "RUNNING" ? "good" : "neutral"}>{instance.status}</AdminBadge></td>
+          <td className={styles.wrap}>{instance.challenge_title}</td><td><AdminBadge tone={instance.status === "FAILED" ? "bad" : instance.status === "RUNNING" ? "good" : "neutral"}>{ADMIN_INSTANCE_STATUS_LABEL[instance.status] ?? instance.status}</AdminBadge></td>
           <td className={styles.time}>{formatAdminTime(instance.expires_at)}</td>
           <td>{canRetryCleanup(instance) ? <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "cleanup" }); }}>{CLEANUP_RETRY.action}</button> : canForceStop(instance) ? <div className={styles.rowActions}>
             {instance.status === "RUNNING" && <button type="button" className={`${BUTTON} ${styles.small}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "reset" }); }}>강제 재시작</button>}

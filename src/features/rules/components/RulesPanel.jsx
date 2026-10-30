@@ -20,7 +20,7 @@ export default function RulesPanel({ rules }) {
         {rules.map((rule) => (
           <article key={rule.title} className={styles.ruleItem}>
             <h2 className={styles.ruleTitle}>
-              <span aria-hidden="true">{rule.icon}</span> {rule.title}
+              {rule.title}
             </h2>
             <p className={styles.ruleDescription}>
               {Array.isArray(rule.description)

@@ -35,7 +35,7 @@ export default function RankingTable({ rankings, status }) {
             ranking.kothScore ?? ranking.categoryScores?.[8] ?? null, ranking.signatureScore, ranking.lineScore].map((value, index) => <td
             key={COLUMNS[index + 2].key} data-column={COLUMNS[index + 2].key} role="cell"
             className={index === 0 ? styles.pointCell : undefined}
-            title={value == null ? "서버에서 아직 제공하지 않는 값" : formatValue(value)}>
+            title={value == null ? "점수 없음" : formatValue(value)}>
             <span className={styles.mobileCellLabel} aria-hidden="true">{COLUMNS[index + 2].label}</span>
             <span className={styles.cellValue}>{formatValue(value)}</span>
           </td>)}

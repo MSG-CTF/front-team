@@ -33,7 +33,7 @@ import { DICE_AMOUNTS, REASON_PRESETS } from "../utils/adminReasons.js";
 import AdminMileageAdjustForm from "../components/AdminMileageAdjustForm.jsx";
 import ui from "../components/AdminWorkspace.module.css";
 
-// 보드 강제 개입 3종 - clear 칸 관리 / 말 위치 이동(백엔드 머지됨) / 주사위 지급/회수.
+// 보드 강제 개입 3종 - 칸 상태 변경 / 말 위치 이동(백엔드 머지됨) / 주사위 지급/회수.
 // 칸 번호는 1(START)~36이다. 0번 칸은 없다(백엔드 #81~#85).
 // 세 줄 모두 같은 열 격자를 써서 번호, 선택, 사유, 버튼이 세로로 한 줄에 선다
 function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMove, onDiceAdjust }) {
@@ -65,8 +65,8 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
         className={ui.inlineForm}
       >
         <div className={ui.inlineFormTitle}>
-          <strong>clear 칸 관리</strong>
-          <span>칸 상태를 바꿉니다</span>
+          <strong>칸 상태 변경</strong>
+          <span>참가자 보드의 칸 상태를 바꿉니다</span>
         </div>
         <label className={ui.field}>
           <span className={ui.fieldLabel}>칸 번호 <small>{BOARD_CELL_MIN}~{BOARD_CELL_MAX}</small></span>
@@ -86,10 +86,10 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
             onChange={(event) => setCellStatus(event.target.value)}
             className={ui.select}
           >
-            <option value="UNVISITED">UNVISITED(초기화)</option>
-            <option value="CONSUMED">CONSUMED</option>
-            <option value="OPENED">OPENED</option>
-            <option value="CLEARED">CLEARED</option>
+            <option value="UNVISITED">방문 전 (초기화)</option>
+            <option value="CONSUMED">소모됨</option>
+            <option value="OPENED">문제 열림</option>
+            <option value="CLEARED">해결함</option>
           </select>
         </label>
         <AdminReasonField label="사유" value={cellReason} onChange={setCellReason} presets={REASON_PRESETS.cell} />
@@ -102,7 +102,7 @@ function BoardInterventionForms({ teamId, isMutating, onCellUpdate, onPositionMo
         </button>
         {CELL_STATUSES_REQUIRING_OPENED_CHALLENGE.includes(cellStatus) && (
           <p className={ui.fieldHint}>
-            OPENED/CLEARED는 이 칸에서 이미 연 문제가 있어야 적용됩니다
+            문제 열림과 해결함은 이 칸에서 이미 연 문제가 있어야 적용됩니다
           </p>
         )}
       </form>

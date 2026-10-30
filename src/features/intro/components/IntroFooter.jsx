@@ -21,7 +21,7 @@ export default function IntroFooter() {
           <span className="footer-name">MSG CTF 2026</span>
         </Link>
         <p className="copyright" lang="en">
-          © 2026 MSG CTF <span>All rights reserved</span>
+          © 2026 MSG CTF
         </p>
       </div>
     </footer>

@@ -11,6 +11,7 @@ import postcss from "postcss";
 let server;
 let main;
 let guide;
+let renderPages;
 before(async () => {
   server = await createServer({
     server: { middlewareMode: true, hmr: false, watch: null },
@@ -47,6 +48,16 @@ before(async () => {
     );
   main = render(IntroPage, false);
   guide = render(IntroGuidePage, true);
+  // 모집 마감 전후 화면을 보려고 렌더링하는 동안만 현재 시각을 바꾼다
+  renderPages = (now) => {
+    const realNow = Date.now;
+    Date.now = () => now;
+    try {
+      return [render(IntroPage, false), render(IntroGuidePage, true)];
+    } finally {
+      Date.now = realNow;
+    }
+  };
 });
 after(async () => {
   await server?.close();
@@ -175,8 +186,21 @@ test("상금에는 순위만 표시하고 상 이름과 취소된 대표상 안�
   for (const rank of ["1위", "2위", "3위"])
     assert.ok(guide.includes(`<th scope="col">${rank}</th>`));
 });
+test("모집이 끝나면 신청 링크를 걷고 첫 화면은 참가 안내로, 신청 칸은 마감 표시로 바꾼다", () => {
+  const [closedMain, closedGuide] = renderPages(Date.parse("2026-10-26T00:00:00+09:00"));
+  for (const html of [closedMain, closedGuide]) {
+    assert.doesNotMatch(html, /hspace\.io\/u\/2026-msgctf|참가 신청 새 창|class="header-apply/);
+    assert.match(html, /class="apply-button[^"]* is-closed"><span>모집 마감<\/span><\/span>/);
+  }
+  assert.match(closedMain, /<a class="apply-button hero-apply" href="\/guide"[^>]*><span>참가 안내<\/span>/);
+  assert.match(closedMain, /class="hero-recruitment">모집 마감 <span>/);
+  // 마감 시각 직전까지는 그대로 신청을 받는다
+  const [openMain] = renderPages(Date.parse("2026-10-25T23:59:00+09:00"));
+  assert.match(openMain, /class="header-apply" href="https:\/\/hspace\.io/);
+  assert.match(openMain, /class="hero-recruitment">모집 <span>/);
+});
 test("로그인은 기존 경로를 사용하고 참가 신청은 HSPACE 주소를 새 창으로 연다", () => {
-  for (const html of [main, guide]) {
+  for (const html of renderPages(Date.parse("2026-10-20T12:00:00+09:00"))) {
     assert.match(html, /class="header-login" href="\/login"[^>]*>LOGIN<\/a>/);
     assert.doesNotMatch(html, /aria-disabled="true"|LOGIN 준비 중/);
     for (const tag of html.match(/<a\b[^>]*>/g)) {

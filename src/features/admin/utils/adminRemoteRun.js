@@ -16,6 +16,21 @@ export const ADMIN_REMOTE_RUN_BADGES = {
   START_UNKNOWN: { label: "실행 확인 필요", tone: "warn" },
 };
 
+// 백엔드가 행마다 남기는 마지막 오류와 확인 필요 표시를 한 줄로 읽는다 모르는 코드는 그대로 보인다
+const REMOTE_RUN_ERROR_LABEL = {
+  QA_EXECUTION_VERSION_CHANGED: "승인한 실행 버전이 바뀜",
+  QA_APPROVAL_MISMATCH: "승인 범위와 다름",
+  EXECUTION_NOT_RESOLVED: "실행 결과 정리 확인 필요",
+  LEGACY_EXECUTION_REQUIRES_REVIEW: "이전 실행 기록 확인 필요",
+};
+
+export function remoteRunIssue(run) {
+  const parts = [];
+  if (run?.requires_review) parts.push("운영자 확인 필요");
+  if (run?.last_error_code) parts.push(REMOTE_RUN_ERROR_LABEL[run.last_error_code] ?? run.last_error_code);
+  return parts.join(" · ");
+}
+
 function formatLimit(bytes) {
   if (bytes < MEGABYTE) return formatFileSize(bytes);
   const megabytes = bytes / MEGABYTE;

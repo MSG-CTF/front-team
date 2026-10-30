@@ -7,7 +7,6 @@ import { IconButton } from "../components/AdminWidgets.jsx";
 import useAdminResource from "../hooks/useAdminResource.js";
 import {
   ADMIN_EVENT_TYPES,
-  ADMIN_EVENT_TYPES_PENDING,
   getAdminEventSeverity,
   getAdminEventTypeLabel,
   isLongEventMessage,
@@ -52,10 +51,7 @@ export default function AdminLogsPage() {
           <span>이벤트 유형</span>
           <select value={appliedType} onChange={(event) => { setPage(1); setAppliedType(event.target.value); }} className={ui.select}>
             <option value="">전체</option>
-            {ADMIN_EVENT_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
-            <optgroup label="백엔드 PR 대기 중">
-              {ADMIN_EVENT_TYPES_PENDING.map((item) => <option key={item.value} value={item.value}>{item.label} ({item.value})</option>)}
-            </optgroup>
+            {ADMIN_EVENT_TYPES.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
           </select>
         </label>
         <IconButton icon="refresh" label="새로고침" onClick={events.retry} disabled={events.status === "loading"} />

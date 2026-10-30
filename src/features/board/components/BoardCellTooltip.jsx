@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { CELL_TYPE, CELL_TYPE_LABEL } from "../../../constants/enums.js";
 import { getBoardCellTooltipPosition, getBoardCellTooltipTail } from "../utils/boardCellTooltip.js";
 import "../../../styles/pretendard/tooltip.generated.css";
 import styles from "./BoardCellTooltip.module.css";
@@ -34,8 +35,9 @@ export default function BoardCellTooltip({ hovered, id, onDismiss }) {
     <div ref={ref} id={id} role="tooltip" className={styles.tooltip}
       data-tail={position?.tail.side}
       style={{ left: position?.left, top: position?.top, "--tail-left": `${position?.tail.offset ?? 20}px`, visibility: position ? "visible" : "hidden" }}>
-      <dl><div><dt>유형</dt><dd>{hovered.cell.type || "-"}</dd></div>
-        <div><dt>난이도</dt><dd>{hovered.cell.difficulty || "-"}</dd></div></dl>
+      {/* 백엔드 타입 값 대신 규칙 화면의 칸 이름을 보이고 난이도는 문제 칸에만 붙인다 */}
+      <dl><div><dt>유형</dt><dd>{CELL_TYPE_LABEL[hovered.cell.type] ?? "-"}</dd></div>
+        {hovered.cell.type === CELL_TYPE.CHALLENGE && <div><dt>난이도</dt><dd>{hovered.cell.difficulty || "-"}</dd></div>}</dl>
     </div>, document.body,
   );
 }

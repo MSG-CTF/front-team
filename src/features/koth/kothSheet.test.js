@@ -222,3 +222,11 @@ test("우표 카드 이름 줄에는 출제 동아리 이름을, 지도 카드 �
   const sheet = /<section[^>]*role="dialog"[^>]*>[\s\S]*<\/section>/.exec(html)?.[0] ?? "";
   assert.match(sheet, /data-round="2" style="--name-scale:1">Y-CERT<\/span>/);
 });
+
+test("정지된 팀은 KoTH 갱신 실패 대신 정지 이유를 본다", async () => {
+  const { readFileSync } = await import("node:fs");
+  const hook = readFileSync(new URL("./hooks/useKothData.js", import.meta.url), "utf8");
+  assert.match(hook, /error\?\.response\?\.data\?\.code === "TEAM_BANNED"/);
+  assert.match(hook, /error: state\.banned \? TEAM_BANNED_MESSAGE : state\.clubsStale/);
+  assert.match(hook, /정지된 팀이라 KoTH 정보를 볼 수 없습니다/);
+});

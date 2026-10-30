@@ -54,7 +54,7 @@ test("계정 확인과 로그인 요청 중에는 같은 틀을 유지하면서 
     assert.match(html, /autoComplete="current-password"/i);
   }
   assert.match(render({ checkingSession: true }), /src="\/assets\/login\/login-button-cutout.webp"/);
-  assert.match(render({ checkingSession: true }), /role="status">로그인 상태를 확인하고 있어요<\/p>/);
+  assert.match(render({ checkingSession: true }), /role="status">로그인 상태를 확인하고 있습니다<\/p>/);
   assert.match(render({ submitting: true }), /role="status">로그인 중<\/p>/);
 });
 
@@ -148,4 +148,18 @@ test("로그인판 조각은 WebKit에서도 판 전체가 아닌 각 격자 행
   assert.ok(sharedRule, "배경 종이와 입력창 장식의 공통 규칙은 유지한다");
   assert.match(sharedRule[1], /height:\s*100%\s*;/);
   assert.ok(sliceRule.index > sharedRule.index, "프레임 조각 높이가 공통 규칙보다 우선해야 한다");
+});
+
+test("로그인 시도 제한 중에는 남은 초를 알리고 제출 버튼만 잠근다", async () => {
+  const { loginRetryMessage, retryAfterSeconds } = await import("./utils/loginRetry.js");
+  const html = render({ locked: true, feedback: { type: "error", message: loginRetryMessage(42) } });
+  assert.match(html, /<button type="submit" disabled=""[^>]*aria-label="로그인"/);
+  assert.doesNotMatch(html, /<input[^>]*disabled=""/);
+  assert.match(html, /로그인 시도가 많아 42초 뒤에 다시 시도할 수 있습니다/);
+  assert.equal(retryAfterSeconds({ response: { headers: { "retry-after": "17" } } }), 17);
+  const at = Date.parse("2026-10-30T12:00:00Z");
+  assert.equal(retryAfterSeconds({ response: { headers: { "retry-after": "Thu, 30 Oct 2026 12:00:30 GMT" } } }, at), 30);
+  assert.equal(retryAfterSeconds({ response: { headers: {} } }), 60);
+  const page = (await import("node:fs")).readFileSync(new URL("./pages/LoginPage.jsx", import.meta.url), "utf8");
+  assert.match(page, /error\.response\?\.status === 429/);
 });

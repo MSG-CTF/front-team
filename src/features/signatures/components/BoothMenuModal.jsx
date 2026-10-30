@@ -81,7 +81,7 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
           {status === "empty" && <p className={styles.notice}>공개된 문제가 없습니다</p>}
           {status === "success" && challenge && <>
             <div className={styles.heading}>{!hasMenus && <p className={styles.kicker}>MENU</p>}<h3>{challenge.title}</h3></div>
-            <div className={styles.score} aria-label={`포인트 ${challenge.score}`}><span aria-hidden="true">❧</span><strong>{challenge.score.toLocaleString("ko-KR")}</strong><span>포인트</span></div>
+            <div className={styles.score} aria-label={`점수 ${challenge.score}`}><span aria-hidden="true">❧</span><strong>{challenge.score.toLocaleString("ko-KR")}</strong><span>점</span></div>
             <section className={styles.description} aria-label="문제 소개">
               <h4>DESCRIPTION</h4>
               <div className={styles.body}>{challenge.description || "등록된 설명이 없습니다"}</div>

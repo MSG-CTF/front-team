@@ -138,9 +138,10 @@ export default function ChallengeDetailScreen({
                     </>
                   )}
                   {showMascot && (
-                    <div className={styles.mascotPanel} aria-hidden="true">
-                      <img src="/assets/challenge-detail/mascot-squirrel.webp" alt="" width="360" height="490" decoding="async" />
-                      <p className={styles.mascotCaption}>Get the flag!</p>
+                    <div className={styles.mascotPanel}>
+                      <img src="/assets/challenge-detail/mascot-squirrel.webp" alt="" aria-hidden="true" width="360" height="490" decoding="async" />
+                      {/* 인스턴스도 원격 실행도 없는 문제에만 보이므로 그 사실을 알린다 */}
+                      <p className={styles.mascotCaption}>서버 없이 푸는 문제</p>
                     </div>
                   )}
                   <FlagSubmitPanel

@@ -18,6 +18,10 @@ export default function LeaderboardScreen({
   page = 1, pageCount = 1, onPageChange, refreshing, updatedAt, refreshError, onRefresh,
 }) {
   const dataStatus = `leaderboard:${leaderboardStatus}; ranking:${rankingStatus}`;
+  // 화면 읽기 프로그램에는 내부 상태 대신 불러오기 결과를 문장으로 알린다
+  const statuses = [leaderboardStatus, rankingStatus];
+  const liveMessage = statuses.includes("loading") ? "순위를 불러오는 중입니다"
+    : statuses.includes("error") ? "순위 일부를 불러오지 못했습니다" : "순위를 불러왔습니다";
   return (
     <>
       <main id="leaderboard-viewport" className={styles.page} data-leaderboard-source={dataStatus}>
@@ -56,7 +60,7 @@ export default function LeaderboardScreen({
             </div>
             <LeaderboardFooter />
             <p className={styles.srOnly} aria-live="polite">
-              {dataStatus}
+              {liveMessage}
             </p>
           </div>
         </div>

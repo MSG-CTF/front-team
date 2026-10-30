@@ -4,7 +4,8 @@
 @container admin-layout (min-width: 1101px) {
   .columns { grid-template-columns: 340px minmax(0, 1fr); }
   .grant { position: sticky; top: 80px; }
-}
-@media (max-height: 820px) {
-  .grant { top: 64px; }
+  /* 붙어 있는 폼만 낮은 화면에서 툴바 아래로 올린다 폰에서는 카드가 relative라 이 값이 폼을 내역 위로 밀어 지급 버튼을 가린다 */
+  @media (max-height: 820px) {
+    .grant { top: 64px; }
+  }
 }

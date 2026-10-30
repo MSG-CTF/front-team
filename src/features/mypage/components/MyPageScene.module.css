@@ -736,7 +736,7 @@
     left: calc(var(--u) * 35);
     top: calc(var(--u) * 232);
     width: calc(var(--u) * 400);
-    font-size: max(10px, calc(var(--u) * 19));
+    font-size: max(11px, calc(var(--u) * 19));
     line-height: calc(var(--u) * 24);
   }
   .qrSlot {
@@ -847,7 +847,7 @@
     top: calc(var(--u) * 468);
     height: calc(var(--u) * 28);
     padding: 0 calc(var(--u) * 6);
-    font-size: max(10px, calc(var(--u) * 15));
+    font-size: max(11px, calc(var(--u) * 15));
   }
   .personalRank {
     position: absolute;
@@ -862,7 +862,7 @@
     align-items: baseline;
     gap: calc(var(--u) * 6);
     margin: 0 0 calc(var(--u) * 4);
-    font-size: max(10px, calc(var(--u) * 12));
+    font-size: max(11px, calc(var(--u) * 12));
     line-height: calc(var(--u) * 18);
     overflow: visible;
   }
@@ -884,10 +884,10 @@
     line-height: calc(var(--u) * 26);
   }
   .personalStats small {
-    font-size: max(10px, calc(var(--u) * 12));
+    font-size: max(11px, calc(var(--u) * 12));
   }
   .personalMessage {
-    font-size: max(10px, calc(var(--u) * 13));
+    font-size: max(11px, calc(var(--u) * 13));
     line-height: calc(var(--u) * 17);
   }
 
@@ -957,7 +957,7 @@
     left: calc(var(--u) * 40);
     top: calc(var(--u) * 162);
     margin: 0;
-    font-size: max(10px, calc(var(--u) * 11));
+    font-size: max(11px, calc(var(--u) * 11));
     line-height: calc(var(--u) * 16);
     gap: 0 calc(var(--u) * 8);
     text-align: left;
@@ -971,7 +971,7 @@
     left: calc(var(--u) * 370);
     right: calc(var(--u) * 190);
     top: calc(var(--u) * 51 - 0.95em);
-    font-size: max(10px, calc(var(--u) * 12));
+    font-size: max(11px, calc(var(--u) * 12));
     line-height: 1.25;
   }
 
@@ -1048,7 +1048,7 @@
     right: calc(var(--u) * 40);
     top: calc(var(--u) * 27.5);
     gap: calc(var(--u) * 8);
-    font-size: max(10px, calc(var(--u) * 16));
+    font-size: max(11px, calc(var(--u) * 16));
   }
   .historyPagination button {
     width: calc(var(--u) * 36);

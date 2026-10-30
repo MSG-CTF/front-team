@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { CELL_TYPE, CELL_TYPE_LABEL } from "../../../constants/enums.js";
 import FixedAspectStage from "../../../components/common/FixedAspectStage.jsx";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 import { getBoardZoomScrollLeft } from "../utils/boardViewport.js";
@@ -346,7 +347,7 @@ export default function BoardScreen({
             </button>
           </div>
         </div>
-        {inspectedCell && <p className={styles.mobileCellInfo} role="status">{inspectedCell.cellIndex}번 · 유형 {inspectedCell.type} · 난이도 {inspectedCell.difficulty || "-"}</p>}
+        {inspectedCell && <p className={styles.mobileCellInfo} role="status">{inspectedCell.cellIndex}번 · {CELL_TYPE_LABEL[inspectedCell.type] ?? "-"}{inspectedCell.type === CELL_TYPE.CHALLENGE ? ` · 난이도 ${inspectedCell.difficulty || "-"}` : ""}</p>}
         <div
           id={boardRegionId}
           ref={boardViewport}
@@ -518,7 +519,8 @@ export default function BoardScreen({
           role="alert"
         >
           <span className="min-w-0 flex-1">
-            {error.code}: {error.message}
+            {/* 오류 코드는 운영진 확인용이라 참가자에게는 문장만 보인다 */}
+            {error.message}
           </span>
           <button
             type="button"

@@ -61,3 +61,20 @@ test("결제 품목과 사유가 같으면 한 번만 표시한다", () => {
   assert.equal(row.reason, "음료 / 환불 완료");
   assert.equal(mapMileageHistory({ history: [{}] })[0].reason, "-");
 });
+
+test("백엔드가 준 줄별 잔액, 분야, 걸린 시간을 채우고 없는 값은 지어내지 않는다", async () => {
+  const { formatElapsed } = await import("./myPageData.js");
+  const [mileage] = mapMileageHistory({ history: [{ history_id: "h1", amount: -120, balance_after: 1230 }] });
+  assert.equal(mileage.balance, "1,230");
+  const [solve, koth] = mapSolveHistory({ solves: [
+    { source_type: "JEOPARDY", challenge_id: "c1", challenge_title: "웹", category: "WEB", elapsed_seconds: 425 },
+    { source_type: "KOTH", koth_challenge_id: "k1", challenge_title: "왕", category: null, elapsed_seconds: null },
+  ] });
+  assert.equal(solve.category, "WEB");
+  assert.equal(solve.elapsed, "7:05");
+  assert.equal(koth.category, null);
+  assert.equal(koth.elapsed, null);
+  assert.equal(formatElapsed(3725), "1:02:05");
+  assert.equal(formatElapsed(-1), null);
+  assert.equal(formatElapsed(undefined), null);
+});

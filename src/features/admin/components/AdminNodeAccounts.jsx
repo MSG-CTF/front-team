@@ -89,7 +89,7 @@ function SchedulingDialog({ account, enable, onClose, onDone }) {
       onClose();
     } catch (failure) {
       setError(getAdminRequestError(failure, "").status === "unavailable"
-        ? "계정 배치 조정 API(PATCH /admin/resources/accounts/{id})가 아직 백엔드에 없습니다"
+        ? "이 서버에서는 계정 배치를 바꿀 수 없습니다"
         : failure?.response?.data?.message || failure?.message || "바꾸지 못했습니다");
     } finally {
       setBusy(false);

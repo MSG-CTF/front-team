@@ -146,14 +146,14 @@
   pointer-events: none;
   user-select: none;
 }
+/* 한국어 안내라 본문 글꼴과 좁은 자간을 쓴다 */
 .mascotCaption {
   margin: 0;
   color: #7a4a14;
-  font-family: var(--label);
-  font-size: 18px;
+  font-family: var(--sans);
+  font-size: 17px;
   font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
   text-shadow: 0 1px 0 #f6e3bc;
 }
 .bakedLabel {
@@ -1766,6 +1766,7 @@
 
 /* ───────── 데스크톱: 1920×1080 Figma 캔버스를 화면 높이/너비에 맞춰 한 화면에 고정 ───────── */
 @media (min-width: 1101px) and (min-height: 620px) {
+  /* 캔버스가 줄어드는 노트북(1280 폭)에서도 라벨과 짧은 안내는 11px, 오류·안내 문장은 12px 아래로 내려가지 않는다 */
   .page {
     display: grid;
     place-items: center;
@@ -1866,7 +1867,7 @@
     left: calc(var(--u) * 29);
     top: calc(var(--u) * 17);
     margin: 0;
-    font-size: max(9px, calc(var(--u) * 13));
+    font-size: max(11px, calc(var(--u) * 13));
   }
   .title {
     position: absolute;
@@ -1893,7 +1894,7 @@
     height: calc(var(--u) * 32);
     padding: 0 calc(var(--u) * 20);
     border-width: 0 calc(var(--u) * 8);
-    font-size: max(9px, calc(var(--u) * 16));
+    font-size: max(11px, calc(var(--u) * 16));
   }
   .pillCategory {
     border-image-width: 0 calc(var(--u) * 8);
@@ -1989,7 +1990,7 @@
     min-width: calc(var(--u) * 28);
     padding: 0 calc(var(--u) * 8);
     border-radius: calc(var(--u) * 12);
-    font-size: max(9px, calc(var(--u) * 16));
+    font-size: max(11px, calc(var(--u) * 16));
     line-height: calc(var(--u) * 22);
   }
   .attachmentList {
@@ -2031,11 +2032,11 @@
   }
   .attachmentInfo .fileSize,
   .downloadError {
-    font-size: max(9px, calc(var(--u) * 12));
+    font-size: max(12px, calc(var(--u) * 12));
     line-height: calc(var(--u) * 14);
   }
   .downloadCancel {
-    font-size: max(10px, calc(var(--u) * 14));
+    font-size: max(11px, calc(var(--u) * 14));
   }
   .downloadIcon {
     font-size: calc(var(--u) * 22);
@@ -2078,7 +2079,7 @@
     height: calc(var(--u) * 250);
   }
   .mascotCaption {
-    font-size: max(14px, calc(var(--u) * 28));
+    font-size: max(14px, calc(var(--u) * 22));
   }
   .statusSlot {
     position: absolute;
@@ -2104,7 +2105,7 @@
     overflow: hidden;
     white-space: nowrap;
     border-radius: calc(var(--u) * 20);
-    font-size: max(10px, calc(var(--u) * 15));
+    font-size: max(11px, calc(var(--u) * 15));
   }
   .statusBadge i {
     width: calc(var(--u) * 8);
@@ -2152,10 +2153,10 @@
     line-height: calc(var(--u) * 24);
   }
   .endpointName {
-    font-size: max(9px, calc(var(--u) * 11));
+    font-size: max(11px, calc(var(--u) * 11));
   }
   .endpointName small {
-    font-size: max(8px, calc(var(--u) * 10));
+    font-size: max(11px, calc(var(--u) * 10));
   }
   .endpoint a,
   .connectionText {
@@ -2171,20 +2172,21 @@
     height: calc(var(--u) * 47);
     padding: 0;
     border-radius: calc(var(--u) * 6);
-    font-size: max(10px, calc(var(--u) * 15));
+    font-size: max(11px, calc(var(--u) * 15));
   }
   .copyError {
-    font-size: max(9px, calc(var(--u) * 12));
+    font-size: max(12px, calc(var(--u) * 12));
   }
   .instanceHint {
     position: absolute;
     left: calc(var(--u) * 35);
     top: calc(var(--u) * 164);
     width: calc(var(--u) * 570);
-    max-height: calc(var(--u) * 28);
+    /* 글자 바닥에 맞춰 줄 높이와 두 줄 높이도 함께 바닥을 둔다 */
+    max-height: max(24px, calc(var(--u) * 28));
     overflow: hidden;
-    font-size: max(9px, calc(var(--u) * 11.5));
-    line-height: calc(var(--u) * 14);
+    font-size: max(11px, calc(var(--u) * 11.5));
+    line-height: max(12px, calc(var(--u) * 14));
   }
   .ttlValue {
     position: absolute;
@@ -2210,7 +2212,7 @@
     position: absolute;
     left: calc(var(--u) * 127);
     top: calc(var(--u) * 264);
-    font-size: max(9px, calc(var(--u) * 15));
+    font-size: max(11px, calc(var(--u) * 15));
     line-height: calc(var(--u) * 16);
   }
   /* 기다리는 동안은 접속 주소 칸과 같은 47 높이 한 줄에 단계와 경과 시간을 둔다 */
@@ -2235,7 +2237,7 @@
   .waitingBusy {
     flex: 1 1 auto;
     gap: calc(var(--u) * 5);
-    font-size: max(10px, calc(var(--u) * 14));
+    font-size: max(11px, calc(var(--u) * 14));
   }
   .createSteps li i,
   .waitingBusy i {
@@ -2252,16 +2254,17 @@
   }
   .waitingElapsed {
     flex: none;
-    font-size: max(10px, calc(var(--u) * 12));
+    font-size: max(12px, calc(var(--u) * 12));
   }
   .expiryTimes {
     position: absolute;
     left: calc(var(--u) * 215);
-    top: calc(var(--u) * 258);
+    /* 두 줄을 게이지와 판 아래 테두리 사이 가운데에 둔다 노트북에서 줄 높이 바닥이 커져도 가운데를 지킨다 */
+    top: calc(var(--u) * 272 - max(12px, calc(var(--u) * 14)));
     width: calc(var(--u) * 390);
     gap: 0;
-    font-size: max(8px, calc(var(--u) * 11));
-    line-height: calc(var(--u) * 14);
+    font-size: max(11px, calc(var(--u) * 11));
+    line-height: max(12px, calc(var(--u) * 14));
     text-align: right;
   }
   .expiryTimes p {
@@ -2285,7 +2288,7 @@
     width: calc(var(--u) * 154);
     height: calc(var(--u) * 62);
     padding: 0 0 calc(var(--u) * 4) 0.1em;
-    font-size: max(10px, calc(var(--u) * 20));
+    font-size: max(11px, calc(var(--u) * 20));
   }
   .controlHints {
     position: absolute;
@@ -2293,7 +2296,7 @@
     top: calc(var(--u) * 716);
     width: calc(var(--u) * 640);
     gap: 0 calc(var(--u) * 12);
-    font-size: max(9px, calc(var(--u) * 12));
+    font-size: max(12px, calc(var(--u) * 12));
     line-height: calc(var(--u) * 15);
   }
   /* 버튼 줄 바로 위에 띄워 판 아래 가장자리만 덮는다 아래 끝은 버튼 위 653에서 4 뗀 649다 */
@@ -2336,7 +2339,7 @@
   .runLabel {
     position: absolute;
     left: calc(var(--u) * 35);
-    font-size: max(9px, calc(var(--u) * 14));
+    font-size: max(11px, calc(var(--u) * 14));
     line-height: calc(var(--u) * 16);
     color: #926f43;
   }
@@ -2371,7 +2374,7 @@
     position: absolute;
     left: calc(var(--u) * 160);
     top: calc(var(--u) * 262);
-    font-size: max(9px, calc(var(--u) * 15));
+    font-size: max(11px, calc(var(--u) * 15));
     line-height: calc(var(--u) * 18);
     color: #d8c7a6;
   }
@@ -2379,7 +2382,7 @@
     position: absolute;
     right: calc(var(--u) * 35);
     top: calc(var(--u) * 264);
-    font-size: max(8px, calc(var(--u) * 11));
+    font-size: max(11px, calc(var(--u) * 11));
     line-height: calc(var(--u) * 14);
   }
   .runUpload {
@@ -2398,7 +2401,7 @@
     padding: 0 0 calc(var(--u) * 4) 0.1em;
     border-width: 0 calc(var(--u) * 46);
     border-image-width: 0 calc(var(--u) * 46);
-    font-size: max(10px, calc(var(--u) * 20));
+    font-size: max(11px, calc(var(--u) * 20));
   }
 
   /* 플래그 제출 */
@@ -2443,8 +2446,8 @@
     left: calc(var(--u) * 36);
     top: calc(var(--u) * 153);
     width: calc(var(--u) * 320);
-    font-size: max(10px, calc(var(--u) * 14));
-    line-height: calc(var(--u) * 18);
+    font-size: max(12px, calc(var(--u) * 14));
+    line-height: max(15px, calc(var(--u) * 18));
   }
   .submitButton {
     position: absolute;
@@ -2482,14 +2485,14 @@
   }
   .bonusNotice p,
   .refreshNotice span {
-    font-size: max(10px, calc(var(--u) * 13));
+    font-size: max(12px, calc(var(--u) * 13));
   }
   .rewards dd {
     font-size: max(12px, calc(var(--u) * 20));
   }
   .noticeButton {
     min-height: calc(var(--u) * 32);
-    font-size: max(10px, calc(var(--u) * 14));
+    font-size: max(11px, calc(var(--u) * 14));
   }
 
   /* 로딩 · 오류 */

@@ -57,7 +57,7 @@ export function KothScoringRule({ scoring, status, error, onRetry, className }) 
       </div>)}
     </div>}
     {divisions?.length === 0 && <p className={ui.quietNote}>등록된 팀이 없습니다</p>}
-    {!divisions && !waiting && <p className={ui.quietNote}>배점표는 관리자 KoTH API(GET /admin/koth/challenges)가 주면 보입니다</p>}
+    {!divisions && !waiting && <p className={ui.quietNote}>아직 배점표가 없습니다</p>}
     <p className={styles.ruleNote}>공동 순위는 차지한 순위 점수의 평균을 내림 · 문제 점수가 0 이하인 팀은 0점 · 테스트 팀도 등록 팀 수에 들어갑니다</p>
   </section>;
 }
@@ -102,7 +102,7 @@ export function KothPeriodsPanel({ challengeId, openedAt, limited, onRetried }) 
   }
 
   if (limited || periods.status === "unavailable") {
-    return <p className={ui.quietNote}>틱 기록은 관리자 KoTH API(GET /admin/koth/challenges/&#123;id&#125;/periods)가 백엔드에 반영되면 보입니다</p>;
+    return <p className={ui.quietNote}>이 서버에서는 틱 기록을 볼 수 없습니다</p>;
   }
   return <div className={styles.periods}>
     <AdminStatusMessage status={periods.status} error={periods.error} onRetry={periods.retry} hasData={Boolean(periods.data)} />
@@ -271,7 +271,7 @@ export function KothEditorPanel({ challenge, limited, draft, onDraftUsed, onSave
   }
 
   return <form onSubmit={save} className={styles.editor}>
-    {limited && <p className={ui.callout}>지문 수정은 관리자 KoTH API(PATCH /admin/koth/challenges/&#123;id&#125;)가 백엔드에 반영되면 열립니다</p>}
+    {limited && <p className={ui.callout}>이 서버에서는 지문을 고칠 수 없습니다</p>}
     {draft && <p className={ui.callout} data-tone="good">저장소 info.yaml 내용을 불러왔습니다 확인한 뒤 저장해주세요</p>}
     <fieldset disabled={busy || limited} className={styles.editorFields}>
       <div className={styles.editorTop}>
@@ -376,7 +376,7 @@ export function KothRepositoryPanel({ challenge, limited, onLinked, onUseDraft }
   }
 
   if (limited || repository.status === "unavailable") {
-    return <p className={ui.quietNote}>저장소 연결은 관리자 KoTH API(GET /admin/koth/repository)가 백엔드에 반영되면 열립니다 출제 폴더는 MSG-CTF/2026_MSG_CTF 의 koth-* 폴더입니다</p>;
+    return <p className={ui.quietNote}>이 서버에서는 저장소를 연결할 수 없습니다 출제 폴더는 MSG-CTF/2026_MSG_CTF 저장소의 koth-* 폴더입니다</p>;
   }
   return <div className={styles.repository}>
     <AdminStatusMessage status={repository.status} error={repository.error} onRetry={repository.retry} hasData={Boolean(repository.data)} />

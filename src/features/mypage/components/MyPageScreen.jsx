@@ -8,8 +8,8 @@ import styles from "./MyPageScene.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
 
 function profileText(state, field) {
-  if (state.status === "loading") return "LOADING";
-  if (state.status === "error") return "ERROR";
+  if (state.status === "loading") return "…";
+  if (state.status === "error") return "-";
   return state.status === "success" ? formatNumber(state.data[field]) : "-";
 }
 

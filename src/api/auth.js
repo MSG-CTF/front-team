@@ -6,7 +6,7 @@ import { isSuccess } from "../utils/response.js";
 export function login({ loginId, password }) {
   // POST /auth/login - Res에 access_token/refresh_token + role/is_leader/nickname/team_*
   // + is_banned/ban_reason(밴 팀도 로그인 허용, 직후 안내용).
-  // 401 INVALID_CREDENTIALS(아이디/비번 구분 안 함), 429 TOO_MANY_REQUESTS(IP+login_id 분당 10회).
+  // 401 INVALID_CREDENTIALS(아이디/비번 구분 안 함), 429 TOO_MANY_REQUESTS(login_id 기준, 남은 시간은 Retry-After 헤더).
   return apiClient.post("/auth/login", { login_id: loginId, password });
 }
 

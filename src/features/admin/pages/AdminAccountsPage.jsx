@@ -105,7 +105,7 @@ export default function AdminAccountsPage() {
                 <Glyph name={showPassword ? "eyeOff" : "eye"} size={16} strokeWidth={2} />
               </button>
               </div>
-              <button type="button" className={ui.button} onClick={suggestPassword}>강력한 비밀번호</button>
+              <button type="button" className={ui.button} onClick={suggestPassword}>비밀번호 자동 생성</button>
             </div>
             {form.password
               ? <span className={styles.strength} data-level={generated ? 3 : strength.level}>

@@ -196,3 +196,14 @@ test("원격 실행 미리보기는 개발 서버에서만 열리고 API 를 부
   const routes = readFileSync(new URL("../../routes/AppRoutes.jsx", import.meta.url), "utf8");
   assert.match(routes, /import.meta.env.DEV && <Route path="\/dev\/remote-run-preview"/);
 });
+
+test("원격 실행 오류는 영어 문구 대신 코드별 한국어 안내를 보이고 백엔드 한국어 문구는 그대로 쓴다", async () => {
+  const { remoteRunErrorMessage } = await import("./utils/remoteRun.js");
+  const english = { response: { data: { code: "INVALID_EXECUTABLE", message: "The file is not a supported executable." } } };
+  assert.equal(remoteRunErrorMessage(english, "fallback"), "Windows에서 실행할 수 있는 .exe 파일인지 확인해주세요");
+  const korean = { response: { data: { code: "INVALID_EXECUTABLE", message: "설정한 크기의 .exe 파일을 선택해주세요" } } };
+  assert.equal(remoteRunErrorMessage(korean, "fallback"), "설정한 크기의 .exe 파일을 선택해주세요");
+  assert.equal(remoteRunErrorMessage({ response: { data: { code: "ALREADY_SOLVED", message: "The challenge is already solved." } } }, "x"), "이미 해결한 문제입니다");
+  assert.equal(remoteRunErrorMessage({ response: { data: { code: "UNKNOWN", message: "Something" } } }, "다시 시도해주세요"), "다시 시도해주세요");
+  assert.equal(remoteRunErrorMessage(new Error("network"), "접수 응답을 받지 못했습니다"), "접수 응답을 받지 못했습니다");
+});

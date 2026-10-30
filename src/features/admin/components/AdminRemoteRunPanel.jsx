@@ -9,6 +9,7 @@ import {
   remoteRunChanges,
   remoteRunDraft,
   remoteRunDraftChanged,
+  remoteRunIssue,
   remoteRunSummary,
 } from "../utils/adminRemoteRun.js";
 import { formatFileSize } from "../../challenges/utils/challengeDetailMapper.js";
@@ -171,7 +172,7 @@ function RemoteRunHistory({ challengeId, active }) {
             <td className={styles.time}><time dateTime={run.created_at}>{formatSolveTime(run.created_at)}</time></td>
             <td><span className={styles.title}>{run.team_name ?? "-"}</span>{run.user?.nickname && <span className={styles.secondary}>{run.user.nickname}</span>}</td>
             <td>{run.run_number != null ? `${run.run_number}회차` : <span className={styles.muted}>횟수 제외</span>}</td>
-            <td><AdminBadge tone={badge.tone}>{badge.label}</AdminBadge>{run.status === "QUEUED" && <span className={styles.secondary}>{queuePosition ? `대기 ${queuePosition}번째` : "순서 확인 중"}</span>}{run.exit_code != null && <span className={styles.secondary}>종료 코드 {run.exit_code}</span>}</td>
+            <td><AdminBadge tone={badge.tone}>{badge.label}</AdminBadge>{run.status === "QUEUED" && <span className={styles.secondary}>{queuePosition ? `대기 ${queuePosition}번째` : "순서 확인 중"}</span>}{remoteRunIssue(run) && <span className={styles.secondary}>{remoteRunIssue(run)}</span>}{run.exit_code != null && <span className={styles.secondary}>종료 코드 {run.exit_code}</span>}</td>
             <td>{formatRunDuration(run.duration_ms) ?? <span className={styles.muted}>-</span>}</td>
             <td>{run.payload_sha256 ? <span className={styles.mono}>{run.payload_sha256.slice(0, 12)}</span> : <span className={styles.muted}>-</span>}
               <span className={styles.secondary}>{[run.file_name, run.file_size != null && formatFileSize(run.file_size)].filter(Boolean).join(" · ")}</span></td>

@@ -108,7 +108,7 @@ export function SignatureFestivalScreen({ state, onPreviewClub }) {
         <header className={styles.festivalHeader}>
           <p>MSG CTF</p>
           <h1>CLUB FESTIVAL</h1>
-          <span>문제를 풀고 동아리 스탬프를 모아보세요</span>
+          <span>문제를 풀면 동아리 스탬프가 모입니다</span>
         </header>
         {state.status === "error" && (
           <div className={styles.sceneNotice} role="alert">
