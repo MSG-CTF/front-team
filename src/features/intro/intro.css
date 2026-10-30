@@ -427,6 +427,14 @@
 .msg-intro .apply-button:hover {
   background: #f0d2a0;
 }
+/* 모집이 끝난 뒤의 신청 자리는 누를 수 없는 표시로 낮춘다 */
+.msg-intro .apply-button.is-closed,
+.msg-intro .apply-button.is-closed:hover {
+  justify-content: center;
+  background: rgba(224, 211, 191, 0.14);
+  color: #e0d3bf;
+  cursor: default;
+}
 .msg-intro .apply-button:focus-visible {
   box-shadow: inset 0 0 0 3px #251a0d;
   background: #f4dcb6;

@@ -12,6 +12,12 @@ function dateValue(date) {
     : NaN;
 }
 
+// 마감 시각이 없거나 읽을 수 없으면 열린 것으로 본다
+export function isRegistrationOpen(closesAt, now = Date.now()) {
+  const closing = Date.parse(closesAt);
+  return !Number.isFinite(closing) || now <= closing;
+}
+
 export function getCountdown(event, now = Date.now()) {
   const date = dateValue(event?.date);
   if (
