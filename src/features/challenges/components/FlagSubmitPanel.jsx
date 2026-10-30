@@ -36,7 +36,7 @@ export default function FlagSubmitPanel({
         id="flag"
         name="flag"
         type="text"
-        placeholder="msg2026{...}"
+        placeholder="msgctf2026{...}"
         autoComplete="off"
         autoCapitalize="off"
         spellCheck={false}
