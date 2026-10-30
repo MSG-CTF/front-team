@@ -9,6 +9,10 @@ function getErrorMessage(error, fallbackMessage) {
   return error?.response?.data?.message || error?.message || fallbackMessage;
 }
 
+// 정지된 팀은 KoTH 조회가 403 TEAM_BANNED로 막히므로 갱신 실패 대신 이유를 알린다
+const TEAM_BANNED_MESSAGE = "정지된 팀이라 KoTH 정보를 볼 수 없습니다 운영진에게 문의해주세요";
+const isTeamBanned = (error) => error?.response?.data?.code === "TEAM_BANNED";
+
 export function useKothData() {
   const [revision, setRevision] = useState(0);
   const [state, setState] = useState({ status: "loading", clubsData: null, progressData: null, progressError: "", clubsStale: false });
@@ -19,11 +23,13 @@ export function useKothData() {
     let active = true;
     async function loadClubs() {
       let clubs;
-      try { clubs = (await getKothClubs(config)).data; } catch { /* 이전 목록은 갱신 실패 상태로 남긴다 */ }
+      let failure;
+      try { clubs = (await getKothClubs(config)).data; } catch (error) { failure = error; /* 이전 목록은 갱신 실패 상태로 남긴다 */ }
       if (!active) return;
       const clubsOk = isSuccess(clubs) && validateKothClubs(clubs.data);
       setState((current) => ({
         ...current,
+        banned: isTeamBanned(failure) || (!clubsOk && current.banned),
         status: clubsOk || current.clubsData ? "success" : "error",
         clubsData: clubsOk ? clubs.data : current.clubsData,
         clubsStale: !clubsOk,
@@ -32,11 +38,13 @@ export function useKothData() {
     async function loadProgress() {
       if (!authenticated) return;
       let progress;
-      try { progress = (await getMyKothProgress(config)).data; } catch { /* 점수 오류는 목록 이용을 막지 않는다 */ }
+      let failure;
+      try { progress = (await getMyKothProgress(config)).data; } catch (error) { failure = error; /* 점수 오류는 목록 이용을 막지 않는다 */ }
       if (!active) return;
       const progressOk = isSuccess(progress) && Array.isArray(progress.data?.challenges);
       setState((current) => ({
         ...current,
+        banned: isTeamBanned(failure) || current.banned,
         progressData: progressOk ? progress.data : null,
         progressError: progressOk ? "" : "내 팀 점수를 갱신하지 못했습니다",
       }));
@@ -46,7 +54,7 @@ export function useKothData() {
     const stopPolling = startVisiblePolling(load);
     return () => { stopPolling(); active = false; controller.abort(); };
   }, [revision, authenticated]);
-  return { ...state, error: state.clubsStale ? "KOTH 목록을 갱신하지 못했습니다" : state.progressError,
+  return { ...state, error: state.banned ? TEAM_BANNED_MESSAGE : state.clubsStale ? "KOTH 목록을 갱신하지 못했습니다" : state.progressError,
     authenticated, retry: () => setRevision((value) => value + 1) };
 }
 

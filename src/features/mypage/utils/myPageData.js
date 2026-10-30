@@ -71,13 +71,21 @@ export function mapMileageHistory(data) {
     reason:
       [...new Set([entry.reason, entry.item_name, entry.is_refunded ? "환불 완료" : null].filter(Boolean))].join(" / ") || "-",
     change: formatSignedNumber(entry.amount),
-    // 현재 contract에는 행별 balance가 없다. 현재 mileage에서 역산하지 않는다.
-    balance: "-",
+    // 백엔드가 같은 스냅샷에서 계산한 그 내역 직후의 잔액 값이 없으면 지어내지 않는다
+    balance: Number.isFinite(entry.balance_after) ? formatNumber(entry.balance_after) : "-",
   }));
 }
 
-// 풀이 기록에서 제공하지 않는 분야와 소요 시간은 추측하지 않는다
-// contract에 없는 category/elapsed는 다른 필드로 추측하지 않는다.
+// 문제를 연 뒤 풀기까지 걸린 시간 한 시간 미만은 분:초, 넘으면 시:분:초
+export function formatElapsed(seconds) {
+  if (!Number.isInteger(seconds) || seconds < 0) return null;
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const rest = String(seconds % 60).padStart(2, "0");
+  return hours > 0 ? `${hours}:${String(minutes).padStart(2, "0")}:${rest}` : `${minutes}:${rest}`;
+}
+
+// 분야와 걸린 시간은 보드 문제(JEOPARDY)에만 오고 KoTH·시그니처는 비워 둔다
 export function mapSolveHistory(data) {
   const solves = Array.isArray(data?.solves) ? data.solves : [];
 
@@ -88,10 +96,10 @@ export function mapSolveHistory(data) {
     earnedMileage: entry.earned_mileage ?? null,
     extraDiceGranted: entry.is_extra_dice_granted === true,
     challenge: `${entry.source_type === "KOTH" ? "KoTH / " : entry.source_type === "SIGNATURE" ? "SIGNATURE / " : ""}${entry.challenge_title ?? "-"}`,
-    category: null,
+    category: entry.category ?? null,
     points: formatNumber(entry.earned_score),
     solvedAt: formatMileageDate(entry.solved_at),
-    elapsed: null,
+    elapsed: formatElapsed(entry.elapsed_seconds),
   }));
 }
 

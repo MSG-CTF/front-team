@@ -3,7 +3,7 @@ import { getExeSubmissions, getExeSubmission, submitExecutable } from "../../../
 import { useAuthenticatedUser } from "../../../routes/AuthenticatedRoute.jsx";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { executableIntent } from "../utils/pendingExecutable.js";
-import { mapRemoteRuns, remoteRetryDeadline } from "../utils/remoteRun.js";
+import { mapRemoteRuns, remoteRetryDeadline, remoteRunErrorMessage } from "../utils/remoteRun.js";
 
 function unwrap(response) {
   if (response.data?.code !== "SUCCESS") throw new Error(response.data?.message || "실행 정보를 확인하지 못했습니다");
@@ -53,7 +53,7 @@ export default function useRemoteRun(challengeId, config) {
       const seconds = data.remote_run?.retry_after_seconds;
       setRetryAt(Math.max(rejectedUntil.current, seconds > 0 ? Date.now() + seconds * 1000 : 0));
     } catch (failure) {
-      if (generation.current === current && requestSequence.current === sequence) setRefreshError({ message: failure.response?.data?.message || "실행 상태를 확인하지 못했습니다 연결이 복구되면 다시 확인합니다" });
+      if (generation.current === current && requestSequence.current === sequence) setRefreshError({ message: remoteRunErrorMessage(failure, "실행 상태를 확인하지 못했습니다 연결이 복구되면 다시 확인합니다") });
     }
   }, [challengeId, enabled, intent]);
 
@@ -96,7 +96,7 @@ export default function useRemoteRun(challengeId, config) {
       if (generation.current === current) {
         rejectedUntil.current = remoteRetryDeadline(failure.response);
         setRetryAt(rejectedUntil.current); setNow(Date.now());
-        setError({ message: failure.response?.data?.message || (!failure.isAxiosError && failure.message) || "접수 응답을 받지 못했습니다 같은 파일로 재시도해주세요" });
+        setError({ message: remoteRunErrorMessage(failure, (!failure.isAxiosError && failure.message) || "접수 응답을 받지 못했습니다 같은 파일로 재시도해주세요") });
       }
       await load();
       return false;

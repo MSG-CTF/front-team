@@ -73,3 +73,10 @@ test("관리 창은 원격 실행 문제에만 원격 실행 탭을 두고, 목�
   const css = readFileSync(new URL("../features/admin/components/AdminWorkspace.module.css", import.meta.url), "utf8");
   assert.match(css, /\.deployPill\[data-state="remote"\] \{ background: var\(--blue-tint\); color: var\(--blue-text\); \}/);
 });
+
+test("관리자 원격 실행 행은 확인 필요 표시와 마지막 오류 원인을 한 줄로 보인다", async () => {
+  const { remoteRunIssue } = await import("../features/admin/utils/adminRemoteRun.js");
+  assert.equal(remoteRunIssue({ requires_review: true, last_error_code: "QA_EXECUTION_VERSION_CHANGED" }), "운영자 확인 필요 · 승인한 실행 버전이 바뀜");
+  assert.equal(remoteRunIssue({ requires_review: false, last_error_code: "SOMETHING_NEW" }), "SOMETHING_NEW");
+  assert.equal(remoteRunIssue({ requires_review: false, last_error_code: null }), "");
+});

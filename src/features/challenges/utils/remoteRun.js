@@ -37,6 +37,29 @@ export const REMOTE_RUN_NOTICE = {
   REJECTED: "실행 파일 검사에서 거절됐습니다",
 };
 
+// 접수·조회 오류 코드별 안내 백엔드가 영어로 보내는 코드만 한국어로 바꾼다
+const REMOTE_RUN_ERROR = {
+  INVALID_EXECUTABLE: "Windows에서 실행할 수 있는 .exe 파일인지 확인해주세요",
+  PAYLOAD_TOO_LARGE: "10MB 이하 .exe 파일만 올릴 수 있습니다",
+  INVALID_REQUEST: "파일을 다시 골라 올려주세요",
+  ALREADY_SOLVED: "이미 해결한 문제입니다",
+  CHALLENGE_LOCKED: "지금은 실행할 수 없는 문제입니다",
+  CHALLENGE_NOT_FOUND: "문제를 찾지 못했습니다",
+  SUBMISSION_NOT_FOUND: "실행 기록을 찾지 못했습니다",
+  EXE_SUBMISSIONS_DISABLED: "지금은 원격 실행을 받지 않습니다",
+  SUBMISSION_UNAVAILABLE: "지금은 원격 실행을 받을 수 없습니다 운영진에게 알려주세요",
+  TEAM_BANNED: "참가할 수 없는 팀입니다",
+  USER_HAS_NO_TEAM: "팀 배정을 확인해주세요",
+  IDEMPOTENCY_KEY_CONFLICT: "같은 접수가 다른 파일로 이미 진행 중입니다 파일을 다시 골라주세요",
+};
+
+// 백엔드 문구가 한국어면 더 구체적이라 그대로 쓰고, 영어면 코드별 안내로 바꾼다
+export function remoteRunErrorMessage(failure, fallback) {
+  const data = failure?.response?.data;
+  if (/[가-힣]/.test(data?.message ?? "")) return data.message;
+  return REMOTE_RUN_ERROR[data?.code] ?? fallback;
+}
+
 const ACTIVE_STATUSES = new Set(["QUEUED", "PREPARING", "RUNNING", "CLEANUP_PENDING", "START_UNKNOWN"]);
 
 export function isActiveRun(run) {

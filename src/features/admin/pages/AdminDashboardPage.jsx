@@ -281,6 +281,8 @@ export default function AdminDashboardPage() {
   const refreshing = [dashboard, events, instances, leaderboard].some((item) => item.status === "loading");
   const leader = [...(leaderboard.data?.teams ?? [])].sort((a, b) => (b.team_score ?? 0) - (a.team_score ?? 0))[0];
   const failed = data?.instances?.failed ?? 0;
+  // 생성·재시작 저장 확인을 기다리는 참가자는 기다려도 풀리지 않아 서버 명령으로 확인해야 한다
+  const writeReview = data?.instances?.write_review ?? 0;
   const payment = data?.payment;
 
   return (
@@ -294,7 +296,10 @@ export default function AdminDashboardPage() {
         <ContestWidget contest={data?.contest} className={intro.contestArea} to={ROUTES.adminSettings} />
         <StatStrip label="운영 지표" className={intro.metricsArea}>
           <StatTile glyph="instance" tone="green" label="실행 인스턴스" value={count(data?.instances?.running)} to={`${ROUTES.adminChallenges}?tab=instances&status=RUNNING`} />
-          <StatTile glyph="warning" tone="red" label="실패 인스턴스" value={count(data?.instances?.failed)} alert={failed > 0} to={`${ROUTES.adminChallenges}?tab=instances&status=FAILED`} />
+          <StatTile glyph="warning" tone="red" label="실패 인스턴스" value={count(data?.instances?.failed)} alert={failed > 0 || writeReview > 0}
+            sub={writeReview > 0 ? `저장 확인 대기 ${count(writeReview)}명` : ""}
+            title={writeReview > 0 ? "서버에서 recover_instance_writes --show로 막힌 요청을 확인하세요" : undefined}
+            to={`${ROUTES.adminChallenges}?tab=instances&status=FAILED`} />
           <StatTile glyph="teams" tone="indigo" label="참가 팀" value={count(data?.teams?.total_count)} sub={data?.teams?.banned_count ? `밴 ${count(data.teams.banned_count)}팀` : ""} to={ROUTES.adminTeams} />
           <StatTile glyph="rank" tone="yellow" label="선두" value={leader?.team_name ?? "-"} text sub={leader ? `${count(leader.team_score)}점` : ""} to={leader ? ROUTES.adminTeamDetail(leader.team_id) : ROUTES.adminTeams} />
           <StatTile glyph="payment" tone="orange" label="부스 결제" value={count(payment?.net_spent)} unit={payment ? "MI" : undefined} sub={payment ? `${count(payment.purchase_count)}건 · 환불 ${count(payment.refund_count)}건` : ""} to={`${ROUTES.adminMileage}?tab=payment`} />
