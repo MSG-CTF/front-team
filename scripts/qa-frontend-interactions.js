@@ -177,7 +177,7 @@ async (page) => {
     await page.locator('[aria-label^="결제 QR 코드,"] svg').waitFor();
     await capture('mypage-qr',width);
     await navigate('/challenges/challenge-1');
-    await page.getByRole('textbox',{name:'플래그',exact:true}).fill('MSG{local_qa}');
+    await page.getByRole('textbox',{name:'플래그',exact:true}).fill('msg2026{local_qa}');
     await capture('flag-input',width);
     await page.getByRole('button',{name:'플래그 제출',exact:true}).click();
     await page.getByRole('button',{name:'플래그 제출',exact:true}).filter({hasText:'SOLVED'}).waitFor();
