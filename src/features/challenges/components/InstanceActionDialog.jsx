@@ -4,6 +4,7 @@ import styles from "./ChallengeDetailScene.module.css";
 export default function InstanceActionDialog({
   action,
   otherInstance,
+  teammate,
   onConfirm,
   onCancel,
   disabled,
@@ -22,16 +23,26 @@ export default function InstanceActionDialog({
       });
     };
   }, [returnFocusTo]);
+  // 팀원이 이 문제를 켜 두었으면 같이 쓸 수 있다는 걸 먼저 알리고, 그래도 따로 켤지 묻는다
+  const sharedLine = teammate && teammate.nickname + "님이 이 문제 인스턴스를 켜 두어 접속 주소를 같이 쓸 수 있습니다";
   const content = {
-    create: {
+    create: otherInstance ? {
       title: "인스턴스 전환",
       description: [
+        ...(sharedLine ? [sharedLine] : []),
         "인스턴스는 한 사람당 1개만 켤 수 있습니다",
         (otherInstance?.challengeTitle || "다른 문제") +
           "에서 사용 중인 인스턴스를 종료하고 새로 생성합니다",
         "기존 작업 내용은 유지되지 않습니다",
       ],
       button: "전환하고 생성",
+    } : {
+      title: "팀원 인스턴스 사용 중",
+      description: [
+        sharedLine || "팀원이 이 문제 인스턴스를 켜 두었습니다",
+        "따로 켜면 팀 인스턴스를 하나 더 쓰고 재시작·종료는 각자 합니다",
+      ],
+      button: "따로 생성",
     },
     restart: {
       title: "인스턴스 재시작",

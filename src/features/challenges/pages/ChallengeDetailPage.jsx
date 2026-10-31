@@ -73,6 +73,13 @@ function ChallengeDetailContent({ challengeId }) {
     () => mapChallengeInstance(detail.otherInstanceData, now),
     [detail.otherInstanceData, now],
   );
+  // 내 인스턴스가 없을 때 이 문제를 팀원이 켜 두었으면 접속 주소를 보여 같이 쓰게 한다
+  const teammate = useMemo(() => {
+    const member = detail.teammateInstanceData;
+    const shared = member ? mapChallengeInstance(member.instance, now) : null;
+    const mineActive = instance && !TERMINAL_INSTANCE_STATUSES.includes(instance.status);
+    return shared?.status === "RUNNING" && !mineActive ? { nickname: member.nickname || "팀원", instance: shared } : null;
+  }, [detail.teammateInstanceData, instance, now]);
   const submission = getChallengeSubmissionState(challenge, now);
   const controls = getInstanceControlState(instance, otherInstance);
   const retrySeconds =
@@ -182,7 +189,7 @@ function ChallengeDetailContent({ challengeId }) {
 
   const requestAction = (action) => {
     if (actionInFlight.current || unavailable) return;
-    if (action === "create" && !otherInstance) runInstanceAction(action);
+    if (action === "create" && !otherInstance && !teammate) runInstanceAction(action);
     else if (action === "extend") runInstanceAction(action);
     else
       setConfirmation({
@@ -237,6 +244,7 @@ function ChallengeDetailContent({ challengeId }) {
       submission={submission}
       instance={instance}
       otherInstance={otherInstance}
+      teammate={teammate}
       controls={controls}
       flagValue={flagValue}
       onFlagChange={setFlagValue}

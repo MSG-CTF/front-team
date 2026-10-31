@@ -71,6 +71,15 @@ export function readCurrentInstance(data) {
     : null;
 }
 
+// 팀원 인스턴스 응답을 문제 줄 표시용으로 줄인다 실패했거나 구버전 서버라 응답이 없으면 빈 목록
+export function readTeammateInstances(envelope) {
+  if (envelope?.code !== "SUCCESS") return [];
+  const members = Array.isArray(envelope.data?.instances) ? envelope.data.instances : [];
+  return members
+    .map((member) => ({ nickname: member?.nickname || "팀원", ...readCurrentInstance(member?.instance) }))
+    .filter((item) => item.instanceId);
+}
+
 export function getOpenChallengesError(error) {
   const status = error?.response?.status;
   return {

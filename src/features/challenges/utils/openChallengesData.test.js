@@ -5,6 +5,7 @@ import {
   groupOpenChallenges,
   readCurrentInstance,
   readOpenChallenges,
+  readTeammateInstances,
 } from "./openChallengesData.js";
 
 const data = {
@@ -208,4 +209,17 @@ test("일시적 조회 오류와 접근 권한 오류를 구분한다", () => {
     }).message,
     "접근 불가",
   );
+});
+
+test("보드 목록용 팀원 인스턴스는 활성 인스턴스만 닉네임과 함께 남기고 실패 응답은 빈 목록으로 본다", () => {
+  const envelope = { code: "SUCCESS", data: { instances: [
+    { nickname: "박도윤", instance: { instance_id: "a", challenge_id: "c1", challenge_title: "단풍잎 게시판", status: "RUNNING" } },
+    { nickname: "", instance: { instance_id: "b", challenge_id: "c2", status: "PROVISIONING" } },
+    { nickname: "끝남", instance: { instance_id: "c", challenge_id: "c3", status: "STOPPED" } },
+  ] } };
+  assert.deepEqual(readTeammateInstances(envelope), [
+    { nickname: "박도윤", instanceId: "a", challengeId: "c1", challengeTitle: "단풍잎 게시판", status: "RUNNING" },
+    { nickname: "팀원", instanceId: "b", challengeId: "c2", challengeTitle: "사용 중인 문제", status: "PROVISIONING" },
+  ]);
+  for (const failed of [null, undefined, { code: "NOT_FOUND" }, { code: "SUCCESS", data: null }]) assert.deepEqual(readTeammateInstances(failed), []);
 });

@@ -82,6 +82,8 @@ export default function OpenChallengesSidePanel({
   // 내 인스턴스 칸은 확인이 끝나면 늘 목록 위에 두고 한 사람당 1개 중 몇 개를 쓰는지 보인다
   // 실행 중인 문제 줄에도 상태를 같이 찍어 목록에서 바로 찾게 한다
   const instanceKnown = Boolean(instance) || (instanceInfo != null && !instanceInfo.loading && !instanceInfo.error);
+  // 팀원이 켠 문제 줄에는 팀원 표시를 붙여 같은 문제를 둘이 따로 켜지 않게 한다
+  const teammates = instanceInfo?.teammates ?? [];
   const hasTabs = Boolean(children);
   const linesVisible = hasTabs && showLines;
   const firstSolved = view.status === "all" && groups.unsolved.length > 0 ? groups.items.find((challenge) => challenge.isSolved) : null;
@@ -228,6 +230,9 @@ export default function OpenChallengesSidePanel({
               {groups.items.map((challenge) => {
                 const number = formatOpenChallengeNumber(challenge.openedNumber - 1);
                 const isInstance = challenge.challengeId === instance?.challengeId;
+                const teammate = isInstance ? null : teammates.find((item) => item.challengeId === challenge.challengeId);
+                const teammateRunning = teammate?.status === "RUNNING";
+                const teammateLabel = teammate && `팀원 ${teammateRunning ? "실행 중" : INSTANCE_STATUS_LABEL[teammate.status] || "확인 중"}`;
                 return (
                   <li key={challenge.challengeId} data-solved={challenge.isSolved ? "true" : undefined}>
                     {challenge === firstSolved && <p className={styles.openGroupLabel} aria-hidden="true">완료한 문제</p>}
@@ -235,7 +240,7 @@ export default function OpenChallengesSidePanel({
                       type="button"
                       className={styles.openRow}
                       onClick={() => select(challenge.challengeId)}
-                      aria-label={`${number}번 ${challenge.title || "문제"}${challenge.isSolved ? ", 해결함" : ""}${isInstance ? `, 내 인스턴스 ${instanceLabel}` : ""} 상세 보기`}
+                      aria-label={`${number}번 ${challenge.title || "문제"}${challenge.isSolved ? ", 해결함" : ""}${isInstance ? `, 내 인스턴스 ${instanceLabel}` : ""}${teammate ? `, ${teammate.nickname}님 인스턴스 ${teammateRunning ? "실행 중" : INSTANCE_STATUS_LABEL[teammate.status] || "확인 중"}` : ""} 상세 보기`}
                     >
                       {/* 푼 문제는 번호 대신 초록 체크로 바꿔 한눈에 구분한다 */}
                       <span className={styles.openRowNo} aria-hidden="true">
@@ -248,6 +253,7 @@ export default function OpenChallengesSidePanel({
                         <span className={styles.openRowMeta}>
                           <span>{challenge.category || "분야 없음"}</span>
                           {isInstance && <InstanceMark running={instanceRunning} label={instanceLabel} />}
+                          {teammate && <InstanceMark running={teammateRunning} label={teammateLabel} />}
                         </span>
                       </span>
                       <Chevron />

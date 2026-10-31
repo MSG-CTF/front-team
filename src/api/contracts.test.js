@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import apiClient from "./client.js";
 import { getChallengeDetail, submitFlag } from "./challenges.js";
 import { getOpenedChallenges } from "./board.js";
-import { createInstance, extendInstance, getMyInstances, resetInstance, stopInstance } from "./instances.js";
+import { createInstance, extendInstance, getMyInstances, getTeamMemberInstances, resetInstance, stopInstance } from "./instances.js";
 import { getLeaderboard, getRankings, getMyMemberRanking } from "./leaderboard.js";
 import { getMyProfile, getMyMileageHistory, getMySolves, issueMyQrToken } from "./mypage.js";
 import { getKothClub, getKothClubs, getKothLeaderboard, getKothTeamToken, getMyKothProgress } from "./koth.js";
@@ -33,6 +33,7 @@ test("다섯 화면의 조회는 /api/v1과 최신 경로, Bearer 계약을 쓴�
   const cases = [
     [() => getChallengeDetail("challenge-1", config), "/challenges/challenge-1"],
     [() => getMyInstances(config), "/teams/me/instances"],
+    [() => getTeamMemberInstances(config), "/teams/me/member_instances"],
     [() => getLeaderboard(config), "/leaderboard"],
     [() => getMyProfile(config), "/teams/me"],
     [() => getMyMileageHistory(config), "/teams/me/mileage_history"],

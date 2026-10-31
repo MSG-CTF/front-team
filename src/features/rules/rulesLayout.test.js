@@ -23,6 +23,7 @@ test("게임 규칙에 문제 서버 제한을 참가 안내와 같은 기준으
   assert.match(page, /title: "문제 서버"/);
   assert.match(page, /팀장·팀원 각자 1개씩, 팀 전체 최대 2개까지 켤 수 있습니다/);
   assert.match(page, /다른 문제에서 새로 생성하면 켜 둔 인스턴스는 종료되고/);
+  assert.match(page, /팀원이 켠 인스턴스는 문제 상세에서 접속 주소를 같이 보고 쓸 수 있습니다/);
   const guide = read("../intro/IntroGuidePage.jsx");
   assert.match(guide, /참가자마다 최대 1개, 팀 전체 최대 2개/);
 });
