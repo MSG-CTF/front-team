@@ -153,7 +153,7 @@ function Endpoint({ endpoint, compact }) {
   );
 }
 
-export default function InstancePanel({ instance, otherInstance, error, pendingAction }) {
+export default function InstancePanel({ instance, otherInstance, teammate, error, pendingAction }) {
   const status = instance?.status ?? null;
   // 생성 단추를 누른 직후부터 RUNNING 이 될 때까지, 재시작·초기화가 끝날 때까지 기다리는 화면을 보인다
   const statusStep = error ? -1 : CREATE_STEPS.findIndex((item) => item.status === status);
@@ -165,19 +165,24 @@ export default function InstancePanel({ instance, otherInstance, error, pendingA
   const failure = error ? null : getInstanceFailureNotice(instance);
   const ended = status === INSTANCE_STATUS.STOPPED || status === INSTANCE_STATUS.CLEANED;
   const requesting = statusStep < 0 && createStep === 0;
+  // 내 인스턴스가 없고 팀원이 이 문제를 켜 두었으면 그 접속 주소를 같이 쓰게 보인다 재시작·종료는 켠 사람만 한다
+  const sharedEndpoints = !error && !waitingKey && !failure && (!status || ended) ? teammate?.instance?.endpoints ?? [] : [];
+  const shared = sharedEndpoints.length > 0;
   const statusLabel = error
     ? "조회 실패"
     : requesting
       ? INSTANCE_STATUS_LABEL[INSTANCE_STATUS.REQUESTED]
     : failure
       ? "실행 실패"
+    : shared
+      ? "팀원 사용 중"
     : status === "RUNNING"
       ? "실행 중"
       : status
         ? (INSTANCE_STATUS_LABEL[status] ?? UNKNOWN_INSTANCE_STATUS_LABEL)
         : "생성 전";
-  const endpoints = instance?.endpoints ?? [];
-  const compact = running && endpoints.length > 1;
+  const endpoints = shared ? sharedEndpoints : instance?.endpoints ?? [];
+  const compact = (running || shared) && endpoints.length > 1;
   const hasTime =
     instance?.expiresAt && Number.isFinite(Date.parse(instance.expiresAt));
   const hasHardTime =
@@ -213,6 +218,8 @@ export default function InstancePanel({ instance, otherInstance, error, pendingA
       ? "준비가 끝나면 접속 주소와 남은 시간이 바로 표시됩니다"
     : failure
       ? failure.message
+    : shared
+      ? `${teammate.nickname}님이 켠 인스턴스입니다 같이 쓰거나 따로 켤 수 있습니다`
     : ended
       ? "다시 사용하려면 새 인스턴스를 생성해 주세요"
     : running
@@ -256,7 +263,7 @@ export default function InstancePanel({ instance, otherInstance, error, pendingA
         className={`${styles.connect} ${compact ? styles.connectMulti : ""}`}
         aria-label="인스턴스 접속 정보"
       >
-        {running ? (
+        {running || shared ? (
           endpoints.length ? (
             endpoints.map((endpoint, index) => (
               <Endpoint

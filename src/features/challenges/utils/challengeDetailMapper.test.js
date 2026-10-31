@@ -8,6 +8,7 @@ import {
 import {
   findChallengeInstance,
   findOtherInstance,
+  findTeammateInstance,
   formatFileSize,
   getAttachmentUrl,
   getInstanceControlState,
@@ -337,4 +338,13 @@ test("separate health endpoints use the probe path without allowing another orig
   assert.equal(instance.endpoints[1].url, "http://example.test:30002/healthz");
   assert.equal(instance.endpoints[1].name, "service · 상태 확인");
   assert.equal(instance.endpoints[2].url, "http://example.test:30003");
+});
+
+test("팀원 인스턴스 중 이 문제를 켠 팀원을 고르고 끝난 인스턴스와 다른 문제는 뺀다", () => {
+  const member = (nickname, challengeId, status) => ({ nickname, instance: { instance_id: `${nickname}-${challengeId}`, challenge_id: challengeId, status } });
+  const data = { instances: [member("가", "other", "RUNNING"), member("나", "here", "STOPPED"), member("다", "here", "PROVISIONING"), member("라", "here", "RUNNING")] };
+  assert.equal(findTeammateInstance(data, "here").nickname, "라");
+  assert.equal(findTeammateInstance({ instances: [member("다", "here", "PROVISIONING")] }, "here").nickname, "다");
+  assert.equal(findTeammateInstance({ instances: [member("나", "here", "STOPPED")] }, "here"), null);
+  for (const empty of [null, undefined, {}, { instances: null }]) assert.equal(findTeammateInstance(empty, "here"), null);
 });

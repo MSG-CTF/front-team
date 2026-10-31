@@ -23,6 +23,7 @@ export default function ChallengeDetailScreen({
   submission,
   instance,
   otherInstance,
+  teammate,
   controls,
   flagValue,
   onFlagChange,
@@ -118,6 +119,7 @@ export default function ChallengeDetailScreen({
                       <InstancePanel
                         instance={instance}
                         otherInstance={otherInstance}
+                        teammate={teammate}
                         error={instanceError}
                         pendingAction={pendingAction}
                       />
@@ -222,6 +224,7 @@ export default function ChallengeDetailScreen({
           returnFocusTo={confirmation.trigger}
           action={confirmation.action}
           otherInstance={otherInstance}
+          teammate={teammate}
           onConfirm={onConfirmAction}
           onCancel={onCancelAction}
           disabled={instanceUnavailable || pendingAction != null}

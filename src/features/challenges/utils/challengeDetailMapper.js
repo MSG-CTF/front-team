@@ -137,6 +137,18 @@ export function findOtherInstance(data, challengeId) {
   );
 }
 
+// 팀원 인스턴스 목록에서 이 문제를 켜 둔 팀원 한 명을 고른다 실행 중인 인스턴스를 먼저 본다
+export function findTeammateInstance(data, challengeId) {
+  const members = Array.isArray(data?.instances) ? data.instances : [];
+  const same = members.filter(
+    (member) =>
+      member?.instance?.instance_id &&
+      stringIdentifier(member.instance.challenge_id) === stringIdentifier(challengeId) &&
+      !TERMINAL_STATUSES.has(member.instance.status),
+  );
+  return same.find((member) => member.instance.status === "RUNNING") ?? same[0] ?? null;
+}
+
 export function calculateRemainingSeconds(expiresAt, now = Date.now()) {
   if (!expiresAt) return null;
   const timestamp = Date.parse(expiresAt);

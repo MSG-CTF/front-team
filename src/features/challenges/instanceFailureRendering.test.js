@@ -68,3 +68,26 @@ test("아직 켜지 않은 인스턴스 칸과 전환 확인창은 한 사람당
   const lines = [...dialog.matchAll(/<p>([^<]+)<\/p>/g)].map((match) => match[1]);
   assert.deepEqual(lines, ["인스턴스는 한 사람당 1개만 켤 수 있습니다", "가을 축제 티켓 발매기에서 사용 중인 인스턴스를 종료하고 새로 생성합니다", "기존 작업 내용은 유지되지 않습니다"]);
 });
+
+test("내 인스턴스가 없을 때 팀원이 이 문제를 켜 두었으면 접속 주소를 같이 보이고 따로 켤지 묻는다", () => {
+  const teammate = { nickname: "박도윤", instance: mapChallengeInstance({ instance_id: "mate", challenge_id: "here", status: "RUNNING", host: "https://mate.example", endpoints: [{ container_name: "web", port: 80, protocol: "HTTP", service_url: "https://mate.example" }], expires_at: "2099-01-01T00:00:00Z" }) };
+  const shared = renderToStaticMarkup(createElement(Panel, { instance: null, teammate }));
+  assert.match(shared, />팀원 사용 중</);
+  assert.match(shared, /href="https:\/\/mate.example"/);
+  assert.match(shared, /박도윤님이 켠 인스턴스입니다 같이 쓰거나 따로 켤 수 있습니다/);
+  // 내 인스턴스가 실행 중이면 내 것만 보인다
+  const mine = renderToStaticMarkup(createElement(Panel, { instance: mapChallengeInstance({ instance_id: "mine", status: "RUNNING", host: "https://mine.example", expires_at: "2099-01-01T00:00:00Z" }), teammate }));
+  assert.doesNotMatch(mine, /팀원 사용 중|mate.example/);
+  // 생성을 기다리는 중이면 준비 단계를 먼저 보인다
+  assert.doesNotMatch(renderToStaticMarkup(createElement(Panel, { instance: null, teammate, pendingAction: "create" })), /팀원 사용 중/);
+
+  const lines = (html) => [...html.matchAll(/<p>([^<]+)<\/p>/g)].map((match) => match[1]);
+  const only = renderToStaticMarkup(createElement(Dialog, { action: "create", teammate }));
+  assert.match(only, /팀원 인스턴스 사용 중/);
+  assert.deepEqual(lines(only), ["박도윤님이 이 문제 인스턴스를 켜 두어 접속 주소를 같이 쓸 수 있습니다", "따로 켜면 팀 인스턴스를 하나 더 쓰고 재시작·종료는 각자 합니다"]);
+  assert.match(only, />따로 생성</);
+  const both = renderToStaticMarkup(createElement(Dialog, { action: "create", teammate, otherInstance: { challengeTitle: "가을 축제 티켓 발매기" } }));
+  assert.equal(lines(both)[0], "박도윤님이 이 문제 인스턴스를 켜 두어 접속 주소를 같이 쓸 수 있습니다");
+  assert.equal(lines(both).length, 4);
+  assert.match(both, />전환하고 생성</);
+});

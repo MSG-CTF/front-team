@@ -1143,6 +1143,26 @@ test("보드 펼쳐보기에서 검색과 상태 선택을 제공하고 내 인�
   assert.match(hidden, /01번 푼 문제, 해결함 상세 보기/);
 });
 
+test("팀원이 켠 문제 줄에는 팀원 표시를 붙이고 내 인스턴스 줄은 내 상태만 보인다", () => {
+  const challenges = [
+    { challengeId: "mine", title: "내 문제", category: "WEB", isSolved: false },
+    { challengeId: "mate", title: "팀원 문제", category: "PWN", isSolved: false },
+    { challengeId: "free", title: "빈 문제", category: "REV", isSolved: false },
+  ];
+  const instanceInfo = {
+    instance: { challengeId: "mine", status: "RUNNING" },
+    teammates: [{ nickname: "박도윤", challengeId: "mate", status: "RUNNING" }, { nickname: "박도윤", challengeId: "mine", status: "RUNNING" }],
+  };
+  const html = render("OpenChallengesPanel", { challenges, instanceInfo });
+  assert.match(html, /팀원 문제, 박도윤님 인스턴스 실행 중 상세 보기/);
+  assert.match(html, /data-tone="running"><i aria-hidden="true"><\/i>팀원 실행 중<\/span>/);
+  assert.match(html, /내 문제, 내 인스턴스 실행 중 상세 보기/);
+  assert.doesNotMatch(html, /내 문제, 내 인스턴스 실행 중, 박도윤님/);
+  assert.match(html, /빈 문제 상세 보기/);
+  const preparing = render("OpenChallengesPanel", { challenges, instanceInfo: { instance: null, teammates: [{ nickname: "박도윤", challengeId: "mate", status: "PROVISIONING" }] } });
+  assert.match(preparing, /data-tone="busy"><i aria-hidden="true"><\/i>팀원 준비 중<\/span>/);
+});
+
 test("목록 조회 중과 실패를 문제 없음으로 표시하지 않는다", () => {
   for (const props of [{ loading: true }, { error: "목록 확인 실패" }]) {
     const html = render("OpenChallengesPanel", { challenges: [], ...props });

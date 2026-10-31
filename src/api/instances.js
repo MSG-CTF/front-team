@@ -19,6 +19,12 @@ export function getMyInstances(config) {
   return apiClient.get("/teams/me/instances", config);
 }
 
+export function getTeamMemberInstances(config) {
+  // GET /teams/me/member_instances - 본인을 뺀 팀원의 활성 인스턴스 { instances: [{ user_id, nickname, is_leader, instance }] }.
+  // 같은 문제를 팀원이 이미 켰는지 보여 같이 쓰게 하는 참고 정보라 실패해도 화면을 막지 않는다.
+  return apiClient.get("/teams/me/member_instances", config);
+}
+
 export function createInstance({ challengeId, replaceInstanceId }) {
   const body = { challenge_id: challengeId };
   if (replaceInstanceId) body.replace_instance_id = replaceInstanceId;

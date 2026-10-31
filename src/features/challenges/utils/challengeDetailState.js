@@ -22,6 +22,7 @@ export const INITIAL_DETAIL_STATE = {
   challengeData: null,
   instanceData: null,
   otherInstanceData: null,
+  teammateInstanceData: null,
   pageError: null,
   refreshError: null,
   instanceError: null,
