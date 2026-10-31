@@ -79,8 +79,9 @@ export default function OpenChallengesSidePanel({
   // RUNNING 은 README 에서 참가자 문구 대신 접속 정보를 보이는 상태라 패널에서는 "실행 중"으로 쓴다
   const instanceRunning = instance?.status === "RUNNING";
   const instanceLabel = instanceRunning ? "실행 중" : INSTANCE_STATUS_LABEL[instance?.status] || "상태 확인 중";
-  // 실행 중인 문제가 목록에 보이면 그 줄에만 표시하고, 검색이나 필터로 가려졌을 때만 따로 띄운다
-  const instanceInList = instance?.challengeId != null && groups.items.some((challenge) => challenge.challengeId === instance.challengeId);
+  // 내 인스턴스 칸은 확인이 끝나면 늘 목록 위에 두고 한 사람당 1개 중 몇 개를 쓰는지 보인다
+  // 실행 중인 문제 줄에도 상태를 같이 찍어 목록에서 바로 찾게 한다
+  const instanceKnown = Boolean(instance) || (instanceInfo != null && !instanceInfo.loading && !instanceInfo.error);
   const hasTabs = Boolean(children);
   const linesVisible = hasTabs && showLines;
   const firstSolved = view.status === "all" && groups.unsolved.length > 0 ? groups.items.find((challenge) => challenge.isSolved) : null;
@@ -209,11 +210,17 @@ export default function OpenChallengesSidePanel({
             onScroll={(event) => { if (restored.current) saveView({ ...currentView.current, scrollTop: event.currentTarget.scrollTop }); }}>
             {instanceInfo?.loading && !instance && <p className={styles.openNotice} role="status">내 인스턴스 확인 중</p>}
             {instanceInfo?.error && <p className={styles.openNotice}>{instanceInfo.error} <button type="button" onClick={instanceInfo.retry}>다시 확인</button></p>}
-            {instance && !instanceInList && <div className={styles.openInstance}>
-              <span className={styles.openInstanceHead}>내 인스턴스 <InstanceMark running={instanceRunning} label={instanceLabel} /></span>
-              {instance.challengeId != null
-                ? <button type="button" title={instanceTitle} onClick={() => select(instance.challengeId)}><span>{instanceTitle}</span><Chevron /></button>
-                : <strong>{instanceTitle}</strong>}
+            {instanceKnown && <div className={styles.openInstance}>
+              <span className={styles.openInstanceHead}>
+                <span>내 인스턴스 <b className={styles.openInstanceCount} aria-hidden="true">{instance ? 1 : 0}/1</b><span className="sr-only">{instance ? "1개 중 1개 사용" : "1개 중 0개 사용"}</span></span>
+                {instance && <InstanceMark running={instanceRunning} label={instanceLabel} />}
+              </span>
+              {instance
+                ? instance.challengeId != null
+                  ? <button type="button" title={instanceTitle} onClick={() => select(instance.challengeId)}><span>{instanceTitle}</span><Chevron /></button>
+                  : <strong>{instanceTitle}</strong>
+                : <p className={styles.openInstanceNote}>팀장·팀원 각자 1개씩 켤 수 있습니다</p>}
+              {instance && <p className={styles.openInstanceNote}>다른 문제에서 켜면 지금 것은 종료됩니다</p>}
             </div>}
             {error && <p className={styles.openNotice} role="alert">{error}<button type="button" disabled={loading} onClick={onRetry}>다시 불러오기</button></p>}
             {loading && <p className={styles.openNotice} role="status">목록 확인 중</p>}

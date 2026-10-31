@@ -26,6 +26,7 @@ export default function InstanceActionDialog({
     create: {
       title: "인스턴스 전환",
       description: [
+        "인스턴스는 한 사람당 1개만 켤 수 있습니다",
         (otherInstance?.challengeTitle || "다른 문제") +
           "에서 사용 중인 인스턴스를 종료하고 새로 생성합니다",
         "기존 작업 내용은 유지되지 않습니다",

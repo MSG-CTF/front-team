@@ -1109,7 +1109,7 @@ test("보드 목록은 얇은 스크롤을 유지하고 모바일 패널을 이�
   assert.ok(highContrastFallback);
 });
 
-test("보드 펼쳐보기에서 검색과 상태 선택을 제공하고 내 인스턴스는 그 문제 줄에 표시한다", () => {
+test("보드 펼쳐보기에서 검색과 상태 선택을 제공하고 내 인스턴스는 목록 위 칸과 그 문제 줄에 표시한다", () => {
   const challenges = [
     { challengeId: "one", title: "푼 문제", category: "WEB", clubName: "MJSEC", isSolved: true },
     { challengeId: "two", title: "진행할 문제", category: "PWN", clubName: "SWING", isSolved: false },
@@ -1122,10 +1122,21 @@ test("보드 펼쳐보기에서 검색과 상태 선택을 제공하고 내 인�
   assert.match(html, /data-tone="running"><i aria-hidden="true"><\/i>실행 중<\/span>/);
   assert.doesNotMatch(html, /RUNNING/);
   assert.doesNotMatch(html, /01번 푼 문제/);
-  assert.doesNotMatch(html, /내 인스턴스 <span/);
-  // 실행 중인 문제가 필터에 가려지면 목록 위에 바로가기를 따로 띄운다
+  // 목록 위 칸은 한 사람당 1개 중 쓰는 개수와 전환 시 종료를 늘 알린다
+  assert.match(html, /내 인스턴스 <b[^>]*aria-hidden="true">1\/1<\/b><span class="sr-only">1개 중 1개 사용<\/span>/);
+  assert.match(html, /다른 문제에서 켜면 지금 것은 종료됩니다/);
+  // 실행 중인 문제가 필터에 가려져도 목록 위 칸에서 바로 갈 수 있다
   const hidden = render("OpenChallengesPanel", { challenges, initialView: { status: "solved" }, instanceInfo });
-  assert.match(hidden, /내 인스턴스 <span[^>]*data-tone="running"><i aria-hidden="true"><\/i>실행 중<\/span>/);
+  assert.match(hidden, /1개 중 1개 사용<\/span><\/span><span class="[^"]*" data-tone="running"><i aria-hidden="true"><\/i>실행 중<\/span>/);
+  // 아직 켜지 않았으면 0/1과 각자 1개 제한을 보이고, 확인 중이거나 실패하면 칸을 띄우지 않는다
+  const none = render("OpenChallengesPanel", { challenges, instanceInfo: { instance: null } });
+  assert.match(none, /aria-hidden="true">0\/1<\/b>/);
+  assert.match(none, /팀장·팀원 각자 1개씩 켤 수 있습니다/);
+  assert.doesNotMatch(none, /data-tone=/);
+  assert.match(render("OpenChallengesPanel", { challenges, instanceInfo: { instance: null, loading: true } }), /내 인스턴스 확인 중/);
+  for (const info of [{ instance: null, loading: true }, { instance: null, error: "인스턴스 확인 실패" }, undefined]) {
+    assert.doesNotMatch(render("OpenChallengesPanel", { challenges, instanceInfo: info }), /내 인스턴스 <b/);
+  }
   const preparing = render("OpenChallengesPanel", { challenges, instanceInfo: { instance: { challengeId: "two", status: "PROVISIONING" } } });
   assert.match(preparing, /data-tone="busy"><i aria-hidden="true"><\/i>준비 중<\/span>/);
   assert.match(hidden, /<button type="button" title="진행할 문제">/);
