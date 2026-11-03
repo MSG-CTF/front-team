@@ -24,6 +24,7 @@ import { BoardDiceStatusPanel } from "./BoardCountdownPanels.jsx";
 import KothEventBanner from "./KothEventBanner.jsx";
 import OpenChallengesSidePanel, { OpenChallengesToggle } from "./OpenChallengesSidePanel.jsx";
 import "../../../styles/pretendard/tooltip.generated.css";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./BoardScreen.module.css";
 
 const NO_LINES = Object.freeze([]);
@@ -503,7 +504,7 @@ export default function BoardScreen({
 
       {isLoading && (
         <div className={`${styles.loading} absolute inset-0 z-50 grid place-items-center bg-[#2b1609]/35 font-inria-serif text-[1.2cqw] text-[#fff0c4]`}>
-          보드 정보를 불러오는 중입니다
+          <LoadingRing size="page">보드 정보를 불러오는 중입니다</LoadingRing>
         </div>
       )}
 

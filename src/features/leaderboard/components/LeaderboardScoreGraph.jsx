@@ -3,6 +3,7 @@ import { toKst } from "../../../utils/time.js";
 import { buildScoreSeries, niceAxisMax, createChartScales, scoreAtTime, toPolylinePoints } from "../utils/leaderboardChartData.js";
 import { clampRange, zoomRange, rangeFromDrag, tooltipLeft } from "../utils/leaderboardViewport.js";
 import { getScoreGraphLayout } from "../utils/scoreGraphLayout.js";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./LeaderboardScoreGraph.module.css";
 
 const VIEW_WIDTH = 1280;
@@ -187,6 +188,6 @@ export default function LeaderboardScoreGraph({ teams, status }) {
         <strong className={styles.tooltipScore}>{formatScore(scoreAtTime(entry.points, hoverTime))}</strong>
       </p>)}
     </div>}
-    {!hasSeries && <p className={styles.state}>{STATUS_MESSAGE[status] ?? "아직 기록된 점수가 없습니다"}</p>}
+    {!hasSeries && <p className={styles.state}>{status === "loading" ? <LoadingRing>{STATUS_MESSAGE.loading}</LoadingRing> : STATUS_MESSAGE[status] ?? "아직 기록된 점수가 없습니다"}</p>}
   </div>;
 }

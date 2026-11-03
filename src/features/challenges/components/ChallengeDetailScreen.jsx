@@ -12,6 +12,7 @@ import FlagSubmitPanel from "./FlagSubmitPanel.jsx";
 import { formatRemaining } from "../../../utils/time.js";
 import styles from "./ChallengeDetailScene.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 
 export default function ChallengeDetailScreen({
   loading,
@@ -67,7 +68,7 @@ export default function ChallengeDetailScreen({
             <div className={styles.stateBox} role="status" aria-busy="true">
               <div className={styles.skeletonTitle} aria-hidden="true" />
               <div className={styles.skeletonBody} aria-hidden="true" />
-              <p>문제 정보를 불러오는 중입니다</p>
+              <p><LoadingRing>문제 정보를 불러오는 중입니다</LoadingRing></p>
             </div>
           )}
           {pageError && (

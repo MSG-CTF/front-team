@@ -8,6 +8,7 @@ import useStartFinale from "../features/countdown/hooks/useStartFinale.js";
 import { contestGateState, isGatedPath } from "./contestGate.js";
 import { preloadGatedPage } from "./gatedPagePreload.js";
 import { markBoardIntro } from "../features/board/utils/boardIntro.js";
+import LoadingRing from "../components/common/LoadingRing.jsx";
 import styles from "./ContestGate.module.css";
 
 // 시작까지 30초 넘게 남았으면 1분마다 서버 시각을 다시 맞춘다 관리자가 시작 시각을 바꿔도 따라간다
@@ -61,11 +62,11 @@ export default function ContestGate({ role, children }) {
   }, [finalCount]);
 
   if (!gated) return children;
-  if (timer.status === "loading") return <div role="status" className={styles.checking}>대회 시간을 확인하는 중</div>;
+  if (timer.status === "loading") return <div role="status" className={styles.checking}><LoadingRing size="page">대회 시간을 확인하는 중</LoadingRing></div>;
   // 카운트다운과 시작 연출이 같은 자리에 있어야 0초에서 끊기지 않고 이어진다
   // 게임 화면 코드를 받는 동안의 대기는 여기서 받아 시작 연출까지 함께 멈추지 않게 한다
   return <>
-    {!gate.blocked && <Suspense fallback={<div role="status" className={styles.loading}>화면을 불러오는 중</div>}>{children}</Suspense>}
+    {!gate.blocked && <Suspense fallback={<div role="status" className={styles.loading}><LoadingRing size="page">화면을 불러오는 중</LoadingRing></div>}>{children}</Suspense>}
     {(gate.blocked || finale) && <ContestCountdown targetTime={gate.startTime ?? timer.data?.start_time} secondsLeft={gate.blocked ? gate.secondsLeft : 0} overlay={!gate.blocked} />}
   </>;
 }

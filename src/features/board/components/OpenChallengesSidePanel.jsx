@@ -4,6 +4,7 @@ import useMobileBoardOverlay from "../hooks/useMobileBoardOverlay.js";
 import { formatOpenChallengeNumber } from "../utils/boardOverlays.js";
 import { normalizeBoardListView, selectBoardChallenges } from "../utils/boardChallengeList.js";
 import { INSTANCE_STATUS_LABEL } from "../../../constants/enums.js";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./BoardScreen.module.css";
 
 const useBrowserLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
@@ -210,7 +211,7 @@ export default function OpenChallengesSidePanel({
           </div>
           <div key="problems" className={styles.openPanelBody} ref={scrollBody} tabIndex={0} {...tabPanel("problems")}
             onScroll={(event) => { if (restored.current) saveView({ ...currentView.current, scrollTop: event.currentTarget.scrollTop }); }}>
-            {instanceInfo?.loading && !instance && <p className={styles.openNotice} role="status">내 인스턴스 확인 중</p>}
+            {instanceInfo?.loading && !instance && <p className={styles.openNotice} role="status"><LoadingRing>내 인스턴스 확인 중</LoadingRing></p>}
             {instanceInfo?.error && <p className={styles.openNotice}>{instanceInfo.error} <button type="button" onClick={instanceInfo.retry}>다시 확인</button></p>}
             {instanceKnown && <div className={styles.openInstance}>
               <span className={styles.openInstanceHead}>
@@ -225,7 +226,7 @@ export default function OpenChallengesSidePanel({
               {instance && <p className={styles.openInstanceNote}>다른 문제에서 켜면 지금 것은 종료됩니다</p>}
             </div>}
             {error && <p className={styles.openNotice} role="alert">{error}<button type="button" disabled={loading} onClick={onRetry}>다시 불러오기</button></p>}
-            {loading && <p className={styles.openNotice} role="status">목록 확인 중</p>}
+            {loading && <p className={styles.openNotice} role="status"><LoadingRing>목록 확인 중</LoadingRing></p>}
             <ol className={styles.openChallengeList}>
               {groups.items.map((challenge) => {
                 const number = formatOpenChallengeNumber(challenge.openedNumber - 1);
