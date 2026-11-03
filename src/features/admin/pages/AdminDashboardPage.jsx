@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StatusSymbol } from "../components/AdminGlyph.jsx";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import { Link } from "react-router-dom";
 import {
   activateChallengeRelease,
@@ -117,7 +118,9 @@ function AttentionInstances({ instances, onChanged, className = "" }) {
       {notice && <p role="alert" className={ui.callout} data-tone="bad">{notice}</p>}
       <div className={ui.formActions}>
         <button type="button" onClick={() => setConfirm(null)} disabled={Boolean(busyId)} className={ui.button}>취소</button>
-        <button type="button" onClick={() => stop(confirm)} disabled={Boolean(busyId)} className={ui.dangerSolid}>{canRetryCleanup(confirm) ? CLEANUP_RETRY.action : "종료 실행"}</button>
+        <button type="button" onClick={() => stop(confirm)} disabled={Boolean(busyId)} className={ui.dangerSolid}>{busyId
+          ? <LoadingRing>{canRetryCleanup(confirm) ? "정리 요청 중" : "종료 요청 중"}</LoadingRing>
+          : canRetryCleanup(confirm) ? CLEANUP_RETRY.action : "종료 실행"}</button>
       </div>
     </Modal>}
   </Widget>;
