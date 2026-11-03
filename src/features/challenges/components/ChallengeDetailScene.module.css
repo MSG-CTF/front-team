@@ -1318,24 +1318,22 @@
   position: relative;
   display: grid;
   justify-items: center;
-  gap: 12px;
-  width: min(480px, 100%);
+  gap: 8px;
+  width: min(440px, 100%);
   max-height: calc(100dvh - 32px);
-  padding: 40px 28px 28px;
-  border: 3px double var(--line);
-  border-radius: 8px;
-  background: #e8cd9f;
+  padding: 36px 56px 20px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   color: var(--brown);
   text-align: center;
-  box-shadow: 0 20px 60px #160d0c80;
-  overflow: auto;
+  overflow: hidden;
 }
 .resultModalSuccess {
-  border: 0;
   background: url("/assets/challenge-detail/panel-result-correct.webp") center / 100% 100% no-repeat;
 }
 .resultModalError {
-  border-color: #b6573f;
+  background: url("/assets/challenge-detail/panel-result-error.webp") center / 100% 100% no-repeat;
 }
 .resultEyebrow {
   margin: 0;
@@ -1374,25 +1372,40 @@
   color: #8a4e12;
 }
 .resultModal .primaryButton {
-  margin-top: 8px;
-  min-width: 120px;
+  margin-top: 0;
+  width: 154px;
+  height: 62px;
+  min-height: auto;
+  min-width: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: url("/assets/challenge-detail/btn-confirm.webp") center / 100% 100% no-repeat;
+  box-shadow: none;
+  color: #ede0c7;
+  font-size: 16px;
+  letter-spacing: 0.15em;
+}
+.resultModal .primaryButton:hover:not(:disabled) {
+  background: url("/assets/challenge-detail/btn-confirm.webp") center / 100% 100% no-repeat;
+  filter: brightness(1.1);
 }
 .resultClose {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: 12px;
+  right: 16px;
   width: 44px;
   height: 44px;
-  border: 0;
-  border-radius: 6px;
+  border: 2px solid #b5651d;
+  border-radius: 10px;
   background: transparent;
-  color: var(--brown);
-  font-size: 30px;
+  color: #5a3a1e;
+  font-size: 24px;
   line-height: 1;
   cursor: pointer;
 }
 .resultClose:hover {
-  background: #0000001a;
+  background: #b5651d22;
 }
 .refreshNotice {
   display: flex;
