@@ -1396,8 +1396,8 @@
   right: 36px;
   width: 44px;
   height: 44px;
+  padding: 0;
   border: 0;
-  border-radius: 10px;
   background: transparent;
   color: #5a3a1e;
   font-size: 24px;
@@ -1407,7 +1407,7 @@
 .resultClose:hover,
 .resultOverlay .resultModal .resultClose:focus-visible {
   outline: none;
-  background: #b5651d22;
+  color: #2e1c0c;
 }
 .refreshNotice {
   display: flex;
