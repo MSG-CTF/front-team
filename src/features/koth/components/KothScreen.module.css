@@ -291,6 +291,18 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* KoTH 정보를 받는 동안 미리 깐 우표 카드: 아직 누를 수 없어 흐리게 두고 제목 자리만 비춘다 */
+.challengePending {
+  pointer-events: none;
+  opacity: 0.55;
+  text-align: center;
+}
+.captionSkeleton {
+  display: block;
+  width: 62%;
+  height: 0.95em;
+  margin: 0 auto;
+}
 
 /* 문제 시트와 팀 토큰 창은 문제 상세 화면과 같은 재료를 쓴다
    금테 양피지 판(panel-board)을 바탕으로 깔고, 안쪽 판은 플래그 판(panel-flag)의 깎인 모서리 금테를,

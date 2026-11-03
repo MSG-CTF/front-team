@@ -5,6 +5,7 @@ import { formatOpenChallengeNumber } from "../utils/boardOverlays.js";
 import { normalizeBoardListView, selectBoardChallenges } from "../utils/boardChallengeList.js";
 import { INSTANCE_STATUS_LABEL } from "../../../constants/enums.js";
 import LoadingRing from "../../../components/common/LoadingRing.jsx";
+import SkeletonBar from "../../../components/common/SkeletonBar.jsx";
 import styles from "./BoardScreen.module.css";
 
 const useBrowserLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
@@ -75,6 +76,8 @@ export default function OpenChallengesSidePanel({
   const groups = useMemo(() => selectBoardChallenges(challenges, view, instance?.challengeId), [challenges, view, instance?.challengeId]);
   const solvedCount = challenges.filter((challenge) => challenge.isSolved).length;
   const statusTabs = [["all", "전체", challenges.length], ["unsolved", "미해결", challenges.length - solvedCount], ["solved", "완료", solvedCount]];
+  // 처음 목록을 받는 동안은 0개처럼 보이지 않게 숫자 자리를 막대로 둔다
+  const countsPending = loading && challenges.length === 0;
   const activeChallenge = challenges.find((challenge) => challenge.challengeId === instance?.challengeId);
   const instanceTitle = activeChallenge?.title || instance?.challengeTitle;
   // RUNNING 은 README 에서 참가자 문구 대신 접속 정보를 보이는 상태라 패널에서는 "실행 중"으로 쓴다
@@ -206,7 +209,7 @@ export default function OpenChallengesSidePanel({
             </div>
             <div className={styles.openStatusTabs} role="group" aria-label="풀이 상태">
               {statusTabs.map(([value, text, count]) => <button key={value} type="button" aria-pressed={view.status === value}
-                onClick={() => changeFilter({ status: value })}>{text} <span>{count}</span></button>)}
+                onClick={() => changeFilter({ status: value })}>{text} <span>{countsPending ? <SkeletonBar className={styles.openCountSkeleton} /> : count}</span></button>)}
             </div>
           </div>
           <div key="problems" className={styles.openPanelBody} ref={scrollBody} tabIndex={0} {...tabPanel("problems")}

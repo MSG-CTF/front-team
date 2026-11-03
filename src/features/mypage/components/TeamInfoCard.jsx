@@ -2,6 +2,7 @@ import { useId, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { formatNumber } from "../utils/myPageData.js";
 import LoadingRing from "../../../components/common/LoadingRing.jsx";
+import SkeletonBar from "../../../components/common/SkeletonBar.jsx";
 import styles from "./MyPageScene.module.css";
 
 function QrSlot({ qrState, onIssueQr, qrDisabled }) {
@@ -70,8 +71,9 @@ const CARD_MEMBER_ROWS = 2;
 export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQr, qrDisabled }) {
   const membersId = useId();
   const [showAllMembers, setShowAllMembers] = useState(false);
+  // 프로필을 받는 동안은 "LOADING"이 팀 이름처럼 보이지 않게 이름과 팀원 자리를 막대로 둔다
+  const loading = profile.status === "loading";
   let teamName = profile.data?.teamName || "-";
-  if (profile.status === "loading") teamName = "LOADING";
   if (profile.status === "error") teamName = "UNAVAILABLE";
   if (profile.status === "noTeam") teamName = "NO TEAM";
   const members = profile.status === "success" ? profile.data.members ?? [] : [];
@@ -79,11 +81,21 @@ export default function TeamInfoCard({ profile, memberRanking, qrState, onIssueQ
   return (
     <section className={styles.teamCard} aria-label="팀 정보">
       <p className={styles.bakedLabel}>TEAM</p>
-      <h1 className={styles.teamName} title={teamName}>{teamName}</h1>
+      {loading ? (
+        <h1 className={styles.teamName}>
+          <SkeletonBar className={styles.teamNameSkeleton} />
+          <span className={styles.srOnly}>팀 정보를 불러오는 중</span>
+        </h1>
+      ) : (
+        <h1 className={styles.teamName} title={teamName}>{teamName}</h1>
+      )}
       <QrSlot qrState={qrState} onIssueQr={onIssueQr} qrDisabled={qrDisabled} />
       <h2 className={styles.srOnly}>MEMBERS</h2>
       <div className={styles.membersRegion}>
         <ul id={membersId} className={styles.members} data-expanded={showAllMembers || undefined}>
+          {loading && Array.from({ length: CARD_MEMBER_ROWS }, (_, index) => (
+            <li key={`pending-${index}`} aria-hidden="true"><SkeletonBar className={styles.memberSkeleton} /></li>
+          ))}
           {members.map((member, index) => (
             <li key={member + index} title={member}>{member}</li>
           ))}

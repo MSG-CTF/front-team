@@ -2,6 +2,7 @@ import { Fragment } from "react";
 import { formatRemaining } from "../../../utils/time.js";
 import styles from "./BoardScreen.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
+import SkeletonBar from "../../../components/common/SkeletonBar.jsx";
 import { BLOCKED_REASON_MESSAGES } from "../data/boardContent.js";
 
 const COMPACT_MESSAGES = {
@@ -31,6 +32,8 @@ export default function DiceStatusPanel({
   challengeRemainingSeconds,
   // 다음 주사위 충전까지 남은 시간 비율(0~1). 없으면 막대는 가득 찬 채 흐리게 둔다
   progress = null,
+  // 처음 보드를 받는 동안은 0/3처럼 보이지 않게 보유 수 자리를 막대로 둔다
+  loading = false,
 }) {
   const rechargeVisible = rollsLeft < maxRolls && resetInSeconds != null;
   const statusLabel =
@@ -44,7 +47,7 @@ export default function DiceStatusPanel({
       className={`${styles.diceStatus} absolute left-[1.35%] top-0 w-[19.69%] h-[20.65%]`}
       role="status"
       data-roll-ready={canRoll && !blockedMessage}
-      aria-label={`주사위 보유 ${rollsLeft}/${maxRolls}. ${statusLabel}${rechargeVisible ? `, 충전까지 ${formatRemaining(resetInSeconds)}` : ""}${challengeRemainingSeconds == null ? "" : `, 문제 제한 ${formatRemaining(challengeRemainingSeconds)}`}`}
+      aria-label={loading ? "주사위 보유 확인 중" : `주사위 보유 ${rollsLeft}/${maxRolls}. ${statusLabel}${rechargeVisible ? `, 충전까지 ${formatRemaining(resetInSeconds)}` : ""}${challengeRemainingSeconds == null ? "" : `, 문제 제한 ${formatRemaining(challengeRemainingSeconds)}`}`}
     >
       <PanelTexture />
       <img src="/assets/board/dice.webp" className={styles.mobileDiceIcon} alt="" aria-hidden="true" />
@@ -63,7 +66,7 @@ export default function DiceStatusPanel({
 
       <div className={`${styles.diceReadout} absolute left-[12.5%] top-[45%] z-10 w-[77%] font-inria-serif text-[#f8ead0]`}>
         <div className={styles.diceCountRow}>
-          <span>주사위 <strong>{rollsLeft}/{maxRolls}</strong></span>
+          <span>주사위 <strong>{loading ? <SkeletonBar className={styles.diceCountSkeleton} /> : `${rollsLeft}/${maxRolls}`}</strong></span>
           {rechargeVisible && <span>충전까지 <strong><Countdown seconds={resetInSeconds} /></strong></span>}
         </div>
       </div>

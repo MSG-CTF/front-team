@@ -48,7 +48,8 @@ export default function LeaderboardScreen({
               <LeaderboardChart teams={teams} status={leaderboardStatus} />
               <section className={styles.rankingPanel} aria-label="팀 순위">
                 <RankingToolbar page={page} pageCount={pageCount} onPageChange={onPageChange}
-                  refreshing={refreshing} updatedAt={updatedAt} onRefresh={onRefresh} />
+                  refreshing={refreshing} updatedAt={updatedAt} onRefresh={onRefresh}
+                  loading={rankingStatus === "loading" && !rankings.length} />
                 <p className={styles.mobileTableHint}>좌우로 밀어 모든 분야의 점수를 확인하세요</p>
                 <RankingTable rankings={rankings} status={rankingStatus} />
               </section>

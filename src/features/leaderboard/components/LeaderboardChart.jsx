@@ -28,8 +28,8 @@ function getLegendTextBoxes(teamCount) {
   }));
 }
 
+// 받는 중 안내는 같은 화면의 점수 그래프와 순위표가 링과 함께 보이므로 범례에는 다시 띄우지 않는다
 const STATUS_MESSAGE = {
-  loading: "순위를 불러오는 중입니다",
   empty: "아직 등록된 팀이 없습니다",
   error: "팀 점수를 불러오지 못했습니다",
 };
