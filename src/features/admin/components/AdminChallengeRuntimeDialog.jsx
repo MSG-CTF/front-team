@@ -121,7 +121,8 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
   const [saving, setBusy] = useState(false);
   const [testBusy, setTestBusy] = useState(false);
   const [preparationBusy, setPreparationBusy] = useState(false);
-  const busy = saving || testBusy || preparationBusy;
+  const [filesBusy, setFilesBusy] = useState(false);
+  const busy = saving || testBusy || preparationBusy || filesBusy;
   useEffect(() => { onBusyChange?.(busy); }, [busy, onBusyChange]);
   const [confirming, setConfirming] = useState(false);
   const [activationReason, setActivationReason] = useState("");
@@ -464,7 +465,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
           <strong>{challenge.remote_run ? "원격 실행 문제는 실행 이미지를 쓰지 않습니다" : "실행 이미지가 없습니다"}</strong>
           <p>{challenge.remote_run
             ? "참가자 파일만 여기서 확인하고, 검증 VM 설정은 원격 실행 탭에서 바꿔주세요"
-            : "파일만 제공하는 문제는 수집된 ZIP을 확인하고, 실행 환경이 필요하면 이미지를 등록해주세요"}</p>
+            : "파일만 제공하는 문제는 참가자 파일에서 줄 ZIP을 확인하고 고정할 수 있습니다 실행 환경이 필요하면 이미지를 등록해주세요"}</p>
           <div className={styles.emptyActions}>
             <button type="button" className={BUTTON} onClick={() => setPanel("files")}>참가자 파일 보기</button>
             {!challenge.remote_run && <button type="button" className={styles.primary} onClick={() => setPanel("image")}>이미지 등록</button>}
@@ -483,7 +484,7 @@ export default function AdminChallengeRuntimeDialog({ challenge, onClose, embedd
       <section role="tabpanel" id="runtime-settings-panel-files" aria-labelledby="runtime-settings-tab-files" hidden={panel !== "files"} className={styles.panel}>
         {panel === "files" && selected?.user_files && <AdminReleaseFilesEditor key={selected.release_id} challengeId={challenge.challenge_id} release={selected} busy={busy} onSave={saveReleaseFiles}/>}
         {panel === "files" && selected && <RepositoryFilesDetails challengeId={challenge.challenge_id}/>}
-        {panel === "files" && !selected && <AdminCollectedFilesPanel challengeId={challenge.challenge_id}/>}
+        {panel === "files" && !selected && <AdminCollectedFilesPanel challengeId={challenge.challenge_id} challengeSlug={challenge.challenge_slug} onBusyChange={setFilesBusy}/>}
       </section>
 
       <section role="tabpanel" id="runtime-settings-panel-environment" aria-labelledby="runtime-settings-tab-environment" hidden={panel !== "environment"} className={styles.panel}>

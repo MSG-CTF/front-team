@@ -4,6 +4,7 @@ import { isSuccess } from "../../../utils/response.js";
 import useAdminResource from "../hooks/useAdminResource.js";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
 import { challengeDetailsDraft, challengeDetailsChanges, challengeScoresValid, formatFileSize } from "../utils/adminChallengeSettings.js";
+import { isStaticFileChoice } from "../utils/adminStaticFiles.js";
 import { formatAdminTime } from "../utils/adminTime.js";
 import AdminFileDownloadButton from "./AdminFileDownloadButton.jsx";
 import AdminDialog from "./AdminDialog.jsx";
@@ -128,6 +129,7 @@ function ParticipantFileCard({ challengeId, onOpenFiles }) {
       {file ? <>
         <p className={styles.fileCardName}><strong>{file.file_name}</strong><span>{file.file_count}개 · {formatFileSize(file.file_size)}</span></p>
         <p className={styles.helpText}>{[data.release_version && `배포 v${data.release_version}`, file.registry_revision && `발행 #${file.registry_revision}`,
+          isStaticFileChoice(data) && (data.mode === "SELECTED" ? "고정" : "최신 자동"),
           file.created_at && `${formatAdminTime(file.created_at, { seconds: false })} 수집`].filter(Boolean).join(" · ")}</p>
       </> : data && <p className={styles.helpText}>{FILE_STATUS[data.status] ?? "파일 정보를 확인해주세요"}</p>}
     </div>
