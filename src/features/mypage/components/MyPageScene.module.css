@@ -454,6 +454,12 @@
   line-height: 1.5;
 }
 .breakdown > span { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+/* 프로필을 받는 동안 팀 이름·팀원·점수 자리를 채우는 막대 크기 */
+.teamNameSkeleton { width: 5.5em; height: 0.72em; }
+.memberSkeleton { width: 7em; height: 0.75em; }
+.metricSkeleton { width: 2.6em; height: 0.62em; }
+.breakdownSkeleton { width: 2.2em; height: 0.9em; }
+.rankSkeleton { width: 1.4em; height: 0.75em; }
 .breakdown > span:not(:last-child)::after { content: " ·"; }
 .historyNote { margin: 0; color: var(--brown-soft); font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; }
 

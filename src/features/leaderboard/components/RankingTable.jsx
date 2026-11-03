@@ -1,5 +1,5 @@
 import LeaderboardArtworkSymbol, { RANK_ARTWORK } from "./LeaderboardArtworkSymbol.jsx";
-import LoadingRing from "../../../components/common/LoadingRing.jsx";
+import SkeletonBar from "../../../components/common/SkeletonBar.jsx";
 import styles from "./LeaderboardScreen.module.css";
 
 const CATEGORIES = ["MISC", "WEB", "FOR", "REV", "PWN", "CRY", "OSINT", "WEB3"];
@@ -15,6 +15,23 @@ const COLUMNS = [
 ];
 const STATUS = { loading: "순위를 불러오는 중", empty: "아직 등록된 팀이 없습니다", error: "순위를 불러오지 못했습니다" };
 const formatValue = (value) => value == null ? "-" : new Intl.NumberFormat("ko-KR", { maximumFractionDigits: 2 }).format(value);
+// 처음 순위를 받는 동안 보이는 여섯 줄의 팀 이름 막대 길이 실제 이름처럼 들쭉날쭉하게 둔다
+const PENDING_TEAM_WIDTHS = ["72%", "56%", "66%", "48%", "62%", "52%"];
+
+// 순위가 오기 전에는 실제 줄과 같은 칸에 막대를 깐다 표 모양이 먼저 보이고 다 받으면 같은 자리가 채워진다
+function PendingRow({ teamWidth }) {
+  return <tr role="row" aria-hidden="true" data-pending-row>
+    <td className={styles.rankCell} role="cell"><SkeletonBar className={styles.rankSkeleton} /></td>
+    <th scope="row" role="rowheader" className={styles.teamNameCell}>
+      <span className={styles.cellValue}><SkeletonBar style={{ width: teamWidth }} /></span>
+    </th>
+    {COLUMNS.slice(2).map((column, index) => <td key={column.key} data-column={column.key} role="cell"
+      className={index === 0 ? styles.pointCell : undefined}>
+      <span className={styles.mobileCellLabel} aria-hidden="true">{column.label}</span>
+      <span className={styles.cellValue}><SkeletonBar className={styles.valueSkeleton} /></span>
+    </td>)}
+  </tr>;
+}
 
 export default function RankingTable({ rankings, status }) {
   return <div className={styles.tableContainer} tabIndex={0} role="region" aria-label="팀 순위표">
@@ -41,7 +58,8 @@ export default function RankingTable({ rankings, status }) {
             <span className={styles.cellValue}>{formatValue(value)}</span>
           </td>)}
         </tr>)}
-        {!rankings.length && <tr><td colSpan={COLUMNS.length} className={styles.tableState}>{status === "loading" ? <LoadingRing>{STATUS.loading}</LoadingRing> : STATUS[status] ?? "아직 등록된 팀이 없습니다"}</td></tr>}
+        {!rankings.length && status === "loading" && PENDING_TEAM_WIDTHS.map((width, index) => <PendingRow key={index} teamWidth={width} />)}
+        {!rankings.length && status !== "loading" && <tr><td colSpan={COLUMNS.length} className={styles.tableState}>{STATUS[status] ?? "아직 등록된 팀이 없습니다"}</td></tr>}
       </tbody>
     </table>
   </div>;

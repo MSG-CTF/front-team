@@ -37,9 +37,11 @@ test("링은 스크린리더에 읽히지 않고 문구는 그대로 남는다",
 });
 
 test("오래 걸릴 수 있는 로딩 상태에만 링이 붙는다", () => {
+  // 순위표는 링 한 줄 대신 실제 줄 모양 막대를 깔고, 받는 중 안내는 화면의 읽기 전용 알림이 맡는다
   const ranking = render(components.RankingTable, { rankings: [], status: "loading" });
-  assert.match(ranking, new RegExp(`${RING.source}순위를 불러오는 중`));
-  assert.doesNotMatch(render(components.RankingTable, { rankings: [], status: "error" }), RING);
+  assert.equal((ranking.match(/data-pending-row/g) ?? []).length, 6);
+  assert.doesNotMatch(ranking, RING);
+  assert.doesNotMatch(render(components.RankingTable, { rankings: [], status: "error" }), /data-pending-row|data-skeleton/);
   assert.match(render(components.ScoreGraph, { teams: [], status: "loading" }), new RegExp(`${RING.source}점수를 불러오는 중`));
   assert.doesNotMatch(render(components.ScoreGraph, { teams: [], status: "empty" }), RING);
   assert.match(render(components.MileageHistory, { state: { status: "loading", data: null } }), new RegExp(`${RING.source}LOADING\\.\\.\\.`));

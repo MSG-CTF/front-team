@@ -17,6 +17,10 @@
 .diceReadout { display: grid; gap: 0.2cqw; top: 43%; width: 77.5%; padding-block: 0; font-size: clamp(12px, 0.72cqw, 14px); line-height: 1.4; }
 .diceCountRow { display: flex; align-items: center; justify-content: space-between; gap: 0.3cqw; white-space: nowrap; }
 .diceReadout strong { font-variant-numeric: tabular-nums; }
+/* 처음 보드와 열린 문제를 받는 동안 숫자·카드 자리를 채우는 막대 크기 */
+.diceCountSkeleton { width: 1.9em; height: 0.72em; }
+.chanceSkeleton { width: 62%; height: 0.9em; }
+.openCountSkeleton { width: 1em; height: 0.75em; }
 .diceChallengeRow { color: #e7c68f; text-align: right; font-size: clamp(11px, 0.66cqw, 14px); line-height: 1.4; white-space: nowrap; }
 .diceChallengeRow strong { font-variant-numeric: tabular-nums; }
 .diceStatusMessage { top: 55%; left: 12.5%; width: 77.5%; font-size: clamp(11px, 0.58cqw, 12px); line-height: 1.2; }

@@ -207,6 +207,7 @@
   border: 0; color: #684322; background: transparent; font: inherit; cursor: pointer;
 }
 .pagination button[aria-current="page"] { color: #863b0c; font-weight: 700; box-shadow: inset 0 -2px #8d4f1c; }
+.pagination[data-pending] { visibility: hidden; }
 .pagination button:hover:not(:disabled), .refreshControls button:hover:not(:disabled) { background: rgb(126 77 30 / 9%); }
 .pagination button:focus-visible, .refreshControls button:focus-visible { outline: 2px solid #8d4f1c; outline-offset: -2px; }
 .pagination button:disabled, .refreshControls button:disabled { opacity: 0.35; cursor: not-allowed; }
@@ -232,6 +233,9 @@
 .cellValue:focus-visible { outline: 1px solid #8d4f1c; outline-offset: 2px; }
 .pointCell { color: #985608; font-weight: 600; }
 .rankingGrid .rankCell { padding: 0; font-size: 25px; color: #704823; }
+/* 처음 순위를 받는 동안 줄 모양 막대 크기 */
+.rankingGrid .rankSkeleton { width: 0.9em; height: 0.7em; }
+.valueSkeleton { width: 1.8em; height: 0.8em; }
 .rankArtwork { display: block; width: 54px; height: 40px; margin: 0 auto; }
 .rankingGrid .tableState { height: 240px; color: #745436; font-size: 20px; border: 0; }
 
@@ -313,6 +317,8 @@
   /* 첫 줄은 순위·팀·점수, 그 아래 분야별 점수를 네 칸씩 */
   .rankingGrid tbody tr { display: grid; grid-template-columns: 44px repeat(3, minmax(0, 1fr)); gap: 8px 10px; align-items: center; height: auto; padding: 12px 0 14px; border-bottom: 1px solid rgb(145 92 43 / 24%); }
   .rankingGrid tbody tr:last-child { border-bottom: 0; }
+  /* 팀마다 카드가 길어 받는 중에는 세 장만 깔고 나머지는 다 받은 뒤에 보인다 */
+  .rankingGrid tbody tr[data-pending-row]:nth-child(n + 4) { display: none; }
   .rankingGrid tbody th, .rankingGrid tbody td { display: block; min-width: 0; padding: 0; border: 0; text-align: left; }
   /* 순위 칸이 왼쪽 세로줄을 다 차지해 분야 점수는 팀 이름 아래 세 칸씩 정렬된다 */
   .rankingGrid tbody .rankCell { grid-column: 1; grid-row: 1 / span 5; align-self: start; font-size: 20px; }

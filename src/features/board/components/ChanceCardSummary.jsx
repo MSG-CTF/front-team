@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { chanceCardKey } from "../utils/boardData.js";
+import SkeletonBar from "../../../components/common/SkeletonBar.jsx";
 import styles from "./BoardScreen.module.css";
 
 const OFFSET_OPTIONS = [-3, -2, -1, 1, 2, 3];
@@ -13,6 +14,8 @@ export default function ChanceCardSummary({
   awaitingDiscard,
   pendingConfirm,
   onUseCard,
+  // 처음 보드를 받는 동안은 "찬스카드 없음" 대신 카드 줄 자리를 막대로 둔다
+  loading = false,
 }) {
   const availableDestinations = useMemo(
     () =>
@@ -56,9 +59,14 @@ export default function ChanceCardSummary({
           카드 한 장을 먼저 폐기해주세요
         </p>
       )}
-      {cards.length === 0 && (
+      {cards.length === 0 && (loading ? (
+        <p className="m-0 mt-[0.25cqw] text-[0.56cqw]">
+          <SkeletonBar className={styles.chanceSkeleton} />
+          <span className="sr-only">찬스카드 확인 중</span>
+        </p>
+      ) : (
         <p className="m-0 mt-[0.25cqw] text-[0.56cqw] opacity-60">찬스카드 없음</p>
-      )}
+      ))}
       <ul className="m-0 mt-[0.25cqw] list-none space-y-[0.32cqw] p-0">
         {cards.map((card) => {
           const showPostRollAction =

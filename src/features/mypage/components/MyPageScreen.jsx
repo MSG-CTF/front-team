@@ -6,9 +6,11 @@ import SolveHistoryTable from "./SolveHistoryTable.jsx";
 import TeamInfoCard from "./TeamInfoCard.jsx";
 import styles from "./MyPageScene.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
+import SkeletonBar from "../../../components/common/SkeletonBar.jsx";
 
+// 프로필을 받는 동안 점수·마일리지 숫자 자리는 멈춘 점 대신 막대로 둔다
 function profileText(state, field) {
-  if (state.status === "loading") return "…";
+  if (state.status === "loading") return <SkeletonBar className={styles.metricSkeleton} />;
   if (state.status === "error") return "-";
   return state.status === "success" ? formatNumber(state.data[field]) : "-";
 }
@@ -43,6 +45,8 @@ export default function MyPageScreen({
 }) {
   const navigate = useNavigate();
   const profileData = profile.status === "success" ? profile.data : {};
+  const profileLoading = profile.status === "loading";
+  const scorePart = (field) => profileLoading ? <SkeletonBar className={styles.breakdownSkeleton} /> : formatNumber(profileData[field]);
   const status = statusMessage({ profileData, noTeam: profile.status === "noTeam", hasScore: profile.status === "success", scoreRefreshError, refreshError, logoutError });
   return (
     <div className={styles.page}>
@@ -87,13 +91,13 @@ export default function MyPageScreen({
             <h2 className={styles.bakedLabel}>CURRENT SCORE</h2>
             <p className={styles.metricValue}>{profileText(profile, "score")}</p>
             <p className={styles.breakdown}>
-              <span>JEOPARDY {formatNumber(profileData.jeopardyScore)}</span>
-              <span>KoTH {formatNumber(profileData.kothScore)}</span>
-              <span>SIGNATURE {formatNumber(profileData.signatureScore)}</span>
-              <span>LINE {formatNumber(profileData.lineScore)}</span>
+              <span>JEOPARDY {scorePart("jeopardyScore")}</span>
+              <span>KoTH {scorePart("kothScore")}</span>
+              <span>SIGNATURE {scorePart("signatureScore")}</span>
+              <span>LINE {scorePart("lineScore")}</span>
             </p>
             <p className={styles.rank}>
-              RANK<strong>{profile.status === "success" ? formatNumber(profileData.rank) : "-"}</strong>
+              RANK<strong>{profileLoading ? <SkeletonBar className={styles.rankSkeleton} /> : profile.status === "success" ? formatNumber(profileData.rank) : "-"}</strong>
             </p>
           </section>
           <section className={`${styles.metricPanel} ${styles.mileagePanel}`} aria-label="마일리지 잔액">

@@ -2,10 +2,11 @@ import { toKst } from "../../../utils/time.js";
 import { rankingPageWindow } from "../utils/leaderboardViewport.js";
 import styles from "./LeaderboardScreen.module.css";
 
-export default function RankingToolbar({ page, pageCount, onPageChange, refreshing, updatedAt, onRefresh }) {
+export default function RankingToolbar({ page, pageCount, onPageChange, refreshing, updatedAt, onRefresh, loading = false }) {
   return <div className={styles.rankingToolbar}>
     <span className={styles.rankingTitle}>TEAM RANKING</span>
-    <nav className={styles.pagination} aria-label="순위 페이지">
+    {/* 처음 순위를 받기 전에는 "1 / 1"이 먼저 보이지 않게 자리만 지키고 숨긴다 */}
+    <nav className={styles.pagination} aria-label="순위 페이지" data-pending={loading || undefined}>
       {pageCount > 5 && <button type="button" onClick={() => onPageChange(1)} disabled={refreshing || page === 1} aria-label="첫 페이지">«</button>}
       <button type="button" onClick={() => onPageChange(page - 1)} disabled={refreshing || page <= 1} aria-label="이전 순위 페이지">‹ 이전</button>
       {rankingPageWindow(page, pageCount).map((number) => <button type="button" key={number}

@@ -1,0 +1,26 @@
+.bar {
+  display: inline-block;
+  width: 3em;
+  max-width: 100%;
+  height: 0.8em;
+  border-radius: 4px;
+  vertical-align: middle;
+  /* color-mix 를 못 쓰는 브라우저에서도 자리는 보이게 둔다 */
+  background: rgb(128 104 80 / 22%);
+  background: linear-gradient(100deg,
+      color-mix(in srgb, currentColor 18%, transparent) 40%,
+      rgb(255 246 226 / 45%) 50%,
+      color-mix(in srgb, currentColor 18%, transparent) 60%)
+    0 0 / 300% 100%;
+  animation: skeleton-bar-gleam 1.6s ease-in-out infinite;
+}
+@keyframes skeleton-bar-gleam {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+/* 움직임을 줄인 화면에서는 빛이 지나가지 않는다 */
+@media (prefers-reduced-motion: reduce) {
+  .bar {
+    animation: none;
+  }
+}

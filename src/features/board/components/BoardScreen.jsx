@@ -409,10 +409,12 @@ export default function BoardScreen({
         blockedMessage={blockedMessage}
         diceStatus={diceStatus}
         activeChallenge={myBoard?.activeChallenge}
+        loading={isLoading && diceStatus == null}
       />
 
       <ChanceCardSummary
         cards={ownedChanceCards}
+        loading={isLoading && myBoard == null}
         isObscured={isOpenListVisible}
         cells={cells}
         consumedCellIndexes={myBoard?.consumedCellIndexes ?? []}
