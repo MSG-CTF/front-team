@@ -382,8 +382,9 @@
   width: 1.35em;
   font-variant-numeric: tabular-nums;
 }
+/* 남은 시간 단위(DAYS·HOURS…)도 다른 작은 글자처럼 11px 아래로 내려가지 않는다 */
 .msg-intro .countdown-clock small {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.13em;
   color: #e0d3bf;
 }
@@ -2023,7 +2024,7 @@
     gap: 7px;
   }
   .msg-intro .countdown-caption {
-    font-size: 10px;
+    font-size: 11px;
   }
   .msg-intro .countdown-day > span:first-child {
     font-size: 58px;
@@ -2046,7 +2047,7 @@
     font-size: 35px;
   }
   .msg-intro .countdown-clock small {
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: 0.08em;
   }
   .msg-intro .countdown-message {

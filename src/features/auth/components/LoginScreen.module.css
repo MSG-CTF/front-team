@@ -36,15 +36,28 @@
   min-width: 0;
 }
 
+/* 밝은 하늘이 뒤에 오는 폰에서도 읽히도록 다른 화면의 뒤로가기 단추처럼 어두운 반투명 바탕과 금테를 깐다
+   보이는 판은 36px, 누르는 자리는 ::before 로 44px 을 지킨다 */
 .backLink {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 44px;
+  min-height: 36px;
+  padding: 0 14px 0 11px;
+  border: 1px solid #ae7c4280;
+  border-radius: 999px;
+  background: rgb(33 21 13 / 60%);
   color: #fff0d5;
   font-size: 15px;
   text-decoration: none;
-  text-shadow: 0 1px 4px #21150d;
+  text-shadow: 0 1px 2px #21150d;
+}
+
+.backLink::before {
+  content: "";
+  position: absolute;
+  inset: -4px 0;
 }
 
 .backLink svg {
