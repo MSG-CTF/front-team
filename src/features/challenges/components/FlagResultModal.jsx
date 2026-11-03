@@ -40,7 +40,7 @@ export default function FlagResultModal({ feedback, onClose }) {
         </button>
         <p className={styles.resultEyebrow}>{isError ? "WRONG" : "CORRECT"}</p>
         <h2 id="flag-result-title" className={styles.resultTitle}>
-          {isError ? "오답입니다" : "정답입니다"}
+          {isError ? "오답입니다" : "🎉 정답입니다 🎉"}
         </h2>
         <p className={styles.resultMessage}>{feedback.message}</p>
         {!isError && data && (

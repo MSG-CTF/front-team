@@ -1331,7 +1331,8 @@
   overflow: auto;
 }
 .resultModalSuccess {
-  border-color: #4f7d3a;
+  border: 0;
+  background: url("/assets/challenge-detail/panel-result-correct.webp") center / 100% 100% no-repeat;
 }
 .resultModalError {
   border-color: #b6573f;
