@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { downloadAdminKothFiles, startAdminKothPreview } from "../../../api/admin.js";
 import { ROUTES } from "../../../routes/routePaths.js";
 import usePageResources from "../../../routes/usePageResources.js";
+import { useAuthenticatedUser } from "../../../routes/AuthenticatedRoute.jsx";
 import KothScreen from "../../koth/components/KothScreen.jsx";
 import { useKothData, useKothLeaderboard, useKothTeamToken } from "../../koth/hooks/useKothData.js";
 import { KOTH_CHALLENGE_VISUALS } from "../../koth/config/kothVisualConfig.js";
@@ -25,7 +26,9 @@ export default function AdminKothPreviewPage() {
   const { kothChallengeId } = useParams();
   const navigate = useNavigate();
   const list = useAdminResource(loadKothList, [], "KoTH 문제를 불러오지 못했습니다");
-  const kothData = useKothData();
+  const user = useAuthenticatedUser();
+  const operatorOnly = user?.role === "ADMIN" && !user.team_id;
+  const kothData = useKothData({ includeTeamProgress: !operatorOnly });
   const ranking = useKothLeaderboard(kothChallengeId, kothData.authenticated);
   const challenges = useMemo(() => list.data?.challenges ?? [], [list.data]);
   const target = challenges.find((item) => item.koth_challenge_id === kothChallengeId);
@@ -33,7 +36,8 @@ export default function AdminKothPreviewPage() {
     kothData.clubsData?.clubs ?? [], kothData.progressData), [challenges, kothData.clubsData, kothData.progressData]);
   const model = models.find((item) => item.kothChallengeId === kothChallengeId);
   const bundle = target?.files?.mode === "REPOSITORY" ? target.files.bundle : null;
-  const selected = model && { ...model, status: "ACTIVE", description: target?.description ?? null, file: kothFile(bundle) };
+  const selected = model && { ...model, status: "ACTIVE", operatorPreview: operatorOnly,
+    description: target?.description ?? null, file: kothFile(bundle) };
   const problemRanking = ranking.status === "success" ? { status: "success", data: ranking.data, retry: ranking.retry }
     : { status: ranking.status === "loading" ? "loading" : "error", data: null, error: ranking.error, retry: ranking.retry };
   const status = kothStatus(target?.status);
@@ -81,7 +85,7 @@ export default function AdminKothPreviewPage() {
 
   return <div className={previewStyles.shell}>
     <aside className={`${styles.workspace} ${styles.previewNotice}`} aria-label="관리자 미리보기">
-      <div><strong>참가자 화면 미리보기</strong><span>관리자 게임 테스트는 5분 동안 열립니다 공개 일정은 바뀌지 않습니다</span></div>
+      <div><strong>참가자 화면 미리보기</strong><span>관리자 토큰으로 게임을 테스트할 수 있습니다 공개 일정과 공식 점수는 바뀌지 않습니다</span></div>
       {target && <span>{target.title} · 지금 {status.label}{target.status === "ACTIVE" ? "" : " · 진행 중일 때 모습으로 보입니다"}</span>}
       {list.status === "success" && !target && <span>이 KoTH 문제를 찾지 못했습니다</span>}
       {target?.status === "SCHEDULED" && <button type="button" className={styles.button} onClick={openGame}

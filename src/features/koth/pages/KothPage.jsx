@@ -42,7 +42,9 @@ export default function KothPage() {
     (challenge) => challenge.kothChallengeId === selectedChallengeId,
   ) ?? null;
   const clubDetail = useKothClubDetail(selectedListChallenge?.clubId, selectedChallengeId);
-  const selectedChallenge = applyKothClubDetail(selectedListChallenge, clubDetail.data) ?? selectedListChallenge;
+  const resolvedChallenge = applyKothClubDetail(selectedListChallenge, clubDetail.data) ?? selectedListChallenge;
+  const selectedChallenge = resolvedChallenge && kothData.operatorOnly
+    ? { ...resolvedChallenge, operatorPreview: true } : resolvedChallenge;
 
   const problemRanking = useKothLeaderboard(selectedChallengeId, kothData.authenticated);
 
@@ -83,7 +85,7 @@ export default function KothPage() {
       isEmpty={kothData.status === "success" && allChallenges.length === 0}
       unmappedChallengeCount={unmappedChallengeCount}
       teamId={kothData.progressData?.team_id ?? null}
-      teamName={kothData.progressData?.team_name ?? ""}
+      teamName={kothData.progressData?.team_name ?? (kothData.operatorOnly ? "운영 테스트" : "")}
       totalKothScore={kothData.progressData?.total_koth_score ?? null}
       selectedChallenge={selectedChallenge}
       clubDetail={clubDetail}

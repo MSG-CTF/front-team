@@ -4,6 +4,7 @@ import { ACCESS_TOKEN_STORAGE_KEY } from "../../../api/client.js";
 import { isSuccess } from "../../../utils/response.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { validateKothClubs, validateKothClubDetail } from "../utils/kothChallengeState.js";
+import { useAuthenticatedUser } from "../../../routes/AuthenticatedRoute.jsx";
 
 function getErrorMessage(error, fallbackMessage) {
   return error?.response?.data?.message || error?.message || fallbackMessage;
@@ -13,7 +14,10 @@ function getErrorMessage(error, fallbackMessage) {
 const TEAM_BANNED_MESSAGE = "정지된 팀이라 KoTH 정보를 볼 수 없습니다 운영진에게 문의해주세요";
 const isTeamBanned = (error) => error?.response?.data?.code === "TEAM_BANNED";
 
-export function useKothData() {
+export function useKothData({ includeTeamProgress } = {}) {
+  const user = useAuthenticatedUser();
+  const operatorOnly = user?.role === "ADMIN" && !user.team_id;
+  const loadTeamProgress = includeTeamProgress ?? !operatorOnly;
   const [revision, setRevision] = useState(0);
   const [state, setState] = useState({ status: "loading", clubsData: null, progressData: null, progressError: "", clubsStale: false });
   const authenticated = Boolean(localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY));
@@ -21,6 +25,7 @@ export function useKothData() {
     const controller = new AbortController();
     const config = { signal: controller.signal, timeout: 10000 };
     let active = true;
+    if (!loadTeamProgress) setState((current) => ({ ...current, progressData: null, progressError: "" }));
     async function loadClubs() {
       let clubs;
       let failure;
@@ -36,7 +41,7 @@ export function useKothData() {
       }));
     }
     async function loadProgress() {
-      if (!authenticated) return;
+      if (!authenticated || !loadTeamProgress) return;
       let progress;
       let failure;
       try { progress = (await getMyKothProgress(config)).data; } catch (error) { failure = error; /* 점수 오류는 목록 이용을 막지 않는다 */ }
@@ -53,9 +58,9 @@ export function useKothData() {
     const load = () => Promise.allSettled([loadClubs(), loadProgress()]);
     const stopPolling = startVisiblePolling(load);
     return () => { stopPolling(); active = false; controller.abort(); };
-  }, [revision, authenticated]);
+  }, [revision, authenticated, loadTeamProgress]);
   return { ...state, error: state.banned ? TEAM_BANNED_MESSAGE : state.clubsStale ? "KOTH 목록을 갱신하지 못했습니다" : state.progressError,
-    authenticated, retry: () => setRevision((value) => value + 1) };
+    authenticated, operatorOnly, retry: () => setRevision((value) => value + 1) };
 }
 
 export function useKothLeaderboard(challengeId, authenticated) {

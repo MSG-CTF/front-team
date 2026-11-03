@@ -98,7 +98,9 @@ export default function KothTeamTokenPanel({
           </>
         )}
         <p className={styles.tokenHint}>{preview
-          ? "공개 전 문제의 관리자 게임 테스트 창에서만 쓰는 토큰입니다 대회가 시작되면 쓸 수 없고 순위표에도 들어가지 않습니다"
+          ? data.qa_open
+            ? "임시 QA 공개 기간에 게임에 바로 로그인할 수 있는 관리자 토큰입니다 공식 순위표에는 들어가지 않습니다"
+            : "공개 전 문제의 관리자 게임 테스트 창에서만 쓰는 토큰입니다 대회가 시작되면 쓸 수 없고 순위표에도 들어가지 않습니다"
           : "KoTH 문제 서버에 접속할 때 입력하는 우리 팀 전용 토큰입니다"}</p>
 
         <div className={styles.tokenFoot}>
