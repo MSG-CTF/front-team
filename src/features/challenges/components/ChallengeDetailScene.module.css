@@ -510,6 +510,23 @@
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+/* 주소가 길면 앞부분만 말줄임하고 포트와 화살표는 늘 보인다 */
+.endpoint a {
+  display: flex;
+  align-items: baseline;
+}
+.urlHead,
+.urlRest {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.urlPort,
+.urlArrow {
+  flex: none;
+  white-space: pre;
+}
 .connectEmpty {
   color: #9a8663;
   font-size: 15px;
@@ -1759,6 +1776,20 @@
     font-size: 14px;
     line-height: 1.6;
   }
+  /* 좁은 화면은 주소를 여러 줄로 보이되 //·점·하이픈 뒤에서만 줄을 바꾸고 포트 숫자는 붙여 둔다 */
+  .endpoint a {
+    display: block;
+    overflow-wrap: break-word;
+  }
+  .urlHead,
+  .urlRest {
+    overflow: visible;
+    white-space: normal;
+  }
+  .urlPort,
+  .urlArrow {
+    white-space: nowrap;
+  }
   .endpointCompact .copyButton {
     min-height: 44px;
   }
@@ -2216,6 +2247,11 @@
     font-size: calc(var(--u) * 22);
     line-height: calc(var(--u) * 28);
   }
+  /* 한 줄 말줄임에서는 좁은 화면용 줄바꿈 자리(wbr)를 꺼야 앞부분이 두 줄로 접히지 않는다 */
+  .urlHead wbr,
+  .urlRest wbr {
+    display: none;
+  }
   .connectEmpty {
     font-size: max(11px, calc(var(--u) * 17));
   }
@@ -2643,7 +2679,8 @@
   .header, .descriptionPanel, .flagPanel { border: 8px solid transparent; border-image: url("/assets/challenge-detail/panel-board.webp") 32 / 8px stretch; border-radius: 0; background: none; }
   .instancePanel, .runPanel { isolation: isolate; border: 8px solid transparent; border-image: url("/assets/mypage/panel-score.webp") 24 / 8px stretch; border-radius: 0; background: #2c1c11; background-clip: padding-box; }
   .runTitle { width: 100%; padding-bottom: 10px; border-bottom: 1px solid #b09a76; font-size: 17px; }
-  .bakedLabel { padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1px solid #9c7548; font-size: 17px; }
+  /* 좁은 화면의 칸 제목은 한글이라 영문 대문자용 넓은 자간(0.18em)을 쓰면 "현 재 배 점"처럼 글자가 떨어진다 */
+  .bakedLabel { padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1px solid #9c7548; font-size: 17px; letter-spacing: 0.02em; }
   .instancePanel .bakedLabel { border-bottom-color: #b09a76; }
   /* 첨부 제목줄도 다른 섹션 제목처럼 줄 전체에 밑줄을 긋고 개수 배지를 제목 글자 줄 가운데에 둔다 */
   .attachmentHeading { padding-bottom: 10px; margin-bottom: 14px; border-bottom: 1px solid #9c7548; }

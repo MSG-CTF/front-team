@@ -59,3 +59,11 @@ export function endpointCopyText(endpoint) {
   return [endpoint.url, ...endpointConnectionDetails(endpoint)
     .map(({ label, value }) => `${label}: ${value}`)].join("\n");
 }
+
+// 접속 주소를 포트 앞에서 나눈다 넓은 화면은 앞부분만 말줄임해 포트가 늘 보이고,
+// 좁은 화면은 //·점·하이픈 뒤에서만 줄을 바꿔 포트 숫자가 두 줄로 갈라지지 않는다
+export function splitEndpointUrl(url) {
+  const text = String(url ?? "");
+  const match = /^(.*?)(:\d+)(.*)$/.exec(text);
+  return match ? { head: match[1], port: match[2], rest: match[3] } : { head: text, port: "", rest: "" };
+}
