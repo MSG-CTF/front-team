@@ -171,10 +171,10 @@ export default function KothChallengeSheet({ challenge, connection, detail, rank
             <div>
               <dt><Label en="MY TEAM" ko="우리 팀" /></dt>
               <dd>
-                <span className={styles.standingName}>{!authenticated ? "순위 없음" : progressError ? "조회 실패" : waiting ? "집계 대기" : failed ? "수집 실패" : challenge.rank != null ? `${challenge.rank}위` : challenge.earnedScore === 0 ? "—" : "순위 없음"}</span>
+                <span className={styles.standingName}>{challenge.operatorPreview ? "운영 테스트" : !authenticated ? "순위 없음" : progressError ? "조회 실패" : waiting ? "집계 대기" : failed ? "수집 실패" : challenge.rank != null ? `${challenge.rank}위` : challenge.earnedScore === 0 ? "—" : "순위 없음"}</span>
                 <span className={styles.standingScore}>{authenticated && !progressError && !waiting && !failed && challenge.earnedScore != null ? challenge.earnedScore : "-"}</span>
               </dd>
-              <dd className={styles.standingNote} role="status" aria-live="polite">{!authenticated ? "로그인 후 확인" : progressError ? "내 팀 점수를 갱신하지 못했습니다 잠시 후 다시 확인해주세요" : failed ? "점수 수집에 실패했습니다 잠시 후 다시 확인해주세요" : waiting ? "점수를 아직 수집하지 못했습니다" : challenge.collection === "stale" ? "마지막으로 수집한 점수입니다" : firstScore ? `${firstScore} 첫 득점` : challenge.earnedScore === 0 ? "수집 결과 0점" : "아직 득점 전"}
+              <dd className={styles.standingNote} role="status" aria-live="polite">{challenge.operatorPreview ? "공식 점수에 반영되지 않습니다" : !authenticated ? "로그인 후 확인" : progressError ? "내 팀 점수를 갱신하지 못했습니다 잠시 후 다시 확인해주세요" : failed ? "점수 수집에 실패했습니다 잠시 후 다시 확인해주세요" : waiting ? "점수를 아직 수집하지 못했습니다" : challenge.collection === "stale" ? "마지막으로 수집한 점수입니다" : firstScore ? `${firstScore} 첫 득점` : challenge.earnedScore === 0 ? "수집 결과 0점" : "아직 득점 전"}
                 {authenticated && collectedAt && <span className={styles.collectionHint}>마지막 수집 <time dateTime={challenge.lastCollectedAt}>{collectedAt}</time></span>}
               </dd>
             </div>

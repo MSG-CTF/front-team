@@ -10,6 +10,6 @@ export function kothLivePreviewUrl(data, challengeUrl) {
     || [...new URLSearchParams(actual.hash.slice(1)).keys()].length !== 1
     || !new URLSearchParams(actual.hash.slice(1)).get("ticket")
     || new URLSearchParams(actual.hash.slice(1)).get("ticket").length > 2048
-    || !Number.isInteger(data.expires_in_seconds) || data.expires_in_seconds < 1 || data.expires_in_seconds > 300) throw error();
+    || !Number.isInteger(data.expires_in_seconds) || data.expires_in_seconds < 1 || data.expires_in_seconds > 86400) throw error();
   return actual.href;
 }
