@@ -20,6 +20,12 @@ const CREATE_STEPS = [
 const BUSY_LABEL = {
   [INSTANCE_STATUS.RESTARTING]: "다시 시작하는 중",
   [INSTANCE_STATUS.RESETTING]: "초기화하는 중",
+  [INSTANCE_STATUS.STOPPING]: "종료하는 중",
+};
+// 재시작·종료는 확인을 누른 순간부터 응답이 와서 상태가 바뀔 때까지도 같은 줄을 띄운다
+const PENDING_STATUS = {
+  restart: INSTANCE_STATUS.RESTARTING,
+  stop: INSTANCE_STATUS.STOPPING,
 };
 
 // 인스턴스 응답에 생성 시각이 없어 기다리기 시작한 순간부터 센다 기다림이 끝나면 다음 기다림은 0초부터 다시 센다
@@ -167,13 +173,16 @@ function Endpoint({ endpoint, compact }) {
 
 export default function InstancePanel({ instance, otherInstance, teammate, error, pendingAction }) {
   const status = instance?.status ?? null;
-  // 생성 단추를 누른 직후부터 RUNNING 이 될 때까지, 재시작·초기화가 끝날 때까지 기다리는 화면을 보인다
+  // 생성 단추를 누른 직후부터 RUNNING 이 될 때까지, 재시작·초기화·종료가 끝날 때까지 기다리는 화면을 보인다
   const statusStep = error ? -1 : CREATE_STEPS.findIndex((item) => item.status === status);
   const createStep = statusStep >= 0 ? statusStep : !error && pendingAction === "create" ? 0 : null;
-  const busyLabel = error || createStep != null ? null : BUSY_LABEL[status] ?? null;
-  const waitingKey = createStep != null ? "create" : busyLabel ? `busy:${status}` : null;
+  const busyStatus = BUSY_LABEL[status] ? status : PENDING_STATUS[pendingAction] ?? null;
+  const busyLabel = error || createStep != null ? null : BUSY_LABEL[busyStatus] ?? null;
+  const waitingKey = createStep != null ? "create" : busyLabel ? `busy:${busyStatus}` : null;
   const waitingSeconds = useWaitingSeconds(waitingKey);
-  const running = !error && status === INSTANCE_STATUS.RUNNING;
+  const stopping = Boolean(busyLabel) && busyStatus === INSTANCE_STATUS.STOPPING;
+  // 재시작·종료 응답을 기다리는 동안은 곧 사라질 접속 주소 대신 기다리는 줄을 보인다
+  const running = !error && !busyLabel && status === INSTANCE_STATUS.RUNNING;
   const failure = error ? null : getInstanceFailureNotice(instance);
   const ended = status === INSTANCE_STATUS.STOPPED || status === INSTANCE_STATUS.CLEANED;
   const requesting = statusStep < 0 && createStep === 0;
@@ -184,6 +193,8 @@ export default function InstancePanel({ instance, otherInstance, teammate, error
     ? "조회 실패"
     : requesting
       ? INSTANCE_STATUS_LABEL[INSTANCE_STATUS.REQUESTED]
+    : busyLabel
+      ? (INSTANCE_STATUS_LABEL[busyStatus] ?? UNKNOWN_INSTANCE_STATUS_LABEL)
     : failure
       ? "실행 실패"
     : shared
@@ -226,6 +237,8 @@ export default function InstancePanel({ instance, otherInstance, teammate, error
       : "문제 환경을 생성해주세요";
   const hint = error
     ? "다시 조회한 뒤 인스턴스를 조작할 수 있습니다"
+    : stopping
+      ? "종료가 끝나면 새 인스턴스를 생성할 수 있습니다"
     : waitingKey
       ? "준비가 끝나면 접속 주소와 남은 시간이 바로 표시됩니다"
     : failure

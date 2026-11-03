@@ -6,12 +6,14 @@ import { formatAdminTime } from "../utils/adminTime.js";
 import { mapInstanceEndpoints } from "../../challenges/utils/challengeDetailMapper.js";
 import { activeTestFromFailure, deploymentTestStatus, deploymentTestSteps } from "../utils/adminDeploymentTests.js";
 import { AdminBadge } from "./AdminLayout.jsx";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./AdminWorkspace.module.css";
 import InstanceConnectionDetails from "../../challenges/components/InstanceConnectionDetails.jsx";
 import { isInstanceChanging } from "../../challenges/utils/challengeDetailState.js";
 import { endpointConnectionDetails, endpointCopyText, endpointTerminalConnection } from "../../challenges/utils/instanceConnectionDetails.js";
 
 const RUNNING_STATES = ["REQUESTED", "SCHEDULING", "PROVISIONING"];
+const STOPPING_STATES = ["STOPPING", "STOPPED", "EXPIRED"];
 
 function elapsedLabel(fromIso, now) {
   const start = Date.parse(fromIso);
@@ -37,6 +39,7 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
   const [loadError, setLoadError] = useState("");
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState("");
+  const [stoppingId, setStoppingId] = useState(null);
   const [now, setNow] = useState(() => Date.now());
   const mounted = useRef(false);
   const pending = useRef(false);
@@ -101,6 +104,14 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
     } finally { pending.current = false; if (mounted.current) setBusy(false); }
   }
 
+  // 누른 종료 단추에만 요청 중 표시를 단다
+  async function stop(test) {
+    if (pending.current) return;
+    setStoppingId(test.test_id);
+    await mutate(() => stopAdminDeploymentTest(test.challenge_id ?? challengeId, test.test_id));
+    if (mounted.current) setStoppingId(null);
+  }
+
   function start() {
     if (!request.current || request.current.releaseId !== release.release_id) {
       request.current = { releaseId: release.release_id, id: crypto.randomUUID() };
@@ -137,7 +148,7 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
       <div><h3 className={styles.sectionTitle}>버전 {release?.version} 시험 실행</h3>
         <p className={styles.helpText}>이 버전의 이미지와 환경변수로 시험용 인스턴스를 따로 띄웁니다 15분 뒤 저절로 정리됩니다</p></div>
       <button type="button" className={styles.primary} disabled={busy || !data || Boolean(active) || Boolean(disabledReason)} onClick={start}>
-        {busy ? "요청 중" : "테스트 실행"}</button>
+        {busy && !stoppingId ? "요청 중" : "테스트 실행"}</button>
     </div>
     <div className={styles.testVersions} aria-label="참가자 버전과 시험 버전">
       <div><span>참가자에게 나가는 버전</span><strong>{currentRelease ? `버전 ${currentRelease.version}` : "아직 없음"}</strong></div>
@@ -156,7 +167,7 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
       <p className={styles.helpText}>{elsewhere ? "다른 문제의 테스트입니다 · " : ""}{deploymentTestStatus[active.status] ?? active.status} · 테스트는 관리자마다 하나씩 돌고, 끝나면 이 버전도 시험할 수 있습니다</p>
       <div className={styles.formActions}>
         {active.can_stop && <button type="button" className={styles.button} disabled={busy}
-          onClick={() => mutate(() => stopAdminDeploymentTest(active.challenge_id, active.test_id))}>진행 중인 테스트 종료</button>}
+          onClick={() => stop(active)}>{stoppingId === active.test_id ? <LoadingRing>종료 요청 중</LoadingRing> : "진행 중인 테스트 종료"}</button>}
         {onSelectRelease && !elsewhere && <button type="button" className={styles.primary} disabled={busy} onClick={() => onSelectRelease(active.release_id)}>버전 {active.version} 테스트 보기</button>}
       </div>
     </div>}
@@ -173,9 +184,11 @@ export default function AdminDeploymentTestPanel({ challengeId, release, current
       <div className={styles.testResultHeader} aria-live="polite"><strong>버전 {latest.version}</strong>
         {running && <span className={styles.testElapsed}>{elapsedLabel(latest.created_at, now)} 경과</span>}
         <AdminBadge tone={latest.error_code && ["FAILED", "CLEANED", "CLEANUP_PENDING"].includes(latest.status) ? "bad" : latest.status === "RUNNING" ? "good" : "neutral"}>
-          {latest.status === "CLEANED" && latest.error_code ? "실패 · 정리 완료" : deploymentTestStatus[latest.status] ?? latest.status}</AdminBadge>
+          {/* 종료·정리가 도는 동안은 상태 앞에 링을 단다 */}
+          {STOPPING_STATES.includes(latest.status) ? <LoadingRing>{deploymentTestStatus[latest.status]}</LoadingRing>
+            : latest.status === "CLEANED" && latest.error_code ? "실패 · 정리 완료" : deploymentTestStatus[latest.status] ?? latest.status}</AdminBadge>
         {latest.can_stop && <button type="button" className={styles.button} disabled={busy}
-          onClick={() => mutate(() => stopAdminDeploymentTest(challengeId, latest.test_id))}>테스트 종료</button>}
+          onClick={() => stop(latest)}>{stoppingId === latest.test_id ? <LoadingRing>종료 요청 중</LoadingRing> : "테스트 종료"}</button>}
       </div>
       <dl className={styles.testTimes}>
         <div><dt>요청 시각</dt><dd>{formatAdminTime(latest.created_at)}</dd></div>

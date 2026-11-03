@@ -44,6 +44,35 @@ test("생성 단계는 지난 칸을 체크하고 지금 칸에서 돌며, 실�
   assert.match(restarting, /data-waiting="true"/);
 });
 
+test("종료와 재시작은 확인을 누른 순간부터 끝날 때까지 움직이는 기다림 줄과 경과 시간을 보인다", () => {
+  const render = (props) => renderToStaticMarkup(createElement(Panel, props));
+  const running = mapChallengeInstance({ instance_id: "a", status: "RUNNING", host: "http://a.test", expires_at: "2099-01-01T00:00:00Z" });
+  const pending = render({ instance: running, pendingAction: "stop" });
+  assert.match(pending, /data-waiting="true"><i aria-hidden="true"><\/i>종료 중<span[^>]*aria-hidden="true">/);
+  assert.match(pending, /<i aria-hidden="true"><\/i>종료하는 중<span[^>]*aria-hidden="true">/);
+  assert.match(pending, /0:00 경과/);
+  assert.match(pending, /종료가 끝나면 새 인스턴스를 생성할 수 있습니다/);
+  // 곧 닫힐 접속 주소와 남은 시간은 내린다
+  assert.doesNotMatch(pending, /a\.test/);
+  assert.match(pending, /aria-label="남은 시간">--:--/);
+
+  const stopping = render({ instance: mapChallengeInstance({ instance_id: "a", status: "STOPPING" }) });
+  assert.match(stopping, /종료하는 중/);
+  assert.match(stopping, /data-waiting="true"/);
+  assert.doesNotMatch(stopping, /상태가 바뀌면 자동으로 갱신됩니다/);
+
+  const restart = render({ instance: running, pendingAction: "restart" });
+  assert.match(restart, /다시 시작하는 중/);
+  assert.match(restart, /준비가 끝나면 접속 주소와 남은 시간이 바로 표시됩니다/);
+  assert.doesNotMatch(restart, /a\.test/);
+  // 연장은 금방 끝나 실행 중 화면을 그대로 둔다
+  assert.match(render({ instance: running, pendingAction: "extend" }), /a\.test/);
+
+  const stopped = render({ instance: mapChallengeInstance({ instance_id: "a", status: "STOPPED" }) });
+  assert.doesNotMatch(stopped, /종료하는 중|data-waiting/);
+  assert.match(stopped, /인스턴스가 종료됐습니다/);
+});
+
 test("초기화 확인창은 남은 시간이 유지되고 먼저 연장할 수 있음을 알린다", () => {
   const html = renderToStaticMarkup(createElement(Dialog, { action: "restart" }));
   assert.match(html, /남은 시간은 늘어나지 않으니 만료가 가까우면 먼저 연장해 주세요/);

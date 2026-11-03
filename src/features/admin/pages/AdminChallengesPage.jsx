@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { forceResetInstance, forceStopInstance, retryInstanceCleanup, getAdminChallenges, getAdminInstances, setChallengeVisibility } from "../../../api/admin.js";
-import { ADMIN_INSTANCE_STATUS_LABEL, INSTANCE_STATUS } from "../../../constants/enums.js";
+import { ACTIVE_INSTANCE_STATUSES, ADMIN_INSTANCE_STATUS_LABEL, INSTANCE_STATUS } from "../../../constants/enums.js";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import { isSuccess } from "../../../utils/response.js";
 import { startVisiblePolling } from "../../../utils/visiblePolling.js";
 import { formatAdminTime } from "../utils/adminTime.js";
@@ -57,6 +58,10 @@ function DeploymentSummary({ deployment, remoteRun }) {
   </span>;
 }
 
+// 생성·재시작·종료가 진행 중인 인스턴스는 상태 앞에 도는 링을 달아 멈춘 게 아님을 보인다
+const MOVING_STATUSES = ACTIVE_INSTANCE_STATUSES.filter((status) => status !== INSTANCE_STATUS.RUNNING);
+const ACTION_PENDING = { stop: "종료 요청 중", reset: "재시작 요청 중", cleanup: "정리 요청 중" };
+
 function InstancesSection({ initialStatus = "" }) {
   const [filter, setFilter] = useState(initialStatus);
   const [page, setPage] = useState(1);
@@ -106,7 +111,8 @@ function InstancesSection({ initialStatus = "" }) {
       <table className={styles.table} aria-label="인스턴스 목록"><thead><tr>{["팀", "문제", "상태", "만료 (KST)", "조치"].map((text) => <th key={text}>{text}</th>)}</tr></thead>
         <tbody>{(instances.data?.instances ?? []).map((instance) => <tr key={instance.instance_id}>
           <td><span className={styles.title}>{instance.team_name}</span><details className={styles.secondary}><summary className={styles.idSummary}>인스턴스 ID</summary><span className={`${styles.mono} ${styles.idValue}`}>{instance.instance_id}</span></details></td>
-          <td className={styles.wrap}>{instance.challenge_title}</td><td><AdminBadge tone={instance.status === "FAILED" ? "bad" : instance.status === "RUNNING" ? "good" : "neutral"}>{ADMIN_INSTANCE_STATUS_LABEL[instance.status] ?? instance.status}</AdminBadge></td>
+          <td className={styles.wrap}>{instance.challenge_title}</td><td><AdminBadge tone={instance.status === "FAILED" ? "bad" : instance.status === "RUNNING" ? "good" : "neutral"}>
+            {MOVING_STATUSES.includes(instance.status) ? <LoadingRing>{ADMIN_INSTANCE_STATUS_LABEL[instance.status]}</LoadingRing> : ADMIN_INSTANCE_STATUS_LABEL[instance.status] ?? instance.status}</AdminBadge></td>
           <td className={styles.time}>{formatAdminTime(instance.expires_at)}</td>
           <td>{canRetryCleanup(instance) ? <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "cleanup" }); }}>{CLEANUP_RETRY.action}</button> : canForceStop(instance) ? <div className={styles.rowActions}>
             {instance.status === "RUNNING" && <button type="button" className={`${BUTTON} ${styles.small}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "reset" }); }}>강제 재시작</button>}
@@ -124,7 +130,8 @@ function InstancesSection({ initialStatus = "" }) {
       {notice && <p role="alert" className={styles.errorText}>{notice}</p>}
       <div className={styles.formActions}>
         <button type="button" onClick={() => setConfirmation(null)} disabled={busy} className={BUTTON}>취소</button>
-        <button type="button" onClick={runAction} disabled={busy} className={styles.dangerSolid}>{confirmation.kind === "cleanup" ? CLEANUP_RETRY.action : confirmation.kind === "reset" ? "재시작 실행" : "종료 실행"}</button>
+        <button type="button" onClick={runAction} disabled={busy} className={styles.dangerSolid}>{busy ? <LoadingRing>{ACTION_PENDING[confirmation.kind]}</LoadingRing>
+          : confirmation.kind === "cleanup" ? CLEANUP_RETRY.action : confirmation.kind === "reset" ? "재시작 실행" : "종료 실행"}</button>
       </div>
     </AdminDialog>}
   </section>;
