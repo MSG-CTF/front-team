@@ -1314,51 +1314,54 @@
   background: #17120dcc;
   backdrop-filter: blur(3px);
 }
+/* 두루마리 그림(640×480 기준) 위에 글을 얹는다 글자와 간격은 그림 크기에 맞춰 함께 줄어든다 */
 .resultModal {
+  container: flag-result / inline-size;
   position: relative;
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  width: min(440px, 100%);
-  max-height: calc(100dvh - 32px);
-  padding: 56px;
+  width: min(640px, 100%, calc((100dvh - 32px) * 4 / 3));
+  aspect-ratio: 4 / 3;
   border: 0;
-  border-radius: 0;
-  background: transparent;
+  background: transparent center / 100% 100% no-repeat;
   color: #4a2f1a;
   font-family: "Song Myung", serif;
   text-align: center;
-  overflow: hidden;
+  filter: drop-shadow(0 18px 28px rgb(10 6 2 / 55%));
 }
 .resultModalSuccess {
-  background: url("/assets/challenge-detail/panel-result-correct.webp") center / 100% 100% no-repeat;
+  background-image: url("/assets/challenge-detail/result-scroll-correct.webp");
 }
 .resultModalError {
-  background: url("/assets/challenge-detail/panel-result-error.webp") center / 100% 100% no-repeat;
+  background-image: url("/assets/challenge-detail/result-scroll-error.webp");
+}
+.resultBody {
+  --s: calc(100cqw / 640);
+  position: absolute;
+  top: calc(var(--s) * 127);
+  left: calc(var(--s) * 120);
+  right: calc(var(--s) * 120);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--s) * 7);
+}
+.resultModalError .resultBody {
+  top: calc(var(--s) * 128.5);
 }
 .resultEyebrow {
   margin: 0;
   font-family: var(--mono);
-  font-size: 13px;
-  line-height: 17px;
+  font-size: max(9px, calc(var(--s) * 12));
+  font-weight: 600;
+  line-height: 1.33;
   letter-spacing: 0.28em;
-  color: #a0642c;
+  color: #7e4b20;
 }
 .resultTitle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
   margin: 0;
   font-family: "Song Myung", serif;
-  font-size: 36px;
+  font-size: max(18px, calc(var(--s) * 32));
   font-weight: 400;
-  line-height: 45px;
-}
-.resultEmoji {
-  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-  font-size: 32px;
-  line-height: 1;
+  line-height: 1.25;
 }
 .resultModalSuccess .resultTitle {
   color: #613d15;
@@ -1366,69 +1369,94 @@
 .resultModalError .resultTitle {
   color: #9b2c1f;
 }
+.resultDivider {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--s) * 8);
+}
+.resultDivider::before,
+.resultDivider::after {
+  content: "";
+  width: calc(var(--s) * 56);
+  height: 1px;
+  background: #a0642c;
+  opacity: 0.7;
+}
+.resultDivider span {
+  width: calc(var(--s) * 6);
+  height: calc(var(--s) * 6);
+  margin: calc(var(--s) * 1.2);
+  background: #a0642c;
+  transform: rotate(45deg);
+}
 .resultMessage {
   margin: 0;
   color: #4a2f1a;
-  font-size: 17px;
-  line-height: 21px;
+  font-size: max(12px, calc(var(--s) * 15));
+  line-height: 1.33;
   white-space: pre-line;
   word-break: keep-all;
   overflow-wrap: anywhere;
 }
 .resultModal .rewards {
   justify-content: center;
-  gap: 4px 40px;
+  gap: 0 calc(var(--s) * 36);
   margin: 0;
-  padding: 2px 0;
 }
 .resultModal .rewards div {
   display: grid;
-  gap: 2px;
+  justify-items: center;
 }
 .resultModal .rewards dt {
   color: #8a5a32;
-  font-size: 13px;
-  line-height: 17px;
+  font-size: max(10px, calc(var(--s) * 12));
+  line-height: 1.25;
 }
 .resultModal .rewards dd {
   color: #8a4a12;
-  font-size: 26px;
-  line-height: 32px;
+  font-size: max(15px, calc(var(--s) * 24));
+  font-weight: 600;
+  line-height: 1.25;
 }
 .resultModal .primaryButton {
   margin-top: 0;
-  width: 154px;
-  height: 62px;
-  min-height: auto;
   min-width: auto;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: url("/assets/challenge-detail/btn-confirm.webp") center / 100% 100% no-repeat;
-  box-shadow: none;
-  color: #eedfc7;
+  min-height: auto;
+  padding: calc(var(--s) * 9) calc(var(--s) * 34);
+  border: 1.5px solid #d2a457;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #9a3322, #5e1810);
+  box-shadow: 0 2px 4px rgb(31 18 8 / 45%), inset 0 1px 0 rgb(255 237 191 / 35%);
+  color: #f6e6c8;
   font-family: "Song Myung", serif;
-  font-size: 18px;
+  font-size: max(12px, calc(var(--s) * 16));
   font-weight: 400;
+  line-height: 1.25;
   letter-spacing: 0.14em;
 }
 .resultModal .primaryButton:hover:not(:disabled) {
-  background: url("/assets/challenge-detail/btn-confirm.webp") center / 100% 100% no-repeat;
-  filter: brightness(1.1);
+  background: linear-gradient(180deg, #ad3c29, #6c1d13);
+  filter: none;
 }
+/* 닫기 단추는 그림 속 표시 위치에 맞추고 누르는 범위는 44px 정사각형으로 넓힌다 */
 .resultClose {
+  --s: calc(100cqw / 640);
   position: absolute;
-  top: 40px;
-  right: 40px;
+  top: calc(var(--s) * 152 - 22px);
+  left: calc(var(--s) * 458.5 - 22px);
   width: 44px;
   height: 44px;
   padding: 0;
   border: 0;
   background: transparent;
   color: #5a3a1e;
-  font-size: 24px;
+  font-size: max(18px, calc(var(--s) * 24));
   line-height: 1;
   cursor: pointer;
+}
+.resultModalError .resultClose {
+  top: calc(var(--s) * 110 - 22px);
+  left: calc(var(--s) * 486.7 - 22px);
 }
 .resultClose:hover,
 .resultOverlay .resultModal .resultClose:focus-visible {
