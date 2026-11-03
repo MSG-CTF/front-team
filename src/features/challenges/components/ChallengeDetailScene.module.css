@@ -1461,18 +1461,71 @@
 .stateBox .eyebrow {
   margin: 0;
 }
-.skeletonTitle,
-.skeletonBody {
+/* 문제 정보를 받는 동안: 실제 칸 판을 같은 자리에 깔고 바뀔 글자 자리만 은은하게 비춘다 */
+.skeleton {
+  display: contents;
+}
+.skeletonHeader,
+.skeletonDescription,
+.skeletonFlag {
+  display: grid;
+  gap: 10px;
+}
+.skeletonBar {
+  display: block;
+  height: 12px;
   border-radius: 4px;
-  background: #d3b57e;
+  background: linear-gradient(100deg, rgb(122 84 44 / 14%) 40%, rgb(255 246 226 / 60%) 50%, rgb(122 84 44 / 14%) 60%) 0 0 / 300% 100%;
+  animation: skeleton-gleam 1.6s ease-in-out infinite;
 }
-.skeletonTitle {
-  width: 50%;
-  height: 40px;
+.skeletonHeader [data-part="title"] {
+  width: min(70%, 420px);
+  height: 26px;
 }
-.skeletonBody {
-  width: 80%;
-  height: 120px;
+.skeletonPills {
+  display: flex;
+  gap: 8px;
+}
+.skeletonPills .skeletonBar {
+  width: 64px;
+  height: 24px;
+  border-radius: 999px;
+}
+.skeletonHeader .metric .skeletonBar {
+  width: 56px;
+  height: 30px;
+  margin-top: 4px;
+}
+.skeletonLines {
+  display: grid;
+  gap: 10px;
+}
+.skeletonDescription [data-part="file"],
+.skeletonFlag [data-part="input"] {
+  height: 44px;
+}
+.skeletonFlag [data-part="hint"] {
+  width: 60%;
+}
+.skeletonFlag [data-part="button"] {
+  justify-self: end;
+  width: 120px;
+  height: 44px;
+}
+.skeletonStatus {
+  margin: 0;
+  color: var(--brown-soft);
+  font-size: 14px;
+  text-align: center;
+}
+@keyframes skeleton-gleam {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeletonBar {
+    animation: none;
+  }
 }
 .primaryButton,
 .secondaryButton {
@@ -2508,6 +2561,77 @@
     font-size: max(18px, calc(var(--u) * 36));
   }
   .stateBox p {
+    font-size: max(12px, calc(var(--u) * 20));
+  }
+  /* 판 그림에 칸 제목과 플래그 입력칸이 그려져 있어 바뀔 글자 자리만 같은 좌표에 둔다 */
+  .skeletonHeader > .skeletonBar,
+  .skeletonPills,
+  .skeletonLines,
+  .skeletonDescription > .skeletonBar,
+  .skeletonFlag > .skeletonBar {
+    position: absolute;
+  }
+  .skeletonHeader [data-part="title"] {
+    left: calc(var(--u) * 29);
+    top: calc(var(--u) * 47);
+    width: calc(var(--u) * 560);
+    height: calc(var(--u) * 34);
+  }
+  .skeletonPills {
+    left: calc(var(--u) * 29);
+    top: calc(var(--u) * 92);
+    gap: calc(var(--u) * 8);
+  }
+  .skeletonPills .skeletonBar {
+    width: calc(var(--u) * 86);
+    height: calc(var(--u) * 28);
+  }
+  /* 배점·해결 팀 숫자: 실제 숫자처럼 그림 라벨 POINTS·SOLVES 아래 150 폭 열의 가운데 */
+  .skeletonHeader .metric .skeletonBar {
+    width: calc(var(--u) * 64);
+    height: calc(var(--u) * 34);
+    margin: calc(var(--u) * 15) auto 0;
+  }
+  .skeletonLines {
+    left: calc(var(--u) * 46);
+    top: calc(var(--u) * 88);
+    width: calc(var(--u) * 908);
+    gap: calc(var(--u) * 20);
+  }
+  .skeletonLines .skeletonBar {
+    height: calc(var(--u) * 16);
+  }
+  /* 첨부파일 줄: 실제 파일 줄처럼 목록 폭을 다 쓴다 */
+  .skeletonDescription [data-part="file"] {
+    left: calc(var(--u) * 46);
+    top: calc(var(--u) * 457);
+    width: calc(var(--u) * 908);
+    height: calc(var(--u) * 58);
+  }
+  .skeletonFlag [data-part="input"] {
+    display: none;
+  }
+  .skeletonFlag [data-part="hint"] {
+    left: calc(var(--u) * 36);
+    top: calc(var(--u) * 160);
+    width: calc(var(--u) * 240);
+    height: calc(var(--u) * 14);
+  }
+  .skeletonFlag [data-part="button"] {
+    left: calc(var(--u) * 382);
+    top: calc(var(--u) * 155);
+    width: calc(var(--u) * 232);
+    height: calc(var(--u) * 48);
+  }
+  /* 인스턴스·원격 실행·마스코트 중 무엇이 올지 모르는 오른쪽 위 칸 자리에는 안내 문구를 둔다 */
+  .skeletonStatus {
+    position: absolute;
+    left: calc(var(--u) * 1146);
+    top: calc(var(--u) * 333);
+    display: grid;
+    place-items: center;
+    width: calc(var(--u) * 640);
+    height: calc(var(--u) * 382);
     font-size: max(12px, calc(var(--u) * 20));
   }
 }

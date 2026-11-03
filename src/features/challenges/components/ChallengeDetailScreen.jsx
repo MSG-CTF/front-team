@@ -9,10 +9,10 @@ import InstanceActionDialog from "./InstanceActionDialog.jsx";
 import InstanceNotice from "./InstanceNotice.jsx";
 import RemoteRunPanel from "./RemoteRunPanel.jsx";
 import FlagSubmitPanel from "./FlagSubmitPanel.jsx";
+import ChallengeDetailSkeleton from "./ChallengeDetailSkeleton.jsx";
 import { formatRemaining } from "../../../utils/time.js";
 import styles from "./ChallengeDetailScene.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
-import LoadingRing from "../../../components/common/LoadingRing.jsx";
 
 export default function ChallengeDetailScreen({
   loading,
@@ -64,13 +64,7 @@ export default function ChallengeDetailScreen({
         <BackButton onClick={onBack} />
         <main className={styles.board} aria-label="문제 상세">
           <PanelTexture material="paper" />
-          {loading && (
-            <div className={styles.stateBox} role="status" aria-busy="true">
-              <div className={styles.skeletonTitle} aria-hidden="true" />
-              <div className={styles.skeletonBody} aria-hidden="true" />
-              <p><LoadingRing>문제 정보를 불러오는 중입니다</LoadingRing></p>
-            </div>
-          )}
+          {loading && <ChallengeDetailSkeleton />}
           {pageError && (
             <section className={styles.stateBox} role="alert">
               <p className={styles.eyebrow}>CHALLENGE</p>

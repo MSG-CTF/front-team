@@ -61,7 +61,7 @@ const SITES = [
   ["../../features/board/components/BoardScreen.jsx", '<LoadingRing size="page">보드 정보를 불러오는 중입니다</LoadingRing>'],
   ["../../features/board/components/OpenChallengesSidePanel.jsx", "<LoadingRing>내 인스턴스 확인 중</LoadingRing>"],
   ["../../features/board/components/OpenChallengesSidePanel.jsx", "<LoadingRing>목록 확인 중</LoadingRing>"],
-  ["../../features/challenges/components/ChallengeDetailScreen.jsx", "<LoadingRing>문제 정보를 불러오는 중입니다</LoadingRing>"],
+  ["../../features/challenges/components/ChallengeDetailSkeleton.jsx", "<LoadingRing>문제 정보를 불러오는 중입니다</LoadingRing>"],
   ["../../features/challenges/components/ChallengeAttachment.jsx", '{state.status === "loading" ? <LoadingRing>{state.message}</LoadingRing> : state.message}'],
   ["../../features/koth/components/KothFileButton.jsx", '{state.status === "loading" ? <LoadingRing>{state.message}</LoadingRing> : state.message}'],
   ["../../features/koth/components/KothScreen.jsx", "<LoadingRing>KoTH 정보를 불러오는 중</LoadingRing>"],
