@@ -1392,11 +1392,11 @@
 }
 .resultClose {
   position: absolute;
-  top: 12px;
-  right: 16px;
+  top: 36px;
+  right: 36px;
   width: 44px;
   height: 44px;
-  border: 2px solid #b5651d;
+  border: 0;
   border-radius: 10px;
   background: transparent;
   color: #5a3a1e;
@@ -1404,7 +1404,9 @@
   line-height: 1;
   cursor: pointer;
 }
-.resultClose:hover {
+.resultClose:hover,
+.resultOverlay .resultModal .resultClose:focus-visible {
+  outline: none;
   background: #b5651d22;
 }
 .refreshNotice {
