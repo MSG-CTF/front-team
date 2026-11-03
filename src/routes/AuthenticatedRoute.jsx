@@ -7,6 +7,7 @@ import { isSuccess } from "../utils/response.js";
 import { ROUTES } from "./routePaths.js";
 import usePageResources from "./usePageResources.js";
 import ContestGate from "./ContestGate.jsx";
+import LoadingRing from "../components/common/LoadingRing.jsx";
 
 const AuthenticatedUser = createContext(null);
 
@@ -76,7 +77,7 @@ function SessionGate() {
   if (status !== "allowed") {
     return (
       <div role="status" className="grid min-h-screen place-items-center bg-[#21150d] text-[#f8ead0]">
-        로그인 확인 중
+        <LoadingRing size="page">로그인 확인 중</LoadingRing>
       </div>
     );
   }

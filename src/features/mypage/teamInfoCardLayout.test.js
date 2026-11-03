@@ -47,7 +47,7 @@ test("팀원 원문과 개인 순위 데이터를 유지하고 세 번째 팀원
 });
 
 test("개인 순위 로딩·오류·빈 상태의 안내를 보존한다", () => {
-  assert.match(render(["팀원"], "loading"), /role="status">개인 순위를 불러오는 중/);
+  assert.match(render(["팀원"], "loading"), /role="status"><span[^>]*><span[^>]*data-loading-ring[^>]*><\/span>개인 순위를 불러오는 중/);
   assert.match(render(["팀원"], "error"), /role="alert">개인 순위를 확인하지 못했습니다/);
   assert.match(render(["팀원"], "empty"), /아직 집계된 개인 순위가 없습니다/);
 });

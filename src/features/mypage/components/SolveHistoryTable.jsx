@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import HistoryPagination from "./HistoryPagination.jsx";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./MyPageScene.module.css";
 
 const PAGE_SIZE = 3;
@@ -50,7 +51,7 @@ export default function SolveHistoryTable({ state }) {
           <tbody>
             {message ? (
               <tr>
-                <td colSpan={5} className={styles.historyEmpty}><span>{message}</span></td>
+                <td colSpan={5} className={styles.historyEmpty}><span>{state.status === "loading" ? <LoadingRing>{message}</LoadingRing> : message}</span></td>
               </tr>
             ) : (
               rows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE).map((row) => (

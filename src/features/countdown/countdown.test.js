@@ -130,7 +130,7 @@ test("시작 연출은 게임 화면 위에 덮이고 MSG CTF 글자와 퍼지�
 
 test("대기 화면은 시작 시각에 게임 화면을 따로 기다리게 해 시작 연출이 멈추지 않는다", () => {
   const gate = readFileSync(new URL("../../routes/ContestGate.jsx", import.meta.url), "utf8");
-  assert.match(gate, /<Suspense fallback=\{<div role="status" className=\{styles\.loading\}>화면을 불러오는 중<\/div>\}>\{children\}<\/Suspense>/);
+  assert.match(gate, /<Suspense fallback=\{<div role="status" className=\{styles\.loading\}><LoadingRing size="page">화면을 불러오는 중<\/LoadingRing><\/div>\}>\{children\}<\/Suspense>/);
   assert.match(gate, /<ContestCountdown targetTime=/);
   assert.match(gate, /useStartFinale\(gate\.blocked, gated\)/);
   assert.match(gate, /preloadGatedPage\(pathname\)/);

@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { formatNumber } from "../utils/myPageData.js";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./MyPageScene.module.css";
 
 function QrSlot({ qrState, onIssueQr, qrDisabled }) {
@@ -20,7 +21,7 @@ function QrSlot({ qrState, onIssueQr, qrDisabled }) {
         aria-label={showQr ? "결제 QR 코드, " + qrState.remainingSeconds + "초 후 만료" : "결제 QR 코드"}
       >
         {showQr && <QRCodeSVG value={qrState.paymentToken} size={160} marginSize={2} className={styles.qrCode} />}
-        {qrState.status === "loading" && <p className={styles.qrLoading} role="status">QR 발급 중</p>}
+        {qrState.status === "loading" && <p className={styles.qrLoading} role="status"><LoadingRing>QR 발급 중</LoadingRing></p>}
         {!showQr && qrState.status !== "loading" && (
           <button type="button" className={styles.qrIssueButton} onClick={onIssueQr} disabled={qrDisabled}>
             <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
@@ -53,7 +54,7 @@ function PersonalRank({ memberRanking }) {
           <div><dt className={styles.srOnly}>해결</dt><dd>{formatNumber(memberRanking.data.solvedCount)}<small> 문제</small></dd></div>
         </dl>
       )}
-      {memberRanking?.status === "loading" && <p className={styles.personalMessage} role="status">개인 순위를 불러오는 중</p>}
+      {memberRanking?.status === "loading" && <p className={styles.personalMessage} role="status"><LoadingRing>개인 순위를 불러오는 중</LoadingRing></p>}
       {memberRanking?.status === "error" && <p className={styles.personalMessage} role="alert">개인 순위를 확인하지 못했습니다 새로고침으로 다시 확인해주세요</p>}
       {memberRanking?.status === "empty" && <p className={styles.personalMessage}>아직 집계된 개인 순위가 없습니다</p>}
       {memberRanking?.status === "noTeam" && <p className={styles.personalMessage}>소속 팀이 없어 개인 순위가 없습니다</p>}

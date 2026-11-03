@@ -5,6 +5,7 @@ import { KothMobileHeading, KothRoundArtwork, KothMapFooter, KothMapFrame } from
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
 import KothTeamTokenPanel from "./KothTeamTokenPanel.jsx";
 import MainNavigationButton from "./MainNavigationButton.jsx";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./KothScreen.module.css";
 
 function formatValue(value) {
@@ -66,7 +67,7 @@ export default function KothScreen({
 
         {requestStatus === "loading" && (
           <section className={styles.dataState} role="status">
-            KoTH 정보를 불러오는 중
+            <LoadingRing>KoTH 정보를 불러오는 중</LoadingRing>
           </section>
         )}
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { downloadKothFile } from "../../../api/koth.js";
 import { fileDownloadError, safeDownloadName, validateFileBlob } from "../../challenges/utils/challengeFileDownload.js";
 import { formatFileSize } from "../../challenges/utils/challengeDetailMapper.js";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./KothScreen.module.css";
 
 // KoTH 문제 파일 받기: 제오파디 첨부파일처럼 고정 경로만 요청하고 zip 인지 확인한 뒤 저장한다
@@ -45,7 +46,7 @@ export default function KothFileButton({ challengeId, file, download = downloadK
         {file.name}
       </button>
       {state.message && <span className={state.status === "error" ? styles.downloadError : styles.downloadNote}
-        role={state.status === "error" ? "alert" : "status"}>{state.message}</span>}
+        role={state.status === "error" ? "alert" : "status"}>{state.status === "loading" ? <LoadingRing>{state.message}</LoadingRing> : state.message}</span>}
     </div>
     {file.sizeBytes && <span className={styles.fileSize}>{formatFileSize(file.sizeBytes)}</span>}
   </div>;

@@ -1,5 +1,6 @@
 import ContestCountdown from "../../countdown/components/ContestCountdown.jsx";
 import useStartFinale from "../../countdown/hooks/useStartFinale.js";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./TimerScreen.module.css";
 
 // 대회 타이머: 대기 화면과 같은 광장과 로고 위에서 시작 전에는 시작까지, 진행 중에는 종료까지 센다
@@ -22,7 +23,7 @@ export default function TimerScreen({ status, contest, error, isSynced, stage, s
       );
     }
     if (status === "empty") return <main className={styles.notice}><p>현재 진행 중이거나 예정된 대회가 없습니다</p></main>;
-    return <div role="status" className={styles.notice}>타이머 정보를 불러오는 중입니다</div>;
+    return <div role="status" className={styles.notice}><LoadingRing size="page">타이머 정보를 불러오는 중입니다</LoadingRing></div>;
   }
 
   const note = isSynced ? null : UNSYNCED_NOTE;

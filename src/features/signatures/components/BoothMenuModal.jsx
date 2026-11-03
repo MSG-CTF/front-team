@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import FlagResultModal from "../../challenges/components/FlagResultModal.jsx";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./BoothMenuModal.module.css";
 
 // submission: useSignatureDetail 결과. 없으면(미리보기) 제출 칸을 그리지 않는다
@@ -76,7 +77,7 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
               ))}
             </div>
           )}
-          {status === "loading" && <p className={styles.notice} role="status">문제 안내를 불러오는 중입니다</p>}
+          {status === "loading" && <p className={styles.notice} role="status"><LoadingRing>문제 안내를 불러오는 중입니다</LoadingRing></p>}
           {status === "error" && <div className={styles.notice} role="alert"><p>{error}</p><button type="button" onClick={onRetry}>다시 확인</button></div>}
           {status === "empty" && <p className={styles.notice}>공개된 문제가 없습니다</p>}
           {status === "success" && challenge && <>

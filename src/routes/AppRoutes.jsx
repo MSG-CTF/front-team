@@ -6,6 +6,7 @@ import RouteLoadBoundary from "./RouteLoadBoundary.jsx";
 import { ROUTES } from "./routePaths.js";
 import useRouteTitle from "./useRouteTitle.js";
 import usePageResources from "./usePageResources.js";
+import LoadingRing from "../components/common/LoadingRing.jsx";
 
 // 현재 화면에 필요한 코드만 읽는다 관리자 화면과 QR 기능은 참가자 진입에서 제외한다
 const LoginPage = lazy(() => import("../features/auth/pages/LoginPage.jsx"));
@@ -90,26 +91,29 @@ const SignatureClubPage = lazy(
   () => import("../features/signatures/pages/SignatureClubPage.jsx"),
 );
 
+// 화면 코드를 받는 동안의 전체 화면 대기 지연 로드하는 자리마다 같은 모양을 쓴다
+function RouteLoading({ children }) {
+  return (
+    <div
+      role="status"
+      className="fixed inset-0 grid place-items-center bg-[#21150d] font-inria-serif text-[#f8ead0]"
+    >
+      <LoadingRing size="page">{children}</LoadingRing>
+    </div>
+  );
+}
+
 // 홍보와 참가 안내, 로그인 외에는 서버의 로그인 확인을 통과한 뒤에만 연다
 export default function AppRoutes() {
   useRouteTitle();
   usePageResources({ gameAllowed: false });
   return (
     <RouteLoadBoundary>
-    <Suspense
-      fallback={
-        <div
-          role="status"
-          className="fixed inset-0 grid place-items-center bg-[#21150d] font-inria-serif text-[#f8ead0]"
-        >
-          화면을 불러오는 중
-        </div>
-      }
-    >
+    <Suspense fallback={<RouteLoading>화면을 불러오는 중</RouteLoading>}>
       <Routes>
         <Route
           element={
-            <Suspense fallback={<p role="status">대회 안내를 불러오는 중</p>}>
+            <Suspense fallback={<RouteLoading>대회 안내를 불러오는 중</RouteLoading>}>
               <IntroLayout />
             </Suspense>
           }
@@ -133,7 +137,7 @@ export default function AppRoutes() {
         <Route
           path={ROUTES.signatures}
           element={
-            <Suspense fallback={<p role="status">부스 문제를 불러오는 중</p>}>
+            <Suspense fallback={<RouteLoading>부스 문제를 불러오는 중</RouteLoading>}>
               <SignaturesPage />
             </Suspense>
           }
@@ -141,7 +145,7 @@ export default function AppRoutes() {
         <Route
           path="/signatures/clubs/:clubId"
           element={
-            <Suspense fallback={<p role="status">동아리 부스를 불러오는 중</p>}>
+            <Suspense fallback={<RouteLoading>동아리 부스를 불러오는 중</RouteLoading>}>
               <SignatureClubPage />
             </Suspense>
           }

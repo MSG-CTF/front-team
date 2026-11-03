@@ -1,4 +1,5 @@
 import LeaderboardArtworkSymbol, { RANK_ARTWORK } from "./LeaderboardArtworkSymbol.jsx";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./LeaderboardScreen.module.css";
 
 const CATEGORIES = ["MISC", "WEB", "FOR", "REV", "PWN", "CRY", "OSINT", "WEB3"];
@@ -40,7 +41,7 @@ export default function RankingTable({ rankings, status }) {
             <span className={styles.cellValue}>{formatValue(value)}</span>
           </td>)}
         </tr>)}
-        {!rankings.length && <tr><td colSpan={COLUMNS.length} className={styles.tableState}>{STATUS[status] ?? "아직 등록된 팀이 없습니다"}</td></tr>}
+        {!rankings.length && <tr><td colSpan={COLUMNS.length} className={styles.tableState}>{status === "loading" ? <LoadingRing>{STATUS.loading}</LoadingRing> : STATUS[status] ?? "아직 등록된 팀이 없습니다"}</td></tr>}
       </tbody>
     </table>
   </div>;

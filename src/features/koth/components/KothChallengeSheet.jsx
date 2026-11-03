@@ -4,6 +4,7 @@ import KothCardArt from "./KothCardArt.jsx";
 import KothFileButton from "./KothFileButton.jsx";
 import { KothCrown, KothRoundRibbon } from "./KothMobileArtwork.jsx";
 import { kothRound, kothCollectionState } from "../utils/kothChallengeState.js";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./KothScreen.module.css";
 
 const STATUS_LABELS = { ACTIVE: "진행 중", SCHEDULED: "열리기 전", CLOSED: "종료" };
@@ -29,7 +30,7 @@ function descriptionDigits(text) {
 
 // 문제별 누적 순위: 판 안에서만 스크롤하고, 1위에는 지도의 왕관을 달고, 우리 팀 줄은 밝히고 아래로 밀려나면 아래 끝에 붙여 둔다
 function KothRanking({ ranking, teamId }) {
-  if (ranking.status === "loading" || ranking.status === "idle") return <p className={styles.rankingState} role="status">순위 조회 중</p>;
+  if (ranking.status === "loading" || ranking.status === "idle") return <p className={styles.rankingState} role="status"><LoadingRing>순위 조회 중</LoadingRing></p>;
   if (ranking.status === "unauthenticated") return <p className={styles.rankingState}>로그인 후 순위를 확인할 수 있습니다</p>;
   if (ranking.status === "error") return <p className={styles.rankingState} role="alert">{ranking.error} <button type="button" onClick={ranking.retry}>다시 시도</button></p>;
   const rows = ranking.data.leaderboard;
@@ -131,7 +132,7 @@ export default function KothChallengeSheet({ challenge, connection, detail, rank
             {authenticated && onOpenTeamToken && (
               <button type="button" className={styles.summaryAction} onClick={onOpenTeamToken}>팀 토큰</button>
             )}
-            {detail.status === "loading" && <p className={styles.detailFeedback} role="status">최신 문제 정보를 확인하는 중</p>}
+            {detail.status === "loading" && <p className={styles.detailFeedback} role="status"><LoadingRing>최신 문제 정보를 확인하는 중</LoadingRing></p>}
             {detail.status === "error" && <p className={styles.detailFeedback} role="alert">{detail.error} <button type="button" onClick={detail.retry}>다시 확인</button></p>}
           </div>
           <div className={styles.sheetFiles}>

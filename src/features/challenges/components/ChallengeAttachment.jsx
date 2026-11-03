@@ -7,6 +7,7 @@ import {
   safeDownloadName,
   validateFileBlob,
 } from "../utils/challengeFileDownload.js";
+import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./ChallengeDetailScene.module.css";
 
 export default function ChallengeAttachment({ attachment, downloadFile = downloadChallengeFile }) {
@@ -120,7 +121,7 @@ export default function ChallengeAttachment({ attachment, downloadFile = downloa
               state.status === "error" ? styles.downloadError : styles.fileSize
             }
           >
-            {state.message}
+            {state.status === "loading" ? <LoadingRing>{state.message}</LoadingRing> : state.message}
           </span>
         )}
       </div>
