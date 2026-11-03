@@ -550,6 +550,10 @@
 .fileTable th, .fileTable td { padding: 11px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
 .fileTable th:nth-child(2) { width: 120px; }
 .fileTable th:last-child { width: 100px; }
+/* 파일 풀이 문제의 발행 이력은 다운로드 옆에 고정 단추 칸을 하나 더 둔다 */
+.fileTable[data-choice] th:nth-child(3) { width: 100px; }
+.fileTable[data-choice] th:last-child { width: 118px; }
+.fileTable[data-choice] .small { white-space: nowrap; }
 .filePath { display: block; margin-top: 4px; color: var(--label-3); font-size: 12px; overflow-wrap: anywhere; }
 .fileTable .title, .fileLink { font-weight: 500; overflow-wrap: anywhere; }
 .fileLink { color: var(--accent-text); text-decoration: none; }
@@ -722,6 +726,10 @@
   .fileTable th, .fileTable td { padding: 10px 6px; font-size: 12px; }
   .fileTable th:nth-child(2) { width: 76px; }
   .fileTable th:last-child { width: 62px; }
+  /* 좁은 화면에서도 ZIP 받기와 이 ZIP 사용이 한 줄에 들어가게 파일 칸을 줄이고 단추 칸을 넓힌다 */
+  .fileTable[data-choice] th:nth-child(2) { width: 64px; }
+  .fileTable[data-choice] th:nth-child(3) { width: 82px; }
+  .fileTable[data-choice] th:last-child { width: 98px; }
   .fileSearch { width: 100%; min-width: 0; }
   .environmentSummary { grid-template-columns: 1fr; gap: 12px; }
   .environmentSummary > div + div { padding-top: 12px; border-top: 1px solid var(--hairline); }

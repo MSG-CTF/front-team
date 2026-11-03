@@ -12,12 +12,12 @@ function responseData(response) {
   return response.data.data;
 }
 
-export default function AdminPublicationImportDialog({ onClose, onImported, onOpenSettings }) {
+export default function AdminPublicationImportDialog({ onClose, onImported, onOpenSettings, initialPublication = null }) {
   const [rows, setRows] = useState([]);
   const [source, setSource] = useState(null);
   const [nextPage, setNextPage] = useState(1);
   const [query, setQuery] = useState("");
-  const [scope, setScope] = useState("new");
+  const [scope, setScope] = useState(initialPublication?.challenge_id ? "registered" : "new");
   const [preview, setPreview] = useState(null);
   const [difficulty, setDifficulty] = useState("UNASSIGNED");
   const [updateMetadata, setUpdateMetadata] = useState(false);
@@ -32,7 +32,9 @@ export default function AdminPublicationImportDialog({ onClose, onImported, onOp
   const heading = useRef(null);
 
   useEffect(() => {
-    loadPage(1);
+    // 참가자 파일 칸에서 발행본 하나를 골라 열면 목록 없이 그 발행본 확인부터 시작한다
+    if (initialPublication) selectPublication(initialPublication);
+    else loadPage(1);
     return () => { read.current.sequence += 1; read.current.controller?.abort(); };
   }, []);
   useEffect(() => { if (preview || result) heading.current?.focus(); }, [preview, result]);
@@ -79,6 +81,7 @@ export default function AdminPublicationImportDialog({ onClose, onImported, onOp
     setError("");
     setRetry(null);
     attempt.current = null;
+    if (!source) loadPage(1);
   }
 
   function openExisting(row) {
@@ -175,7 +178,7 @@ export default function AdminPublicationImportDialog({ onClose, onImported, onOp
           : "제목·지문·분야가 현재 설정과 같습니다"}</p>
       </div>}
       {preview.runtime_type ? <p className={styles.helpText}>가져온 뒤 배포 설정에서 환경변수와 첨부파일을 확인하고 테스트할 수 있습니다 실제 적용은 배포 버전을 선택해 진행해주세요</p>
-        : registered && <p className={styles.fileNotice}>파일 풀이 문제는 가장 높은 발행번호의 첨부파일을 제공합니다 새 발행본을 가져오면 참가자 다운로드가 바뀔 수 있습니다</p>}
+        : registered && <p className={styles.fileNotice}>파일 풀이 문제는 ZIP을 고정해 두지 않았다면 가장 높은 발행번호의 첨부파일을 제공합니다 새 발행본을 가져오면 참가자 다운로드가 바로 바뀔 수 있습니다</p>}
       {preview.existing_release_id && <p className={styles.helpText}>이 배포 버전은 이미 등록되어 있습니다 같은 버전은 다시 만들지 않습니다</p>}
       {!registered && <div className={styles.publicationDefaults}>
         <label>난이도<select className={styles.select} value={difficulty} disabled={saving} onChange={(event) => setDifficulty(event.target.value)}>
@@ -207,8 +210,8 @@ export default function AdminPublicationImportDialog({ onClose, onImported, onOp
         <div><dt>참가자 첨부파일</dt><dd>{publicationFileLabel(preview.files)}</dd></div>
       </dl>
       <div className={`${styles.formFooter} ${styles.publicationFooter}`}>
-        <button type="button" className={styles.button} onClick={onClose}>닫기</button>
-        <button type="button" className={styles.primary} onClick={() => onOpenSettings(result)}>{result.release_id ? "가져온 배포 설정 열기" : "문제 설정 열기"}</button>
+        <button type="button" className={onOpenSettings ? styles.button : styles.primary} onClick={onClose}>닫기</button>
+        {onOpenSettings && <button type="button" className={styles.primary} onClick={() => onOpenSettings(result)}>{result.release_id ? "가져온 배포 설정 열기" : "문제 설정 열기"}</button>}
       </div>
     </section>}
   </AdminDialog>;

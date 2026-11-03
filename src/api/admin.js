@@ -118,6 +118,12 @@ export function configureChallengeReleaseFiles(challengeId, releaseId, body, ide
     idKey("release-files", idempotencyKey));
 }
 
+// 실행 이미지 없이 파일만 주는 문제에서 참가자 ZIP을 고정하거나 최신 자동으로 돌린다
+export function selectStaticChallengeFile(challengeId, body, idempotencyKey) {
+  return apiClient.post(`/admin/challenges/${encodeURIComponent(challengeId)}/files/selection`, body,
+    idKey("static-files", idempotencyKey));
+}
+
 export function getAdminChallengeRepositoryFiles(challengeId, config) {
   return apiClient.get(`/admin/challenges/${encodeURIComponent(challengeId)}/repository-files`, config);
 }
