@@ -206,6 +206,15 @@ test("팀 토큰 창은 TEAM TOKEN 아래에 팀 이름을 크게 두고 토큰 
   assert.match(dialog, /<span>발급 10월 26일 07:45<\/span>/);
   assert.match(dialog, /aria-label="KOTH 팀 토큰 닫기"/);
 
+  assert.match(dialog, /우리 팀 전용 토큰입니다/);
+
+  // 팀이 없는 관리자가 받는 운영 테스트 토큰은 TEST TOKEN과 쓰는 곳을 따로 알린다
+  const preview = render({ selectedChallenge: null, isTeamTokenOpen: true,
+    teamToken: { ...teamToken, data: { ...teamToken.data, team_name: "운영 테스트", preview: true } } });
+  assert.match(preview, /aria-hidden="true">TEST TOKEN<\/p><h2 id="koth-token-title"[^>]*>운영 테스트</);
+  assert.match(preview, /관리자 게임 테스트 창에서만 쓰는 토큰입니다 대회가 시작되면 쓸 수 없고 순위표에도 들어가지 않습니다/);
+  assert.doesNotMatch(preview, /우리 팀 전용 토큰/);
+
   const failed = render({ selectedChallenge: null, isTeamTokenOpen: true, teamToken: { ...teamToken, status: "error", data: null, error: "팀 토큰을 불러오지 못했습니다" } });
   assert.match(failed, /role="alert">팀 토큰을 불러오지 못했습니다<\/p>/);
   assert.match(failed, /aria-label="다시 시도">RETRY<\/button>/);
