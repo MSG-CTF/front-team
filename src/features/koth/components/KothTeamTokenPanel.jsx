@@ -60,6 +60,8 @@ export default function KothTeamTokenPanel({
     ? toKst(data.issued_at, { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
     : "";
   const owner = (ready ? data.team_name : teamName) || "내 팀";
+  // 팀이 없는 관리자는 공개 전 게임 테스트에서만 통과하는 운영 테스트 토큰을 받는다
+  const preview = Boolean(ready && data.preview);
 
   return (
     <div className={styles.sheetBackdrop} onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
@@ -75,7 +77,7 @@ export default function KothTeamTokenPanel({
         <button type="button" className={styles.sheetClose} onClick={onClose} aria-label="KOTH 팀 토큰 닫기">
           <img src="/assets/board/icon-close-round.png" alt="" />
         </button>
-        <p className={styles.tokenLabel} aria-hidden="true">TEAM TOKEN</p>
+        <p className={styles.tokenLabel} aria-hidden="true">{preview ? "TEST TOKEN" : "TEAM TOKEN"}</p>
         <h2 id="koth-token-title" className={styles.tokenTeam}>{owner}<span className="sr-only"> KoTH 팀 토큰</span></h2>
 
         {status === "error" ? (
@@ -95,7 +97,9 @@ export default function KothTeamTokenPanel({
             />
           </>
         )}
-        <p className={styles.tokenHint}>KoTH 문제 서버에 접속할 때 입력하는 우리 팀 전용 토큰입니다</p>
+        <p className={styles.tokenHint}>{preview
+          ? "공개 전 문제의 관리자 게임 테스트 창에서만 쓰는 토큰입니다 대회가 시작되면 쓸 수 없고 순위표에도 들어가지 않습니다"
+          : "KoTH 문제 서버에 접속할 때 입력하는 우리 팀 전용 토큰입니다"}</p>
 
         <div className={styles.tokenFoot}>
           <p className={styles.tokenMeta}>{issuedAt && <span>발급 {issuedAt}</span>}</p>

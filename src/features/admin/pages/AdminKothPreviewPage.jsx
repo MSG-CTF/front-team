@@ -96,7 +96,7 @@ export default function AdminKothPreviewPage() {
     }}>
       <KothScreen requestStatus={list.status === "success" ? "success" : list.status === "loading" ? "loading" : "error"} requestError={list.error}
         authenticated={kothData.authenticated} clubsStale={false} progressError={kothData.progressError} problemRanking={problemRanking} challenges={models} isEmpty={list.status === "success" && models.length === 0}
-        unmappedChallengeCount={0} teamId={kothData.progressData?.team_id ?? null} teamName={kothData.progressData?.team_name ?? "테스트 팀"}
+        unmappedChallengeCount={0} teamId={kothData.progressData?.team_id ?? null} teamName={kothData.progressData?.team_name ?? "운영 테스트"}
         totalKothScore={kothData.progressData?.total_koth_score ?? null} selectedChallenge={isTeamTokenOpen ? null : selected ?? null} clubDetail={READY}
         isTeamTokenOpen={isTeamTokenOpen} teamToken={teamToken} onRetry={list.retry} onSelectChallenge={() => {}} onCloseChallenge={() => navigate(ROUTES.adminKothDetail(kothChallengeId))}
         onOpenTeamToken={openTeamToken} onRetryTeamToken={() => teamToken.requestTeamToken(kothChallengeId)} onCloseTeamToken={closeTeamToken} downloadFile={downloadAdminKothFiles} />
