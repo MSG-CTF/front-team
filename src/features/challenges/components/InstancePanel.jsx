@@ -9,7 +9,7 @@ import { getInstanceFailureNotice } from "../utils/instanceFailureNotice.js";
 import styles from "./ChallengeDetailScene.module.css";
 import PanelTexture from "../../../components/common/PanelTexture.jsx";
 import InstanceConnectionDetails from "./InstanceConnectionDetails.jsx";
-import { endpointConnectionDetails, endpointCopyText, endpointTerminalConnection } from "../utils/instanceConnectionDetails.js";
+import { endpointConnectionDetails, endpointCopyText, endpointTerminalConnection, splitEndpointUrl } from "../utils/instanceConnectionDetails.js";
 
 // 생성은 요청 접수 > 서버 배정 > 환경 준비 순서로 상태가 바뀐다 지금 칸에서 돌고, 지난 칸은 체크한다
 const CREATE_STEPS = [
@@ -74,10 +74,20 @@ function WaitingProgress({ step, busyLabel, seconds }) {
   );
 }
 
+// 좁은 화면에서 주소가 //·점·하이픈·경로 / 뒤에서만 줄을 바꾸게 한다 http:// 의 두 / 사이는 끊지 않는다
+const URL_BREAK = /(?<=\/\/|[.\-?&=])|(?<=[^/]\/)(?!\/)/;
+function withBreaks(text) {
+  return text.split(URL_BREAK).flatMap((part, index) => (index ? [<wbr key={index} />, part] : [part]));
+}
+
 function Endpoint({ endpoint, compact }) {
   const hasDetails = endpointConnectionDetails(endpoint).length > 0;
   const terminal = endpointTerminalConnection(endpoint);
   const connectionText = terminal?.command ?? endpoint.url;
+  const kind = endpoint.isWeb ? "WEB" : terminal?.label ?? "터미널";
+  // 컨테이너 이름이 종류와 같으면(web과 WEB) 한 번만 보인다
+  const showKind = String(endpoint.name ?? "").trim().toLowerCase() !== kind.toLowerCase();
+  const url = splitEndpointUrl(endpoint.url);
   const copyText = endpointCopyText(endpoint);
   const copyLabel = terminal ? "접속 명령어" : "접속 주소";
   const [copied, setCopied] = useState(false);
@@ -113,7 +123,7 @@ function Endpoint({ endpoint, compact }) {
       <div className={styles.endpointBox}>
         <span className={styles.endpointName}>
           <span className={styles.endpointLabel}>{endpoint.name}</span>
-          <small>{endpoint.isWeb ? "WEB" : terminal?.label ?? "터미널"}</small>
+          {showKind && <small>{kind}</small>}
         </span>
         {endpoint.isWeb ? (
           <a
@@ -123,8 +133,10 @@ function Endpoint({ endpoint, compact }) {
             title={endpoint.url}
             aria-label={endpoint.name + " 접속 주소 새 탭에서 열기"}
           >
-            {endpoint.url}
-            <span aria-hidden="true"> ↗</span>
+            <span className={styles.urlHead}>{withBreaks(url.head)}</span>
+            {url.port && <span className={styles.urlPort}>{url.port}</span>}
+            {url.rest && <span className={styles.urlRest}>{withBreaks(url.rest)}</span>}
+            <span className={styles.urlArrow} aria-hidden="true"> ↗</span>
           </a>
         ) : (
           <span className={styles.connectionText} title={connectionText} aria-label={endpoint.name + " " + copyLabel}>

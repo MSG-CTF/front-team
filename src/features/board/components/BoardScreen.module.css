@@ -326,7 +326,7 @@
   border: 0.42em solid transparent; border-image: url("/assets/board/panel-frame-outline.png") 14 fill / 0.42em stretch;
   background: none; color: var(--open-soft); font: 400 1.06em/1 "Song Myung", serif; white-space: nowrap; cursor: pointer;
 }
-.openTabs button span { font: 600 0.84em/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
+.openTabs button span { font: 600 max(11px, 0.84em)/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
 .openTabs button:hover { color: var(--open-ink); }
 .openTabs button[aria-selected="true"] { border-image-source: url("/assets/board/panel-frame.png"); color: #ecd9b4; filter: drop-shadow(0 0.1em 0.18em #3a200b4d); }
 .openTabs button[aria-selected="true"] span { color: #e0b066; }
@@ -358,7 +358,7 @@
 .openPanel .openRow:focus-visible { outline: none; }
 .openRow:focus-visible::before { background: #f8ecd2a6; box-shadow: inset 0 0 0 2px #825725; }
 /* 번호 도장은 Figma 배지의 적갈색 단색 원, 푼 문제는 옅은 초록 원에 체크로 물러나게 한다 */
-.openRowNo { flex: none; display: grid; place-items: center; width: 2.45em; height: 2.45em; border-radius: 50%; background: #871f13; color: #fff6e6; font: 700 max(10px, 0.72em)/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
+.openRowNo { flex: none; display: grid; place-items: center; width: 2.45em; height: 2.45em; border-radius: 50%; background: #871f13; color: #fff6e6; font: 700 max(11px, 0.72em)/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
 .openRowNo svg { width: 1.5em; height: 1.5em; }
 .openChallengeList li[data-solved="true"] .openRowNo { background: #dde5c4; color: #557636; }
 .openRowText { flex: 1 1 auto; min-width: 0; }
@@ -377,7 +377,7 @@
 .openLive[data-tone="running"] { color: #4f7a35; }
 .openLive[data-tone="running"] i { box-shadow: 0 0 0 0.2em #4f7a3524; }
 .openInstance { display: grid; gap: 0.35em; margin: 0.6em 0 0.5em; padding: 0.6em 0.75em; border: 1px solid var(--open-line); border-radius: 0.38em; background: #f3dfb866; }
-.openInstanceHead { display: flex; align-items: center; justify-content: space-between; gap: 0.6em; min-width: 0; color: var(--open-soft); font: 600 0.82em/1.2 "Pretendard", sans-serif; }
+.openInstanceHead { display: flex; align-items: center; justify-content: space-between; gap: 0.6em; min-width: 0; color: var(--open-soft); font: 600 max(11px, 0.82em)/1.2 "Pretendard", sans-serif; }
 .openInstance button, .openInstance strong { display: flex; align-items: center; gap: 0.4em; width: 100%; min-width: 0; padding: 0; border: 0; background: none; color: var(--open-ink); font: 600 1em/1.4 "Pretendard", sans-serif; text-align: left; }
 .openInstance button { min-height: 2em; cursor: pointer; }
 .openInstance button > span { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -457,7 +457,7 @@ label.sheetChoice { align-items: flex-start; cursor: pointer; }
 .lineList > li + li { background: linear-gradient(var(--open-rule), var(--open-rule)) top / 100% 1px no-repeat; }
 .lineList > li[data-selected="true"]::before { content: ""; position: absolute; inset: 0 -0.45em; z-index: -1; border-radius: 0.35em; background: #f8ecd2c7; box-shadow: inset 3px 0 0 var(--line-accent); }
 .lineRow { display: flex; align-items: center; gap: var(--open-gap); min-height: 3.6em; padding: 0.6em 0; }
-.lineSeal { flex: none; display: grid; place-items: center; width: 2.45em; height: 2.45em; border-radius: 50%; background: var(--gem-mid); color: #fff6e6; font: 700 max(10px, 0.72em)/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
+.lineSeal { flex: none; display: grid; place-items: center; width: 2.45em; height: 2.45em; border-radius: 50%; background: var(--gem-mid); color: #fff6e6; font: 700 max(11px, 0.72em)/1 "Pretendard", sans-serif; font-variant-numeric: tabular-nums; }
 .lineText { flex: 1 1 auto; min-width: 0; }
 /* 라인 이름은 문제 제목과 같은 글자, 대상 칸은 분야 자리에 쓰고 푼 칸만 보석색으로 진하게 */
 .lineName { display: block; min-width: 0; color: var(--open-ink); font-size: 1em; font-weight: 600; line-height: 1.4; word-break: keep-all; overflow-wrap: anywhere; }

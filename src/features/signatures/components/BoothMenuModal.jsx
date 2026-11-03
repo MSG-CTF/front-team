@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import FlagResultModal from "../../challenges/components/FlagResultModal.jsx";
 import LoadingRing from "../../../components/common/LoadingRing.jsx";
+import { boothMenuWidth } from "../utils/boothMenuSize.js";
 import styles from "./BoothMenuModal.module.css";
 
 // submission: useSignatureDetail 결과. 없으면(미리보기) 제출 칸을 그리지 않는다
@@ -22,8 +23,11 @@ export default function BoothMenuModal({ club, challenge, status, error, onRetry
       const box = entries.find(entry => entry.target === overlay)?.contentRect;
       const width = box?.width ?? overlay.clientWidth - parseFloat(outer.paddingLeft) - parseFloat(outer.paddingRight);
       const height = box?.height ?? overlay.clientHeight - parseFloat(outer.paddingTop) - parseFloat(outer.paddingBottom);
-      const limit = parseFloat(getComputedStyle(dialog).getPropertyValue("--menu-max"));
-      dialog.style.setProperty("--menu-w", `${Math.max(0, Math.min(limit, width))}px`);
+      const style = getComputedStyle(dialog);
+      const number = (name) => parseFloat(style.getPropertyValue(name));
+      const base = number("--menu-max");
+      const menuWidth = boothMenuWidth({ width, height, base, grow: number("--menu-grow") || 0, cap: number("--menu-cap") || base });
+      dialog.style.setProperty("--menu-w", `${menuWidth}px`);
       dialog.style.setProperty("--booth-view-height", `${Math.max(0, height)}px`);
     };
     measure();

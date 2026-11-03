@@ -43,5 +43,7 @@
 /* 큰 화면에서는 카드를 키워 글자를 읽기 쉽게 한다 */
 @media (min-width: 1101px) and (min-height: 760px) { .card { width: min(290px, calc((100dvh - 150px) * .597)); } }
 @media (max-width: 800px) { .card { width: min(260px, 76vw, calc((100dvh - 140px) * .597)); } }
+/* 좁은 화면은 카드와 확인 명판이 아래 보유 찬스카드 판과 겹쳐 보이지 않게 룰렛 창과 같은 세기로 뒤를 덮는다 */
+@media (max-width: 1100px) { .overlay { background: rgba(27, 13, 5, 0.6); } }
 @media (prefers-reduced-motion: no-preference) { .card { animation: arrive 180ms ease-out; } }
 @keyframes arrive { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }

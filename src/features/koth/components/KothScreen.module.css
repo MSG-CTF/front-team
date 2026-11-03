@@ -177,8 +177,9 @@
   color: #74512c;
 }
 
+/* 노트북(1280·1440)에서도 단위 글자가 11px 아래로 내려가지 않는다 */
 .teamScore small {
-  font: 400 0.82em/1 "Inria Serif", serif;
+  font: 400 max(11px, 0.82em)/1 "Inria Serif", serif;
   letter-spacing: 0.08em;
 }
 
@@ -285,7 +286,7 @@
   width: 120%;
   overflow: hidden;
   color: #4b2b17;
-  font-size: 0.85em;
+  font-size: max(11px, 0.85em);
   font-weight: 600;
   line-height: 1.1;
   text-overflow: ellipsis;

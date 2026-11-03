@@ -1,6 +1,15 @@
 @import "../../../styles/pretendard/detail.generated.css";
 /* Figma: "MSG-CTF 프론트 개발", node 192:137 (Rules Page, 1920x1080). */
 
+/* 판 제목줄 RULES 는 문제 상세의 DESCRIPTION·ATTACHMENTS 와 같은 Caslon 대문자다 */
+@font-face {
+  font-family: "Detail Caslon";
+  src: url("/assets/leaderboard/fonts/libre-caslon-text-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 /* 배경은 메인(보드) 페이지와 같은 Figma 467:345 원본 한 장. 예전에는 무대 안에 풍경+보드가 함께 그려진
    rules-background.png를 한 번 더 깔아 16:9가 아닌 창에서 풍경이 두 겹으로 보였다 */
 .page {
@@ -41,51 +50,69 @@
   filter: drop-shadow(0 0.6cqw 1.6cqw #160d0c66);
 }
 
+/* 규칙 판을 두 단으로 넓게 쓰도록 로고는 원래의 2/3 크기로 보드 안쪽 위에 둔다
+   그림 속 로고(정사각 그림의 위 26.4%~71.1%)가 무대 높이 16%~28.6%에 온다 */
 .logo {
   position: absolute;
-  top: 7.2222%;
-  left: 37.9688%;
+  top: 8.56%;
+  left: 42.07%;
   display: block;
-  width: 24.0625%;
-  height: 42.7778%;
+  width: 15.86%;
+  height: 28.19%;
   object-fit: cover;
   user-select: none;
   pointer-events: none;
 }
 
+/* 무대 높이 29.5%~89.5% 보드 안쪽 아래 테두리선(91%) 위까지 쓴다 */
 .rulesPanel {
   position: absolute;
-  top: 38.6111%;
+  top: 29.5%;
   left: 9.0625%;
   width: 80.8854%;
-  height: 48.1481%;
+  height: 60%;
 }
 
-/* 가로줄을 지운 설명 패널(2000×670). 테두리까지 상자 안에 다 보인다 */
-.rulesPanelImage {
+/* 제목 글자를 지운 설명 판(2000×670)을 9조각으로 쓴다
+   제목줄(위 150px)과 테두리(70px) 두께는 원래 비율대로 두고 가운데 종이만 세로로 늘인다
+   그림 1px = 판 폭 80.8854cqw / 2000 */
+.rulesPanel::before {
+  content: "";
   position: absolute;
   inset: 0;
-  display: block;
-  width: 100%;
-  height: 100%;
-  user-select: none;
+  border: 0 solid transparent;
+  border-image: url("/assets/rules/rules-panel-blank.webp") 150 70 70 fill / 6.0664cqw 2.831cqw 2.831cqw stretch;
   pointer-events: none;
 }
 
-/* 패널 그림의 DESCRIPTION 제목줄(y 132/670) 아래, 안쪽 테두리 안 */
+/* 원래 그림의 DESCRIPTION 자리(그림 x 76, 글자 아래끝 y 103) */
+.panelLabel {
+  position: absolute;
+  top: 2.57cqw;
+  left: 3.074cqw;
+  margin: 0;
+  color: #4d2f13;
+  font: 400 1.9cqw/1 "Detail Caslon", "Inria Serif", serif;
+  letter-spacing: 0.12em;
+}
+
+/* 제목줄(y 132/670) 아래, 안쪽 테두리 안 앞 세 항목과 뒤 세 항목을 두 단으로 나란히 둔다
+   글이 판보다 길어지는 아주 낮은 창에서만 판 안에서 스크롤한다 */
 .rulesList {
   position: absolute;
-  inset: 23% 3.2% 5.5% 4.6%;
+  inset: 6.23cqw 3.2% 1.49cqw 4.6%;
   display: grid;
-  align-content: start;
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 3cqw;
+  align-items: start;
   overflow-y: auto;
   scrollbar-color: #9b713d transparent;
-  padding-right: 12px;
-  padding-bottom: 1.5cqw;
-  /* 스크롤 중 아래 끝에서 글줄이 칼같이 잘리지 않게 흐리게 사라지게 한다 */
-  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5cqw), transparent);
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 2.5cqw), transparent);
+}
+
+.rulesColumn {
+  display: grid;
+  align-content: start;
+  gap: 1.1cqw;
 }
 
 .ruleItem {
@@ -106,12 +133,13 @@
   line-height: 1.2917;
 }
 
+/* 두 단이 한 판에 들어가도록 노트북(1280)에서는 14px 까지 줄인다 1920 에서는 21px 그대로다 */
 .ruleDescription {
   margin-top: 0.5208cqw;
   font-family: "Detail Pretendard", "Pretendard", "Apple SD Gothic Neo", sans-serif;
-  font-size: clamp(16px, 1.1cqw, 22px);
+  font-size: clamp(14px, 1.1cqw, 22px);
   font-weight: 400;
-  line-height: 1.6;
+  line-height: 1.55;
   overflow-wrap: anywhere;
 }
 
@@ -147,11 +175,11 @@
     background: #eedfbd;
     background-clip: padding-box;
   }
-  .background, .rulesPanelImage { display: none; }
+  .background, .rulesPanel::before, .panelLabel { display: none; }
   .logo { position: static; width: 160px; height: 130px; margin: -16px auto 12px; object-fit: contain; }
   .rulesPanel { position: static; width: 100%; height: auto; overflow: visible; }
   .rulesPanel h1 { position: static; width: auto; height: auto; margin: 0 0 24px; clip: auto; overflow: visible; text-align: center; font: 700 24px/1.5 "Detail Pretendard", "Pretendard", "Apple SD Gothic Neo", sans-serif; color: #613d15; }
-  .rulesList { position: static; overflow: visible; gap: 24px; padding: 0; -webkit-mask-image: none; mask-image: none; }
+  .rulesList { position: static; grid-template-columns: minmax(0, 1fr); overflow: visible; gap: 24px; padding: 0; }
   .ruleTitle { font-size: 18px; }
   .ruleDescription { margin-top: 8px; font-size: 16px; }
   .mainNavigationButton { top: 10px; right: 10px; left: auto; width: 44px; height: 44px; padding: 4px; }
@@ -197,6 +225,7 @@
   .page { isolation: isolate; background: none; }
   .page::before { content: ""; position: fixed; inset: 0; z-index: -1; background: #674326 url("/assets/login/background-plaza.webp") center / cover; pointer-events: none; }
   .stage { isolation: isolate; border-image: url("/assets/rules/paper-frame.webp") 32 / 8px stretch; background: none; }
-  .rulesList { gap: 20px; }
-  .rulesList > * + * { padding-top: 20px; border-top: 1px solid #9d784e70; }
+  /* 두 단 묶음을 풀어 한 줄로 잇고, 단 사이와 항목 사이에 같은 구분선을 긋는다 */
+  .rulesList, .rulesColumn { gap: 20px; }
+  .rulesList > * + *, .rulesColumn > * + * { padding-top: 20px; border-top: 1px solid #9d784e70; }
 }
