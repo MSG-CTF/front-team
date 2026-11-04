@@ -38,36 +38,40 @@ export default function FlagResultModal({ feedback, onClose }) {
         >
           ×
         </button>
-        <p className={styles.resultEyebrow}>{isError ? "WRONG" : "CORRECT"}</p>
-        <h2 id="flag-result-title" className={styles.resultTitle}>
-          {isError ? "오답입니다" : "정답입니다"}
-        </h2>
-        <p className={styles.resultMessage}>{feedback.message}</p>
-        {!isError && data && (
-          <dl className={styles.rewards}>
-            {hasNumber("earned_score") && (
-              <div>
-                <dt>획득 점수</dt>
-                <dd>+{data.earned_score.toLocaleString("ko-KR")}</dd>
-              </div>
-            )}
-            {hasNumber("earned_mileage") && (
-              <div>
-                <dt>획득 마일리지</dt>
-                <dd>+{data.earned_mileage.toLocaleString("ko-KR")}</dd>
-              </div>
-            )}
-            {data.is_extra_dice_granted === true && (
-              <div>
-                <dt>추가 주사위</dt>
-                <dd>+1</dd>
-              </div>
-            )}
-          </dl>
-        )}
-        <button type="button" className={styles.primaryButton} onClick={onClose}>
-          확인
-        </button>
+        {/* 두루마리 양피지 안쪽에 글을 모은다 */}
+        <div className={styles.resultBody}>
+          <p className={styles.resultEyebrow}>{isError ? "INCORRECT" : "CORRECT"}</p>
+          <h2 id="flag-result-title" className={styles.resultTitle}>
+            {isError ? "오답입니다" : "정답입니다"}
+          </h2>
+          <div className={styles.resultDivider} aria-hidden="true"><span /></div>
+          <p className={styles.resultMessage}>{feedback.message}</p>
+          {!isError && data && (
+            <dl className={styles.rewards}>
+              {hasNumber("earned_score") && (
+                <div>
+                  <dt>획득 점수</dt>
+                  <dd>+{data.earned_score.toLocaleString("ko-KR")}</dd>
+                </div>
+              )}
+              {hasNumber("earned_mileage") && (
+                <div>
+                  <dt>획득 마일리지</dt>
+                  <dd>+{data.earned_mileage.toLocaleString("ko-KR")}</dd>
+                </div>
+              )}
+              {data.is_extra_dice_granted === true && (
+                <div>
+                  <dt>추가 주사위</dt>
+                  <dd>+1</dd>
+                </div>
+              )}
+            </dl>
+          )}
+          <button type="button" className={styles.primaryButton} onClick={onClose}>
+            확인
+          </button>
+        </div>
       </div>
     </div>
   );
