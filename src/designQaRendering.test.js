@@ -323,7 +323,7 @@ test("PC 순위표는 긴 팀명과 점수를 한 줄로 줄여 표가 종이 �
   for (const [property, value] of [["white-space", "nowrap"], ["overflow", "hidden"], ["text-overflow", "ellipsis"]]) {
     assert.ok(oneLine.some(([key, current]) => key === property && current === value), property);
   }
-  // 종이가 내용 따라 늘어나는 태블릿·폰과 기본 규칙은 줄을 바꿔 이름을 다 보인다
+  // 종이가 내용 따라 늘어나는 태블릿·폰과 기본 규칙은 줄을 바꾼다 (폰 팀명은 두 줄까지)
   const wraps = [];
   root.walkRules((rule) => {
     const media = rule.parent?.type === "atrule" ? rule.parent.params : "";
@@ -356,16 +356,28 @@ test("대회 전 그래프 범례는 팀이 없다고 하지 않고 점수 얻�
   assert.ok(declarations(root, ".legendState").some(([key, value]) => key === "word-break" && value === "keep-all"));
 });
 
-test("순위표는 폰에서 팀마다 카드로 쌓이고 태블릿에서는 모든 열을 유지한 채 표 안에서만 가로 이동한다", () => {
+test("순위표는 폰에서 표 대신 팀 목록을 쓰고 태블릿에서는 모든 열을 유지한 채 표 안에서만 가로 이동한다", () => {
   const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
   assert.ok(declarations(root, ".rankingGrid").some(([key, value]) => key === "width" && value === "100%"));
   assert.ok(declarations(root, ".tableContainer").some(([key, value]) => key === "overflow-x" && value === "auto"));
-  // 폰 구간에서만 줄이 격자 카드가 되고, 밀어서 보라는 안내는 사라지며, 분야 이름이 값 위에 붙는다
+  // 폰 구간에서는 표와 밀어 보라는 안내를 숨기고, 제목·갱신·목록·쪽 넘김을 한 격자에 둔다
   const phone = root.nodes.find((node) => node.type === "atrule" && node.params === "(max-width: 767px)"
-    && declarations(node, ".rankingGrid tbody tr").length > 0);
-  assert.ok(declarations(phone, ".rankingGrid tbody tr").some(([key]) => key === "grid-template-columns"));
-  assert.ok(declarations(phone, ".mobileTableHint").some(([key, value]) => key === "display" && value === "none"));
-  assert.ok(declarations(phone, ".mobileCellLabel").some(([key, value]) => key === "display" && value === "block"));
+    && declarations(node, ".rankingPanel").length > 0);
+  assert.ok(declarations(phone, ".mobileTableHint, .tableContainer").some(([key, value]) => key === "display" && value === "none"));
+  assert.ok(declarations(phone, ".rankingPanel").some(([key, value]) => key === "grid-template-areas" && value.includes("pager")));
+  // 쪽 번호 줄은 폰에서 목록 아래 ‹ 1 / 15 › 한 줄로 바뀐다
+  assert.ok(declarations(phone, ".pagination button:not(.pagerStep), .pageTotal").some(([key, value]) => key === "display" && value === "none"));
+  assert.ok(declarations(phone, ".pageIndicator").some(([key, value]) => key === "display" && value === "inline-block"));
+  assert.ok(declarations(root, ".pagerIcon, .pageIndicator").some(([key, value]) => key === "display" && value === "none"));
+  // 목록은 폰에서만 보인다
+  const list = css("features/leaderboard/components/PhoneRankingList.module.css");
+  assert.ok(list.nodes.some((node) => node.type === "rule" && node.selector === ".ranking"
+    && node.nodes.some((decl) => decl.prop === "display" && decl.value === "none")));
+  const listPhone = list.nodes.find((node) => node.type === "atrule" && node.params === "(max-width: 767px)");
+  assert.ok(declarations(listPhone, ".ranking").some(([key, value]) => key === "display" && value === "block"));
+  // 팀 이름은 영문은 순위표 세리프, 한글은 게임 화면 제목 글꼴(송명)이고 목록은 카드 없이 종이 위 줄선만 쓴다
+  assert.ok(declarations(listPhone, ".name").some(([key, value]) => key === "font" && value.includes("\"Libre Baskerville\", \"Song Myung\"")));
+  assert.ok(!declarations(listPhone, ".list").some(([key]) => key === "border-radius" || key === "box-shadow" || key === "background"));
   const tablet = root.nodes.filter((node) => node.type === "atrule" && node.params === "(max-width: 1100px)");
   assert.ok(tablet.some((node) => declarations(node, ".rankingGrid").some(([key, value]) => key === "min-width" && value === "1036px")));
   assert.ok(!tablet.some((node) => declarations(node, ".rankingGrid tbody tr").some(([key]) => key === "grid-template-columns")));
@@ -384,6 +396,42 @@ test("순위표는 폰에서 팀마다 카드로 쌓이고 태블릿에서는 �
   assert.match(html, /좌우로 밀어 모든 분야의 점수를 확인하세요/);
   assert.match(html, /<h1[^>]*>[\s\S]*SCOREBOARD[\s\S]*?<\/h1>/);
   assert.doesNotMatch(html, />LEADERBOARD<|background-plaza|panel-board/);
+});
+
+test("폰 순위 목록은 팀마다 한 줄이고 누르면 분야별·KoTH·CLUB·LINE 점수가 펼쳐진다", () => {
+  const scored = { key: "scored", rank: 1, teamName: "고구마라떼", teamScore: 4310, solveCount: 12, lastSolvedAt: "2026-11-08T05:32:00Z",
+    categoryScores: [174, 651, 304, 260, 347, 217, 130, 87], kothScore: 704, signatureScore: 1450, lineScore: 500 };
+  const zero = { key: "zero", rank: 2, teamName: "팀002", teamScore: 0, solveCount: null, lastSolvedAt: null,
+    categoryScores: [0, 0, 0, 0, 0, 0, 0, 0], kothScore: 0, signatureScore: 0, lineScore: 0 };
+  const html = render("Leaderboard", { teams: [], leaderboardStatus: "empty", rankingStatus: "success", page: 3, pageCount: 15, rankings: [scored, zero] });
+  const list = html.match(/<ol[^>]*aria-label="팀 순위"[^>]*>[\s\S]*?<\/ol>/)?.[0];
+  assert.ok(list);
+  const [first, second] = list.match(/<li[^>]*>[\s\S]*?<\/li>/g);
+  // 1~3위는 PC 그림과 같은 월계관을 선으로 다시 그리고, 줄 아래 푼 문제 수와 마지막 득점 시각(KST), 오른쪽 총점
+  assert.match(first, /data-medal="1" aria-label="1위"><svg[^>]*aria-hidden="true"[\s\S]*?>1<\/text><\/svg>/);
+  assert.match(first, />고구마라떼</);
+  assert.match(first, /12문제 · 마지막 득점 14:32/);
+  assert.match(first, />4,310<span[^>]*>점<\/span>/);
+  // 펼친 칸은 PC 표 열 순서 그대로 분야 여덟 칸 다음 KoTH·CLUB·LINE
+  assert.match(first, /<details[^>]*>/);
+  assert.doesNotMatch(first, /<details[^>]* open/);
+  const order = [...first.matchAll(/<dt>([^<]+)<\/dt>/g)].map((match) => match[1]);
+  assert.deepEqual(order, ["MISC", "WEB", "FOR", "REV", "PWN", "CRY", "OSINT", "WEB3", "KoTH", "CLUB", "LINE"]);
+  for (const [label, value] of [["MISC", "174"], ["OSINT", "130"], ["WEB3", "87"], ["KoTH", "704"], ["CLUB", "1,450"], ["LINE", "500"]]) {
+    assert.match(first, new RegExp(`<dt>${label}</dt><dd>${value}</dd>`));
+  }
+  // 점수가 없는 팀은 순위 숫자·0·펼침 없이 한 줄 안내만
+  assert.doesNotMatch(second, /<details/);
+  assert.match(second, /aria-label="순위 없음">–</);
+  assert.match(second, /아직 점수 없음/);
+  assert.doesNotMatch(second, />0<span/);
+  assert.doesNotMatch(html, /점수를 얻으면 순위가 매겨집니다/);
+  // 아무도 점수가 없으면(대회 전) 순위가 아직 없다고 알린다
+  assert.match(render("Leaderboard", { teams: [], leaderboardStatus: "empty", rankingStatus: "success", rankings: [zero] }), /점수를 얻으면 순위가 매겨집니다/);
+  // 폰 쪽 넘김은 현재 쪽과 전체 쪽 수를 한 줄로 보이고 앞뒤 단추 이름은 그대로다
+  assert.match(html, /<strong>3<\/strong> \/ 15/);
+  assert.match(html, /aria-label="이전 순위 페이지"/);
+  assert.match(html, /aria-label="다음 순위 페이지"/);
 });
 
 test("규칙 문단은 원문을 유지하고 한 줄 고정과 항목별 절대 좌표를 사용하지 않는다", () => {
