@@ -229,6 +229,11 @@
 .rankingGrid .teamNameCell { padding-inline: 10px; text-align: left; font-weight: 400; }
 .cellValue { display: block; width: 100%; min-width: 0; overflow-wrap: anywhere; line-height: 1.4; }
 .teamNameCell .cellValue { word-break: keep-all; }
+/* PC 표는 종이 위 자리가 정해져 있어 팀 이름이나 점수가 두 줄이 되면 아래 줄이 종이 밖으로 밀린다 */
+/* 한 줄로 두고 넘치면 말줄임, 전체 값은 칸 title 로 본다 종이가 같이 늘어나는 태블릿·폰은 그대로 줄을 바꾼다 */
+@media (min-width: 1101px) {
+  .rankingGrid tbody .cellValue { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
 .mobileCellLabel { display: none; }
 .cellValue:focus-visible { outline: 1px solid #8d4f1c; outline-offset: 2px; }
 .pointCell { color: #985608; font-weight: 600; }
@@ -239,7 +244,7 @@
 .rankArtwork { display: block; width: 54px; height: 40px; margin: 0 auto; }
 .rankingGrid .tableState { height: 240px; color: #745436; font-size: 20px; border: 0; }
 
-.legendState { position: absolute; top: 42%; left: 0; width: 100%; margin: 0; color: rgb(71 42 20 / 76%); font-size: 12px; font-weight: 600; text-align: center; line-height: 1.35; }
+.legendState { position: absolute; top: 42%; left: 0; width: 100%; margin: 0; color: rgb(71 42 20 / 76%); font-size: 12px; font-weight: 600; text-align: center; line-height: 1.35; word-break: keep-all; text-wrap: balance; }
 .legendLeaf { position: absolute; left: -44px; top: 0; width: 29px; height: 29px; }
 .refreshNote { position: absolute; left: 340px; top: 135px; width: 1270px; text-align: center; font-size: 15px; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }

@@ -315,6 +315,47 @@ test("리더보드 표는 모든 열과 긴 팀명, 원래 1~3위 이미지를 �
   assert.equal((html.match(/scope="col"/g) || []).length, 15);
 });
 
+test("PC 순위표는 긴 팀명과 점수를 한 줄로 줄여 표가 종이 밖으로 밀리지 않는다", () => {
+  const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
+  // 종이 위 자리가 정해진 PC 표 칸만 한 줄 말줄임이다
+  const desktop = root.nodes.filter((node) => node.type === "atrule" && node.params === "(min-width: 1101px)");
+  const oneLine = desktop.flatMap((node) => declarations(node, ".rankingGrid tbody .cellValue"));
+  for (const [property, value] of [["white-space", "nowrap"], ["overflow", "hidden"], ["text-overflow", "ellipsis"]]) {
+    assert.ok(oneLine.some(([key, current]) => key === property && current === value), property);
+  }
+  // 종이가 내용 따라 늘어나는 태블릿·폰과 기본 규칙은 줄을 바꿔 이름을 다 보인다
+  const wraps = [];
+  root.walkRules((rule) => {
+    const media = rule.parent?.type === "atrule" ? rule.parent.params : "";
+    if (media === "(min-width: 1101px)" || !rule.selector.includes("cellValue")) return;
+    rule.walkDecls("white-space", (decl) => wraps.push(`${media} ${rule.selector} ${decl.value}`));
+  });
+  assert.deepEqual(wraps, []);
+  // 잘린 이름은 칸 title 과 읽기용 이름으로 전부 남는다
+  const name = "명지대학교 정보보안 동아리 연합 MJSEC 2026 본선팀";
+  const html = render("Leaderboard", {
+    teams: [], leaderboardStatus: "empty", rankingStatus: "success",
+    rankings: [{ key: "long", rank: 1, teamName: name, teamScore: 0, solveCount: null, categoryScores: [], signatureScore: 0 }],
+  });
+  assert.match(html, new RegExp(`<th[^>]*title="${name}"`));
+  assert.match(html, new RegExp(`tabindex="0" aria-label="${name}"`));
+});
+
+test("대회 전 그래프 범례는 팀이 없다고 하지 않고 점수 얻은 팀이 없다고 안내한다", () => {
+  // /leaderboard 는 아직 못 푼 팀을 빼서 대회 전에는 비어 온다 순위표에는 팀이 그대로 있다
+  const html = render("Leaderboard", {
+    teams: [], leaderboardStatus: "empty", rankingStatus: "success",
+    rankings: [{ key: "zero", rank: 1, teamName: "팀001", teamScore: 0, solveCount: null, categoryScores: [], signatureScore: 0 }],
+  });
+  const legend = html.match(/<aside[^>]*aria-label="그래프 팀 범례"[\s\S]*?<\/aside>/)?.[0];
+  assert.ok(legend);
+  assert.match(legend, /아직 점수를 얻은 팀이 없습니다/);
+  assert.doesNotMatch(html, /아직 등록된 팀이 없습니다/);
+  // PC 범례 폭에서는 두 줄이 되므로 낱말 중간("없습/니다")에서 끊지 않는다
+  const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
+  assert.ok(declarations(root, ".legendState").some(([key, value]) => key === "word-break" && value === "keep-all"));
+});
+
 test("순위표는 폰에서 팀마다 카드로 쌓이고 태블릿에서는 모든 열을 유지한 채 표 안에서만 가로 이동한다", () => {
   const root = css("features/leaderboard/components/LeaderboardScreen.module.css");
   assert.ok(declarations(root, ".rankingGrid").some(([key, value]) => key === "width" && value === "100%"));
