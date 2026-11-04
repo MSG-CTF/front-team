@@ -29,8 +29,9 @@ function getLegendTextBoxes(teamCount) {
 }
 
 // 받는 중 안내는 같은 화면의 점수 그래프와 순위표가 링과 함께 보이므로 범례에는 다시 띄우지 않는다
+// /leaderboard 는 아직 못 푼 팀을 빼고 보내므로 비어 있다는 건 팀이 없다는 게 아니라 점수 얻은 팀이 없다는 뜻이다
 const STATUS_MESSAGE = {
-  empty: "아직 등록된 팀이 없습니다",
+  empty: "아직 점수를 얻은 팀이 없습니다",
   error: "팀 점수를 불러오지 못했습니다",
 };
 
