@@ -85,7 +85,7 @@ function ChallengeDetailContent({ challengeId }) {
   const retrySeconds =
     retryAt == null ? 0 : Math.max(0, Math.ceil((retryAt - now) / 1000));
   const unavailable = Boolean(
-    detail.pageError || detail.refreshError || detail.instanceError,
+    detail.pageError || detail.refreshError || detail.instanceError || detail.instanceLookupPending,
   );
 
   const handleSubmitFlag = async () => {
@@ -239,6 +239,7 @@ function ChallengeDetailContent({ challengeId }) {
       refreshError={detail.refreshError}
       refreshing={detail.refreshing}
       instanceError={detail.instanceError}
+      instanceLookupPending={detail.instanceLookupPending}
       challenge={challenge}
       remoteRun={remoteRun}
       submission={submission}

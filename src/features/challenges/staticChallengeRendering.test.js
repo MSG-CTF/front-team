@@ -74,6 +74,36 @@ test("실행형 문제는 인스턴스 작업을 계속 보여준다", () => {
   assert.match(html, /href="#challenge-instance"/);
 });
 
+test("본문 조회 후 인스턴스를 확인하는 동안 본문은 보이고 실행 버튼만 잠긴다", () => {
+  const html = renderDetail(true, false, { instanceLookupPending: true, instanceUnavailable: true });
+  assert.match(html, /Is This Job Legit\?/);
+  assert.match(html, /인스턴스 상태를 확인하고 있습니다/);
+  assert.match(html, /상태 확인이 끝나면 인스턴스 작업을 사용할 수 있습니다/);
+  assert.match(html, /<button(?=[^>]*aria-label="인스턴스 생성")(?=[^>]*disabled)[^>]*>/);
+  assert.doesNotMatch(html, /조회 실패/);
+});
+
+test("초기 일시 오류는 재시도 안내로 표시하고 접근 거절은 오류로 남긴다", () => {
+  const challengeProps = { challenge: null, pageError: { code: "REQUEST_FAILED", recoverable: true } };
+  const temporary = renderDetail(true, false, challengeProps);
+  assert.match(temporary, /연결이 지연되고 있습니다/);
+  assert.match(temporary, /잠시 후 자동으로 다시 확인합니다/);
+  assert.doesNotMatch(temporary, /문제를 불러오지 못했습니다/);
+  const denied = renderDetail(true, false, { challenge: null, pageError: { code: "CHALLENGE_LOCKED", message: "개방되지 않음", recoverable: false } });
+  assert.match(denied, /role="alert"/);
+  assert.match(denied, /아직 열리지 않은 문제입니다/);
+});
+
+test("복구 중 인스턴스를 다시 확인할 때 이전 접속 주소를 먼저 보여주지 않는다", () => {
+  const html = renderDetail(true, false, {
+    instanceLookupPending: true,
+    instanceUnavailable: true,
+    instance: { status: "RUNNING", instanceId: "old", endpoints: [{ name: "web", isWeb: true, url: "https://old-before-check.example" }] },
+  });
+  assert.match(html, /인스턴스 상태를 확인하고 있습니다/);
+  assert.doesNotMatch(html, /old-before-check\.example|실행 중/);
+});
+
 test("인스턴스 작업 알림과 조회 오류는 화면 아래 독이 아니라 인스턴스 버튼 바로 뒤에 둔다", () => {
   const html = renderDetail(true, false, {
     instanceFeedback: { type: "success", message: "인스턴스 생성 요청을 접수했습니다" },

@@ -26,8 +26,36 @@ export const INITIAL_DETAIL_STATE = {
   pageError: null,
   refreshError: null,
   instanceError: null,
+  instanceLookupPending: false,
+  instanceChecked: false,
   refreshing: false,
 };
+
+export function resolveDetailMetadata(current, detail, challengeId) {
+  const valid = detail.data && typeof detail.data === "object" && !Array.isArray(detail.data);
+  if (!valid || detail.error) {
+    const failed = resolveDetailState(current, detail, { data: null, error: null }, challengeId);
+    if (failed.status === "error") return failed;
+    return { ...current, refreshError: detail.error, refreshing: false, instanceLookupPending: false };
+  }
+  const lookup = needsInstanceLookup(detail.data);
+  const checked = current.instanceChecked && needsInstanceLookup(current.challengeData)
+    && !current.refreshError && !current.instanceError;
+  return {
+    ...current,
+    status: "success",
+    challengeData: detail.data,
+    pageError: null,
+    refreshError: null,
+    instanceError: null,
+    instanceLookupPending: lookup && !checked,
+    instanceChecked: !lookup || checked,
+    instanceData: lookup ? current.instanceData : null,
+    otherInstanceData: lookup ? current.otherInstanceData : null,
+    teammateInstanceData: lookup ? current.teammateInstanceData : null,
+    refreshing: lookup,
+  };
+}
 
 export function readDetailResult(result, fallbackMessage) {
   const envelope =
@@ -81,6 +109,8 @@ export function resolveDetailState(current, detail, instance, challengeId) {
       ? null
       : findOtherInstance(instance.data, challengeId),
     instanceError: instance.error,
+    instanceLookupPending: false,
+    instanceChecked: !instance.error,
     refreshing: false,
   };
 }
