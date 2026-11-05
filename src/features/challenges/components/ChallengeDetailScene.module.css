@@ -1330,6 +1330,45 @@
 .resultModalSuccess {
   background-image: url("/assets/challenge-detail/result-scroll-correct.webp");
 }
+/* 정답일 때 두루마리 그림 속 낙엽 조각이 화면 위에서 천천히 흔들리며 떨어진다 */
+.leafFall {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.leafDrop {
+  position: absolute;
+  top: 0;
+  animation: leaf-fall linear infinite both;
+  will-change: transform;
+}
+.leaf {
+  display: block;
+  width: calc(var(--w) * var(--k) * 1px);
+  height: calc(var(--h) * var(--k) * 1px);
+  background: url("/assets/challenge-detail/result-scroll-correct.webp") no-repeat;
+  background-size: calc(1280px * var(--k)) calc(960px * var(--k));
+  background-position: calc(var(--x) * var(--k) * -1px) calc(var(--y) * var(--k) * -1px);
+  animation: leaf-sway ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes leaf-fall {
+  0% { transform: translateY(-80px); opacity: 0; }
+  6% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(calc(100dvh + 40px)); opacity: 0; }
+}
+@keyframes leaf-sway {
+  0% { transform: translateX(calc(var(--amp) * -1)) rotate(-28deg) rotateY(0deg); }
+  50% { transform: translateX(0) rotate(4deg) rotateY(35deg); }
+  100% { transform: translateX(var(--amp)) rotate(30deg) rotateY(0deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .leafFall {
+    display: none;
+  }
+}
 .resultModalError {
   background-image: url("/assets/challenge-detail/result-scroll-error.webp");
 }
