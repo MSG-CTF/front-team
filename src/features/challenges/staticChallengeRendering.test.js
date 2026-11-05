@@ -83,6 +83,30 @@ test("본문 조회 후 인스턴스를 확인하는 동안 본문은 보이고 
   assert.doesNotMatch(html, /조회 실패/);
 });
 
+test("첫 상태 확인 중에도 본문은 읽을 수 있고 장식용 SVG 파일은 요청하지 않는다", () => {
+  const html = renderDetail(true, false, { instanceLookupPending: true, instanceUnavailable: true });
+  assert.match(html, /Is This Job Legit\?/);
+  assert.match(html, /인스턴스 상태를 확인하고 있습니다/);
+  assert.match(html, /artworkPending/);
+  assert.doesNotMatch(html, /paper-texture\.webp|panel-score\.webp/);
+  const ready = renderDetail(true);
+  assert.doesNotMatch(ready, /artworkPending/);
+  assert.match(ready, /paper-texture\.webp|panel-score\.webp/);
+});
+
+test("일시 오류의 재확인 중에는 장식을 계속 미루고 관리자 미리보기에는 원래 디자인을 쓴다", () => {
+  const temporary = renderDetail(true, false, { challenge: null, pageError: { code: "REQUEST_FAILED", recoverable: true } });
+  assert.match(temporary, /연결이 지연되고 있습니다/);
+  assert.match(temporary, /artworkPending/);
+  assert.doesNotMatch(temporary, /paper-texture\.webp/);
+  const instanceFailure = renderDetail(true, false, { instanceError: { message: "재확인 중", recoverable: true }, instanceUnavailable: true });
+  assert.match(instanceFailure, /artworkPending/);
+  assert.match(instanceFailure, /재확인 중/);
+  const preview = renderDetail(true, true, { instanceLookupPending: true });
+  assert.doesNotMatch(preview, /artworkPending/);
+  assert.match(preview, /paper-texture\.webp/);
+});
+
 test("초기 일시 오류는 재시도 안내로 표시하고 접근 거절은 오류로 남긴다", () => {
   const challengeProps = { challenge: null, pageError: { code: "REQUEST_FAILED", recoverable: true } };
   const temporary = renderDetail(true, false, challengeProps);

@@ -2823,3 +2823,18 @@
 @media (max-width: 1100px), (max-height: 619px) {
   .runPlaque { min-width: 0; border-inline-width: 12px; border-image-width: 0 12px; letter-spacing: 0.06em; }
 }
+
+/* 조회 중에는 글과 상태를 먼저 보여준다 확인 뒤에는 기존 그림·글꼴을 그대로 쓴다 */
+.artworkPending,
+.artworkPending::before,
+.artworkPending *,
+.artworkPending *::before,
+.artworkPending *::after {
+  background-image: none !important;
+  border-image-source: none !important;
+  font-family: system-ui, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif !important;
+}
+.artworkPending { background-color: #21150d; }
+.artworkPending .board { background-color: #ead0a0; }
+.artworkPending .instancePanel,
+.artworkPending .runPanel { background-color: #2c1c11; }
