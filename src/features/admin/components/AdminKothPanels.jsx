@@ -43,7 +43,7 @@ export function KothScoringRule({ scoring, status, error, onRetry, className }) 
   return <section className={[styles.rule, className].filter(Boolean).join(" ")} aria-label="KoTH 틱 배점">
     <div className={styles.ruleHead}>
       <strong>틱 배점</strong>
-      <span>한 틱은 15분 · {named ? "부문마다 " : ""}정지되지 않은 등록 팀 수의 절반까지 점수를 받습니다</span>
+      <span>한 틱은 15분 · {named ? "부문마다 " : ""}정지되지 않은 참가팀 수의 절반까지 점수를 받습니다</span>
     </div>
     {waiting && <AdminStatusMessage status={status} error={error} onRetry={onRetry} />}
     {divisions?.length > 0 && <div className={styles.divisions}>
@@ -58,7 +58,7 @@ export function KothScoringRule({ scoring, status, error, onRetry, className }) 
     </div>}
     {divisions?.length === 0 && <p className={ui.quietNote}>등록된 팀이 없습니다</p>}
     {!divisions && !waiting && <p className={ui.quietNote}>아직 배점표가 없습니다</p>}
-    <p className={styles.ruleNote}>공동 순위는 차지한 순위 점수의 평균을 내림 · 문제 점수가 0 이하인 팀은 0점 · 테스트 팀도 등록 팀 수에 들어갑니다</p>
+    <p className={styles.ruleNote}>공동 순위는 차지한 순위 점수의 평균을 내림 · 문제 점수가 0 이하인 팀은 0점 · 제외 등록된 미리보기·운영 검증팀은 집계에서 빠집니다</p>
   </section>;
 }
 
