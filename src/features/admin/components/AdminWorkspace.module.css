@@ -796,12 +796,14 @@
   .challengeStack td:nth-child(4) { grid-area: status; justify-self: end; }
   .challengeStack td:nth-child(5) { grid-area: deploy; color: var(--label-2); font-size: 13px; }
   .challengeStack td:nth-child(6) { grid-area: actions; }
-  .instanceStack tr { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "team status" "challenge challenge" "expires actions"; }
+  .instanceStack tr { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "team status" "challenge challenge" "observation observation" "expires actions"; }
   .instanceStack td:nth-child(1) { grid-area: team; }
   .instanceStack td:nth-child(2) { grid-area: challenge; color: var(--label-2); font-size: 13px; }
   .instanceStack td:nth-child(3) { grid-area: status; justify-self: end; }
-  .instanceStack td:nth-child(4) { grid-area: expires; }
-  .instanceStack td:nth-child(5) { grid-area: actions; justify-self: end; }
+  .instanceStack td:nth-child(4) { grid-area: observation; }
+  .instanceStack td:nth-child(4)::before { content: "Scheduler 확인"; display: block; margin-bottom: 2px; color: var(--label-3); font-size: 12px; }
+  .instanceStack td:nth-child(5) { grid-area: expires; }
+  .instanceStack td:nth-child(6) { grid-area: actions; justify-self: end; }
   .teamHistoryStack tr { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "time amount" "type type" "reason reason"; }
   .teamHistoryStack td:nth-child(1) { grid-area: time; }
   .teamHistoryStack td:nth-child(2) { grid-area: type; font-size: 13px; }
@@ -815,6 +817,13 @@
   .historyStack td:nth-child(5) { grid-area: reason; color: var(--label-2); font-size: 13px; }
 }
 .instanceStack .rowActions { flex-wrap: nowrap; }
+/* Scheduler 관측 칸 DB 상태 배지와 따로 읽히도록 배지 옆에 원격 상태를 글자로 둔다 */
+.observation { display: block; min-width: 0; }
+.observationTop { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; }
+.observationRemote { color: var(--label-2); font-size: 12px; line-height: 16px; }
+.dialogFacts { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 12px; margin: 0 0 14px; font-size: 13px; }
+.dialogFacts dt { color: var(--label-3); }
+.dialogFacts dd { margin: 0; min-width: 0; }
 .instanceStack .rowActions > button { white-space: nowrap; }
 
 /* 목록 안의 위험 동작은 글자만 붉게 두고 가리킬 때 옅게 칠한다 줄마다 붉은 칸이 늘어서지 않게 */

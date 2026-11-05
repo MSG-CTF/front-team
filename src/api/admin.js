@@ -1,5 +1,6 @@
 import apiClient from "./client.js";
 import { downloadFile } from "./fileDownload.js";
+import { INSTANCE_REASON_MAX, normalizeInstanceReason } from "../features/admin/utils/adminInstanceForce.js";
 
 const MUTATION_CONFIG = { timeout: 15000, timeoutErrorMessage: "요청 결과를 확인하지 못했습니다. 최신 상태를 조회한 뒤 확인하세요" };
 const PUBLICATION_CONFIG = { timeout: 120000, timeoutErrorMessage: "발행본 처리 결과를 확인하지 못했습니다 같은 요청으로 다시 시도해주세요" };
@@ -270,14 +271,23 @@ export function getAdminInstances({ status, teamId, challengeId, page = 1, size 
   });
 }
 
-export function forceResetInstance(instanceId) {
-  // 202 Accepted: 새 인스턴스의 준비 상태는 후속 조회로 확인
-  return apiClient.post(`/admin/instances/${instanceId}/reset`, undefined, MUTATION_CONFIG);
+// 강제 재시작, 종료, 정리는 앞뒤 공백을 뺀 1~500자 사유가 필요하다 (Backend #245, 빠지면 400 INVALID_REQUEST)
+function requireInstanceReason(reason) {
+  const value = normalizeInstanceReason(reason);
+  if (!value) throw new Error(`사유를 1~${INSTANCE_REASON_MAX}자로 입력해주세요`);
+  return value;
 }
 
-export function forceStopInstance(instanceId) {
-  // [백엔드: 완료] 202 Accepted, status: "STOPPING"
-  return apiClient.delete(`/admin/instances/${instanceId}`, MUTATION_CONFIG);
+export function forceResetInstance(instanceId, reason) {
+  // 202 Accepted: 새 인스턴스의 준비 상태는 후속 조회로 확인
+  const body = { reason: requireInstanceReason(reason) };
+  return apiClient.post(`/admin/instances/${encodeURIComponent(instanceId)}/reset`, body, MUTATION_CONFIG);
+}
+
+export function forceStopInstance(instanceId, reason) {
+  // [백엔드: 완료] 202 Accepted, status: "STOPPING" 정리 대기(CLEANUP_PENDING)의 강제 정리도 같은 경로다
+  const data = { reason: requireInstanceReason(reason) };
+  return apiClient.delete(`/admin/instances/${encodeURIComponent(instanceId)}`, { ...MUTATION_CONFIG, data });
 }
 
 export function retryInstanceCleanup(instanceId) {

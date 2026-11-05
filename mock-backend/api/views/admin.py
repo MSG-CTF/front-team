@@ -113,6 +113,36 @@ class AdminTeamsView(APIView):
         )
 
 
+def _instance_reason(request):
+    # Backend #245: 강제 종료, 재시작, 정리는 앞뒤 공백을 뺀 1~500자 사유가 필수다
+    reason = request.data.get("reason") if isinstance(request.data, dict) else None
+    reason = reason.strip() if isinstance(reason, str) else ""
+    if not (1 <= len(reason) <= 500):
+        raise ApiError("INVALID_REQUEST", "필수 항목이 누락되었습니다: reason", status=400)
+    return reason
+
+
+def _scheduler_observation(instance, now):
+    """Backend #246 scheduler_observation 흉내.
+
+    목서버에는 Scheduler가 없어서 인스턴스 ID로 다섯 가지 관측 상태 중 하나를 고정해 돌려준다.
+    화면에서 일치, 불일치, 조회 실패, 오래된 정보, 미확인을 모두 확인하기 위한 값이다.
+    """
+    kind = instance.id.int % 5
+    fresh = (now - timezone.timedelta(seconds=10)).isoformat().replace("+00:00", "Z")
+    old = (now - timezone.timedelta(minutes=5)).isoformat().replace("+00:00", "Z")
+    if kind == 0:
+        return {"status": instance.status, "checked_at": fresh, "check_status": "OK", "error_code": None, "status_mismatch": False}
+    if kind == 1:
+        remote = "STOPPED" if instance.status != "STOPPED" else "RUNNING"
+        return {"status": remote, "checked_at": fresh, "check_status": "OK", "error_code": None, "status_mismatch": True}
+    if kind == 2:
+        return {"status": None, "checked_at": fresh, "check_status": "ERROR", "error_code": "UNAVAILABLE", "status_mismatch": None}
+    if kind == 3:
+        return {"status": "CLEANED", "checked_at": old, "check_status": "STALE", "error_code": None, "status_mismatch": None}
+    return {"status": None, "checked_at": None, "check_status": "NOT_CHECKED", "error_code": None, "status_mismatch": None}
+
+
 class AdminInstancesView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -133,6 +163,7 @@ class AdminInstancesView(APIView):
         for i in Instance.objects.values_list("challenge_id", flat=True).distinct():
             by_challenge[str(i)] = Instance.objects.filter(challenge_id=i).count()
 
+        now = timezone.now()
         return success(
             {
                 "instances": [
@@ -143,6 +174,7 @@ class AdminInstancesView(APIView):
                         "challenge_id": str(i.challenge_id),
                         "challenge_title": i.challenge.title,
                         "status": i.status,
+                        "scheduler_observation": _scheduler_observation(i, now),
                         "created_at": i.created_at,
                         "expires_at": i.expires_at,
                     }
@@ -165,6 +197,7 @@ class AdminInstanceResetView(APIView):
             instance = Instance.objects.select_related("team").get(id=instance_id)
         except Instance.DoesNotExist:
             raise ApiError("INSTANCE_NOT_FOUND", "인스턴스를 찾을 수 없습니다", status=404)
+        reason = _instance_reason(request)
         if instance.status in ("STOPPED", "CLEANED", "STOPPING"):
             raise ApiError("INSTANCE_NOT_RESTARTABLE", "재시작할 수 없는 상태입니다", status=409)
 
@@ -172,7 +205,7 @@ class AdminInstanceResetView(APIView):
         instance.save()
         _log_event(
             "INSTANCE_FORCED",
-            "인스턴스 강제 재시작",
+            f"인스턴스 강제 재시작 - {reason}",
             team_name=instance.team.team_name,
             challenge_title=instance.challenge.title,
             actor=request.user.nickname,
@@ -203,6 +236,7 @@ class AdminInstanceDeleteView(APIView):
             instance = Instance.objects.select_related("team").get(id=instance_id)
         except Instance.DoesNotExist:
             raise ApiError("INSTANCE_NOT_FOUND", "인스턴스를 찾을 수 없습니다", status=404)
+        reason = _instance_reason(request)
         if instance.status in ("STOPPED", "CLEANED"):
             raise ApiError("INSTANCE_ALREADY_TERMINATED", "이미 종료된 인스턴스입니다", status=409)
 
@@ -210,7 +244,7 @@ class AdminInstanceDeleteView(APIView):
         instance.save()
         _log_event(
             "INSTANCE_FORCED",
-            "인스턴스 강제 종료",
+            f"인스턴스 강제 종료 - {reason}",
             team_name=instance.team.team_name,
             challenge_title=instance.challenge.title,
             actor=request.user.nickname,

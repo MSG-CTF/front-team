@@ -12,6 +12,9 @@ export const REASON_PRESETS = {
   dice: ["주사위 응답 유실 보상", "이벤트 보상", "중복 지급 정정"],
   teamEdit: ["팀원 변경 요청", "팀장 변경 요청", "팀 이름 정정"],
   teamDelete: ["중복 등록", "참가 취소", "테스트 팀 정리"],
+  instanceStop: ["참가자 요청", "문제 오류 확인", "자원 정리", "운영 점검"],
+  instanceReset: ["참가자 요청", "접속 응답 없음", "문제 오류 확인", "운영 점검"],
+  instanceCleanup: ["생성 실패 정리", "남은 자원 정리", "운영 점검"],
 };
 
 export const MILEAGE_AMOUNTS = [100, 300, 500, -100];

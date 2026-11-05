@@ -24,6 +24,9 @@ import AdminNodeBoard from "../components/AdminNodeBoard.jsx";
 import { ActionGrid, ActionTile, ContestWidget, IconButton, StatStrip, StatTile, Widget } from "../components/AdminWidgets.jsx";
 import AdminTeamPicker from "../components/AdminTeamPicker.jsx";
 import { AdminReasonField } from "../components/AdminFormParts.jsx";
+import { ADMIN_INSTANCE_STATUS_LABEL } from "../../../constants/enums.js";
+import AdminSchedulerObservation from "../components/AdminSchedulerObservation.jsx";
+import { INSTANCE_REASON_MAX, normalizeInstanceReason } from "../utils/adminInstanceForce.js";
 import { REASON_PRESETS } from "../utils/adminReasons.js";
 import useAdminNodeResources from "../hooks/useAdminNodeResources.js";
 import intro from "./AdminDashboardPage.module.css";
@@ -63,19 +66,30 @@ function AttentionInstances({ instances, onChanged, className = "" }) {
   const [busyId, setBusyId] = useState(null);
   const [confirm, setConfirm] = useState(null);
   const [notice, setNotice] = useState("");
+  const [reason, setReason] = useState("");
   const summary = useMemo(() => summarizeAttention(instances.data?.pages), [instances.data]);
   const rows = summary.rows.slice(0, ATTENTION_ROWS);
   const hidden = summary.count - rows.length;
   const now = Date.now();
 
+  function openConfirm(instance) {
+    setNotice("");
+    setReason("");
+    setConfirm(instance);
+  }
+  // 정리 재시도는 사유 없이, 강제 종료와 정리 대기 강제 정리는 사유를 함께 보낸다
+  const confirmCleanup = confirm ? canRetryCleanup(confirm) : false;
+  const validReason = normalizeInstanceReason(reason);
+
   async function stop(instance) {
     if (pending.current) return;
+    if (!canRetryCleanup(instance) && !validReason) { setNotice(`사유를 1~${INSTANCE_REASON_MAX}자로 입력해주세요`); return; }
     pending.current = true;
     setBusyId(instance.instance_id);
     setNotice("");
     try {
       const cleanup = canRetryCleanup(instance);
-      const response = await (cleanup ? retryInstanceCleanup : forceStopInstance)(instance.instance_id);
+      const response = cleanup ? await retryInstanceCleanup(instance.instance_id) : await forceStopInstance(instance.instance_id, validReason);
       if (!isSuccess(response.data)) throw new Error(response.data?.message || "종료 요청이 처리되지 않았습니다");
       const message = cleanup ? cleanupRetryNotice(response.data, instance.instance_id) : "종료 요청이 접수됐습니다";
       setConfirm(null);
@@ -107,18 +121,26 @@ function AttentionInstances({ instances, onChanged, className = "" }) {
       return <li key={instance.instance_id}>
         <span className={intro.who}><strong>{instance.team_name || "-"}</strong><span>{instance.challenge_title || "-"}</span></span>
         <span className={intro.why}><AdminBadge tone={why.kind === "failed" ? "bad" : "warn"}>{why.label}</AdminBadge><span>{why.age}</span></span>
-        {canRetryCleanup(instance) ? <button type="button" className={`${ui.button} ${ui.small} ${ui.danger}`} disabled={Boolean(busyId)} onClick={() => { setNotice(""); setConfirm(instance); }}>{CLEANUP_RETRY.action}</button> : canForceStop(instance)
-          ? <button type="button" className={`${ui.button} ${ui.small} ${ui.danger}`} disabled={busy || Boolean(busyId)} onClick={() => setConfirm(instance)}>{instance.status === "CLEANUP_PENDING" ? "강제 정리" : "종료"}</button>
+        {canRetryCleanup(instance) ? <button type="button" className={`${ui.button} ${ui.small} ${ui.danger}`} disabled={Boolean(busyId)} onClick={() => openConfirm(instance)}>{CLEANUP_RETRY.action}</button> : canForceStop(instance)
+          ? <button type="button" className={`${ui.button} ${ui.small} ${ui.danger}`} disabled={busy || Boolean(busyId)} onClick={() => openConfirm(instance)}>{instance.status === "CLEANUP_PENDING" ? "강제 정리" : "종료"}</button>
           : <Link to={`${ROUTES.adminChallenges}?tab=instances&status=${encodeURIComponent(instance.status)}`} className={`${ui.button} ${ui.small}`}>보기</Link>}
       </li>;
     })}</ul>}
     {confirm && <Modal title={canRetryCleanup(confirm) ? CLEANUP_RETRY.title : "인스턴스 강제 종료"} onClose={() => setConfirm(null)} busy={Boolean(busyId)}>
       <p className={ui.dialogLead}><strong>{confirm.team_name}</strong> · {confirm.challenge_title}</p>
+      <dl className={ui.dialogFacts}>
+        <dt>상태 (DB)</dt><dd>{ADMIN_INSTANCE_STATUS_LABEL[confirm.status] ?? confirm.status}</dd>
+        <dt>Scheduler 확인</dt><dd><AdminSchedulerObservation observation={confirm.scheduler_observation} detailed /></dd>
+      </dl>
       <p className={ui.callout} data-tone="bad">{canRetryCleanup(confirm) ? CLEANUP_RETRY.description : confirm.status === "CLEANUP_PENDING" ? "생성 실패가 확인된 오래된 요청만 처리합니다 실행 자원이 남아 있는지는 별도로 확인해주세요" : "참가자의 현재 접속이 끊기고 인스턴스가 정리됩니다"}</p>
+      {!confirmCleanup && <AdminReasonField label={confirm.status === "CLEANUP_PENDING" ? "정리 사유" : "종료 사유"}
+        note={`1~${INSTANCE_REASON_MAX}자, 감사 기록에 남습니다`} value={reason} onChange={setReason}
+        presets={confirm.status === "CLEANUP_PENDING" ? REASON_PRESETS.instanceCleanup : REASON_PRESETS.instanceStop}
+        maxLength={INSTANCE_REASON_MAX} disabled={Boolean(busyId)} required autoFocus />}
       {notice && <p role="alert" className={ui.callout} data-tone="bad">{notice}</p>}
       <div className={ui.formActions}>
         <button type="button" onClick={() => setConfirm(null)} disabled={Boolean(busyId)} className={ui.button}>취소</button>
-        <button type="button" onClick={() => stop(confirm)} disabled={Boolean(busyId)} className={ui.dangerSolid}>{busyId
+        <button type="button" onClick={() => stop(confirm)} disabled={Boolean(busyId) || (!confirmCleanup && !validReason)} className={ui.dangerSolid}>{busyId
           ? <LoadingRing>{canRetryCleanup(confirm) ? "정리 요청 중" : "종료 요청 중"}</LoadingRing>
           : canRetryCleanup(confirm) ? CLEANUP_RETRY.action : "종료 실행"}</button>
       </div>
