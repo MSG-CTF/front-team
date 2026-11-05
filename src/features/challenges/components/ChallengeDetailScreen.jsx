@@ -20,6 +20,7 @@ export default function ChallengeDetailScreen({
   refreshError,
   refreshing,
   instanceError,
+  instanceLookupPending = false,
   challenge,
   submission,
   instance,
@@ -66,14 +67,16 @@ export default function ChallengeDetailScreen({
           <PanelTexture material="paper" />
           {loading && <ChallengeDetailSkeleton />}
           {pageError && (
-            <section className={styles.stateBox} role="alert">
+            <section className={styles.stateBox} role={pageError.recoverable ? "status" : "alert"}>
               <p className={styles.eyebrow}>CHALLENGE</p>
               <h1>
                 {pageError.code === "CHALLENGE_LOCKED"
                   ? "아직 열리지 않은 문제입니다"
-                  : "문제를 불러오지 못했습니다"}
+                  : pageError.recoverable
+                    ? "연결이 지연되고 있습니다"
+                    : "문제를 불러오지 못했습니다"}
               </h1>
-              <p>{pageError.message}</p>
+              <p>{pageError.recoverable ? "잠시 후 자동으로 다시 확인합니다" : pageError.message}</p>
               <button
                 type="button"
                 className={styles.primaryButton}
@@ -116,6 +119,7 @@ export default function ChallengeDetailScreen({
                         otherInstance={otherInstance}
                         teammate={teammate}
                         error={instanceError}
+                        checking={instanceLookupPending}
                         pendingAction={pendingAction}
                       />
                       <InstanceControls

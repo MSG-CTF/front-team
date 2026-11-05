@@ -8,6 +8,7 @@ import {
   isInstanceChanging,
   needsInstanceLookup,
   readDetailResult,
+  resolveDetailMetadata,
   resolveDetailState,
 } from "../utils/challengeDetailState.js";
 
@@ -18,7 +19,7 @@ export default function useChallengeDetailData(challengeId) {
   const requestSequence = useRef(0);
   const memberLookup = useRef({ id: null, at: 0 });
   const controller = useRef(null);
-  const instanceLookupRequired = useRef(true);
+  const memberController = useRef(null);
   const [state, setState] = useState(INITIAL_DETAIL_STATE);
   const fastPolling = !state.instanceError && isInstanceChanging(state.instanceData);
 
@@ -36,31 +37,50 @@ export default function useChallengeDetailData(challengeId) {
       detailResult,
       "문제 정보를 새로 불러오지 못했습니다",
     );
-    if (!detail.error) instanceLookupRequired.current = needsInstanceLookup(detail.data);
+    setState((current) => resolveDetailMetadata(current, detail, challengeId));
+    if (detail.error || !detail.data || typeof detail.data !== "object" || Array.isArray(detail.data)) {
+      if (!detail.error?.recoverable) memberController.current?.abort();
+      return false;
+    }
     let instance = { data: { instances: [] }, error: null };
-    let members;
-    if (instanceLookupRequired.current) {
-      const askMembers = memberLookup.current.id !== challengeId || Date.now() - memberLookup.current.at >= MEMBER_LOOKUP_MS;
-      if (askMembers) memberLookup.current = { id: challengeId, at: Date.now() };
-      const [instanceResult, memberResult] = await Promise.allSettled([
+    if (needsInstanceLookup(detail.data)) {
+      const askMembers = !memberController.current && (memberLookup.current.id !== challengeId || Date.now() - memberLookup.current.at >= MEMBER_LOOKUP_MS);
+      if (askMembers) {
+        memberLookup.current = { id: challengeId, at: Date.now() };
+        const request = new AbortController();
+        memberController.current = request;
+        // 참고용 팀원 조회는 본문과 내 인스턴스 확인을 기다리게 하지 않는다
+        Promise.allSettled([getTeamMemberInstances({ signal: request.signal, timeout: 10000 })])
+          .then(([result]) => {
+            if (request.signal.aborted || memberController.current !== request) return;
+            const members = readDetailResult(result, "").data;
+            setState((current) => ({ ...current, teammateInstanceData: findTeammateInstance(members, challengeId) }));
+          })
+          .catch(() => {
+            // 참고 정보의 실패는 상세·인스턴스 조회로 전파하지 않는다
+          })
+          .finally(() => {
+            if (memberController.current === request) memberController.current = null;
+          });
+      }
+      const [instanceResult] = await Promise.allSettled([
         getMyInstances({ ...config, params: { challenge_id: challengeId } }),
-        askMembers ? getTeamMemberInstances(config) : null,
       ]);
       if (sequence !== requestSequence.current) return false;
       instance = readDetailResult(instanceResult, "인스턴스 정보를 불러오지 못했습니다");
-      // 팀원 조회가 실패하면(구버전 서버 포함) 팀원 표시만 지우고 화면은 그대로 둔다
-      if (askMembers) members = readDetailResult(memberResult, "").data;
+    } else {
+      memberController.current?.abort();
     }
-    setState((current) => {
-      const next = resolveDetailState(current, detail, instance, challengeId);
-      return members === undefined ? next : { ...next, teammateInstanceData: findTeammateInstance(members, challengeId) };
-    });
+    setState((current) => resolveDetailState(current, detail, instance, challengeId));
     return !detail.error && Boolean(detail.data) && !instance.error;
   }, [challengeId]);
 
   const invalidateRequest = useCallback(() => {
     ++requestSequence.current;
     controller.current?.abort();
+    memberController.current?.abort();
+    memberController.current = null;
+    memberLookup.current = { id: null, at: 0 };
   }, []);
 
   const applyInstance = useCallback(
@@ -71,6 +91,8 @@ export default function useChallengeDetailData(challengeId) {
         ...current,
         refreshing: false,
         instanceError: null,
+        instanceLookupPending: false,
+        instanceChecked: true,
         otherInstanceData: null,
         instanceData: {
           ...(current.instanceData?.instance_id === data.instance_id

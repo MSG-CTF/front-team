@@ -171,26 +171,28 @@ function Endpoint({ endpoint, compact }) {
   );
 }
 
-export default function InstancePanel({ instance, otherInstance, teammate, error, pendingAction }) {
+export default function InstancePanel({ instance, otherInstance, teammate, error, checking = false, pendingAction }) {
   const status = instance?.status ?? null;
   // 생성 단추를 누른 직후부터 RUNNING 이 될 때까지, 재시작·초기화·종료가 끝날 때까지 기다리는 화면을 보인다
-  const statusStep = error ? -1 : CREATE_STEPS.findIndex((item) => item.status === status);
+  const statusStep = error || checking ? -1 : CREATE_STEPS.findIndex((item) => item.status === status);
   const createStep = statusStep >= 0 ? statusStep : !error && pendingAction === "create" ? 0 : null;
   const busyStatus = BUSY_LABEL[status] ? status : PENDING_STATUS[pendingAction] ?? null;
-  const busyLabel = error || createStep != null ? null : BUSY_LABEL[busyStatus] ?? null;
+  const busyLabel = error || checking || createStep != null ? null : BUSY_LABEL[busyStatus] ?? null;
   const waitingKey = createStep != null ? "create" : busyLabel ? `busy:${busyStatus}` : null;
   const waitingSeconds = useWaitingSeconds(waitingKey);
   const stopping = Boolean(busyLabel) && busyStatus === INSTANCE_STATUS.STOPPING;
   // 재시작·종료 응답을 기다리는 동안은 곧 사라질 접속 주소 대신 기다리는 줄을 보인다
-  const running = !error && !busyLabel && status === INSTANCE_STATUS.RUNNING;
-  const failure = error ? null : getInstanceFailureNotice(instance);
+  const running = !error && !checking && !busyLabel && status === INSTANCE_STATUS.RUNNING;
+  const failure = error || checking ? null : getInstanceFailureNotice(instance);
   const ended = status === INSTANCE_STATUS.STOPPED || status === INSTANCE_STATUS.CLEANED;
   const requesting = statusStep < 0 && createStep === 0;
   // 내 인스턴스가 없고 팀원이 이 문제를 켜 두었으면 그 접속 주소를 같이 쓰게 보인다 재시작·종료는 켠 사람만 한다
-  const sharedEndpoints = !error && !waitingKey && !failure && (!status || ended) ? teammate?.instance?.endpoints ?? [] : [];
+  const sharedEndpoints = !error && !checking && !waitingKey && !failure && (!status || ended) ? teammate?.instance?.endpoints ?? [] : [];
   const shared = sharedEndpoints.length > 0;
   const statusLabel = error
     ? "조회 실패"
+    : checking
+      ? "확인 중"
     : requesting
       ? INSTANCE_STATUS_LABEL[INSTANCE_STATUS.REQUESTED]
     : busyLabel
@@ -228,6 +230,8 @@ export default function InstancePanel({ instance, otherInstance, teammate, error
 
   const emptyTitle = error
     ? "접속 정보를 확인할 수 없습니다"
+    : checking
+      ? "인스턴스 상태를 확인하고 있습니다"
     : failure
       ? failure.title
     : ended
@@ -237,6 +241,8 @@ export default function InstancePanel({ instance, otherInstance, teammate, error
       : "문제 환경을 생성해주세요";
   const hint = error
     ? "다시 조회한 뒤 인스턴스를 조작할 수 있습니다"
+    : checking
+      ? "상태 확인이 끝나면 인스턴스 작업을 사용할 수 있습니다"
     : stopping
       ? "종료가 끝나면 새 인스턴스를 생성할 수 있습니다"
     : waitingKey
