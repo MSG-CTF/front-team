@@ -5,6 +5,7 @@ import { clampRange, zoomRange, rangeFromDrag, tooltipLeft } from "../utils/lead
 import { getScoreGraphLayout } from "../utils/scoreGraphLayout.js";
 import LoadingRing from "../../../components/common/LoadingRing.jsx";
 import styles from "./LeaderboardScoreGraph.module.css";
+import LeaderboardArtworkSymbol, { LEAF_ARTWORK } from "./LeaderboardArtworkSymbol.jsx";
 
 const VIEW_WIDTH = 1280;
 const VIEW_HEIGHT = 392;
@@ -125,6 +126,8 @@ export default function LeaderboardScoreGraph({ teams, status }) {
 
   return <div ref={graph} className={styles.graph} data-compact={compact} onPointerLeave={() => { if (!drag) setHoverX(null); }}
     data-range-start={range?.[0]} data-range-end={range?.[1]} data-full-start={fullRange[0]} data-full-end={fullRange[1]}>
+    {/* PC 는 그림에 POINTS 가 있고, 폰에서만 TEAM RANKING 과 같은 제목을 글자로 단다 */}
+    <span className={styles.phoneTitle} aria-hidden="true"><LeaderboardArtworkSymbol region={LEAF_ARTWORK[0]} />POINTS</span>
     {hasSeries && <div className={styles.zoomControls} data-zoom-controls aria-label="그래프 확대 도구">
       <span className={styles.zoomHint}>드래그로 확대</span>
       <button type="button" onClick={() => changeZoom(0.5)} aria-label="시간 구간 확대" title="시간 구간 확대 (+)">+</button>

@@ -130,3 +130,12 @@
 @media (max-width: 1100px) {
   .state { color: #472a14; }
 }
+
+.phoneTitle { display: none; }
+/* 폰: PC 그림의 낙엽 + POINTS 제목을 글자로 달고, 눈금은 순위표 세리프로 작게, 점은 작게 */
+@media (max-width: 767px) {
+  .graph[data-compact="true"] .phoneTitle { position: absolute; top: 12px; left: 0; display: flex; align-items: center; gap: 6px; font: 16px/1 "Libre Caslon Text", Georgia, serif; letter-spacing: 0.04em; color: #754315; }
+  .graph[data-compact="true"] .phoneTitle svg { width: 18px; height: 18px; }
+  .graph[data-compact="true"] .axisScore, .graph[data-compact="true"] .axisTime { font-size: 12px; color: #6f5032; }
+  .graph[data-compact="true"] .scorePoint { r: 2.4px; stroke-width: 0.75px; }
+}

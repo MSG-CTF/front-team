@@ -1,0 +1,91 @@
+/* 폰 순위 목록 PC·태블릿(768px 이상)에서는 표를 쓰므로 숨긴다 */
+.ranking { display: none; }
+
+@media (max-width: 767px) {
+  /* 색과 선은 PC 순위표 표의 값을 그대로 쓴다 */
+  .ranking {
+    --rule: rgb(145 92 43 / 22%);
+    --rule-strong: rgb(131 81 37 / 45%);
+    --ink: #2e1b0d;
+    --ink-soft: #6f5032;
+    --ink-faint: #9c7b55;
+    display: block;
+    grid-area: list;
+    min-width: 0;
+  }
+
+  .note { margin: 0 0 6px; font: 500 13px/1.5 "Pretendard", sans-serif; color: var(--ink-soft); }
+
+  /* 카드 없이 종이 위에 바로 줄을 긋는다 맨 위는 표 머리줄처럼 진한 선, 팀 사이는 옅은 선 */
+  .list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--rule-strong); }
+  .item { border-bottom: 1px solid var(--rule); }
+  .item:last-child { border-bottom: 0; }
+
+  /* 순위 40 · 팀 · 총점 · 꺾쇠 14 네 칸 */
+  .head {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) auto 14px;
+    align-items: center;
+    column-gap: 12px;
+    min-height: 68px;
+    padding: 10px 0;
+    list-style: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .head::-webkit-details-marker { display: none; }
+  .item[data-zero] .head { grid-template-columns: 40px minmax(0, 1fr); cursor: default; }
+  .item[data-pending-item] .head { grid-template-columns: 40px minmax(0, 1fr) auto; cursor: default; }
+  .details > .head:active { background: rgb(126 77 30 / 7%); }
+  .details > .head:focus-visible { outline: 2px solid #8d4f1c; outline-offset: 2px; }
+
+  .rank { display: grid; place-items: center; width: 40px; min-height: 34px; font: 400 20px/1 "Libre Baskerville", Georgia, serif; font-variant-numeric: tabular-nums; color: #704823; }
+  .item[data-zero] .rank { color: var(--ink-faint); }
+  /* 월계관 1위 금, 2위 은, 3위 적동 PC 그림과 같은 색 */
+  .laurel { display: block; width: 40px; height: 34px; overflow: visible; }
+  .laurelLeaves { fill: currentColor; }
+  .laurelNumber { font: 600 16px "Libre Baskerville", Georgia, serif; }
+  .rank[data-medal="1"] { color: #d38f24; }
+  .rank[data-medal="1"] .laurelNumber { fill: #c97a0c; }
+  .rank[data-medal="2"] { color: #9a9187; }
+  .rank[data-medal="2"] .laurelNumber { fill: #463b31; }
+  .rank[data-medal="3"] { color: #c4553a; }
+  .rank[data-medal="3"] .laurelNumber { fill: #b3321e; }
+
+  .team { display: grid; gap: 3px; min-width: 0; }
+  /* 영문은 순위표 세리프, 한글은 게임 화면 제목 글꼴(송명) 두 줄까지 보이고 끝을 줄인다 */
+  .name {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    font: 400 16px/1.35 "Libre Baskerville", "Song Myung", serif;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+    color: var(--ink);
+  }
+  .meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 500 12px/1.4 "Pretendard", sans-serif; color: var(--ink-soft); }
+  .score { font: 600 18px/1 "Libre Baskerville", Georgia, serif; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; color: #75420b; }
+
+  .chevron { width: 14px; height: 14px; fill: none; stroke: var(--ink-faint); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.2s ease; }
+  .details[open] .chevron { transform: rotate(180deg); }
+
+  /* 펼친 칸은 팀 이름 칸 선에 맞추고 PC 표 머리글처럼 Caslon 대문자 아래 숫자 */
+  .panel { display: grid; gap: 12px; padding: 0 0 14px 52px; animation: panelIn 0.18s ease-out; }
+  .values { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px 8px; margin: 0; }
+  .values + .values { padding-top: 12px; border-top: 1px dashed var(--rule); }
+  .values div { min-width: 0; }
+  .values dt { font: 11px/1.3 "Libre Caslon Text", Georgia, serif; letter-spacing: 0.06em; color: var(--ink-soft); }
+  .values dd { margin: 3px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 15px/1.2 "Libre Baskerville", Georgia, serif; font-variant-numeric: tabular-nums; color: #4a2e14; }
+
+  .state { padding: 32px 0; text-align: center; font: 14px/1.6 "Pretendard", sans-serif; color: #593517; }
+  .rankSkeleton { width: 30px; height: 30px; margin: 0 auto; border-radius: 50%; }
+  .scoreSkeleton { width: 52px; height: 16px; }
+  .srOnly { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+}
+
+@keyframes panelIn { from { opacity: 0; transform: translateY(-4px); } }
+@media (prefers-reduced-motion: reduce) {
+  .panel { animation: none; }
+  .chevron { transition: none; }
+}

@@ -212,6 +212,8 @@
 .pagination button:focus-visible, .refreshControls button:focus-visible { outline: 2px solid #8d4f1c; outline-offset: -2px; }
 .pagination button:disabled, .refreshControls button:disabled { opacity: 0.35; cursor: not-allowed; }
 .pageTotal { margin-left: 8px; color: #8b6848; font-size: 16px; }
+/* 폰에서만 쓰는 쪽 표시·꺾쇠·요약 칸은 PC·태블릿에서 숨긴다 */
+.pagerIcon, .pageIndicator { display: none; }
 /* 첫 조회 전에는 갱신 시각이 없어 아이콘 아래 끝이 기준선이 되므로 갱신 묶음은 가운데 정렬로 둔다 */
 .refreshControls { display: flex; align-self: center; justify-content: flex-end; align-items: center; gap: 12px; font-size: 17px; }
 .refreshControls time { font-size: 14px; white-space: nowrap; }
@@ -312,28 +314,29 @@
   .rankingGrid thead th { white-space: nowrap; }
 }
 
-/* ───────── 폰에서는 순위표를 옆으로 미는 대신 팀마다 카드로 쌓는다 ───────── */
+/* ───────── 폰에서는 표 대신 팀 목록(PhoneRankingList)을 쓴다 ───────── */
 @media (max-width: 767px) {
-  .mobileTableHint { display: none; }
-  .tableContainer { overflow: visible; }
-  .rankingGrid { display: block; min-width: 0; }
-  .rankingGrid colgroup, .rankingGrid thead { display: none; }
-  .rankingGrid tbody { display: block; }
-  /* 첫 줄은 순위·팀·점수, 그 아래 분야별 점수를 네 칸씩 */
-  .rankingGrid tbody tr { display: grid; grid-template-columns: 44px repeat(3, minmax(0, 1fr)); gap: 8px 10px; align-items: center; height: auto; padding: 12px 0 14px; border-bottom: 1px solid rgb(145 92 43 / 24%); }
-  .rankingGrid tbody tr:last-child { border-bottom: 0; }
-  /* 팀마다 카드가 길어 받는 중에는 세 장만 깔고 나머지는 다 받은 뒤에 보인다 */
-  .rankingGrid tbody tr[data-pending-row]:nth-child(n + 4) { display: none; }
-  .rankingGrid tbody th, .rankingGrid tbody td { display: block; min-width: 0; padding: 0; border: 0; text-align: left; }
-  /* 순위 칸이 왼쪽 세로줄을 다 차지해 분야 점수는 팀 이름 아래 세 칸씩 정렬된다 */
-  .rankingGrid tbody .rankCell { grid-column: 1; grid-row: 1 / span 5; align-self: start; font-size: 20px; }
-  .rankArtwork { margin: 0; }
-  .rankingGrid tbody .teamNameCell { grid-column: 2 / 4; grid-row: 1; padding-inline: 0; font-size: 16px; font-weight: 600; }
-  .rankingGrid tbody .pointCell { grid-column: 4; grid-row: 1; font-size: 20px; text-align: right; }
-  .rankingGrid tbody .pointCell .mobileCellLabel { display: none; }
-  /* 분야 칸은 작은 제목 아래 값 */
-  .rankingGrid tbody td[data-column] { padding: 2px 0; }
-  .mobileCellLabel { display: block; font-family: "Libre Caslon Text", Georgia, serif; font-size: 11px; letter-spacing: .04em; line-height: 1.3; color: #8a6a43; }
-  .rankingGrid tbody td[data-column] .cellValue { font-size: 15px; color: #4a2e14; }
-  .rankingGrid tbody .tableState { grid-column: 1 / -1; height: auto; padding: 28px 0; text-align: center; }
+  .mobileTableHint, .tableContainer { display: none; }
+  /* 제목과 갱신은 한 줄, 그 아래 목록, 쪽 넘김은 목록을 다 본 자리에 둔다 */
+  .rankingPanel { display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title refresh" "list list" "pager pager"; align-items: center; row-gap: 10px; }
+  .rankingToolbar { display: contents; }
+  .rankingTitle { grid-area: title; }
+  .refreshControls { grid-area: refresh; margin: 0; }
+
+  /* 쪽 넘김은 마이페이지 기록 목록과 같은 종이 단추 ‹ 1 / 15 › 를 오른쪽에 */
+  .pagination { grid-area: pager; justify-self: end; order: 0; flex: none; gap: 8px; }
+  .pagination button:not(.pagerStep), .pageTotal { display: none; }
+  .pagination .pagerStep { width: 44px; min-width: 44px; height: 44px; padding: 0; border: 1px solid #8d6b3b; border-radius: 4px; background: #f3dfb8; color: #613d15; }
+  .pagination .pagerStep:hover:not(:disabled) { background: #ead0a0; }
+  .pagerText { display: none; }
+  .pagerIcon { display: block; width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .pageIndicator { display: inline-block; min-width: 56px; font: 15px/44px "Libre Caslon Text", Georgia, serif; font-variant-numeric: tabular-nums; text-align: center; color: #8a5e2e; }
+  .pageIndicator strong { font-weight: 400; color: #613d15; }
+
+  /* 범례 팀 이름도 목록과 같이 영문은 순위표 세리프, 한글은 송명 (기기마다 다른 명조 대체 글꼴 대신) */
+  .legendName, .compactLegend .legendName { font: 400 14px/1.3 "Libre Baskerville", "Song Myung", serif; color: #3a210c; }
+  .legendTop3 .legendName { color: #702e05; }
+  .legendLeaf { flex-basis: 20px; width: 20px; height: 20px; }
+  .legendRow { min-height: 32px; gap: 8px; }
+  .legendState { font: 500 13px/1.5 "Pretendard", sans-serif; }
 }

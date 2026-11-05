@@ -6,13 +6,21 @@ export default function RankingToolbar({ page, pageCount, onPageChange, refreshi
   return <div className={styles.rankingToolbar}>
     <span className={styles.rankingTitle}>TEAM RANKING</span>
     {/* 처음 순위를 받기 전에는 "1 / 1"이 먼저 보이지 않게 자리만 지키고 숨긴다 */}
+    {/* 폰에서는 쪽 번호 줄 대신 마이페이지와 같은 ‹ 1 / 15 › 한 줄로 줄인다 */}
     <nav className={styles.pagination} aria-label="순위 페이지" data-pending={loading || undefined}>
       {pageCount > 5 && <button type="button" onClick={() => onPageChange(1)} disabled={refreshing || page === 1} aria-label="첫 페이지">«</button>}
-      <button type="button" onClick={() => onPageChange(page - 1)} disabled={refreshing || page <= 1} aria-label="이전 순위 페이지">‹ 이전</button>
+      <button type="button" className={styles.pagerStep} onClick={() => onPageChange(page - 1)} disabled={refreshing || page <= 1} aria-label="이전 순위 페이지">
+        <span className={styles.pagerText}>‹ 이전</span>
+        <svg className={styles.pagerIcon} viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
+      </button>
+      <span className={styles.pageIndicator}><strong>{page}</strong> / {pageCount}</span>
       {rankingPageWindow(page, pageCount).map((number) => <button type="button" key={number}
         aria-label={number + "페이지"} aria-current={number === page ? "page" : undefined}
         disabled={refreshing} onClick={() => onPageChange(number)}>{number}</button>)}
-      <button type="button" onClick={() => onPageChange(page + 1)} disabled={refreshing || page >= pageCount} aria-label="다음 순위 페이지">다음 ›</button>
+      <button type="button" className={styles.pagerStep} onClick={() => onPageChange(page + 1)} disabled={refreshing || page >= pageCount} aria-label="다음 순위 페이지">
+        <span className={styles.pagerText}>다음 ›</span>
+        <svg className={styles.pagerIcon} viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg>
+      </button>
       {pageCount > 5 && <button type="button" onClick={() => onPageChange(pageCount)} disabled={refreshing || page === pageCount} aria-label="마지막 페이지">»</button>}
       <span className={styles.pageTotal}>/ {pageCount}</span>
     </nav>

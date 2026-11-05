@@ -1,4 +1,5 @@
 import LeaderboardArtworkSymbol, { RANK_ARTWORK } from "./LeaderboardArtworkSymbol.jsx";
+import PhoneRankingList from "./PhoneRankingList.jsx";
 import SkeletonBar from "../../../components/common/SkeletonBar.jsx";
 import styles from "./LeaderboardScreen.module.css";
 
@@ -33,8 +34,11 @@ function PendingRow({ teamWidth }) {
   </tr>;
 }
 
+// 폰에서는 표 대신 같은 순위를 팀 목록으로 보인다 (화면 폭에 따라 둘 중 하나만 보인다)
 export default function RankingTable({ rankings, status }) {
-  return <div className={styles.tableContainer} tabIndex={0} role="region" aria-label="팀 순위표">
+  return <>
+  <PhoneRankingList rankings={rankings} status={status} statusText={STATUS} />
+  <div className={styles.tableContainer} tabIndex={0} role="region" aria-label="팀 순위표">
     <table className={styles.rankingGrid} aria-label="팀 순위표" role="table">
       <colgroup>{COLUMNS.map((column) => <col key={column.key} style={{ "--column-width": `${column.width}%` }} />)}</colgroup>
       <thead role="rowgroup"><tr role="row">{COLUMNS.map((column) => <th key={column.key} scope="col" role="columnheader" title={column.title}
@@ -62,5 +66,6 @@ export default function RankingTable({ rankings, status }) {
         {!rankings.length && status !== "loading" && <tr><td colSpan={COLUMNS.length} className={styles.tableState}>{STATUS[status] ?? "아직 등록된 팀이 없습니다"}</td></tr>}
       </tbody>
     </table>
-  </div>;
+  </div>
+  </>;
 }
