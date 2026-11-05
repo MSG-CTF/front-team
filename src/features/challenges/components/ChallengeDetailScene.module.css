@@ -2836,5 +2836,6 @@
 }
 .artworkPending { background-color: #21150d; }
 .artworkPending .board { background-color: #ead0a0; }
+.artworkPending .pill { color: var(--brown); }
 .artworkPending .instancePanel,
 .artworkPending .runPanel { background-color: #2c1c11; }
