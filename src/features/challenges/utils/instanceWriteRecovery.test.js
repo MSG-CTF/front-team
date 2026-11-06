@@ -92,3 +92,82 @@ test("a repeated stop rejected after the state changes resolves only after clean
   assert.equal(isConfirmedInstanceWrite(notice, { instance_id: "parent-1", challenge_id: "challenge-1", status: "CLEANED" }), true);
   assert.equal(isConfirmedInstanceWrite(notice, { instance_id: "parent-2", challenge_id: "challenge-1", status: "CLEANED" }), false);
 });
+
+const lostGatewayResponse = { response: { status: 502, data: "<html>Bad Gateway</html>" } };
+const previous = { operationId: "previous-request", replacementInstanceId: null };
+const fresh = { instance_id: "fresh-1", operation_id: "new-request", challenge_id: "challenge-1", status: "RUNNING", replaced_instance_id: null };
+
+test("a restart that loses the entire create receipt clears after the new instance is running", () => {
+  const notice = attachInstanceWriteRecovery(feedback, lostGatewayResponse, "create", "challenge-1", "previous-instance", previous);
+  assert.equal(isConfirmedInstanceWrite(notice, fresh), true);
+  assert.equal(isConfirmedInstanceWrite(notice, { ...fresh, instance_id: "previous-instance" }), false);
+  assert.equal(isConfirmedInstanceWrite(notice, { ...fresh, operation_id: "previous-request" }), false);
+});
+
+test("a first creation without prior history still requires a completed operation receipt", () => {
+  const notice = attachInstanceWriteRecovery(feedback, { code: "ERR_NETWORK" }, "create", "challenge-1", null, { operationId: undefined, replacementInstanceId: null });
+  assert.equal(isConfirmedInstanceWrite(notice, fresh), true);
+  for (const operation_id of [undefined, null, ""]) {
+    assert.equal(isConfirmedInstanceWrite(notice, { ...fresh, operation_id }), false);
+  }
+  const { replaced_instance_id, ...withoutSource } = fresh;
+  assert.equal(isConfirmedInstanceWrite(notice, withoutSource), false);
+});
+
+test("reset recovery without the HTTP receipt must point back to the exact source", () => {
+  const notice = attachInstanceWriteRecovery(feedback, lostGatewayResponse, "restart", "challenge-1", "source-1", { operationId: "old-request", replacementInstanceId: "source-1" });
+  assert.equal(isConfirmedInstanceWrite(notice, { ...fresh, replaced_instance_id: "source-1" }), true);
+  for (const replaced_instance_id of [null, undefined, "different-source"]) {
+    assert.equal(isConfirmedInstanceWrite(notice, { ...fresh, replaced_instance_id }), false);
+  }
+  assert.equal(isConfirmedInstanceWrite(notice, { ...fresh, instance_id: "source-1", replaced_instance_id: "source-1" }), false);
+});
+
+test("creating by replacing another challenge requires the confirmed replacement source", () => {
+  const notice = attachInstanceWriteRecovery(feedback, { code: "ETIMEDOUT" }, "create", "challenge-1", "old-history", { operationId: "old-request", replacementInstanceId: "other-challenge-source" });
+  assert.equal(isConfirmedInstanceWrite(notice, { ...fresh, replaced_instance_id: "other-challenge-source" }), true);
+  assert.equal(isConfirmedInstanceWrite(notice, fresh), false);
+  assert.equal(isConfirmedInstanceWrite(notice, { ...fresh, replaced_instance_id: "unrelated-source" }), false);
+});
+
+test("pending, failed, and cleaned operations keep an error when the receipt was lost", () => {
+  const notice = attachInstanceWriteRecovery(feedback, lostGatewayResponse, "create", "challenge-1", "old-history", previous);
+  for (const status of ["CREATING", "SCHEDULING", "PROVISIONING", "RUNNING_ERROR", "FAILED", "STOPPING", "CLEANUP_PENDING", "CLEANED"]) {
+    assert.equal(isConfirmedInstanceWrite(notice, { ...fresh, status }), false);
+  }
+});
+
+test("a different challenge or malformed instance cannot dismiss the error", () => {
+  const notice = attachInstanceWriteRecovery(feedback, lostGatewayResponse, "create", "challenge-1", null, previous);
+  assert.equal(isConfirmedInstanceWrite(notice, { ...fresh, challenge_id: "challenge-2" }), false);
+  for (const value of [null, {}, { ...fresh, instance_id: "" }, { ...fresh, instance_id: 123 }, { ...fresh, operation_id: 123 }]) {
+    assert.equal(isConfirmedInstanceWrite(notice, value), false);
+  }
+});
+
+test("validation, permission, cancellation, and unclassified errors retain their feedback", () => {
+  for (const error of [{ response: { status: 400 } }, { response: { status: 401 } }, { response: { status: 403 } }, { response: { status: 409 } }, { response: { status: 500 } }, { code: "ERR_CANCELED" }, {}]) {
+    assert.equal(attachInstanceWriteRecovery(feedback, error, "create", "challenge-1", "old-history", previous), feedback);
+  }
+});
+
+test("a missing snapshot or uncertain reset source cannot establish transport recovery", () => {
+  for (const snapshot of [undefined, {}, { replacementInstanceId: undefined }, { replacementInstanceId: "" }, { replacementInstanceId: 12 }]) {
+    assert.equal(attachInstanceWriteRecovery(feedback, lostGatewayResponse, "create", "challenge-1", "old-history", snapshot), feedback);
+  }
+  assert.equal(attachInstanceWriteRecovery(feedback, lostGatewayResponse, "restart", "challenge-1", "source-1", { replacementInstanceId: "source-2" }), feedback);
+  assert.equal(attachInstanceWriteRecovery(feedback, lostGatewayResponse, "restart", "challenge-1", null, { replacementInstanceId: null }), feedback);
+});
+
+test("a later reset failure is not cleared by an earlier replacement", () => {
+  const earlier = attachInstanceWriteRecovery(feedback, lostGatewayResponse, "restart", "challenge-1", "source-1", { operationId: "old-request", replacementInstanceId: "source-1" });
+  const later = attachInstanceWriteRecovery(feedback, lostGatewayResponse, "restart", "challenge-1", "fresh-1", { operationId: "new-request", replacementInstanceId: "fresh-1" });
+  assert.equal(isConfirmedInstanceWrite(earlier, { ...fresh, replaced_instance_id: "source-1" }), true);
+  assert.equal(isConfirmedInstanceWrite(later, { ...fresh, replaced_instance_id: "source-1" }), false);
+});
+
+test("an explicit receipt remains authoritative even before a recovered instance is running", () => {
+  const notice = attachInstanceWriteRecovery(feedback, error, "restart", "challenge-1", "source-1", { operationId: "old-request", replacementInstanceId: "source-1" });
+  assert.equal(isConfirmedInstanceWrite(notice, { ...instance, status: "PROVISIONING" }), true);
+  assert.equal(isConfirmedInstanceWrite(notice, { ...fresh, replaced_instance_id: "source-1" }), false);
+});
