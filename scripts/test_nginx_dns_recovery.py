@@ -95,7 +95,7 @@ HTTPServer(('0.0.0.0',8000),Handler).serve_forever()
             with urllib.request.urlopen(base+path,timeout=2) as response:
                 assert 'no-cache' in response.headers.get('Cache-Control',''), path
                 assert response.headers.get('X-Frame-Options')=='DENY', path
-                assert response.headers.get('Content-Security-Policy')=="frame-ancestors 'none'", path
+                assert "frame-ancestors 'none'" in response.headers.get('Content-Security-Policy','') and "default-src 'self'" in response.headers.get('Content-Security-Policy',''), path
                 assert response.headers.get('X-Content-Type-Options')=='nosniff', path
                 assert b'<div id="root">' in response.read(), path
         cases=[('/api/v1/qa/items/a%2Fb?tag=a%2Bb&tag=x%2Fy',None),
