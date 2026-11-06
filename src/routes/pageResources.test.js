@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
 import { ensureGameFonts, preloadIntroResources, preloadGameArtwork, isIntroPath, GAME_FONT_STYLESHEETS } from "./pageResources.js";
+import { BOARD_PIECE_ARTWORK } from "../features/board/config/boardArtwork.js";
 
 function mockDocument() {
   const links = new Map();
@@ -87,7 +88,7 @@ test("상세 안내에는 첫 화면 배경을 미리 읽지 않고 게임에는
 
 test("화면 이동을 준비할 때 선택한 그림만 한 번 받고 API나 다른 화면은 미리 읽지 않는다", () => {
   const document = mockDocument();
-  for (const path of ["/", "/login", "/board", "/admin", "/signatures-other"]) preloadGameArtwork(document, path);
+  for (const path of ["/", "/login", "/admin", "/signatures-other"]) preloadGameArtwork(document, path);
   assert.equal(document.links.size, 0);
   preloadGameArtwork(document, "/rules");
   preloadGameArtwork(document, "/rules/");
@@ -95,6 +96,17 @@ test("화면 이동을 준비할 때 선택한 그림만 한 번 받고 API나 �
   const link = [...document.links.values()][0].attributes;
   assert.equal(link.href, "/assets/login/background-plaza.webp");
   assert.equal(link.as, "image");
+  assert.ok(existsSync(new URL(`../../public${link.href}`, import.meta.url)));
+});
+
+test("보드와 문제 목록 재진입은 같은 작은 말 이미지를 한 번만 우선 요청한다", () => {
+  const document = mockDocument();
+  for (const path of ["/board", "/board/", "/challenges", "/board"]) preloadGameArtwork(document, path);
+  assert.equal(document.links.size, 1);
+  const link = [...document.links.values()][0].attributes;
+  assert.equal(link.href, BOARD_PIECE_ARTWORK.src);
+  assert.equal(link.as, "image");
+  assert.equal(link.fetchpriority, "high");
   assert.ok(existsSync(new URL(`../../public${link.href}`, import.meta.url)));
 });
 
