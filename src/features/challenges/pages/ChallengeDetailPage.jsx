@@ -14,6 +14,7 @@ import { TERMINAL_INSTANCE_STATUSES } from "../../../constants/enums.js";
 import ChallengeDetailScreen from "../components/ChallengeDetailScreen.jsx";
 import useChallengeDetailData from "../hooks/useChallengeDetailData.js";
 import useRemoteRun from "../hooks/useRemoteRun.js";
+import { attachInstanceWriteRecovery, isConfirmedInstanceWrite } from "../utils/instanceWriteRecovery.js";
 import {
   getChallengeSubmissionState,
   getInstanceControlState,
@@ -87,6 +88,11 @@ function ChallengeDetailContent({ challengeId }) {
   const unavailable = Boolean(
     detail.pageError || detail.refreshError || detail.instanceError || detail.instanceLookupPending,
   );
+  const writeRecovered = isConfirmedInstanceWrite(instanceFeedback, detail.instanceData);
+  useEffect(() => {
+    if (!writeRecovered) return;
+    setInstanceFeedback((current) => current === instanceFeedback ? null : current);
+  }, [writeRecovered, instanceFeedback]);
 
   const handleSubmitFlag = async () => {
     if (
@@ -176,9 +182,12 @@ function ChallengeDetailContent({ challengeId }) {
       }
       if (mounted.current)
         setInstanceFeedback(
-          feedbackFromEnvelope(
-            error?.response?.data,
-            "인스턴스 요청을 처리하지 못했습니다 상태를 확인한 뒤 다시 시도해주세요",
+          attachInstanceWriteRecovery(
+            feedbackFromEnvelope(
+              error?.response?.data,
+              "인스턴스 요청을 처리하지 못했습니다 상태를 확인한 뒤 다시 시도해주세요",
+            ),
+            error, action, challengeId,
           ),
         );
     } finally {
@@ -254,7 +263,7 @@ function ChallengeDetailContent({ challengeId }) {
       retrySeconds={retrySeconds}
       flagFeedback={flagFeedback}
       instanceFeedback={
-        TERMINAL_INSTANCE_STATUSES.includes(instance?.status) && instanceFeedback?.type === "success"
+        writeRecovered || (TERMINAL_INSTANCE_STATUSES.includes(instance?.status) && instanceFeedback?.type === "success")
           ? null
           : instanceFeedback
       }
