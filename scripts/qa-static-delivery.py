@@ -68,7 +68,8 @@ def main():
             data = response.read()
             headers = dict(response.headers)
             assert headers["X-Frame-Options"] == "DENY"
-            assert headers["Content-Security-Policy"] == "frame-ancestors 'none'"
+            assert "frame-ancestors 'none'" in headers["Content-Security-Policy"] and "default-src 'self'" in headers["Content-Security-Policy"]
+            assert "Content-Security-Policy-Report-Only" not in headers
             assert headers["X-Content-Type-Options"] == "nosniff"
             return data, headers
 
