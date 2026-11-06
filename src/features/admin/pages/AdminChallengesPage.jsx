@@ -20,6 +20,8 @@ import AdminTabs from "../components/AdminTabs.jsx";
 import AdminBoardReadiness from "../components/AdminBoardReadiness.jsx";
 import { AdminReasonField, AdminSwitch } from "../components/AdminFormParts.jsx";
 import { REASON_PRESETS } from "../utils/adminReasons.js";
+import { INSTANCE_REASON_MAX, needsInstanceReason, normalizeInstanceReason } from "../utils/adminInstanceForce.js";
+import AdminSchedulerObservation from "../components/AdminSchedulerObservation.jsx";
 import styles from "../components/AdminWorkspace.module.css";
 import { ADMIN_CHALLENGE_CATEGORIES } from "../utils/adminValidation.js";
 import { remoteRunSummary } from "../utils/adminRemoteRun.js";
@@ -68,6 +70,7 @@ function InstancesSection({ initialStatus = "" }) {
   const [confirmation, setConfirmation] = useState(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
+  const [reason, setReason] = useState("");
   const pending = useRef(false);
   const instances = useAdminResource((config) => getAdminInstances({ status: filter || undefined, page, size: 50 }, config), [filter, page], "인스턴스 목록을 불러오지 못했습니다");
   useEffect(() => {
@@ -76,14 +79,25 @@ function InstancesSection({ initialStatus = "" }) {
     }, { intervalMs: 10000, immediate: false });
   }, [instances.reload]);
 
+  function openConfirmation(instance, kind) {
+    setNotice("");
+    setReason("");
+    setConfirmation({ instance, kind });
+  }
+  const withReason = confirmation ? needsInstanceReason(confirmation.kind) : false;
+  const validReason = normalizeInstanceReason(reason);
+
   async function runAction() {
     if (pending.current || !confirmation) return;
+    if (withReason && !validReason) { setNotice(`사유를 1~${INSTANCE_REASON_MAX}자로 입력해주세요`); return; }
     pending.current = true;
     setBusy(true);
     setNotice("");
     try {
-      const action = confirmation.kind === "cleanup" ? retryInstanceCleanup : confirmation.kind === "reset" ? forceResetInstance : forceStopInstance;
-      const response = await action(confirmation.instance.instance_id);
+      // 정리 재시도는 기존 계약대로 사유 없이 빈 객체를 보낸다
+      const id = confirmation.instance.instance_id;
+      const response = confirmation.kind === "cleanup" ? await retryInstanceCleanup(id)
+        : confirmation.kind === "reset" ? await forceResetInstance(id, validReason) : await forceStopInstance(id, validReason);
       if (!isSuccess(response.data)) throw new Error(response.data?.message || "요청이 처리되지 않았습니다");
       const message = confirmation.kind === "cleanup" ? cleanupRetryNotice(response.data, confirmation.instance.instance_id) : response.data?.message || "요청이 접수되었습니다 상태가 자동으로 갱신됩니다";
       setConfirmation(null);
@@ -108,15 +122,16 @@ function InstancesSection({ initialStatus = "" }) {
     <AdminStatusMessage status={instances.status} error={instances.error} onRetry={instances.retry} hasData={Boolean(instances.data)}/>
     {notice && <p role="status" className={styles.callout}>{notice}</p>}
     {instances.data && <div className={`${styles.tableWrap} ${styles.instanceStack}`}>
-      <table className={styles.table} aria-label="인스턴스 목록"><thead><tr>{["팀", "문제", "상태", "만료 (KST)", "조치"].map((text) => <th key={text}>{text}</th>)}</tr></thead>
+      <table className={styles.table} aria-label="인스턴스 목록"><thead><tr>{["팀", "문제", "상태 (DB)", "Scheduler 확인", "만료 (KST)", "조치"].map((text) => <th key={text}>{text}</th>)}</tr></thead>
         <tbody>{(instances.data?.instances ?? []).map((instance) => <tr key={instance.instance_id}>
           <td><span className={styles.title}>{instance.team_name}</span><details className={styles.secondary}><summary className={styles.idSummary}>인스턴스 ID</summary><span className={`${styles.mono} ${styles.idValue}`}>{instance.instance_id}</span></details></td>
           <td className={styles.wrap}>{instance.challenge_title}</td><td><AdminBadge tone={instance.status === "FAILED" ? "bad" : instance.status === "RUNNING" ? "good" : "neutral"}>
             {MOVING_STATUSES.includes(instance.status) ? <LoadingRing>{ADMIN_INSTANCE_STATUS_LABEL[instance.status]}</LoadingRing> : ADMIN_INSTANCE_STATUS_LABEL[instance.status] ?? instance.status}</AdminBadge></td>
+          <td><AdminSchedulerObservation observation={instance.scheduler_observation} /></td>
           <td className={styles.time}>{formatAdminTime(instance.expires_at)}</td>
-          <td>{canRetryCleanup(instance) ? <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "cleanup" }); }}>{CLEANUP_RETRY.action}</button> : canForceStop(instance) ? <div className={styles.rowActions}>
-            {instance.status === "RUNNING" && <button type="button" className={`${BUTTON} ${styles.small}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "reset" }); }}>강제 재시작</button>}
-            <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy} onClick={() => { setNotice(""); setConfirmation({ instance, kind: "stop" }); }}>{instance.status === "CLEANUP_PENDING" ? "강제 정리" : "강제 종료"}</button>
+          <td>{canRetryCleanup(instance) ? <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy} onClick={() => openConfirmation(instance, "cleanup")}>{CLEANUP_RETRY.action}</button> : canForceStop(instance) ? <div className={styles.rowActions}>
+            {instance.status === "RUNNING" && <button type="button" className={`${BUTTON} ${styles.small}`} disabled={busy} onClick={() => openConfirmation(instance, "reset")}>강제 재시작</button>}
+            <button type="button" className={`${BUTTON} ${styles.small} ${styles.danger}`} disabled={busy} onClick={() => openConfirmation(instance, "stop")}>{instance.status === "CLEANUP_PENDING" ? "강제 정리" : "강제 종료"}</button>
           </div> : <span className={styles.muted}>-</span>}</td>
         </tr>)}</tbody>
       </table>
@@ -126,11 +141,19 @@ function InstancesSection({ initialStatus = "" }) {
     {confirmation && <AdminDialog title={confirmation.kind === "cleanup" ? CLEANUP_RETRY.title : confirmation.kind === "reset" ? "인스턴스 강제 재시작" : "인스턴스 강제 종료"} onClose={() => setConfirmation(null)} busy={busy}>
       <p className={styles.dialogLead}><strong>{confirmation.instance.team_name}</strong> · {confirmation.instance.challenge_title}</p>
       <p className={`${styles.mono} ${styles.dialogId}`}>{confirmation.instance.instance_id}</p>
+      <dl className={styles.dialogFacts}>
+        <dt>상태 (DB)</dt><dd>{ADMIN_INSTANCE_STATUS_LABEL[confirmation.instance.status] ?? confirmation.instance.status}</dd>
+        <dt>Scheduler 확인</dt><dd><AdminSchedulerObservation observation={confirmation.instance.scheduler_observation} detailed /></dd>
+      </dl>
       <p className={styles.callout} data-tone="bad">{confirmation.kind === "cleanup" ? CLEANUP_RETRY.description : confirmation.instance.status === "CLEANUP_PENDING" ? "생성 실패가 확인된 오래된 요청만 처리합니다 실행 자원이 남아 있는지는 별도로 확인해주세요" : "선택한 인스턴스의 현재 접속이 종료됩니다"}</p>
+      {withReason && <AdminReasonField label={confirmation.kind === "reset" ? "재시작 사유" : confirmation.instance.status === "CLEANUP_PENDING" ? "정리 사유" : "종료 사유"}
+        note={`1~${INSTANCE_REASON_MAX}자, 감사 기록에 남습니다`} value={reason} onChange={setReason}
+        presets={confirmation.kind === "reset" ? REASON_PRESETS.instanceReset : confirmation.instance.status === "CLEANUP_PENDING" ? REASON_PRESETS.instanceCleanup : REASON_PRESETS.instanceStop}
+        maxLength={INSTANCE_REASON_MAX} disabled={busy} required autoFocus />}
       {notice && <p role="alert" className={styles.errorText}>{notice}</p>}
       <div className={styles.formActions}>
         <button type="button" onClick={() => setConfirmation(null)} disabled={busy} className={BUTTON}>취소</button>
-        <button type="button" onClick={runAction} disabled={busy} className={styles.dangerSolid}>{busy ? <LoadingRing>{ACTION_PENDING[confirmation.kind]}</LoadingRing>
+        <button type="button" onClick={runAction} disabled={busy || (withReason && !validReason)} className={styles.dangerSolid}>{busy ? <LoadingRing>{ACTION_PENDING[confirmation.kind]}</LoadingRing>
           : confirmation.kind === "cleanup" ? CLEANUP_RETRY.action : confirmation.kind === "reset" ? "재시작 실행" : "종료 실행"}</button>
       </div>
     </AdminDialog>}
