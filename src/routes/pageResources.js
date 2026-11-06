@@ -1,5 +1,7 @@
 // 게임 글꼴은 홍보 페이지의 첫 표시를 기다리게 하지 않는다
 // Pretendard는 CDN 통파일 대신 화면 글자가 든 조각만 받는 우리 서버 글꼴을 쓴다 (scripts/subset-game-fonts.py)
+import { BOARD_PIECE_ARTWORK } from "../features/board/config/boardArtwork.js";
+
 export const GAME_FONT_STYLESHEETS = [
   "https://fonts.googleapis.com/css2?family=Abyssinica+SIL&family=IM+Fell+English&family=Inria+Serif&family=Kode+Mono&family=Song+Myung&display=swap",
   "/assets/fonts/pretendard/pretendard.generated.css",
@@ -33,7 +35,8 @@ export function preloadGameArtwork(document, pathname) {
   const path = pathname.replace(/\/$/, "");
   let href;
   const attributes = { rel: "preload", as: "image", fetchpriority: "high" };
-  if (path === "/rules") href = "/assets/login/background-plaza.webp";
+  if (path === "/board" || path === "/challenges") href = BOARD_PIECE_ARTWORK.src;
+  else if (path === "/rules") href = "/assets/login/background-plaza.webp";
   else if (path === "/koth") href = "/assets/koth/koth-trail-background.webp";
   else if (path === "/signatures" || path.startsWith("/signatures/clubs/")) {
     const small = document.defaultView?.matchMedia("(max-width: 600px) and (max-resolution: 1dppx), (max-width: 460px) and (max-resolution: 2dppx)").matches;

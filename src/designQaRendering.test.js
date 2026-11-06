@@ -649,11 +649,13 @@ test("닫은 룰렛은 대기와 결과 도착 후에도 숨겨두고 중복 요
   assert.match(source, /if \(cellEvent\?\.type === "ROULETTE"\) \{[\s\S]*?setDismissedRouletteToken\(cellEvent.token\);\s+return;\s+\}\s+onCloseCellEvent\?\.\(\);/);
 });
 
-test("보드 말은 36칸의 기존 좌표를 따르며 고해상도 투명 이미지를 사용한다", () => {
+test("보드 말은 36칸의 기존 좌표를 따르며 표시용 투명 이미지를 우선 읽는다", () => {
   for (let position = 1; position <= 36; position++) {
     const { x, y } = getBoardCellPosition(position);
     const html = render("BoardPiece", { position });
-    assert.match(html, /src="\/assets\/board\/selection-squirrel-refined\.webp"/);
+    assert.match(html, /src="\/assets\/board\/selection-squirrel-refined-320\.webp"/);
+    assert.match(html, /width="320" height="343"/);
+    assert.match(html, /loading="eager" decoding="async" fetchpriority="high"/);
     assert.ok(html.includes(`내 팀 말 (현재 ${position}번 칸)`));
     assert.ok(html.includes(`left:${x}%;top:${y}%`));
     assert.match(html, /draggable="false"/);

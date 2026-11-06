@@ -1,5 +1,6 @@
 import { memo, useRef } from "react";
 import { getBoardCellPosition } from "../utils/boardData.js";
+import { BOARD_PIECE_ARTWORK } from "../config/boardArtwork.js";
 import styles from "./BoardScreen.module.css";
 
 export default memo(function BoardPiece({ position, transitionMs }) {
@@ -12,7 +13,12 @@ export default memo(function BoardPiece({ position, transitionMs }) {
   const hopClass = hopCount.current === 0 ? "" : hopCount.current % 2 ? styles.boardPieceHopA : styles.boardPieceHopB;
   const coordinates = getBoardCellPosition(position);
   return <img
-    src="/assets/board/selection-squirrel-refined.webp"
+    src={BOARD_PIECE_ARTWORK.src}
+    width={BOARD_PIECE_ARTWORK.width}
+    height={BOARD_PIECE_ARTWORK.height}
+    loading="eager"
+    decoding="async"
+    fetchpriority="high"
     alt={`내 팀 말 (현재 ${position}번 칸)`}
     data-board-piece={position}
     draggable={false}
