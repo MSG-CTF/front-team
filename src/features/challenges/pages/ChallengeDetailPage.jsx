@@ -187,7 +187,7 @@ function ChallengeDetailContent({ challengeId }) {
               error?.response?.data,
               "인스턴스 요청을 처리하지 못했습니다 상태를 확인한 뒤 다시 시도해주세요",
             ),
-            error, action, challengeId,
+            error, action, challengeId, instance?.instanceId,
           ),
         );
     } finally {

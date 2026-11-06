@@ -1,10 +1,23 @@
-// Only a receipt for this exact failed operation confirms its outcome.
-export function attachInstanceWriteRecovery(feedback, error, action, challengeId) {
+// Match the operation receipt or the exact instance whose deletion was requested.
+export function attachInstanceWriteRecovery(feedback, error, action, challengeId, instanceId) {
+  if (feedback?.type !== "error") return feedback;
+  const serverFailure = error?.response?.status >= 500;
+  const networkFailure = !error?.response &&
+    ["ERR_NETWORK", "ECONNABORTED", "ETIMEDOUT"].includes(error?.code);
+  if (action === "stop") {
+    const stateAlreadyChanged = error?.response?.status === 400 &&
+      error?.response?.data?.code === "INVALID_STATE_TRANSITION";
+    if (
+      !(serverFailure || networkFailure || stateAlreadyChanged) ||
+      typeof instanceId !== "string" || !instanceId ||
+      typeof challengeId !== "string" || !challengeId
+    ) return feedback;
+    return { ...feedback, recovery: { action, instanceId, challengeId } };
+  }
   const operationId = error?.response?.data?.data?.operation_id;
   if (
-    feedback?.type !== "error" ||
     !["create", "restart"].includes(action) ||
-    !(error?.response?.status >= 500) ||
+    !serverFailure ||
     typeof operationId !== "string" ||
     !operationId
   ) return feedback;
@@ -14,8 +27,16 @@ export function attachInstanceWriteRecovery(feedback, error, action, challengeId
 
 export function isConfirmedInstanceWrite(feedback, instance) {
   const recovery = feedback?.recovery;
+  if (feedback?.type !== "error") return false;
+  if (recovery?.action === "stop") {
+    return Boolean(
+      recovery.instanceId && recovery.challengeId &&
+      instance?.instance_id === recovery.instanceId &&
+      instance.challenge_id === recovery.challengeId &&
+      instance.status === "CLEANED"
+    );
+  }
   return Boolean(
-    feedback?.type === "error" &&
     recovery?.operationId &&
     instance?.instance_id &&
     instance.challenge_id === recovery.challengeId &&
