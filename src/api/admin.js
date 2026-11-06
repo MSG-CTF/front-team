@@ -187,9 +187,8 @@ export function getAdminMileageHistory({ teamId, type, page = 1, size = 50 } = {
 }
 
 // ── 팀 ─────────────────────────────────────────────────────────────────────
-export function getAdminTeams({ search, sort, page = 1, size = 20 } = {}, config) {
-  // [백엔드: 완료] sort: "score" | "name"
-  return apiClient.get("/admin/teams", { ...config, params: { search, sort, page, size } });
+export function getAdminTeams({ search, sort, teamScope = "official", page = 1, size = 20 } = {}, config) {
+  return apiClient.get("/admin/teams", { ...config, params: { search, sort, team_scope: teamScope, page, size } });
 }
 
 export function getAdminTeamDetail(teamId, { historyLimit = 10 } = {}, config) {

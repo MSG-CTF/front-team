@@ -11,7 +11,7 @@ function getErrorMessage(error, fallbackMessage) {
 // 검색어, 정렬, 페이지가 바뀌면 그 조건으로 다시 조회하고 늦게 도착한 이전 조건의 응답은 버린다
 // 밴 처리 뒤 다시 조회할 때도 지금 보고 있는 조건을 그대로 쓴다
 export default function useAdminTeams() {
-  const [params, setParams] = useState({ search: "", sort: "score", page: 1, size: 20 });
+  const [params, setParams] = useState({ search: "", sort: "score", teamScope: "official", page: 1, size: 20 });
   const [actionError, setActionError] = useState("");
   const [mutatingTeamId, setMutatingTeamId] = useState(null);
   const list = useAdminResource((config) => getAdminTeams(params, config), [params], "팀 목록을 불러오지 못했습니다");
@@ -59,6 +59,7 @@ export default function useAdminTeams() {
     status: list.status,
     teams: list.data?.teams ?? [],
     totalCount: list.data?.total_count ?? 0,
+    summary: list.status === "success" ? list.data?.summary : null,
     error: list.error || actionError,
     params,
     setParams: applyParams,

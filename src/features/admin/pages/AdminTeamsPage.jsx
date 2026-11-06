@@ -1,8 +1,5 @@
 import { useState } from "react";
 import { StatStrip, StatTile } from "../components/AdminWidgets.jsx";
-import useAdminResource from "../hooks/useAdminResource.js";
-import { getLeaderboard } from "../../../api/leaderboard.js";
-import { getAdminDashboard } from "../../../api/admin.js";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../../routes/routePaths.js";
 import AdminLayout, { AdminBadge, AdminStatusMessage } from "../components/AdminLayout.jsx";
@@ -51,25 +48,23 @@ function BanControl({ team, isMutating, onBan, onUnban }) {
   </>;
 }
 
-// 팀별 목록 - README.md "8. 관리자 페이지 > 팀". 검색/정렬은 백엔드가 실제로
-// query를 반영하는지 아직 확인 전이라(README에 필드만 정의) 우선 요청만
-// 보내고 결과를 그대로 표시한다.
+const TEAM_SCOPE_LABELS = { official: "공식 참가팀", test: "테스트팀", archived: "보관·밴 팀", all: "전체 팀" };
+
 export default function AdminTeamsPage() {
   const teams = useAdminTeams();
   const navigate = useNavigate();
   const [searchInput, setSearchInput] = useState("");
   const lastPage = teams.params.page * teams.params.size >= teams.totalCount;
-  const summary = useAdminResource(getAdminDashboard, [], "집계를 불러오지 못했습니다");
-  const leaderboard = useAdminResource((config) => getLeaderboard(config), [], "순위를 불러오지 못했습니다");
-  const leader = [...(leaderboard.data?.teams ?? [])].sort((a, b) => (b.team_score ?? 0) - (a.team_score ?? 0))[0];
+  const summary = teams.summary;
+  const leader = summary?.leader;
   const count = (value) => (value == null ? "-" : formatAdminNumber(value));
 
   return (
     <AdminLayout title="팀별 목록">
       <StatStrip label="팀 집계" className={ui.pageStrip}>
-        <StatTile glyph="teams" label="전체 팀" value={count(summary.data?.teams?.total_count ?? teams.totalCount)} />
-        <StatTile glyph="ban" label="밴 팀" value={count(summary.data?.teams?.banned_count)} tone={summary.data?.teams?.banned_count ? "bad" : undefined} />
-        <StatTile glyph="mileage" label="팀 보유 마일리지" value={<>{count(summary.data?.teams?.total_mileage)}<small>MI</small></>} />
+        <StatTile glyph="teams" label={TEAM_SCOPE_LABELS[teams.params.teamScope]} value={count(summary?.total_count)} />
+        <StatTile glyph="ban" label="보관·밴 팀" value={count(summary?.banned_count)} tone={summary?.banned_count ? "bad" : undefined} />
+        <StatTile glyph="mileage" label="팀 보유 마일리지" value={<>{count(summary?.total_mileage)}<small>MI</small></>} />
         <StatTile glyph="rank" label="선두" value={leader?.team_name ?? "-"} text sub={leader ? `${count(leader.team_score)}점` : ""} tone="gold" to={leader ? ROUTES.adminTeamDetail(leader.team_id) : undefined} />
       </StatStrip>
       <form
@@ -80,6 +75,17 @@ export default function AdminTeamsPage() {
         className={ui.filterBar}
         role="search"
       >
+        <label className={ui.field}>
+          <span className={ui.fieldLabel}>조회 범위</span>
+          <select
+            aria-label="조회 범위"
+            value={teams.params.teamScope}
+            onChange={(event) => teams.setParams({ teamScope: event.target.value, page: 1 })}
+            className={ui.select}
+          >
+            {Object.entries(TEAM_SCOPE_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </label>
         <label className={`${ui.field} ${ui.grow}`}>
           <span className={ui.fieldLabel}>팀 이름</span>
           <input

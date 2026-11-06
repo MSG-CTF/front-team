@@ -14,7 +14,7 @@ export default function useAdminTeamOptions(deps = [], { enabled = true } = {}) 
   return useAdminResource(async (config) => {
     if (!enabled) return { data: { code: "SUCCESS", data: null } };
     const result = await collectPages(async (page) => {
-      const response = await getAdminTeams({ page, size: 100, sort: "name" }, config);
+      const response = await getAdminTeams({ page, size: 100, sort: "name", teamScope: "all" }, config);
       const envelope = response.data;
       if (!isSuccess(envelope) || !Array.isArray(envelope.data?.teams)) throw new Error(envelope?.message || FALLBACK);
       return { items: envelope.data.teams, totalCount: envelope.data.total_count };
