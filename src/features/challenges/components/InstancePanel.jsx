@@ -171,7 +171,7 @@ function Endpoint({ endpoint, compact }) {
   );
 }
 
-export default function InstancePanel({ instance, otherInstance, teammate, error, checking = false, pendingAction }) {
+export default function InstancePanel({ instance, otherInstance, teammate, error, checking = false, artworkPending = false, pendingAction }) {
   const status = instance?.status ?? null;
   // 생성 단추를 누른 직후부터 RUNNING 이 될 때까지, 재시작·초기화·종료가 끝날 때까지 기다리는 화면을 보인다
   const statusStep = error || checking ? -1 : CREATE_STEPS.findIndex((item) => item.status === status);
@@ -273,7 +273,7 @@ export default function InstancePanel({ instance, otherInstance, teammate, error
       aria-labelledby="instance-heading"
       tabIndex={-1}
     >
-      <PanelTexture />
+      {!artworkPending && <PanelTexture />}
       <h2 id="instance-heading" className={styles.bakedLabel}>
         인스턴스
       </h2>

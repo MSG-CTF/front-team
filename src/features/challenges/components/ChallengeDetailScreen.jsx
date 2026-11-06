@@ -53,18 +53,22 @@ export default function ChallengeDetailScreen({
   const showInstance = !showRemoteRun && (challenge?.requiresInstance || instance != null);
   // 인스턴스도 원격 실행도 없는 문제는 그 자리에 마스코트를 둬 빈 칸처럼 보이지 않게 한다
   const showMascot = !showRemoteRun && !showInstance;
+  // 첫 조회가 끝나기 전에는 장식 파일이 API와 같은 연결의 대역폭을 차지하지 않게 한다
+  const artworkPending = !readOnly && Boolean(
+    loading || instanceLookupPending || pageError?.recoverable || instanceError?.recoverable,
+  );
   const showDock =
     challenge &&
     !loading &&
     !pageError &&
     (refreshError || retrySeconds > 0 || showBonus);
   return (
-    <div className={styles.page}>
+    <div className={`${styles.page}${artworkPending ? ` ${styles.artworkPending}` : ""}`}>
       <div className={styles.stage}>
         <div className={styles.boardFrame} aria-hidden="true" />
         <BackButton onClick={onBack} />
         <main className={styles.board} aria-label="문제 상세">
-          <PanelTexture material="paper" />
+          {!artworkPending && <PanelTexture material="paper" />}
           {loading && <ChallengeDetailSkeleton />}
           {pageError && (
             <section className={styles.stateBox} role={pageError.recoverable ? "status" : "alert"}>
@@ -120,6 +124,7 @@ export default function ChallengeDetailScreen({
                         teammate={teammate}
                         error={instanceError}
                         checking={instanceLookupPending}
+                        artworkPending={artworkPending}
                         pendingAction={pendingAction}
                       />
                       <InstanceControls
