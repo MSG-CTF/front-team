@@ -924,3 +924,4 @@
 .recentPrice { margin-left: 6px; color: var(--label-3); font-weight: 600; font-variant-numeric: tabular-nums; }
 .recentItems [aria-pressed="true"] .recentPrice { color: rgb(255 255 255 / 75%); }
 .amountSteps { margin: 0 0 22px; }
+.entryModes button { min-height: 44px; }
