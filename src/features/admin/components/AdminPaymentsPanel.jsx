@@ -15,12 +15,14 @@ import {
 } from "../utils/adminMileage.js";
 import { amountDigits, formatAdminNumber, formatAmountDigits } from "../utils/adminNumber.js";
 import { PAYMENT_STEPS } from "../utils/adminReasons.js";
+import { changeProductQuantity, productCheckout } from "../utils/paymentCatalog.js";
 import AdminDialog from "./AdminDialog.jsx";
 import AdminPagination from "./AdminPagination.jsx";
 import { AdminStatusMessage } from "./AdminLayout.jsx";
 import AdminQrScanner from "./AdminQrScannerLoader.jsx";
 import AdminTeamPicker from "./AdminTeamPicker.jsx";
 import PaymentIcon from "./PaymentIcon.jsx";
+import AdminPaymentProducts from "./AdminPaymentProducts.jsx";
 import styles from "./AdminPayments.module.css";
 import pickerStyles from "./AdminPicker.module.css";
 import ui from "./AdminWorkspace.module.css";
@@ -39,6 +41,10 @@ export default function AdminPaymentsPanel({
   active = true,
 }) {
   const [form, setForm] = useState(EMPTY);
+  const [cart, setCart] = useState({});
+  const [directAmount, setDirectAmount] = useState(false);
+  const productSelection = useMemo(() => productCheckout(cart), [cart]);
+  const checkoutForm = directAmount ? form : { paymentToken: form.paymentToken, amount: productSelection.amount, itemName: productSelection.itemName };
   const [page, setPage] = useState(1);
   const [teamId, setTeamId] = useState("");
   const [confirmation, setConfirmation] = useState(null);
@@ -81,6 +87,14 @@ export default function AdminPaymentsPanel({
   // 부스에서 자주 파는 품목은 최근 결제에서 뽑아 한 번에 품목과 금액을 채운다
   const recentItems = useMemo(() => recentPaymentItems(history.data?.history), [history.data]);
   const addAmount = (step) => setForm((current) => ({ ...current, amount: amountDigits(String(Number(current.amount || 0) + step)) }));
+  function selectEntryMode(direct) {
+    if (direct === directAmount) return;
+    setDirectAmount(direct);
+    setCart({});
+    setForm((current) => ({ ...EMPTY, paymentToken: current.paymentToken }));
+    setError("");
+    setNotice("");
+  }
 
   async function runPayment() {
     if (pending.current || !confirmation) return;
@@ -124,6 +138,8 @@ export default function AdminPaymentsPanel({
       setConfirmation(null);
       if (action === "결제") {
         setForm(EMPTY);
+        setCart({});
+        setDirectAmount(false);
         setManualEntry(false);
       }
       setNotice(
@@ -157,10 +173,10 @@ export default function AdminPaymentsPanel({
   function prepareCheckout(event) {
     event.preventDefault();
     if (pending.current) return;
-    const validation = validateCheckout(form);
+    const validation = validateCheckout(checkoutForm);
     setError(validation);
     setNotice("");
-    if (!validation) setConfirmation({ kind: "checkout", form: { ...form } });
+    if (!validation) setConfirmation({ kind: "checkout", form: { ...checkoutForm } });
   }
 
   function openScanner() {
@@ -202,6 +218,10 @@ export default function AdminPaymentsPanel({
             disabled={busy}
             onClick={() => {
               setReceipt(null);
+              setForm(EMPTY);
+              setCart({});
+              setDirectAmount(false);
+              setManualEntry(false);
               setNotice("");
               setError("");
             }}
@@ -286,75 +306,91 @@ export default function AdminPaymentsPanel({
             </div>
             <div>
               <h3 className={styles.detailsHeading}>결제 정보</h3>
-              {recentItems.length > 0 && (
-                <div className={styles.recentItems}>
-                  <span className={styles.recentLabel}>최근 품목</span>
-                  <div className={pickerStyles.chips} role="group" aria-label="최근 품목으로 채우기">
-                    {recentItems.map((item) => (
-                      <button
-                        key={item.itemName}
-                        type="button"
-                        className={pickerStyles.chip}
-                        aria-pressed={form.itemName.trim() === item.itemName && form.amount === String(item.amount)}
-                        onClick={() => setForm((current) => ({ ...current, itemName: item.itemName, amount: String(item.amount) }))}
-                      >
-                        {item.itemName}
-                        <span className={styles.recentPrice}>{formatAdminNumber(item.amount)}</span>
+              <div className={`${styles.tabs} ${styles.entryModes}`} role="group" aria-label="결제 입력 방식">
+                <button type="button" aria-pressed={!directAmount} onClick={() => selectEntryMode(false)}>상품 선택</button>
+                <button type="button" aria-pressed={directAmount} onClick={() => selectEntryMode(true)}>직접 입력</button>
+              </div>
+              {!directAmount ? (
+                <AdminPaymentProducts
+                  cart={cart}
+                  checkout={productSelection}
+                  onChangeQuantity={(id, delta) => { setCart((current) => changeProductQuantity(current, id, delta)); setError(""); }}
+                  onClear={() => { setCart({}); setError(""); }}
+                />
+              ) : (
+                <>
+                  {recentItems.length > 0 && (
+                    <div className={styles.recentItems}>
+                      <span className={styles.recentLabel}>최근 품목</span>
+                      <div className={pickerStyles.chips} role="group" aria-label="최근 품목으로 채우기">
+                        {recentItems.map((item) => (
+                          <button
+                            key={item.itemName}
+                            type="button"
+                            className={pickerStyles.chip}
+                            aria-pressed={form.itemName.trim() === item.itemName && form.amount === String(item.amount)}
+                            onClick={() => setForm((current) => ({ ...current, itemName: item.itemName, amount: String(item.amount) }))}
+                          >
+                            {item.itemName}
+                            <span className={styles.recentPrice}>{formatAdminNumber(item.amount)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <label className={styles.amountField}>
+                    결제 금액
+                    <span className={styles.amountInput}>
+                      <input
+                        aria-label="결제 금액 (MI)"
+                        ref={amountInput}
+                        data-long={form.amount.length > 7}
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        required
+                        placeholder="0"
+                        value={formatAmountDigits(form.amount)}
+                        onChange={(event) =>
+                          setForm({ ...form, amount: amountDigits(event.target.value) })
+                        }
+                      />
+                      <span>MI</span>
+                    </span>
+                  </label>
+                  <div className={`${pickerStyles.chips} ${styles.amountSteps}`} role="group" aria-label="금액 더하기">
+                    {PAYMENT_STEPS.map((step) => (
+                      <button key={step} type="button" className={pickerStyles.chip} data-tone="plus" onClick={() => addAmount(step)}>
+                        +{formatAdminNumber(step)}
                       </button>
                     ))}
+                    {form.amount && (
+                      <button type="button" className={pickerStyles.chip} onClick={() => setForm((current) => ({ ...current, amount: "" }))}>
+                        지우기
+                      </button>
+                    )}
                   </div>
-                </div>
+                  <label className={styles.field}>
+                    품목
+                    <input
+                      className={styles.input}
+                      required
+                      maxLength={100}
+                      value={form.itemName}
+                      placeholder="교환할 품목을 입력해주세요"
+                      onChange={(event) =>
+                        setForm({ ...form, itemName: event.target.value })
+                      }
+                    />
+                  </label>
+                </>
               )}
-              <label className={styles.amountField}>
-                결제 금액
-                <span className={styles.amountInput}>
-                  <input
-                    aria-label="결제 금액 (MI)"
-                    ref={amountInput}
-                    data-long={form.amount.length > 7}
-                    type="text"
-                    inputMode="numeric"
-                    autoComplete="off"
-                    required
-                    placeholder="0"
-                    value={formatAmountDigits(form.amount)}
-                    onChange={(event) =>
-                      setForm({ ...form, amount: amountDigits(event.target.value) })
-                    }
-                  />
-                  <span>MI</span>
-                </span>
-              </label>
-              <div className={`${pickerStyles.chips} ${styles.amountSteps}`} role="group" aria-label="금액 더하기">
-                {PAYMENT_STEPS.map((step) => (
-                  <button key={step} type="button" className={pickerStyles.chip} data-tone="plus" onClick={() => addAmount(step)}>
-                    +{formatAdminNumber(step)}
-                  </button>
-                ))}
-                {form.amount && (
-                  <button type="button" className={pickerStyles.chip} onClick={() => setForm((current) => ({ ...current, amount: "" }))}>
-                    지우기
-                  </button>
-                )}
-              </div>
-              <label className={styles.field}>
-                품목
-                <input
-                  className={styles.input}
-                  required
-                  maxLength={100}
-                  value={form.itemName}
-                  placeholder="교환할 품목을 입력해주세요"
-                  onChange={(event) =>
-                    setForm({ ...form, itemName: event.target.value })
-                  }
-                />
-              </label>
               <div className={styles.checkoutAction}>
                 <button
                   type="submit"
+                  ref={directAmount ? undefined : amountInput}
                   className={styles.primaryButton}
-                  disabled={Boolean(validateCheckout(form))}
+                  disabled={Boolean(validateCheckout(checkoutForm))}
                 >
                   결제 확인
                   <PaymentIcon name="arrow" />
