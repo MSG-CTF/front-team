@@ -138,18 +138,39 @@ jobs:
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
           echo "published: ${TARGET_IMAGE}@${digest}"
 
-  deploy-development:
-    name: deploy-development
-    needs: supply-chain-build-scan-push
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  deployment-transport-tests:
+    runs-on: ubuntu-latest
     permissions:
       contents: read
-    uses: MSG-CTF/jm_devsecops/.github/workflows/reusable-vm-ssh-deploy-dev.yml@40d6a567b35955471d2ce2b556340451a6b8e647
-    with:
-      commit_sha: ${{ github.sha }}
-      pipeline_ref: 40d6a567b35955471d2ce2b556340451a6b8e647
-      ssh_host: msgctf.kr
-      ssh_user: msgfrontenddeploy
-    secrets:
-      vm_ssh_private_key: ${{ secrets.DEV_VM_SSH_PRIVATE_KEY }}
-      vm_ssh_known_hosts: ${{ secrets.DEV_VM_SSH_KNOWN_HOSTS }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: 배포 중계 범위와 양방향 전송 검사
+        run: python3 -m unittest discover -s deploy -p 'test_*.py' -v
+      - name: 배포 스크립트 문법 검사
+        run: bash -n deploy/frontend_via_broker.sh
+
+  deploy-development:
+    name: deploy-development
+    needs: [supply-chain-build-scan-push, deployment-transport-tests]
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: development
+    timeout-minutes: 25
+    concurrency:
+      group: development-vm-msgctf
+      cancel-in-progress: false
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: 기존 브로커를 경유해 현재 main 배포
+        env:
+          VM_SSH_PRIVATE_KEY: ${{ secrets.DEV_VM_SSH_PRIVATE_KEY }}
+          VM_SSH_KNOWN_HOSTS: ${{ secrets.DEV_VM_SSH_KNOWN_HOSTS }}
+          BROKER_SSH_PRIVATE_KEY: ${{ secrets.DEV_BROKER_SSH_PRIVATE_KEY }}
+          BROKER_SSH_KNOWN_HOSTS: ${{ secrets.DEV_BROKER_SSH_KNOWN_HOSTS }}
+        run: bash deploy/frontend_via_broker.sh
