@@ -9,6 +9,8 @@ import { watchBoardLineSnapshot } from "../utils/boardLineRefresh.js";
 import { readOpenChallenges } from "../../challenges/utils/openChallengesData.js";
 import { useAuthenticatedUser } from "../../../routes/AuthenticatedRoute.jsx";
 import { createPendingDiceRoll, restorePendingDiceRoll } from "../utils/pendingDiceRoll.js";
+import { getMyMileageHistory } from "../../../api/mypage.js";
+import { findRouletteReceipt } from "../utils/rouletteCompletion.js";
 import {
   acknowledgeDiceRoll,
   confirmChanceCard,
@@ -571,10 +573,17 @@ export default function useBoardController() {
         actionId: `roulette-spin:${eventToken}`,
         prefix: "roulette-spin",
         request: async (idempotencyKey) => {
-          const result = adaptRouletteResult(
-            unwrapBoardResponse(await spinRoulette({ idempotencyKey })),
-          );
-          await syncProgress();
+          let result;
+          try {
+            result = adaptRouletteResult(
+              unwrapBoardResponse(await spinRoulette({ idempotencyKey })),
+            );
+          } catch (requestError) {
+            if (getBoardError(requestError).code !== "ROULETTE_ALREADY_SPUN") throw requestError;
+            if (mountedRef.current) setCellEvent({ type: "ROULETTE", token: eventToken, status: "already_spun" });
+            return { alreadySpun: true };
+          }
+          // 지급 성공은 확정됐다 이후의 조회 실패가 결과 창을 막지 않게 한다
           if (mountedRef.current) {
             setCellEvent({
               type: "ROULETTE",
@@ -583,6 +592,9 @@ export default function useBoardController() {
               result,
             });
           }
+          void syncProgress({ requestOptions: { timeout: 10000 } }).catch((requestError) => {
+            if (mountedRef.current) setError(getBoardError(requestError));
+          });
           return result;
         },
       }),
@@ -613,7 +625,7 @@ export default function useBoardController() {
       return;
     }
 
-    setCellEvent({ type: "ROULETTE", token, status: "ready" });
+    setCellEvent({ type: "ROULETTE", token, status: "checking" });
   }, [
     awaitingDiscard,
     currentCell,
@@ -623,6 +635,24 @@ export default function useBoardController() {
     pendingChanceChoice,
     pendingRoll,
   ]);
+
+  useEffect(() => {
+    if (cellEvent?.type !== "ROULETTE" || !["checking", "already_spun"].includes(cellEvent.status)) return undefined;
+    const token = cellEvent.token;
+    const phase = cellEvent.status;
+    const cellIndex = Number(token.split(":")[0]);
+    const controller = new AbortController();
+    const finish = (result) => {
+      if (!mountedRef.current || controller.signal.aborted) return;
+      setCellEvent((current) => current?.token === token && current.status === phase
+        ? { ...current, status: result ? "success" : phase === "checking" ? "ready" : "already_spun", ...(result ? { result } : {}) }
+        : current);
+    };
+    void getMyMileageHistory({ signal: controller.signal, timeout: 10000 })
+      .then((response) => finish(findRouletteReceipt(unwrapBoardResponse(response), cellIndex)))
+      .catch(() => finish(null));
+    return () => controller.abort();
+  }, [cellEvent?.type, cellEvent?.token, cellEvent?.status, progressScope]);
 
   // 충전과 문제 만료를 한 예약으로 처리한다 실패한 조회는 완료로 기록하지 않는다
   useEffect(() => {

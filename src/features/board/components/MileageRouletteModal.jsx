@@ -36,11 +36,14 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
   const confirmRef = useRef(null);
 
   const isSuccess = event.status === "success";
+  const isAlreadySpun = event.status === "already_spun";
+  const isChecking = event.status === "checking";
   const mileageGained = event.result?.mileageGained;
-  const isSpinning = (isMutating || isRequesting) && !isSuccess;
+  const isSpinning = (isMutating || isRequesting) && !isSuccess && !isAlreadySpun;
   const showResult = isSuccess && revealedToken === event.token;
-  const isBusy = isSpinning || isSettling || (isSuccess && !showResult);
-  const chancesLeft = isSuccess ? 0 : 1;
+  const showCompletion = showResult || isAlreadySpun;
+  const isBusy = isChecking || isSpinning || isSettling || (isSuccess && !showResult);
+  const chancesLeft = isSuccess || isAlreadySpun ? 0 : isChecking ? "-" : 1;
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -63,8 +66,8 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
   }, []);
 
   useEffect(() => {
-    if (showResult) confirmRef.current?.focus({ preventScroll: true });
-  }, [showResult]);
+    if (showCompletion) confirmRef.current?.focus({ preventScroll: true });
+  }, [showCompletion]);
 
   useEffect(() => {
     if (isBusy) panelRef.current?.focus({ preventScroll: true });
@@ -97,7 +100,7 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
       revealedRef.current = token;
       setRevealedToken(token);
     };
-    if (next == null || reducedMotion || revealedRef.current === token) {
+    if (next == null || event.result?.restored || reducedMotion || revealedRef.current === token) {
       if (next != null) {
         rotationRef.current = next;
         setRotation(next);
@@ -118,10 +121,10 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
       window.cancelAnimationFrame(frame);
       window.clearTimeout(timer);
     };
-  }, [event.token, isSuccess, mileageGained, reducedMotion]);
+  }, [event.token, isSuccess, mileageGained, event.result?.restored, reducedMotion]);
 
   const spin = async () => {
-    if (requestRef.current || isMutating || isSuccess || isSettling) return;
+    if (requestRef.current || isMutating || isSuccess || isAlreadySpun || isChecking || isSettling) return;
     requestRef.current = true;
     setIsRequesting(true);
     setSpinError("");
@@ -147,7 +150,7 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
     else if (!keyEvent.shiftKey && (index < 0 || index === buttons.length - 1)) { keyEvent.preventDefault(); first.focus(); }
   };
 
-  const message = showResult
+  const message = isChecking ? "룰렛 결과를 확인하고 있습니다" : isAlreadySpun ? "이미 마일리지를 받은 룰렛입니다" : showResult
     ? <><strong className={styles.reward}>+{mileageGained} MI</strong><span>마일리지를 받았습니다</span><span className={styles.total}>보유 마일리지 {event.result?.totalMileage ?? "-"} MI</span></>
     : isBusy
       ? "룰렛이 돌아가는 중입니다"
@@ -202,7 +205,7 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
           </svg>
         </div>
 
-        <p id={`${id}-status`} className={`${styles.status}${showResult ? ` ${styles.resultStatus}` : ""}`} role="status" aria-live="polite">{message}</p>
+        <p id={`${id}-status`} className={`${styles.status}${showCompletion ? ` ${styles.resultStatus}` : ""}`} role="status" aria-live="polite">{message}</p>
         <div className={styles.chances} aria-label={`남은 기회 ${chancesLeft} / 1`}>
           <span className={styles.chancesLabel} aria-hidden="true">남은 기회</span>
           <span className={styles.chancesValue} aria-hidden="true">
@@ -210,14 +213,14 @@ export default function MileageRouletteModal({ event, isMutating, onSpin, onClos
           </span>
         </div>
         <div className={styles.action}>
-          {showResult ? <button ref={confirmRef} type="button" onClick={onClose} className={styles.confirm}>확인</button>
+          {showCompletion ? <button ref={confirmRef} type="button" onClick={onClose} className={styles.confirm}>확인</button>
             : <button type="button" onClick={spin} disabled={isBusy || isSuccess}
               aria-label={isBusy ? "룰렛 돌리는 중" : "룰렛 돌리기(SPIN)"} className={styles.spin}>
               <img src="/assets/board/roulette-spin-button.png" alt="" aria-hidden="true" />
             </button>}
         </div>
-        <p className={`${styles.luck}${showResult ? ` ${styles.luckResult}` : ""}`} aria-hidden="true">
-          {showResult ? `보유 마일리지 ${event.result?.totalMileage ?? "-"} MI` : "50 · 100 · 150 · 200 MI 중 하나"}
+        <p className={`${styles.luck}${showCompletion ? ` ${styles.luckResult}` : ""}`} aria-hidden="true">
+          {isAlreadySpun ? "보상 지급이 완료되었습니다" : showResult ? `보유 마일리지 ${event.result?.totalMileage ?? "-"} MI` : "50 · 100 · 150 · 200 MI 중 하나"}
         </p>
       </section>
     </div>
