@@ -1,20 +1,40 @@
-# MSG CTF Frontend
+<div align="center">
+<h1>MSG CTF · Frontend</h1>
+<p>보드·주사위·문제 풀이부터 관리까지, MSG CTF의 웹 화면</p>
+<p><a href="https://msg-ctf.github.io/platform.html">플랫폼</a> · <a href="#development">개발 문서</a></p>
+</div>
 
-주사위를 굴려 보드를 돌며 문제를 푸는 MSG CTF의 참가자·관리자 화면입니다
-문제 풀이와 인스턴스 접속부터 KOTH, 동아리 부스, 마일리지 결제까지 한 화면 흐름으로 연결합니다
+<h2 align="center">Overview</h2>
 
-[플랫폼 전체 소개](https://github.com/MSG-CTF/msg-ctf.github.io)
+<table align="center">
+<tr><th width="260">게임 화면</th><th width="260">문제 풀이</th><th width="260">관리·복구</th></tr>
+<tr><td align="center">보드·3D 주사위·찬스카드</td><td align="center">문제·파일·인스턴스·KOTH</td><td align="center">배포·QR 결제·재시도 복구</td></tr>
+</table>
 
-## 맡은 일
+<h2 align="center">Contributors</h2>
 
-- 보드·3D 주사위·말 이동·찬스카드와 남은 시간 표시
-- 문제 선택·지문·파일 다운로드·플래그 제출·인스턴스 제어
-- KOTH 접속·문제별 토큰·점수 수집 상태와 순위 표시
-- 팀 정보·마일리지·QR, 동아리 부스와 시그니처 문제
-- 관리자 문제 가져오기·배포 버전·테스트·감사 로그·상품 결제
-- 새로고침·두 브라우저 재시도·응답 유실 후 화면 복구와 모바일 대응
+<table align="center">
+<tr><th align="center" colspan="12"><a href="https://github.com/MSG-CTF/front-team">Frontend</a></th></tr>
+<tr>
+<td align="center" valign="top" colspan="6" width="390"><a href="https://github.com/tortoiese"><img src="https://avatars.githubusercontent.com/u/268766155?v=4&amp;s=128" width="52" height="52" alt="tortoiese"></a><br><a href="https://github.com/tortoiese"><b>tortoiese</b></a><br><sub>참가자·관리자 UI<br>API 연결·타이머</sub></td>
+<td align="center" valign="top" colspan="6" width="390"><a href="https://github.com/yes0r"><img src="https://avatars.githubusercontent.com/u/230512345?v=4&amp;s=128" width="52" height="52" alt="yes0r"></a><br><a href="https://github.com/yes0r"><b>yes0r</b></a><br><sub>보드·3D<br>KOTH·순위·부스 화면</sub></td>
+</tr>
+<tr><th align="center" colspan="8"><a href="https://github.com/MSG-CTF/jm_devsecops/tree/main">DevSecOps</a></th><th align="center" colspan="4"><a href="https://github.com/MSG-CTF/secure-provisioner/tree/dev">Runtime</a></th></tr>
+<tr>
+<td align="center" valign="top" colspan="4" width="260"><a href="https://github.com/Giheon-Jeon"><img src="https://avatars.githubusercontent.com/u/64824907?v=4&amp;s=128" width="52" height="52" alt="Giheon-Jeon"></a><br><a href="https://github.com/Giheon-Jeon"><b>Giheon-Jeon</b></a><br><sub>프론트 CI<br>API 프록시·보안 검사</sub></td>
+<td align="center" valign="top" colspan="4" width="260"><a href="https://github.com/woalseee"><img src="https://avatars.githubusercontent.com/u/109592496?v=4&amp;s=128" width="52" height="52" alt="woalseee"></a><br><a href="https://github.com/woalseee"><b>woalseee</b></a><br><sub>실행 환경<br>VM 자동 배포</sub></td>
+<td align="center" valign="top" colspan="4" width="260"><a href="https://github.com/goldsimchoi"><img src="https://avatars.githubusercontent.com/u/173701392?v=4&amp;s=128" width="52" height="52" alt="goldsimchoi"></a><br><a href="https://github.com/goldsimchoi"><b>goldsimchoi</b></a><br><sub>TCP·TLS 접속 안내<br>이미지 준비 화면</sub></td>
+</tr>
+<tr><th align="center" colspan="8"><a href="https://github.com/MSG-CTF/msg-backend">Backend</a></th><th align="center" colspan="4"><a href="https://github.com/MSG-CTF">PM</a></th></tr>
+<tr>
+<td align="center" valign="top" colspan="4" width="260"><a href="https://github.com/dnehdx"><img src="https://avatars.githubusercontent.com/u/178199953?v=4&amp;s=128" width="52" height="52" alt="dnehdx"></a><br><a href="https://github.com/dnehdx"><b>dnehdx</b></a><br><sub>팀 정보·분야별 순위<br>CSP 적용</sub></td>
+<td align="center" valign="top" colspan="4" width="260"><a href="https://github.com/jiwonnii"><img src="https://avatars.githubusercontent.com/u/224767982?v=4&amp;s=128" width="52" height="52" alt="jiwonnii"></a><br><a href="https://github.com/jiwonnii"><b>jiwonnii</b></a><br><sub>주사위 연속 사용<br>충전 규칙 안내</sub></td>
+<td align="center" valign="top" colspan="4" width="260"><a href="https://github.com/jongcoding"><img src="https://avatars.githubusercontent.com/u/128033808?v=4&amp;s=128" width="52" height="52" alt="jongcoding"></a><br><a href="https://github.com/jongcoding"><b>jongcoding</b></a><br><sub>운영 QA·재시도 복구<br>다운로드·상품 결제</sub></td>
+</tr>
+</table>
 
-## 함께 만든 사람들
+<details>
+<summary>기여 기록 · 관련 PR</summary>
 
 | 기여자 | 기여 내용 | 관련 PR |
 | --- | --- | --- |
@@ -27,16 +47,18 @@
 | [jiwonnii](https://github.com/jiwonnii) | 주사위 연속 사용과 충전 규칙 안내 | [#54](https://github.com/MSG-CTF/front-team/pull/54) |
 | [jongcoding](https://github.com/jongcoding) | 운영 QA와 연동 보완, 재시도 복구·다운로드·관리자 상품 결제 | [#150](https://github.com/MSG-CTF/front-team/pull/150) · [#294](https://github.com/MSG-CTF/front-team/pull/294) · [#296](https://github.com/MSG-CTF/front-team/pull/296) |
 
-2026-11-09까지 병합된 PR과 커밋을 기준으로 정리했습니다
+</details>
 
-## 기술 구성
+<h2 align="center">Tech Stack</h2>
 
-JavaScript · React · Vite · React Router · Tailwind CSS · Three.js
+<p align="center"><img src="https://raw.githubusercontent.com/MSG-CTF/msg-ctf.github.io/67e93a09ce630910f98ae56fb118ca1317af78e0/assets/tech/react.svg" width="44" height="44" alt="React" title="React"> &nbsp; <img src="https://raw.githubusercontent.com/MSG-CTF/msg-ctf.github.io/67e93a09ce630910f98ae56fb118ca1317af78e0/assets/tech/vitejs.svg" width="44" height="44" alt="Vite" title="Vite"> &nbsp; <img src="https://raw.githubusercontent.com/MSG-CTF/msg-ctf.github.io/67e93a09ce630910f98ae56fb118ca1317af78e0/assets/tech/tailwindcss.svg" width="44" height="44" alt="Tailwind CSS" title="Tailwind CSS"> &nbsp; <img src="https://raw.githubusercontent.com/MSG-CTF/msg-ctf.github.io/67e93a09ce630910f98ae56fb118ca1317af78e0/assets/tech/threejs.svg" width="44" height="44" alt="Three.js" title="Three.js"><br><sub>React · Vite · Tailwind CSS · Three.js</sub><br><sub>JavaScript · React Router</sub></p>
 
-## 개발·운영 문서
+## Development
 
 - [관리자 화면](docs/admin-console.md)
 - [배포 환경 설정](docs/deployment-broker.md)
 - [인스턴스 오류 안내](docs/instance-reset-feedback.md)
 - [화면·API 기획](AGENT.md)
-- [기존 개발·설정 참고 문서](README.reference.md)
+- [설치·실행 안내](README.reference.md)
+
+<p align="center"><sub><a href="https://github.com/MSG-CTF/msg-ctf.github.io/blob/67e93a09ce630910f98ae56fb118ca1317af78e0/docs/tech-icons.md">아이콘 출처</a></sub></p>
