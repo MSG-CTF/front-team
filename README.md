@@ -6,10 +6,37 @@
 
 <h2 align="center">Overview</h2>
 
+### Participant
+
 <table align="center">
-<tr><th width="260">게임 화면</th><th width="260">문제 풀이</th><th width="260">관리·복구</th></tr>
-<tr><td align="center">보드·3D 주사위·찬스카드</td><td align="center">문제·파일·인스턴스·KOTH</td><td align="center">배포·QR 결제·재시도 복구</td></tr>
+<tr><th width="400">Board</th><th width="400">Challenge</th></tr>
+<tr><td><a href="docs/readme/board.jpg"><img src="docs/readme/board.jpg" width="400" alt="Board"></a><sub>3D 주사위 · 이동 · 찬스카드</sub></td><td><a href="docs/readme/challenge-detail.jpg"><img src="docs/readme/challenge-detail.jpg" width="400" alt="Challenge"></a><sub>문제 지문 · 파일 · 실행 · 정답 제출</sub></td></tr>
+<tr><th width="400">Challenge List</th><th width="400">KOTH</th></tr>
+<tr><td><a href="docs/readme/open-challenges.jpg"><img src="docs/readme/open-challenges.jpg" width="400" alt="Challenge List"></a><sub>보드에서 열린 문제 확인</sub></td><td><a href="docs/readme/koth.jpg"><img src="docs/readme/koth.jpg" width="400" alt="KOTH"></a><sub>문제별 접속 · 경기 · 점수</sub></td></tr>
+<tr><th width="400">Club Festival</th><th width="400">My Page</th></tr>
+<tr><td><a href="docs/readme/festival.jpg"><img src="docs/readme/festival.jpg" width="400" alt="Club Festival"></a><sub>동아리 부스 · 시그니처 문제</sub></td><td><a href="docs/readme/mypage.jpg"><img src="docs/readme/mypage.jpg" width="400" alt="My Page"></a><sub>팀 점수 · 마일리지 · 풀이 기록</sub></td></tr>
 </table>
+
+<details>
+<summary>규칙 · 부스 화면 더 보기</summary>
+
+<table align="center">
+<tr><th width="400">Rules</th><th width="400">Booth</th></tr>
+<tr><td><a href="docs/readme/rules.jpg"><img src="docs/readme/rules.jpg" width="400" alt="Rules"></a><sub>대회 규칙과 보상 안내</sub></td><td><a href="docs/images/game/booth-menus.jpg"><img src="docs/images/game/booth-menus.jpg" width="400" alt="Booth"></a><sub>데스크톱 · 모바일 문제 제출</sub></td></tr>
+</table>
+
+</details>
+
+### Admin
+
+<table align="center">
+<tr><th width="400">Dashboard</th><th width="400">Releases</th></tr>
+<tr><td><a href="docs/images/admin/dashboard.jpg"><img src="docs/images/admin/dashboard.jpg" width="400" alt="Dashboard"></a><sub>서비스 · 노드 · 인스턴스 현황</sub></td><td><a href="docs/images/admin/deploy-versions.jpg"><img src="docs/images/admin/deploy-versions.jpg" width="400" alt="Releases"></a><sub>문제별 배포 버전 · 실행 환경</sub></td></tr>
+<tr><th width="400">Nodes</th><th width="400">KOTH Scoring</th></tr>
+<tr><td><a href="docs/images/admin/node-detail.jpg"><img src="docs/images/admin/node-detail.jpg" width="400" alt="Nodes"></a><sub>노드 자원 · 실행 중인 문제</sub></td><td><a href="docs/images/admin/koth-ticks.jpg"><img src="docs/images/admin/koth-ticks.jpg" width="400" alt="KOTH Scoring"></a><sub>수집 틱 · 순위 · 점수 확인</sub></td></tr>
+</table>
+
+[웹에서 둘러보기](https://msg-ctf.github.io/platform.html#platform)
 
 <h2 align="center">Contributors</h2>
 
