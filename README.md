@@ -1,6 +1,6 @@
 <div align="center">
 <h1>MSG CTF · Frontend</h1>
-<p>보드·주사위·문제 풀이부터 관리까지, MSG CTF의 웹 화면</p>
+<p>MSG CTF 참가자 화면 · 관리자 콘솔</p>
 <p><a href="https://msg-ctf.github.io/platform.html">플랫폼</a> · <a href="#development">개발 문서</a></p>
 </div>
 
